@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--suppress HtmlUnknownTarget -->
+<html>
+<head>
+    <title>mol-html5-videoplayer DEMO</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+    <!-- CSS files --><% styles.forEach( function ( file ) { %>
+    <link rel="stylesheet" type="text/css" href="<%= file %>"/><% }); %>
+
+    <script>
+        // this is mandatory for IE8 !!!!!
+        document.createElement('video');
+    </script>
+</head>
+<body>
+
+    <h1>video.js VAST plugin DEMO</h1>
+
+    HERE COMES THE DEMO VIDEO
+
+    <!-- DEMO required scripts -->
+    <script type="text/javascript" src="scripts/es5-shim.js"/>
+    <script type="text/javascript" src="scripts/video.dev.js"/>
+
+    <!-- PLUGIN js files --><% scripts.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script> <% }); %>
+
+
+    <!-- ADS SETUP DEMO PLUGIN -->
+    <script type="text/javascript" src="scripts/ads-setup-plugin.js"/>
+
+</body>
+
+</html>

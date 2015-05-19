@@ -1,0 +1,26 @@
+{
+  "name": "videojs-vast-plugin",
+  "version": "0.0.0",
+  "authors": [
+    "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
+  ],
+  "description": "VAST plugin to use with video.js",
+  "main": [
+    "dist/videojs-vast-plugin.min.js",
+    "dist/videojs-vast-plugin.min.css"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "build",
+    "frontend/demo/*"
+  ],
+  "dependencies": {
+    "video.js": "4.11.4",
+    "videojs-contrib-ads": "^1.0.2"
+  }
+}
