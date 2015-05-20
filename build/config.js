@@ -18,11 +18,15 @@ module.exports = {
     ],
     styles: [
       'bower_components/video.js/dist/video-js/video-js.css',
-      'demo/styles/*.less'
+      'demo/styles/*.css'
     ],
 
     assets: [
       'demo/assets/*'
+    ],
+
+    fonts: [
+      'bower_components/video.js/dist/video-js/font/*'
     ],
 
     scripts: [

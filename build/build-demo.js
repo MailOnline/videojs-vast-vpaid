@@ -5,7 +5,6 @@ var config = require('./config');
 var template = require('gulp-template');
 var globUtils = require('./globUtils');
 var flatten = require('gulp-flatten');
-var less = require('gulp-less');
 var BuildTaskDoc = require('./BuildTaskDoc');
 
 
@@ -14,6 +13,8 @@ gulp.task('build-demo', function (callback) {
     'build',
     [
       'build-demo-scripts',
+      'build-demo-styles',
+      'build-demo-fonts',
       'build-demo-assets',
       'build-demo-page'
     ],
@@ -26,6 +27,20 @@ gulp.task('build-demo', function (callback) {
     });
 });
 
+
+gulp.task('build-demo-styles', function () {
+  var stylesPath = path.join(config.DEV, '/styles');
+
+  return gulp.src(config.demo.styles)
+    .pipe(gulp.dest(stylesPath));
+});
+
+gulp.task('build-demo-fonts', function () {
+  var fontsPath = path.join(config.DEV, '/styles/font');
+
+  return gulp.src(config.demo.fonts)
+    .pipe(gulp.dest(fontsPath));
+});
 
 gulp.task('build-demo-assets', function () {
   var assetsPath = path.join(config.DEV, '/assets');
@@ -40,7 +55,7 @@ gulp.task('build-demo-page', function () {
 
   if (config.env === 'production') {
     scripts = [
-      config.prodfile.scripts
+      config.plugin.scripts
     ];
 
     scripts = globUtils.flattenFiles(scripts, 'scripts');
@@ -52,11 +67,8 @@ gulp.task('build-demo-page', function () {
     scripts = globUtils.syncGlobArray(scripts, {}, true, 'scripts');
   }
 
-  styles = [
-    config.prodfile.styles
-  ];
-
-  styles = globUtils.flattenFiles(styles, 'styles');
+  styles = config.demo.styles.concat(config.plugin.styles);
+  styles = globUtils.syncGlobArray(styles, {}, true, 'styles');
 
   return gulp.src(config.demo.pages)
     .pipe(template({
