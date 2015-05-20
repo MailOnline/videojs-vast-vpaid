@@ -50,11 +50,10 @@ div.vast-skip-button {
   bottom: 0;
 }
 
-/* TODO: Skipt button Icon */
 .vast-skip-button.enabled:after {
-  content: ">";
+  content: ">>";
   position: relative;
-  top: 3px;
+  top: 1px;
   margin-left: 15px;
 }
 /* Ad loading */
