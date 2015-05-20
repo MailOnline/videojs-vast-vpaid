@@ -1,14 +1,16 @@
-// Gulpfile.js
 var gulp = require( "gulp" );
+var supervisor = require( "gulp-supervisor" );
 var BuildTaskDoc = require('./BuildTaskDoc');
 var runSequence = require('run-sequence');
 
 
 gulp.task( "start-dev", function (callback) {
   runSequence(
+    'build-demo',
     [
       'dev-server',
-      'watch'
+      'watch',
+      'unit-tests'
     ],
     function (error) {
       if(error){
@@ -17,6 +19,11 @@ gulp.task( "start-dev", function (callback) {
       console.log('BUILD FINISHED SUCCESSFULLY'.green);
       callback();
     });
+});
+
+gulp.task( "dev-server", ['build-demo'], function() {
+  console.log('STARTING DEVELOPMENT SERVER'.blue);
+  supervisor( "demo/server/index.js" );
 });
 
 module.exports = new BuildTaskDoc("start-dev", "Starts dev server and watch task. \nIf you use \"--env production\" everything will be minified \nand the dist folder will be updated accordingly. ", 1);
