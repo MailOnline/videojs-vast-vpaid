@@ -1,5 +1,5 @@
 function VPAIDIntegrator(player, adStartTimeout) {
-  if(!(this instanceof VPAIDIntegrator)) {
+  if (!(this instanceof VPAIDIntegrator)) {
     return new VPAIDIntegrator(player, adStartTimeout);
   }
 
@@ -7,8 +7,12 @@ function VPAIDIntegrator(player, adStartTimeout) {
   this.adStartTimeout = adStartTimeout || 5000;
 }
 
+//List of supported VPAID technologies
+VPAIDIntegrator.techs = [
+  VPAIDFlashTech
+];
+
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
-  var that = this;
   callback = callback || noop;
 
   if (!(vastResponse instanceof VASTResponse)) {
@@ -23,4 +27,16 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   //getDuration, setAdVolume, setup evetn like pauseAd, resumeAd, resizeAd
   //On AdStopped Resume playing
 
+};
+
+
+VPAIDIntegrator.prototype._findSupportedTech = function (type) {
+  var i, len, VPAIDTech;
+  for (i = 0, len = VPAIDIntegrator.techs.length; i < len; i+=1) {
+    VPAIDTech = VPAIDIntegrator.techs[i];
+    if(VPAIDTech.supports(type)){
+      return new VPAIDTech();
+    }
+  }
+  return null;
 };

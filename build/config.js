@@ -39,6 +39,7 @@ module.exports = {
   //Vendor files
   vendor: {
     scripts: [
+      'bower_components/swfobject/swfobject/src/swfobject.js',
       'bower_components/flashVPAID/bin/VPAIDFlashToJS.js',
       'bower_components/videojs-contrib-ads/src/videojs.ads.js'
     ],

@@ -1,7 +1,6 @@
 describe("VPAIDIntegrator", function(){
   var player, AD_START_TIMEOUT;
 
-
   beforeEach(function () {
     AD_START_TIMEOUT = 500;
     player = videojs(document.createElement('video'), {});
@@ -38,6 +37,31 @@ describe("VPAIDIntegrator", function(){
     describe("playAd", function(){
       it("must be a function", function(){
         assert.isFunction(vpaidIntegrator.playAd);
+      });
+
+      //TODO: Yet to be finished
+    });
+
+    describe("_findSupportedTech", function(){
+      it("must search for a supported tech on the registered techs", function(){
+        VPAIDIntegrator.techs.forEach(function(tech) {
+          sinon.stub(tech, 'supports');
+          tech.supports.returns(false);
+        });
+
+        vpaidIntegrator._findSupportedTech('application/fake-tech');
+        VPAIDIntegrator.techs.forEach(function(tech) {
+          sinon.assert.calledWith(tech.supports, 'application/fake-tech');
+          tech.supports.restore();
+        });
+      });
+
+      it("must return null if no tech is found", function(){
+        assert.isNull(vpaidIntegrator._findSupportedTech('application/fake-tech'));
+      });
+
+      it("must return an instance of the supported tech", function(){
+        assert.instanceOf(vpaidIntegrator._findSupportedTech('application/xshockwave-flash'), VPAIDFlashTech);
       });
     });
   });

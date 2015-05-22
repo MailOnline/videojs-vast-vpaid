@@ -7,25 +7,25 @@ describe("VPAIDFlashTech", function () {
     assert.instanceOf(VPAIDFlashTech(), VPAIDFlashTech);
   });
 
+  describe("supports", function () {
+    it("must be a function", function () {
+      assert.isFunction(VPAIDFlashTech.supports);
+    });
+
+    it("must return true when you pass 'application/xshockwave-flash' as type and false otherwise", function () {
+      assert.isTrue(VPAIDFlashTech.supports('application/xshockwave-flash'));
+      assert.isFalse(VPAIDFlashTech.supports('application/javascript'));
+      assert.isFalse(VPAIDFlashTech.supports(undefined));
+      assert.isFalse(VPAIDFlashTech.supports(null));
+      assert.isFalse(VPAIDFlashTech.supports(123));
+    });
+  });
+
   describe("instance", function () {
     var vpaidFlashClient;
 
     beforeEach(function () {
       vpaidFlashClient = new VPAIDFlashTech();
-    });
-
-    describe("supports", function () {
-      it("must be a function", function () {
-        assert.isFunction(vpaidFlashClient.supports);
-      });
-
-      it("must return true when you pass 'application/xshockwave-flash' as type and false otherwise", function () {
-        assert.isTrue(vpaidFlashClient.supports('application/xshockwave-flash'));
-        assert.isFalse(vpaidFlashClient.supports('application/javascript'));
-        assert.isFalse(vpaidFlashClient.supports(undefined));
-        assert.isFalse(vpaidFlashClient.supports(null));
-        assert.isFalse(vpaidFlashClient.supports(123));
-      });
     });
 
     describe("load", function () {

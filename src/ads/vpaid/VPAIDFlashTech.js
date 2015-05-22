@@ -4,7 +4,7 @@ function VPAIDFlashTech() {
   }
 }
 
-VPAIDFlashTech.prototype.supports = function (type) {
+VPAIDFlashTech.supports = function (type) {
   return type === 'application/xshockwave-flash';
 };
 
