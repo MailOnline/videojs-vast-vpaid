@@ -20,7 +20,9 @@
     "frontend/demo/*"
   ],
   "dependencies": {
-    "video.js": "4.11.4",
     "videojs-contrib-ads": "^1.0.2"
+  },
+  "devDependencies": {
+    "video.js": "4.11.4"
   }
 }
