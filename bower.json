@@ -20,7 +20,8 @@
     "frontend/demo/*"
   ],
   "dependencies": {
-    "videojs-contrib-ads": "^1.0.2"
+    "videojs-contrib-ads": "^1.0.2",
+    "flashVPAID": "git@github.com:MailOnline/flashVPAID.git"
   },
   "devDependencies": {
     "video.js": "4.11.4"

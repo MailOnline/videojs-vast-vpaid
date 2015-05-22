@@ -8,24 +8,37 @@ VPAIDFlashTech.prototype.supports = function (type) {
   return type === 'application/xshockwave-flash';
 };
 
-VPAIDFlashTech.prototype.load = function loadFlashCreative(vpaidCreativeUrl, containerEl, callback) {
-  sanityCheck(vpaidCreativeUrl, containerEl, callback);
+VPAIDFlashTech.prototype.load = function loadFlashCreative(containerEl, vpaidCreativeUrl, callback) {
+  sanityCheck(containerEl, vpaidCreativeUrl, callback);
 
-  //TODO: The meet of this method is yet to be implemented
-  //Important Note: It needs to return an instance of VPAIDCreativeWrapper that wraps the external VPAIDCreative
+  async.waterfall([
+    createVPAIDFlashToJs,
+    loadVPAIDCreative
+  ], callback);
 
   /*** Local Functions ***/
-  function sanityCheck(creativeUrl, container, cb) {
-    if (!isString(creativeUrl)) {
-      throw new VASTError('on VPAIDFlashTech.load, invalid VPAIDCreativeUrl');
-    }
+  function sanityCheck(container, creativeUrl, cb) {
 
     if(!dom.isDomElement(container)){
       throw new VASTError('on VPAIDFlashTech.load, invalid dom container element');
     }
 
+    if (!isString(creativeUrl)) {
+      throw new VASTError('on VPAIDFlashTech.load, invalid VPAIDCreativeUrl');
+    }
+
     if(!isFunction(cb)){
       throw new VASTError('on VPAIDFlashTech.load, missing valid callback');
     }
+  }
+
+  function createVPAIDFlashToJs(callback) {
+    var vpaidFlashToJs = new VPAIDFlashToJS(containerEl, function (error) {
+      callback(error, vpaidFlashToJs);
+    });
+  }
+
+  function loadVPAIDCreative(vpaidFlashToJs, callback){
+    vpaidFlashToJs.loadAdUnit(vpaidCreativeUrl, callback)
   }
 };

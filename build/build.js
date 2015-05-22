@@ -19,7 +19,9 @@ gulp.task('build', function (callback) {
     'clean',
     [
       'build-scripts',
-      'build-styles'
+      'build-styles',
+      'build-sourcemaps',
+      'build-assets'
     ]
   ];
 
@@ -57,6 +59,22 @@ gulp.task('build-scripts', function () {
     .pipe(gulpif(config.env === 'production', uglify()))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
     .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)));
+});
+
+
+gulp.task('build-sourcemaps', function () {
+  var scriptsDistPath = path.join(config.DEV, '/scripts');
+
+  return gulp.src(config.vendor.sourcemaps)
+    .pipe(gulp.dest(scriptsDistPath));
+});
+
+
+gulp.task('build-assets', function () {
+  var assetsPath = path.join(config.DEV, '/assets');
+
+  return gulp.src(config.vendor.assets)
+    .pipe(gulp.dest(assetsPath));
 });
 
 

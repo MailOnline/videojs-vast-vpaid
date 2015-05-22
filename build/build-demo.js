@@ -27,7 +27,6 @@ gulp.task('build-demo', function (callback) {
     });
 });
 
-
 gulp.task('build-demo-styles', function () {
   var stylesPath = path.join(config.DEV, '/styles');
 
@@ -48,7 +47,6 @@ gulp.task('build-demo-assets', function () {
   return gulp.src(config.demo.assets)
     .pipe(gulp.dest(assetsPath));
 });
-
 
 gulp.task('build-demo-page', function () {
   var scripts, styles;

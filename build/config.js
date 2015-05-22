@@ -39,13 +39,17 @@ module.exports = {
   //Vendor files
   vendor: {
     scripts: [
+      'bower_components/flashVPAID/bin/VPAIDFlashToJS.js',
       'bower_components/videojs-contrib-ads/src/videojs.ads.js'
+    ],
+    sourcemaps: [
+      'bower_components/flashVPAID/bin/VPAIDFlashToJS.js.map'
     ],
     styles: [
       //Empty for the moment
     ],
     assets: [
-      //Empty for the moment
+      'bower_components/flashVPAID/bin/VPAIDFlash.swf'
     ],
     fonts: [
       //Empty for the moment
