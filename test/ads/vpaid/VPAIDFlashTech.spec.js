@@ -1,17 +1,17 @@
-describe("VPAIDFlashClient", function () {
+describe("VPAIDFlashTech", function () {
   it("must be a function", function () {
-    assert.isFunction(VPAIDFlashClient);
+    assert.isFunction(VPAIDFlashTech);
   });
 
   it("must return an instance of itself", function () {
-    assert.instanceOf(VPAIDFlashClient(), VPAIDFlashClient);
+    assert.instanceOf(VPAIDFlashTech(), VPAIDFlashTech);
   });
 
   describe("instance", function () {
     var vpaidFlashClient;
 
     beforeEach(function () {
-      vpaidFlashClient = new VPAIDFlashClient();
+      vpaidFlashClient = new VPAIDFlashTech();
     });
 
     describe("supports", function () {
@@ -37,7 +37,7 @@ describe("VPAIDFlashClient", function () {
         [undefined, null, {}, 123].forEach(function (invalidCreativeUrl) {
           assert.throws(function () {
             vpaidFlashClient.load(invalidCreativeUrl);
-          }, VASTError, 'on VPAIDFlashClient.load, invalid VPAIDCreativeUrl');
+          }, VASTError, 'on VPAIDFlashTech.load, invalid VPAIDCreativeUrl');
         });
       });
 
@@ -45,7 +45,7 @@ describe("VPAIDFlashClient", function () {
         [undefined, null, {}, 123].forEach(function (invalidDomElement) {
           assert.throws(function () {
             vpaidFlashClient.load('fakeVPAIDCreativeURL', invalidDomElement);
-          }, VASTError, 'on VPAIDFlashClient.load, invalid dom container element');
+          }, VASTError, 'on VPAIDFlashTech.load, invalid dom container element');
         });
       });
 
@@ -53,7 +53,7 @@ describe("VPAIDFlashClient", function () {
         [undefined, null, {}, 123].forEach(function (invalidCallback) {
           assert.throws(function () {
             vpaidFlashClient.load('fakeVPAIDCreativeURL', document.createElement('div'), invalidCallback);
-          }, VASTError, 'on VPAIDFlashClient.load, missing valid callback');
+          }, VASTError, 'on VPAIDFlashTech.load, missing valid callback');
         });
       });
 
