@@ -129,4 +129,14 @@ describe("Linear", function(){
       assert.isNull(linear.skipoffset);
     });
   });
+  
+  describe("AdParameters", function(){
+    it("must be added to the linear", function(){
+      var encodedAdParameters = xml.encode('<some>data</some>');
+
+      var linearXML = '<Linear skipoffset="10%"><AdParameters><![CDATA['+encodedAdParameters+']]></AdParameters></Linear>';
+      var linear = Linear(xml.toJXONTree(linearXML));
+      assert.equal(linear.adParameters, '<some>data</some>');
+    });
+  });
 });

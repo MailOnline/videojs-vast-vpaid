@@ -14,6 +14,10 @@ function Linear(linearJTree) {
   if (linearJTree.videoClicks) {
     this.videoClicks = new VideoClicks(linearJTree.videoClicks);
   }
+  
+  if(linearJTree.adParameters) {
+    this.adParameters = xml.decode(xml.keyValue(linearJTree.adParameters));
+  }
 
   /*** Local functions ***/
   function parseTrackingEvents(trackingEvents, duration) {

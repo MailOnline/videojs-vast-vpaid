@@ -221,4 +221,24 @@ describe("xml", function () {
       assert.equal('foo', xml.attr(jxonTree, 'custom_attr'));
     });
   });
+
+  describe("encode", function(){
+    it("must be a function", function(){
+      assert.isFunction(xml.encode);
+    });
+
+    it("must encode &, \", ', < and >", function(){
+      assert.equal(xml.encode("<br/> \"'"), '&lt;br/&gt; &quot;&apos;' );
+    });
+  });
+
+  describe("decode", function(){
+    it("must be a function", function(){
+      assert.isFunction(xml.decode);
+    });
+
+    it("must edcode a previously encoded xml", function(){
+      assert.equal(xml.decode('&lt;br/&gt; &quot;&apos;'), "<br/> \"'");
+    });
+  });
 });

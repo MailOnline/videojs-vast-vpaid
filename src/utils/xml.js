@@ -119,3 +119,19 @@ xml.attr = function getAttrValue(xmlObj, attr) {
   }
   return undefined;
 };
+
+xml.encode = function encodeXML(str) {
+  return str.replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+};
+
+xml.decode = function decodeXML(str) {
+  return str.replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&');
+};

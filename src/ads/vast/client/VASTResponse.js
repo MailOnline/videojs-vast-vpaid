@@ -109,6 +109,12 @@
     }
   };
 
+  VASTResponse.prototype._addAdParameters = function (adParameters) {
+    if (adParameters) {
+      this.adParameters = adParameters;
+    }
+  };
+
   VASTResponse.prototype._addLinear = function (linear) {
     if (linear instanceof Linear) {
       this._addDuration(linear.duration);
@@ -116,6 +122,7 @@
       this._addVideoClicks(linear.videoClicks);
       this._addMediaFiles(linear.mediaFiles);
       this._addSkipoffset(linear.skipoffset);
+      this._addAdParameters(linear.adParameters);
       this._linearAdded = true;
     }
   };

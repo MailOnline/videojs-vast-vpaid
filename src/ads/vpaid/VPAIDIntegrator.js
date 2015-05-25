@@ -18,7 +18,13 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   if (!(vastResponse instanceof VASTResponse)) {
     return callback(new VASTError('On VASTIntegrator, missing required VASTResponse'));
   }
-  //I am going to need a VASTTracker
+
+  async.waterfall([
+    function(next) {
+      next(null, vastResponse);
+    },
+    findSupportedTech
+  ], callback);
 
   //handshake
   //initad
@@ -27,6 +33,26 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   //getDuration, setAdVolume, setup evetn like pauseAd, resumeAd, resizeAd
   //On AdStopped Resume playing
 
+  /*** Local functions ***/
+  function findSupportedTech(vastResponse, next) {
+
+  }
+
+  function loadVPAIDAdUnit(vastResponse, tech, next){
+
+  }
+
+  function doHandshacke(vastResponse, creative, next){
+
+  }
+
+  function setupEvents(vastResponse, creative, next) {
+
+  }
+
+  function playAd(vastResponse, creative, next) {
+
+  }
 };
 
 
@@ -40,3 +66,6 @@ VPAIDIntegrator.prototype._findSupportedTech = function (type) {
   }
   return null;
 };
+
+
+//TODO: MISSING TRACK ERROR

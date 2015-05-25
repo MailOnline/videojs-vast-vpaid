@@ -500,7 +500,17 @@ describe("VASTResponse", function () {
 
         response._addLinear(linear);
         assert.equal(response.skipoffset, 1000);
+      });
 
+      it("must add the adParameters to the response", function(){
+        var linearXML = '<?xml version="1.0" encoding="UTF-8"?>' +
+          '<Linear>' +
+            '<AdParameters><![CDATA['+xml.encode('<data>Some Data</data>')+']]></AdParameters>' +
+          '</Linear>';
+        var linear = Linear(xml.toJXONTree(linearXML));
+
+        response._addLinear(linear);
+        assert.equal(response.adParameters, '<data>Some Data</data>');
       });
     });
 
