@@ -28,38 +28,38 @@ describe("VPAIDFlashTech", function () {
       vpaidFlashClient = new VPAIDFlashTech();
     });
 
-    describe("load", function () {
+    describe("loadAdUnit", function () {
       it("must be a function", function () {
-        assert.isFunction(vpaidFlashClient.load)
+        assert.isFunction(vpaidFlashClient.loadAdUnit)
       });
 
       it("must throw a VASTError if you don't pass a valid 'VPAIDCreativeUrl'", function () {
         [undefined, null, {}, 123].forEach(function (invalidCreativeUrl) {
           assert.throws(function () {
-            vpaidFlashClient.load(document.createElement('div'), invalidCreativeUrl);
-          }, VASTError, 'on VPAIDFlashTech.load, invalid VPAIDCreativeUrl');
+            vpaidFlashClient.loadAdUnit(document.createElement('div'), invalidCreativeUrl);
+          }, VASTError, 'on VPAIDFlashTech.loadAdUnit, invalid VPAIDCreativeUrl');
         });
       });
 
       it("must throw a VASTError if you don't pass a valid dom Element to contain the ad", function(){
         [undefined, null, {}, 123].forEach(function (invalidDomElement) {
           assert.throws(function () {
-            vpaidFlashClient.load(invalidDomElement);
-          }, VASTError, 'on VPAIDFlashTech.load, invalid dom container element');
+            vpaidFlashClient.loadAdUnit(invalidDomElement);
+          }, VASTError, 'on VPAIDFlashTech.loadAdUnit, invalid dom container element');
         });
       });
 
       it("must throw a VASTError if you don't pass a callback to call once the ad have been loaded", function(){
         [undefined, null, {}, 123].forEach(function (invalidCallback) {
           assert.throws(function () {
-            vpaidFlashClient.load(document.createElement('div'), 'fakeVPAIDCreativeURL', invalidCallback);
-          }, VASTError, 'on VPAIDFlashTech.load, missing valid callback');
+            vpaidFlashClient.loadAdUnit(document.createElement('div'), 'fakeVPAIDCreativeURL', invalidCallback);
+          }, VASTError, 'on VPAIDFlashTech.loadAdUnit, missing valid callback');
         });
       });
 
       it("must not throw an error if pass valid arguments", function(){
         assert.doesNotThrow(function () {
-          vpaidFlashClient.load(document.createElement('div'), 'fakeVPAIDCreativeURL', noop);
+          vpaidFlashClient.loadAdUnit(document.createElement('div'), 'fakeVPAIDCreativeURL', noop);
         });
       });
     });

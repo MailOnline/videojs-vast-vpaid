@@ -8,7 +8,7 @@ VPAIDFlashTech.supports = function (type) {
   return type === 'application/xshockwave-flash';
 };
 
-VPAIDFlashTech.prototype.load = function loadFlashCreative(containerEl, vpaidCreativeUrl, callback) {
+VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, vpaidCreativeUrl, callback) {
   sanityCheck(containerEl, vpaidCreativeUrl, callback);
 
   async.waterfall([
@@ -20,15 +20,15 @@ VPAIDFlashTech.prototype.load = function loadFlashCreative(containerEl, vpaidCre
   function sanityCheck(container, creativeUrl, cb) {
 
     if(!dom.isDomElement(container)){
-      throw new VASTError('on VPAIDFlashTech.load, invalid dom container element');
+      throw new VASTError('on VPAIDFlashTech.loadAdUnit, invalid dom container element');
     }
 
     if (!isString(creativeUrl)) {
-      throw new VASTError('on VPAIDFlashTech.load, invalid VPAIDCreativeUrl');
+      throw new VASTError('on VPAIDFlashTech.loadAdUnit, invalid VPAIDCreativeUrl');
     }
 
     if(!isFunction(cb)){
-      throw new VASTError('on VPAIDFlashTech.load, missing valid callback');
+      throw new VASTError('on VPAIDFlashTech.loadAdUnit, missing valid callback');
     }
   }
 

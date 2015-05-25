@@ -40,7 +40,6 @@ VPAIDAdUnitWrapper.prototype.creativeAsyncCall = function () {
   var args = arrayLikeObjToArray(arguments);
   var method = args.shift();
   var cb = args.pop();
-  var that = this;
   var timeoutId;
 
   sanityCheck(method, cb, this._creative);
