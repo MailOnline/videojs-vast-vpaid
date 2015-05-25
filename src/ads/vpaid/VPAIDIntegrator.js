@@ -68,4 +68,8 @@ VPAIDIntegrator.prototype._findSupportedTech = function (type) {
 };
 
 
+VPAIDIntegrator.prototype._handshake = function handshake(creative) {
+    //TODO: Yet to be done
+};
+
 //TODO: MISSING TRACK ERROR

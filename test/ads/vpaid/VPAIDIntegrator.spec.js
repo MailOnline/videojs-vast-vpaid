@@ -64,5 +64,11 @@ describe("VPAIDIntegrator", function(){
         assert.instanceOf(vpaidIntegrator._findSupportedTech('application/xshockwave-flash'), VPAIDFlashTech);
       });
     });
+
+    describe("handshake", function(){
+      it("must be a function", function(){
+        assert.isFunction(vpaidIntegrator._handshake)
+      });
+    });
   });
 });

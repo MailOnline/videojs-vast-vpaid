@@ -1,4 +1,4 @@
-describe("VPAIDCreativeWrapper", function(){
+describe("VPAIDAdUnitWrapper", function(){
   var vpaidCreative;
 
   beforeEach(function(){
@@ -19,47 +19,47 @@ describe("VPAIDCreativeWrapper", function(){
   });
 
   it("must be a function", function(){
-    assert.isFunction(VPAIDCreativeWrapper);
+    assert.isFunction(VPAIDAdUnitWrapper);
   });
 
   describe("checkVPAIDInterface", function(){
     it("must be a function", function(){
-      assert.isFunction(VPAIDCreativeWrapper.checkVPAIDInterface);
+      assert.isFunction(VPAIDAdUnitWrapper.checkVPAIDInterface);
     });
 
     it("must return false if you pass an obj that does not fully implements the VPAID interface", function(){
-      assert.isFalse(VPAIDCreativeWrapper.checkVPAIDInterface());
-      assert.isFalse(VPAIDCreativeWrapper.checkVPAIDInterface(null));
-      assert.isFalse(VPAIDCreativeWrapper.checkVPAIDInterface(noop));
-      assert.isFalse(VPAIDCreativeWrapper.checkVPAIDInterface('foo'));
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface());
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(null));
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(noop));
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface('foo'));
     });
 
     it("must return true if you pass an object that fully implements the VPAID interface", function(){
-      assert.isTrue(VPAIDCreativeWrapper.checkVPAIDInterface(vpaidCreative));
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidCreative));
     });
   });
 
   describe("constructor", function(){
     it("must return an instance of itself", function(){
-     assert.instanceOf(VPAIDCreativeWrapper(vpaidCreative), VPAIDCreativeWrapper);
+     assert.instanceOf(VPAIDAdUnitWrapper(vpaidCreative), VPAIDAdUnitWrapper);
     });
 
     it("must throw a VASTError if the passed VPAIDCreative does not fully implement the VPAID api", function(){
      [null, undefined, noop, 'foo', {}, []].forEach(function(invalidCreative) {
        assert.throws(function () {
-         new VPAIDCreativeWrapper(invalidCreative);
-       }, VASTError, 'on VPAIDCreativeWrapper, the passed VPAID creative does not fully implement the VPAID interface');
+         new VPAIDAdUnitWrapper(invalidCreative);
+       }, VASTError, 'on VPAIDAdUnitWrapper, the passed VPAID creative does not fully implement the VPAID interface');
      });
     });
 
-    it("must complian if you pass an options that is not a hash", function(){
+    it("must complain if you pass an options that is not a hash", function(){
       assert.throws(function() {
-        new VPAIDCreativeWrapper(vpaidCreative, 'foo');
-      }, VASTError, "on VPAIDCreativeWrapper, expected options hash  but got 'foo'")
+        new VPAIDAdUnitWrapper(vpaidCreative, 'foo');
+      }, VASTError, "on VPAIDAdUnitWrapper, expected options hash  but got 'foo'")
     });
 
     it("must publish the VPAIDCreative in '_creative'", function(){
-      var wrapper = new VPAIDCreativeWrapper(vpaidCreative);
+      var wrapper = new VPAIDAdUnitWrapper(vpaidCreative);
       assert.equal(wrapper._creative, vpaidCreative);
     });
   });
@@ -68,7 +68,7 @@ describe("VPAIDCreativeWrapper", function(){
     var wrapper;
 
     beforeEach(function(){
-      wrapper = new VPAIDCreativeWrapper(vpaidCreative);
+      wrapper = new VPAIDAdUnitWrapper(vpaidCreative);
     });
 
     describe("creativeAsyncCall", function(){
@@ -87,13 +87,13 @@ describe("VPAIDCreativeWrapper", function(){
       it("must complain if the method is not part of the creative", function(){
         assert.throws(function () {
           wrapper.creativeAsyncCall('foo', noop);
-        }, VASTError, "on VPAIDCreativeWrapper.creativeAsyncCall, invalid method name");
+        }, VASTError, "on VPAIDAdUnitWrapper.creativeAsyncCall, invalid method name");
       });
 
       it("must complain if there is no callback", function(){
         assert.throws(function () {
           wrapper.creativeAsyncCall('initAd');
-        }, VASTError, "on VPAIDCreativeWrapper.creativeAsyncCall, missing callback");
+        }, VASTError, "on VPAIDAdUnitWrapper.creativeAsyncCall, missing callback");
       });
 
       it("must call the creative method", function(){
@@ -132,21 +132,12 @@ describe("VPAIDCreativeWrapper", function(){
           sinon.assert.calledOnce(cb);
           var error = firstArg(cb);
           assert.instanceOf(error, VASTError);
-          assert.equal(error.message, "VAST Error: on VPAIDCreativeWrapper, timeout while waiting for a response on call 'initAd'");
+          assert.equal(error.message, "VAST Error: on VPAIDAdUnitWrapper, timeout while waiting for a response on call 'initAd'");
 
           //it must not call the callback again
           wrapperCb(null);
           sinon.assert.calledOnce(cb);
         });
-
-        it("must destroy the creative", function(){
-          var cb = sinon.spy();
-          sinon.spy(wrapper, 'destroy');
-          wrapper.creativeAsyncCall('initAd', cb);
-          this.clock.tick(wrapper.options.responseTimeout);
-          sinon.assert.calledOnce(wrapper.destroy);
-        });
-
       });
     });
 
@@ -236,13 +227,13 @@ describe("VPAIDCreativeWrapper", function(){
       it("must complain if you don't pass an evtName", function(){
         assert.throws(function () {
           wrapper.waitForEvent();
-        }, VASTError, "on VPAIDCreativeWrapper.waitForEvent, missing evt name");
+        }, VASTError, "on VPAIDAdUnitWrapper.waitForEvent, missing evt name");
       });
       
       it("must complain if you don't pass a callback", function(){
         assert.throws(function () {
           wrapper.waitForEvent('adInit');
-        }, VASTError, "on VPAIDCreativeWrapper.waitForEvent, missing callback");
+        }, VASTError, "on VPAIDAdUnitWrapper.waitForEvent, missing callback");
       });
 
       it("must subscribe to the passed event", function(){
@@ -287,7 +278,7 @@ describe("VPAIDCreativeWrapper", function(){
           error = firstArg(callback);
 
           assert.instanceOf(error, VASTError);
-          assert.equal(error.message, "VAST Error: on VPAIDCreativeWrapper.waitForEvent, timeout while waiting for event 'adInit'")
+          assert.equal(error.message, "VAST Error: on VPAIDAdUnitWrapper.waitForEvent, timeout while waiting for event 'adInit'")
         });
 
         it("must not call the callback once the event response comes", function(){
