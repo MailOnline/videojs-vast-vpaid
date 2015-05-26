@@ -1,19 +1,19 @@
-function VPAIDAdUnitWrapper(vpaidCreative, opts) {
+function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
   if (!(this instanceof VPAIDAdUnitWrapper)) {
-    return new VPAIDAdUnitWrapper(vpaidCreative);
+    return new VPAIDAdUnitWrapper(vpaidAdUnit);
   }
-  sanityCheck(vpaidCreative, opts);
+  sanityCheck(vpaidAdUnit, opts);
   var defaultOpts = {
     responseTimeout: 2000
   };
 
   this.options = extend({}, defaultOpts, opts || {});
-  this._creative = vpaidCreative;
+  this._adUnit = vpaidAdUnit;
 
   /*** Local Functions ***/
-  function sanityCheck(creative, opts) {
-    if (!creative || !VPAIDAdUnitWrapper.checkVPAIDInterface(creative)) {
-      throw new VASTError('on VPAIDAdUnitWrapper, the passed VPAID creative does not fully implement the VPAID interface');
+  function sanityCheck(adUnit, opts) {
+    if (!adUnit || !VPAIDAdUnitWrapper.checkVPAIDInterface(adUnit)) {
+      throw new VASTError('on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
     }
 
     if (opts && !isObject(opts)) {
@@ -22,30 +22,30 @@ function VPAIDAdUnitWrapper(vpaidCreative, opts) {
   }
 }
 
-VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDCreative) {
+VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUnit) {
   var VPAIDInterfaceMethods = [
     'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd',
     'subscribe', 'unsubscribe'
   ];
 
   for (var i = 0, len = VPAIDInterfaceMethods.length; i < len; i++) {
-    if (!VPAIDCreative || !isFunction(VPAIDCreative[VPAIDInterfaceMethods[i]])) {
+    if (!VPAIDAdUnit || !isFunction(VPAIDAdUnit[VPAIDInterfaceMethods[i]])) {
       return false;
     }
   }
   return true;
 };
 
-VPAIDAdUnitWrapper.prototype.creativeAsyncCall = function () {
+VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
   var args = arrayLikeObjToArray(arguments);
   var method = args.shift();
   var cb = args.pop();
   var timeoutId;
 
-  sanityCheck(method, cb, this._creative);
+  sanityCheck(method, cb, this._adUnit);
   args.push(wrapCallback());
 
-  this._creative[method].apply(this, args);
+  this._adUnit[method].apply(this, args);
   timeoutId = setTimeout(function () {
     timeoutId = null;
     cb(new VASTError("on VPAIDAdUnitWrapper, timeout while waiting for a response on call '" + method + "'"));
@@ -53,13 +53,13 @@ VPAIDAdUnitWrapper.prototype.creativeAsyncCall = function () {
   }, this.options.responseTimeout);
 
   /*** Local functions ***/
-  function sanityCheck(method, cb, creative) {
-    if (!isString(method) || !isFunction(creative[method])) {
-      throw new VASTError("on VPAIDAdUnitWrapper.creativeAsyncCall, invalid method name")
+  function sanityCheck(method, cb, adUnit) {
+    if (!isString(method) || !isFunction(adUnit[method])) {
+      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name")
     }
 
     if (!isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.creativeAsyncCall, missing callback")
+      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback")
     }
   }
 
@@ -74,17 +74,17 @@ VPAIDAdUnitWrapper.prototype.creativeAsyncCall = function () {
 };
 
 VPAIDAdUnitWrapper.prototype.destroy = function () {
-  this._creative.unloadAdUnit();
+  this._adUnit.unloadAdUnit();
 };
 
 VPAIDAdUnitWrapper.prototype.on = function (evtName, handler) {
-  var addEventListener = this._creative.addEventListener || this._creative.subscribe || this._creative.on;
-  addEventListener.call(this._creative, evtName, handler);
+  var addEventListener = this._adUnit.addEventListener || this._adUnit.subscribe || this._adUnit.on;
+  addEventListener.call(this._adUnit, evtName, handler);
 };
 
 VPAIDAdUnitWrapper.prototype.off = function (evtName, handler) {
-  var removeEventListener = this._creative.removeEventListener || this._creative.unsubscribe || this._creative.off;
-  removeEventListener.call(this._creative, evtName, handler);
+  var removeEventListener = this._adUnit.removeEventListener || this._adUnit.unsubscribe || this._adUnit.off;
+  removeEventListener.call(this._adUnit, evtName, handler);
 };
 
 VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
@@ -126,51 +126,51 @@ VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
 
 // VPAID METHODS
 VPAIDAdUnitWrapper.prototype.handshakeVersion = function (version, cb) {
-  this.creativeAsyncCall('handshakeVersion', version, cb)
+  this.adUnitAsyncCall('handshakeVersion', version, cb)
 };
 
-VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars, cb) {
-  this._creative(width, height, viewMode, desiredBitrate, creativeData, environmentVars);
+VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desiredBitrate, adUnitData, cb) {
+  this._adUnit.initAd(width, height, viewMode, desiredBitrate, adUnitData);
   this.waitForEvent('AdLoaded', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.resizeAd = function (width, height, viewMode, cb) {
-  this._creative.resizeAd(width, height, viewMode);
+  this._adUnit.resizeAd(width, height, viewMode);
   this.waitForEvent('AdSizeChange', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.startAd = function (cb) {
-  this._creative.startAd();
+  this._adUnit.startAd();
   this.waitForEvent('AdStarted', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.stopAd = function (cb) {
-  this._creative.stopAd();
+  this._adUnit.stopAd();
   this.waitForEvent('AdStopped', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.pauseAd = function (cb) {
-  this._creative.pauseAd();
+  this._adUnit.pauseAd();
   this.waitForEvent('AdPaused', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.resumeAd = function (cb) {
-  this._creative.resumeAd();
+  this._adUnit.resumeAd();
   this.waitForEvent('AdPlaying', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.expandAd = function (cb) {
-  this._creative.expandAd();
+  this._adUnit.expandAd();
   this.waitForEvent('AdExpandedChange', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.collapseAd = function (cb) {
-  this._creative.collapseAd();
+  this._adUnit.collapseAd();
   this.waitForEvent('AdExpandedChange', cb);
 };
 
 VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
-  this._creative.skipAd();
+  this._adUnit.skipAd();
   this.waitForEvent('AdSkipped', cb);
 
   //TODO: what about: AdSkippableStateChange
@@ -192,6 +192,6 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   var getterName = 'get' + capitalize(property);
 
   VPAIDAdUnitWrapper.prototype[getterName] = function (cb) {
-    this.creativeAsyncCall(getterName, cb)
+    this.adUnitAsyncCall(getterName, cb)
   };
 });

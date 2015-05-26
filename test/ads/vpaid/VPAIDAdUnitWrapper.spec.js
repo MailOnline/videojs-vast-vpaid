@@ -1,8 +1,8 @@
 describe("VPAIDAdUnitWrapper", function(){
-  var vpaidCreative;
+  var vpaidAdUnit;
 
   beforeEach(function(){
-    vpaidCreative = {
+    vpaidAdUnit = {
       'handshakeVersion': noop,
       'initAd': noop,
       'startAd': noop,
@@ -35,32 +35,32 @@ describe("VPAIDAdUnitWrapper", function(){
     });
 
     it("must return true if you pass an object that fully implements the VPAID interface", function(){
-      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidCreative));
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
     });
   });
 
   describe("constructor", function(){
     it("must return an instance of itself", function(){
-     assert.instanceOf(VPAIDAdUnitWrapper(vpaidCreative), VPAIDAdUnitWrapper);
+     assert.instanceOf(VPAIDAdUnitWrapper(vpaidAdUnit), VPAIDAdUnitWrapper);
     });
 
-    it("must throw a VASTError if the passed VPAIDCreative does not fully implement the VPAID api", function(){
-     [null, undefined, noop, 'foo', {}, []].forEach(function(invalidCreative) {
+    it("must throw a VASTError if the passed VPAIDAdUnit does not fully implement the VPAID api", function(){
+     [null, undefined, noop, 'foo', {}, []].forEach(function(invalidAdUnit) {
        assert.throws(function () {
-         new VPAIDAdUnitWrapper(invalidCreative);
-       }, VASTError, 'on VPAIDAdUnitWrapper, the passed VPAID creative does not fully implement the VPAID interface');
+         new VPAIDAdUnitWrapper(invalidAdUnit);
+       }, VASTError, 'on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
      });
     });
 
     it("must complain if you pass an options that is not a hash", function(){
       assert.throws(function() {
-        new VPAIDAdUnitWrapper(vpaidCreative, 'foo');
+        new VPAIDAdUnitWrapper(vpaidAdUnit, 'foo');
       }, VASTError, "on VPAIDAdUnitWrapper, expected options hash  but got 'foo'")
     });
 
-    it("must publish the VPAIDCreative in '_creative'", function(){
-      var wrapper = new VPAIDAdUnitWrapper(vpaidCreative);
-      assert.equal(wrapper._creative, vpaidCreative);
+    it("must publish the VPAIDAdUnit in '_adUnit'", function(){
+      var wrapper = new VPAIDAdUnitWrapper(vpaidAdUnit);
+      assert.equal(wrapper._adUnit, vpaidAdUnit);
     });
   });
 
@@ -68,10 +68,10 @@ describe("VPAIDAdUnitWrapper", function(){
     var wrapper;
 
     beforeEach(function(){
-      wrapper = new VPAIDAdUnitWrapper(vpaidCreative);
+      wrapper = new VPAIDAdUnitWrapper(vpaidAdUnit);
     });
 
-    describe("creativeAsyncCall", function(){
+    describe("adUnitAsyncCall", function(){
       beforeEach(function(){
         this.clock = sinon.useFakeTimers();
       });
@@ -81,33 +81,33 @@ describe("VPAIDAdUnitWrapper", function(){
       });
 
       it("must be a function", function(){
-        assert.isFunction(wrapper.creativeAsyncCall);
+        assert.isFunction(wrapper.adUnitAsyncCall);
       });
 
-      it("must complain if the method is not part of the creative", function(){
+      it("must complain if the method is not part of the adUnit", function(){
         assert.throws(function () {
-          wrapper.creativeAsyncCall('foo', noop);
-        }, VASTError, "on VPAIDAdUnitWrapper.creativeAsyncCall, invalid method name");
+          wrapper.adUnitAsyncCall('foo', noop);
+        }, VASTError, "on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name");
       });
 
       it("must complain if there is no callback", function(){
         assert.throws(function () {
-          wrapper.creativeAsyncCall('initAd');
-        }, VASTError, "on VPAIDAdUnitWrapper.creativeAsyncCall, missing callback");
+          wrapper.adUnitAsyncCall('initAd');
+        }, VASTError, "on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback");
       });
 
-      it("must call the creative method", function(){
-        sinon.spy(vpaidCreative, 'initAd');
-        wrapper.creativeAsyncCall('initAd', noop);
-        sinon.assert.calledOnce(vpaidCreative.initAd)
+      it("must call the adUnit method", function(){
+        sinon.spy(vpaidAdUnit, 'initAd');
+        wrapper.adUnitAsyncCall('initAd', noop);
+        sinon.assert.calledOnce(vpaidAdUnit.initAd)
       });
 
-      it("must call the callback whenever the creative response comes back", function(){
+      it("must call the callback whenever the adUnit response comes back", function(){
         var cb = sinon.spy();
-        sinon.spy(vpaidCreative, 'initAd');
+        sinon.spy(vpaidAdUnit, 'initAd');
 
-        wrapper.creativeAsyncCall('initAd', cb);
-        var wrapperCb = firstArg(vpaidCreative.initAd);
+        wrapper.adUnitAsyncCall('initAd', cb);
+        var wrapperCb = firstArg(vpaidAdUnit.initAd);
         sinon.assert.notCalled(cb);
         wrapperCb(null);
 
@@ -122,10 +122,10 @@ describe("VPAIDAdUnitWrapper", function(){
       describe("on response timeout", function(){
         it("must call the callback with a VASTError", function(){
           var cb = sinon.spy();
-          sinon.spy(vpaidCreative, 'initAd');
+          sinon.spy(vpaidAdUnit, 'initAd');
 
-          wrapper.creativeAsyncCall('initAd', cb);
-          var wrapperCb = firstArg(vpaidCreative.initAd);
+          wrapper.adUnitAsyncCall('initAd', cb);
+          var wrapperCb = firstArg(vpaidAdUnit.initAd);
           sinon.assert.notCalled(cb);
           this.clock.tick(wrapper.options.responseTimeout);
 
@@ -146,10 +146,10 @@ describe("VPAIDAdUnitWrapper", function(){
         assert.isFunction(wrapper.destroy);
       });
 
-      it("must call the creative's 'unloadAdUnit' method", function(){
-        sinon.stub(vpaidCreative, 'unloadAdUnit');
+      it("must call the adUnit's 'unloadAdUnit' method", function(){
+        sinon.stub(vpaidAdUnit, 'unloadAdUnit');
         wrapper.destroy();
-        sinon.assert.calledOnce(vpaidCreative.unloadAdUnit);
+        sinon.assert.calledOnce(vpaidAdUnit.unloadAdUnit);
       });
     });
 
@@ -158,31 +158,31 @@ describe("VPAIDAdUnitWrapper", function(){
         assert.isFunction(wrapper.on);
       });
 
-      it("must call the subscribe method of the inner creative", function(){
-        vpaidCreative.on = undefined;
-        vpaidCreative.addEventListener = undefined;
-        sinon.spy(vpaidCreative, 'subscribe');
+      it("must call the subscribe method of the inner adunit", function(){
+        vpaidAdUnit.on = undefined;
+        vpaidAdUnit.addEventListener = undefined;
+        sinon.spy(vpaidAdUnit, 'subscribe');
 
         wrapper.on('evtName', noop);
-        sinon.assert.calledWith(vpaidCreative.subscribe, 'evtName', noop);
+        sinon.assert.calledWith(vpaidAdUnit.subscribe, 'evtName', noop);
       });
 
-      it("must call the addEventListener method of the inner creative", function(){
-        vpaidCreative.subscribe = undefined;
-        vpaidCreative.on = undefined;
-        vpaidCreative.addEventListener = sinon.spy();
+      it("must call the addEventListener method of the inner adunit", function(){
+        vpaidAdUnit.subscribe = undefined;
+        vpaidAdUnit.on = undefined;
+        vpaidAdUnit.addEventListener = sinon.spy();
 
         wrapper.on('evtName', noop);
-        sinon.assert.calledWith(vpaidCreative.addEventListener, 'evtName', noop);
+        sinon.assert.calledWith(vpaidAdUnit.addEventListener, 'evtName', noop);
       });
 
-      it("must call the on method of the inner creative", function(){
-        vpaidCreative.subscribe = undefined;
-        vpaidCreative.addEventListener = undefined;
-        vpaidCreative.on = sinon.spy();
+      it("must call the on method of the inner adunit", function(){
+        vpaidAdUnit.subscribe = undefined;
+        vpaidAdUnit.addEventListener = undefined;
+        vpaidAdUnit.on = sinon.spy();
 
         wrapper.on('evtName', noop);
-        sinon.assert.calledWith(vpaidCreative.on, 'evtName', noop);
+        sinon.assert.calledWith(vpaidAdUnit.on, 'evtName', noop);
       });
     });
 
@@ -191,31 +191,31 @@ describe("VPAIDAdUnitWrapper", function(){
         assert.isFunction(wrapper.off);
       });
 
-      it("must call the unsubscribe method of the inner creative", function(){
-        vpaidCreative.off = undefined;
-        vpaidCreative.removeEventListener = undefined;
-        sinon.spy(vpaidCreative, 'unsubscribe');
+      it("must call the unsubscribe method of the inner adunit", function(){
+        vpaidAdUnit.off = undefined;
+        vpaidAdUnit.removeEventListener = undefined;
+        sinon.spy(vpaidAdUnit, 'unsubscribe');
 
         wrapper.off('evtName', noop);
-        sinon.assert.calledWith(vpaidCreative.unsubscribe, 'evtName', noop);
+        sinon.assert.calledWith(vpaidAdUnit.unsubscribe, 'evtName', noop);
       });
 
-      it("must call the removeEventListener method of the inner creative", function(){
-        vpaidCreative.unsubscribe = undefined;
-        vpaidCreative.on = undefined;
-        vpaidCreative.removeEventListener = sinon.spy();
+      it("must call the removeEventListener method of the inner adunit", function(){
+        vpaidAdUnit.unsubscribe = undefined;
+        vpaidAdUnit.on = undefined;
+        vpaidAdUnit.removeEventListener = sinon.spy();
 
         wrapper.off('evtName', noop);
-        sinon.assert.calledWith(vpaidCreative.removeEventListener, 'evtName', noop);
+        sinon.assert.calledWith(vpaidAdUnit.removeEventListener, 'evtName', noop);
       });
 
-      it("must call the off method of the inner creative", function(){
-        vpaidCreative.unsubscribe = undefined;
-        vpaidCreative.removeEventListener = undefined;
-        vpaidCreative.off = sinon.spy();
+      it("must call the off method of the inner adunit", function(){
+        vpaidAdUnit.unsubscribe = undefined;
+        vpaidAdUnit.removeEventListener = undefined;
+        vpaidAdUnit.off = sinon.spy();
 
         wrapper.off('evtName', noop);
-        sinon.assert.calledWith(vpaidCreative.off, 'evtName', noop);
+        sinon.assert.calledWith(vpaidAdUnit.off, 'evtName', noop);
       });
     });
 

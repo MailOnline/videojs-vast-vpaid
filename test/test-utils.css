@@ -1,0 +1,25 @@
+.relative-pos {
+  position: relative;
+  top: 10px;
+  left: 10px;
+}
+
+.absolute-pos {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.ten-px-square {
+  width: 10px;
+  height: 10px;
+  padding: 5px;
+  margin: 5px;
+  border: 5px solid black;
+}
+
+div.vjs-test-player {
+  width: 720px !important;
+  height: 480px !important;
+  display: block;
+}

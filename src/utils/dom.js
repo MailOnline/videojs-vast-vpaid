@@ -190,3 +190,23 @@ dom.once = function(el, type, handler) {
 
   dom.addEventListener(el, type, handlerWrap);
 };
+
+
+
+//Note: there is no getBoundingClientRect on iPad so we need a fallback
+dom.getDimension = function getDimension(element) {
+  var rect;
+
+  if(element.getBoundingClientRect) {
+    rect = element.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  return {
+    width: element.offsetWidth,
+    height: element.offsetHeight
+  }
+};

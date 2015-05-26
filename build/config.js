@@ -69,6 +69,7 @@ module.exports = {
     ],
     tests: {
       unit: [
+        'test/test-utils.css',
         'test/test-utils.js',
         'test/**/*.js'
       ]

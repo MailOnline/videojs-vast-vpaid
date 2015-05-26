@@ -433,5 +433,13 @@ describe("dom", function () {
       sinon.assert.calledOnce(spy);
     });
   });
+
+  describe("getDimension", function(){
+    it("must return de width and the height of the passed element", function(){
+      var el = createEl('div');
+      dom.addClass(el, 'ten-px-square');
+      assert.deepEqual(dom.getDimension(el), {width: 30, height: 30});
+    });
+  });
 });
 
