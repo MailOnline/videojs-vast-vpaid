@@ -220,7 +220,10 @@ describe("VPAIDIntegrator", function(){
     });
     
     describe("initAd", function(){
+      var response;
+
       beforeEach(function(){
+        response = new VASTResponse();
         sinon.spy(adUnitWrapper, 'initAd');
       });
 
@@ -230,8 +233,24 @@ describe("VPAIDIntegrator", function(){
 
       it("must call pass the with, height , viewmode  desired bitrate to the adUnit's initAd", function(){
         var next = sinon.spy();
-        vpaidIntegrator._initAd(adUnitWrapper, next);
+        vpaidIntegrator._initAd(adUnitWrapper, response, next);
         sinon.assert.calledWithExactly(adUnitWrapper.initAd, 720, 480, 'normal', -1, '', sinon.match.func)
+      });
+
+      it("must pass the add parameters if present on the VASTResponse", function(){
+        var next = sinon.spy();
+        response.adParameters = "some params";
+        vpaidIntegrator._initAd(adUnitWrapper, response, next);
+        sinon.assert.calledWithExactly(adUnitWrapper.initAd, 720, 480, 'normal', -1, 'some params', sinon.match.func)
+      });
+
+      it("must propagate any error that may come from the adUnit and pass the adUnit and the VASTResponse", function(){
+        var next = sinon.spy();
+        var fakeError = new Error();
+        vpaidIntegrator._initAd(adUnitWrapper, response, next);
+        var respond = lastArg(adUnitWrapper.initAd);
+        respond(fakeError);
+        sinon.assert.calledWith(next, fakeError, adUnitWrapper, response);
       });
     });
   });

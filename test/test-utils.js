@@ -39,6 +39,10 @@ function fourthArg(spy) {
   return spy.lastCall.args[3];
 }
 
+function lastArg(spy) {
+  return spy.lastCall.args[spy.lastCall.args.length - 1];
+}
+
 function namespace(namespaceString) {
   var parts = namespaceString.split('.'),
     parent = window,
