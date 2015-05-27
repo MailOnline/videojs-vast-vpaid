@@ -25,8 +25,8 @@ function VASTTracker(assetURI, vastResponse) {
   }
 }
 
-VASTTracker.prototype.trackURLs = function trackURLs(urls, variables){
-  if(isArray(urls) && urls.length > 0) {
+VASTTracker.prototype.trackURLs = function trackURLs(urls, variables) {
+  if (isArray(urls) && urls.length > 0) {
     variables = extend({
       ASSETURI: this.assetURI,
       CONTENTPLAYHEAD: vastUtil.formatProgress(this.progress)
@@ -90,7 +90,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
 
   function addProgressEvent(progress) {
     var progressEvent = trackingEvents.progress && trackingEvents.progress[0];
-    if(progressEvent) {
+    if (progressEvent) {
       addTrackEvent('progress', ONCE, progressEvent.offset <= progress);
     }
   }
@@ -102,14 +102,34 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
   }
 };
 
-['fullscreen', 'exitFullscreen', 'complete', 'pause', 'resume', 'close', 'closeLinear', 'skip', 'mute', 'unmute'].forEach(function (eventName) {
-  VASTTracker.prototype['track' + capitalize(eventName)] = function () {
-    this.trackEvent(eventName);
-  };
-});
+[
+  'start',
+  'rewind',
+  'fullscreen',
+  'exitFullscreen',
+  'complete',
+  'pause',
+  'resume',
+  'close',
+  'closeLinear',
+  'skip',
+  'mute',
+  'unmute',
+  'firstQuartile',
+  'midpoint',
+  'thirdQuartile',
+  'acceptInvitation',
+  'acceptInvitationLinear',
+  'collapse',
+  'expand'
+].forEach(function (eventName) {
+    VASTTracker.prototype['track' + capitalize(eventName)] = function () {
+      this.trackEvent(eventName);
+    };
+  });
 
 VASTTracker.prototype.trackErrorWithCode = function trackErrorWithCode(errorcode) {
-  if(isNumber(errorcode)){
+  if (isNumber(errorcode)) {
     this.trackURLs(this.response.errorURLMacros, {ERRORCODE: errorcode});
   }
 };

@@ -234,7 +234,27 @@ describe("VASTTracker", function () {
       });
     });
 
-    ['fullscreen', 'exitFullscreen', 'complete', 'pause', 'resume', 'close', 'closeLinear', 'skip', 'mute', 'unmute'].forEach(function (eventName) {
+    [
+      'start',
+      'rewind',
+      'fullscreen',
+      'exitFullscreen',
+      'complete',
+      'pause',
+      'resume',
+      'close',
+      'closeLinear',
+      'skip',
+      'mute',
+      'unmute',
+      'firstQuartile',
+      'midpoint',
+      'thirdQuartile',
+      'acceptInvitation',
+      'acceptInvitationLinear',
+      'collapse',
+      'expand'
+    ].forEach(function (eventName) {
       var fnName = 'track' + capitalize(eventName);
       describe(fnName, function(){
         var tracker;

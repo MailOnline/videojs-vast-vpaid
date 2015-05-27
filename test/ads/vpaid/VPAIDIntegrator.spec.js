@@ -1,11 +1,5 @@
 describe("VPAIDIntegrator", function(){
   var player, AD_START_TIMEOUT, vpaidAdUnit, adUnitWrapper, testDiv;
-  function createElement(type) {
-
-    videoEl.id = 'testVideoElm';
-    testDiv.appendChild(videoEl);
-  }
-
   beforeEach(function () {
 
     testDiv = document.createElement("div");
@@ -161,7 +155,9 @@ describe("VPAIDIntegrator", function(){
         vpaidIntegrator._loadAdUnit(response, callback);
         var responseBack = thirdArg(fakeTech.prototype.loadAdUnit);
         responseBack(null, vpaidAdUnit);
-        assert.instanceOf(secondArg(callback), VPAIDAdUnitWrapper);
+        var adUnit = secondArg(callback);
+        assert.instanceOf(adUnit, VPAIDAdUnitWrapper);
+        assert.equal(adUnit.options.src, 'http://fakeVideoFile')
       });
     });
 
@@ -251,6 +247,12 @@ describe("VPAIDIntegrator", function(){
         var respond = lastArg(adUnitWrapper.initAd);
         respond(fakeError);
         sinon.assert.calledWith(next, fakeError, adUnitWrapper, response);
+      });
+    });
+
+    describe("setupEvents", function(){
+      it("must be a function", function(){
+        assert.isFunction(vpaidIntegrator._setupEvents);
       });
     });
   });
