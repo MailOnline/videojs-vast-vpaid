@@ -71,7 +71,7 @@ gulp.task('build-sourcemaps', function () {
 
 
 gulp.task('build-assets', function () {
-  var assetsPath = path.join(config.DEV, '/assets');
+  var assetsPath = path.join(config.DEV, '/');
 
   return gulp.src(config.vendor.assets)
     .pipe(gulp.dest(assetsPath));

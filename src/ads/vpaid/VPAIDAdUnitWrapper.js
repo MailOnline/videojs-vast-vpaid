@@ -24,8 +24,7 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
 
 VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUnit) {
   var VPAIDInterfaceMethods = [
-    'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd',
-    'subscribe', 'unsubscribe'
+    'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd'
   ];
 
   for (var i = 0, len = VPAIDInterfaceMethods.length; i < len; i++) {
@@ -33,7 +32,20 @@ VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUni
       return false;
     }
   }
-  return true;
+
+
+  return canSubscribeToEvents(VPAIDAdUnit) && canUnsubscribeFromEvents(VPAIDAdUnit);
+
+  /*** Local Functions ***/
+
+  function canSubscribeToEvents(adUnit) {
+    return isFunction(adUnit.subscribe) || isFunction(adUnit.addEventListener) || isFunction(adUnit.on)
+  }
+
+  function canUnsubscribeFromEvents(adUnit) {
+    return isFunction(adUnit.unsubscribe) || isFunction(adUnit.removeEventListener) || isFunction(adUnit.off)
+
+  }
 };
 
 VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
@@ -45,7 +57,7 @@ VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
   sanityCheck(method, cb, this._adUnit);
   args.push(wrapCallback());
 
-  this._adUnit[method].apply(this, args);
+  this._adUnit[method].apply(this._adUnit, args);
   timeoutId = setTimeout(function () {
     timeoutId = null;
     cb(new VASTError("on VPAIDAdUnitWrapper, timeout while waiting for a response on call '" + method + "'"));
@@ -71,10 +83,6 @@ VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
       cb.apply(this, arguments);
     };
   }
-};
-
-VPAIDAdUnitWrapper.prototype.destroy = function () {
-  this._adUnit.unloadAdUnit();
 };
 
 VPAIDAdUnitWrapper.prototype.on = function (evtName, handler) {

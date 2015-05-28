@@ -136,5 +136,9 @@ var vastUtil = {
     function calcPercent(quantity, percent){
       return quantity * percent / 100;
     }
+  },
+
+  isVPAID: function isVPAIDMediaFile(mediaFile) {
+    return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };

@@ -38,72 +38,92 @@ VPAIDIntegrator.techs = [
 ];
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
-  callback = callback || noop;
   var that = this;
+  var tech, adStartTimeoutId;
 
   if (!(vastResponse instanceof VASTResponse)) {
     return callback(new VASTError('On VASTIntegrator, missing required VASTResponse'));
   }
 
-  async.waterfall([
-    function (next) {
-      next(null, vastResponse);
-    },
-    this._loadAdUnit.bind(this),
-    this._handshake.bind(this),
-    this._initAd.bind(this),
-    this._setupEvents.bind(this),
-    this._finishPlaying.bind(this)
-  ], function (error, adUnit, vastResponse) {
-      if(adUnit) {
-        adUnit.destroy();
-      }
+  callback = callback || noop;
+  adStartTimeoutId = setTimeout(function () {
+    callback(new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start'));
+    callback = noop;
+  }, this.adStartTimeout);
+
+  tech = this._findSupportedTech(vastResponse);
+
+  if(tech){
+    async.waterfall([
+      function(next) {
+        next(null, tech, vastResponse);
+      },
+      this._loadAdUnit.bind(this),
+      this._playAdUnit.bind(this),
+      clearAdStartTimeout,
+      this._finishPlaying.bind(this)
+
+    ], function (error, adUnit, vastResponse) {
       if(error) {
         that._trackError(vastResponse);
       }
-    callback(error, adUnit, vastResponse);
-  });
+
+      if(adUnit) {
+        tech.unloadAdUnit();
+      }
+
+      callback(error, vastResponse);
+    });
+  } else {
+    callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
+  }
+  /*** Local functions ***/
+
+  function clearAdStartTimeout(adUnit, vastResponse, next) {
+    clearTimeout(adStartTimeoutId);
+    adStartTimeoutId = null;
+    next(null, adUnit, vastResponse);
+  }
 
 };
 
-VPAIDIntegrator.prototype._loadAdUnit = function loadAdUnit(vastResponse, next) {
-  var that = this;
-  var vpaidMediaFile = findSupportedMediaFile(vastResponse.mediaFiles);
+VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {
+  tech.loadAdUnit(this.containerEl, function(error, adUnit) {
+    next(error, adUnit, vastResponse);
+  });
+};
 
-  if (vpaidMediaFile) {
-    loadAdUnit(vpaidMediaFile, function (error, adUnit) {
-      if (error) {
-        return next(error);
-      }
-      var adUnitOpts = extend({
-        src: vpaidMediaFile.src
-      }, that.options);
+VPAIDIntegrator.prototype._playAdUnit = function(adUnit, vastResponse, callback) {
+  async.waterfall([
+    function (next) {
+      next(null, adUnit, vastResponse);
+    },
+    this._handshake.bind(this),
+    this._initAd.bind(this),
+    this._setupEvents.bind(this),
+    this._startAd.bind(this)
+  ], callback);
+};
 
-      return next(null, new VPAIDAdUnitWrapper(adUnit, adUnitOpts), vastResponse);
-    });
-  } else {
-    next(new VASTError('on VPAIDIntegrator._loadAdUnit, could not find a supported mediaFile'), null, vastResponse);
+VPAIDIntegrator.prototype._findSupportedTech = function(vastResponse) {
+  if(!(vastResponse instanceof VASTResponse)){
+    return null;
+  }
+
+  var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
+  var i, len, mediaFile, VPAIDTech;
+
+  for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
+    mediaFile = vpaidMediaFiles[i];
+    VPAIDTech = findSupportedTech(mediaFile);
+    if (VPAIDTech) {
+      return new VPAIDTech(mediaFile);
+    }
   }
 
   return null;
 
-
   /*** Local functions ***/
-
-  function findSupportedMediaFile(mediaFiles) {
-    var vpaidMediaFiles = mediaFiles.filter(isVPAID);
-    var i, len, mediaFile, tech;
-
-    for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
-      mediaFile = vpaidMediaFiles[i];
-      tech = findSupportedTech(mediaFile);
-      if (tech) {
-        return mediaFile;
-      }
-    }
-
-    return null;
-  }
 
   function findSupportedTech(mediafile) {
     var type = mediafile.type;
@@ -112,27 +132,17 @@ VPAIDIntegrator.prototype._loadAdUnit = function loadAdUnit(vastResponse, next) 
     for (i = 0, len = VPAIDIntegrator.techs.length; i < len; i += 1) {
       VPAIDTech = VPAIDIntegrator.techs[i];
       if (VPAIDTech.supports(type)) {
-        return new VPAIDTech();
+        return VPAIDTech;
       }
     }
     return null;
   }
-
-  function isVPAID(mediaFile) {
-    return mediaFile.apiFramework === 'VPAID';
-  }
-
-  function loadAdUnit(mediaFile, callback) {
-    var tech = findSupportedTech(vpaidMediaFile);
-    tech.loadAdUnit(that.containerEl, mediaFile.src, callback);
-  }
 };
-
 
 VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, next) {
   adUnit.handshakeVersion('2.0', function (error, version) {
     if (error) {
-      return next(erroradUnit, vastResponse);
+      return next(error, adUnit, vastResponse);
     }
 
     if (version && isSupportedVersion(version)) {
@@ -156,6 +166,12 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
   var dimension = dom.getDimension(this.player.el());
   adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
+    next(error, adUnit, vastResponse);
+  });
+};
+
+VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
+  adUnit.startAd(function (error) {
     next(error, adUnit, vastResponse);
   });
 };
@@ -243,15 +259,16 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   next(null, adUnit, vastResponse);
 };
 
-VASTIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
+VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
   adUnit.on('AdVideoComplete', function () {
     next(null, adUnit, vastResponse);
   });
+
+  adUnit.on('AdError', function () {
+    next(new VASTError('on VPAIDIntegrator, error while waiting for the adUnit to finish playing'), adUnit, vastResponse);
+  });
 };
 
-
-VASTIntegrator.prototype._trackError = function trackError(response) {
-  VASTIntegrator.track(response.errorURLMacros, {ERRORCODE: 901});
+VPAIDIntegrator.prototype._trackError = function trackError(response) {
+  vastUtil.track(response.errorURLMacros, {ERRORCODE: 901});
 };
-
-//TODO: MISSING TRACK ERROR

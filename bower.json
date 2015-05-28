@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "videojs-contrib-ads": "^1.0.2",
-    "flashVPAID": "git@github.com:MailOnline/flashVPAID.git"
+    "flashVPAID": "git@github.com:MailOnline/flashVPAID.git#bab7fc562c3880ddb0071ff39fd81325baead6e3"
   },
   "devDependencies": {
     "video.js": "4.11.4"

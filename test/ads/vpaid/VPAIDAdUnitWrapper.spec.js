@@ -37,6 +37,36 @@ describe("VPAIDAdUnitWrapper", function(){
     it("must return true if you pass an object that fully implements the VPAID interface", function(){
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
     });
+
+    it("must return false if there is no method to subscribe to events", function(){
+      vpaidAdUnit.subscribe = undefined;
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+    });
+
+    it("must return true if there is a method to subscribe to events", function(){
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+      vpaidAdUnit.subscribe = undefined;
+      vpaidAdUnit.on = noop;
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+      vpaidAdUnit.on = undefined;
+      vpaidAdUnit.addEventListener = noop;
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+    });
+
+    it("must return false if there is no method to unsubscribe to events", function(){
+      vpaidAdUnit.unsubscribe = undefined;
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+    });
+
+    it("must return true if there is a method to unsubscribe from events", function(){
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+      vpaidAdUnit.unsubscribe = undefined;
+      vpaidAdUnit.off = noop;
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+      vpaidAdUnit.off = undefined;
+      vpaidAdUnit.removeEventListener = noop;
+      assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
+    });
   });
 
   describe("constructor", function(){
@@ -138,18 +168,6 @@ describe("VPAIDAdUnitWrapper", function(){
           wrapperCb(null);
           sinon.assert.calledOnce(cb);
         });
-      });
-    });
-
-    describe("destroy", function(){
-      it("must be a function", function(){
-        assert.isFunction(wrapper.destroy);
-      });
-
-      it("must call the adUnit's 'unloadAdUnit' method", function(){
-        sinon.stub(vpaidAdUnit, 'unloadAdUnit');
-        wrapper.destroy();
-        sinon.assert.calledOnce(vpaidAdUnit.unloadAdUnit);
       });
     });
 

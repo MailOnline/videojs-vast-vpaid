@@ -150,7 +150,7 @@ vjs.plugin('vast', function VASTPlugin(options) {
     var i, len;
     var mediaFiles = vastResponse.mediaFiles;
     for (i = 0, len = mediaFiles.length; i < len; i++) {
-      if (mediaFiles[i].apiFramework === 'VPAID') {
+      if (vastUtil.isVPAID(mediaFiles[i])) {
         return true;
       }
     }

@@ -259,4 +259,16 @@ describe("vastUtil", function () {
       assert.isNull(parseOffset(undefined, 123));
     });
   });
+
+  describe("isVPAID", function(){
+    it("must return true if the passed mediaFile apiFramework attr is VPAID and false otherwiser", function(){
+      assert.isFunction(vastUtil.isVPAID);
+      [undefined, false, '', {}, []].forEach(function(wrongMediaFile) {
+        assert.isFalse(vastUtil.isVPAID(wrongMediaFile));
+      });
+
+      assert.isFalse(vastUtil.isVPAID({apiFramework: 'JS'}));
+      assert.isTrue(vastUtil.isVPAID({apiFramework: 'VPAID'}));
+    });
+  });
 });
