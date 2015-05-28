@@ -49,6 +49,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   adStartTimeoutId = setTimeout(function () {
     callback(new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start'));
     callback = noop;
+    tech.unloadAdUnit();
   }, this.adStartTimeout);
 
   tech = this._findSupportedTech(vastResponse);
@@ -68,9 +69,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
         that._trackError(vastResponse);
       }
 
-      if(adUnit) {
-        tech.unloadAdUnit();
-      }
+      tech.unloadAdUnit();
 
       callback(error, vastResponse);
     });
@@ -89,7 +88,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
 VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {
   tech.loadAdUnit(this.containerEl, function(error, adUnit) {
-    next(error, adUnit, vastResponse);
+    next(error, new VPAIDAdUnitWrapper(adUnit), vastResponse);
   });
 };
 

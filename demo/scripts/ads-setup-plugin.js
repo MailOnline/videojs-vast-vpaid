@@ -1,7 +1,7 @@
 vjs.plugin('ads-setup', function molVastSetup(opts) {
   var player = this;
   var options = extend({}, this.options_, opts);
-  var adsCancelTimeout = 300000;
+  var adsCancelTimeout = 3000;
 
   var vastAd = player.vast({
     url: getAdsUrl,
