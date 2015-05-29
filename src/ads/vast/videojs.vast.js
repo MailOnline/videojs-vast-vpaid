@@ -39,8 +39,6 @@ vjs.plugin('vast', function VASTPlugin(options) {
 
   player.ads(settings); // initialize the ad framework
 
-  initAds();
-
   player.on('play', function () {
     if(player.ads.state === 'preroll?'){
       addSpinnerIcon();
@@ -90,6 +88,8 @@ vjs.plugin('vast', function VASTPlugin(options) {
       }
     });
   });
+
+  initAds();
 
   return {
     isEnabled: function () {

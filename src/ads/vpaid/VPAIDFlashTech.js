@@ -50,7 +50,13 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
 
 VPAIDFlashTech.prototype.unloadAdUnit = function () {
   if (this.vpaidFlashToJS) {
-    this.vpaidFlashToJS.destroy();
+    try{
+      this.vpaidFlashToJS.destroy();
+    } catch(e){
+      if(console && isFunction(console.log)){
+        console.log('VAST ERROR: trying to unload the VPAID adunit');
+      }
+    }
     this.vpaidFlashToJS = null;
   }
 

@@ -40,6 +40,7 @@ VPAIDIntegrator.techs = [
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
   var that = this;
   var tech, adStartTimeoutId;
+  var player = this.player;
 
   if (!(vastResponse instanceof VASTResponse)) {
     return callback(new VASTError('On VASTIntegrator, missing required VASTResponse'));
@@ -49,10 +50,11 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   adStartTimeoutId = setTimeout(function () {
     callback(new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start'));
     callback = noop;
-    tech.unloadAdUnit();
+    removeAdUnit();
   }, this.adStartTimeout);
 
   tech = this._findSupportedTech(vastResponse);
+  dom.addClass(player.el(), 'vjs-vpaid-ad');
 
   if(tech){
     async.waterfall([
@@ -69,7 +71,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
         that._trackError(vastResponse);
       }
 
-      tech.unloadAdUnit();
+      removeAdUnit();
 
       callback(error, vastResponse);
     });
@@ -83,7 +85,11 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     adStartTimeoutId = null;
     next(null, adUnit, vastResponse);
   }
-
+  
+  function removeAdUnit() {
+    tech.unloadAdUnit();
+    dom.removeClass(player.el(), 'vjs-vpaid-ad')
+  }
 };
 
 VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {

@@ -6,3 +6,9 @@ div.VPAID-container{
   height: 100%;
   background-color: black;
 }
+
+div.vjs-vpaid-ad div.vjs-progress-control,
+div.vjs-vpaid-ad div.vjs-time-controls,
+div.vjs-vpaid-ad div.vjs-time-divider {
+  display: none;
+}
