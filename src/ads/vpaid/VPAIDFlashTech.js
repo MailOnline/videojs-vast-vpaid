@@ -9,7 +9,7 @@ function VPAIDFlashTech(mediaFile) {
 
   /*** local functions ***/
   function sanityCheck(mediaFile) {
-    if(!mediaFile || !isString(mediaFile.src)){
+    if (!mediaFile || !isString(mediaFile.src)) {
       throw new VASTError('on VPAIDFlashTech, invalid MediaFile');
     }
 
@@ -26,7 +26,7 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
 
   this.containerEl = containerEl;
   this.vpaidFlashToJS = new VPAIDFlashToJS(containerEl, function (error) {
-    if(error) {
+    if (error) {
       callback(error);
     }
 
@@ -37,25 +37,25 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
   /*** Local Functions ***/
   function sanityCheck(container, cb) {
 
-    if(!dom.isDomElement(container)){
+    if (!dom.isDomElement(container)) {
       throw new VASTError('on VPAIDFlashTech.loadAdUnit, invalid dom container element');
     }
 
-    if(!isFunction(cb)){
+    if (!isFunction(cb)) {
       throw new VASTError('on VPAIDFlashTech.loadAdUnit, missing valid callback');
     }
   }
 };
 
 
-VPAIDFlashTech.prototype.unloadAdUnit = function() {
-    if(this.vpaidFlashToJS) {
-      this.vpaidFlashToJS.unloadAdUnit();
-      this.vpaidFlashToJS = null;
-    }
+VPAIDFlashTech.prototype.unloadAdUnit = function () {
+  if (this.vpaidFlashToJS) {
+    this.vpaidFlashToJS.destroy();
+    this.vpaidFlashToJS = null;
+  }
 
-    if(this.containerEl) {
-      this.containerEl.innerHTML = '';
-      this.containerEl = null;
-    }
+  if (this.containerEl) {
+    dom.remove(this.containerEl);
+    this.containerEl = null;
+  }
 };

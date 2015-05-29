@@ -80,28 +80,30 @@ describe("VPAIDFlashTech", function () {
         var container = document.createElement('div');
         vpaidFlashClient.loadAdUnit(container, noop);
         var vpaidFlashToJS = vpaidFlashClient.vpaidFlashToJS;
-        vpaidFlashToJS.unloadAdUnit = sinon.spy();
+        vpaidFlashToJS.destroy = sinon.spy();
 
         vpaidFlashClient.unloadAdUnit();
 
-        sinon.assert.calledOnce(vpaidFlashToJS.unloadAdUnit);
+        sinon.assert.calledOnce(vpaidFlashToJS.destroy);
       });
 
-      it("must empty the containerEl", function(){
+      it("must remove the containerEl", function(){
         var container = document.createElement('div');
-        container.innerHTML = 'foo bar';
+        sinon.stub(dom, 'remove');
         vpaidFlashClient.loadAdUnit(container, noop);
-        //We mock unloadAdUnit to prevent exception
-        vpaidFlashClient.vpaidFlashToJS.unloadAdUnit = noop;
+        //We mock destroy to prevent exception
+        vpaidFlashClient.vpaidFlashToJS.destroy = noop;
         vpaidFlashClient.unloadAdUnit();
 
-        assert.equal(container.innerHTML, '');
+
+        sinon.assert.calledWithExactly(dom.remove, container);
+        dom.remove.restore();
       });
 
       it("must set instance properties: containerEl and vpaidFlashToJS to null", function(){
         vpaidFlashClient.loadAdUnit(document.createElement('div'), noop);
-        //We mock unloadAdUnit to prevent exception
-        vpaidFlashClient.vpaidFlashToJS.unloadAdUnit = noop;
+        //We mock destroy to prevent exception
+        vpaidFlashClient.vpaidFlashToJS.destroy = noop;
 
         vpaidFlashClient.unloadAdUnit();
 

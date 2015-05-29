@@ -26,7 +26,7 @@ function VPAIDIntegrator(player, adStartTimeout) {
   function createVPAIDContainerEl() {
     var containerEl = document.createElement('div');
     dom.addClass(containerEl, 'VPAID-container');
-    player.el().appendChild(containerEl);
+    player.el().insertBefore(containerEl, player.controlBar.el());
     return containerEl;
 
   }
@@ -88,7 +88,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
 VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {
   tech.loadAdUnit(this.containerEl, function(error, adUnit) {
-    next(error, new VPAIDAdUnitWrapper(adUnit), vastResponse);
+    next(error, new VPAIDAdUnitWrapper(adUnit, { src: tech.mediaFile.src }), vastResponse);
   });
 };
 
