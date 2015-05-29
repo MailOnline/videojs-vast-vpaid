@@ -42,11 +42,11 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   var tech, adStartTimeoutId;
   var player = this.player;
 
+  callback = callback || noop;
   if (!(vastResponse instanceof VASTResponse)) {
-    return callback(new VASTError('On VASTIntegrator, missing required VASTResponse'));
+    return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  callback = callback || noop;
   adStartTimeoutId = setTimeout(function () {
     callback(new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start'));
     callback = noop;

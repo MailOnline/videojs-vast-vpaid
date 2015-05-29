@@ -132,10 +132,12 @@ vjs.plugin('vast', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, options.adCancelTimeout) : new VASTIntegrator(player, options.adCancelTimeout);
     player.ads.startLinearAdMode();
     adIntegrator.playAd(vastResponse, callback);
+    player.controlBar.addChild('AdsLabel');
   }
 
   function finishPlayingAd(vastResponse, callback) {
     player.ads.endLinearAdMode();
+    player.controlBar.removeChild('AdsLabel');
     callback(null, vastResponse);
   }
 

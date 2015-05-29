@@ -9,6 +9,7 @@ div.VPAID-container{
 
 div.vjs-vpaid-ad div.vjs-progress-control,
 div.vjs-vpaid-ad div.vjs-time-controls,
-div.vjs-vpaid-ad div.vjs-time-divider {
+div.vjs-vpaid-ad div.vjs-time-divider,
+div.vjs-vpaid-ad div.vjs-play-control{
   display: none;
 }

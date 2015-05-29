@@ -52,7 +52,7 @@ describe("VPAIDIntegrator", function () {
   });
 
   describe("instance", function () {
-    var vpaidIntegrator, callback;
+    var vpaidIntegrator, callback, vpaidTesAdUnit;
 
     function createMediaFile(url, type) {
       var xmlStr = '<MediaFile delivery="progressive" type="' + type + '" apiFramework="VPAID">' +
@@ -64,14 +64,41 @@ describe("VPAIDIntegrator", function () {
     beforeEach(function () {
       vpaidIntegrator = new VPAIDIntegrator(player, AD_START_TIMEOUT);
       callback = sinon.spy();
+
+      vpaidTesAdUnit = {
+        'handshakeVersion': noop,
+        'initAd': noop,
+        'startAd': noop,
+        'stopAd': noop,
+        'skipAd': noop,
+        'resizeAd': noop,
+        'pauseAd': noop,
+        'expandAd': noop,
+        'collapseAd': noop,
+        'subscribe': noop,
+        'unsubscribe': noop,
+        'unloadAdUnit': noop
+      };
     });
 
     describe("playAd", function () {
-      it("must be a function", function () {
-        assert.isFunction(vpaidIntegrator.playAd);
+      it("must complain if you don't pass a VASTResponse", function(){
+        vpaidIntegrator.playAd(null, callback);
+        sinon.assert.calledOnce(callback);
+        var error = firstArg(callback);
+        assert.instanceOf(error, VASTError);
+        assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse')
       });
 
-      //TODO: Yet to be finished
+      it("must add the class 'vjs-vpaid-ad' class to the player element", function(){
+        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+        vpaidIntegrator.playAd(new VASTResponse(), callback);
+        assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+      });
+
+      it("must remove the class 'vjs-vpaid-ad' once the adUnit finish playing", function(){
+        //TODO: YET TO BE FINISHED
+      });
     });
 
     describe("handshake", function () {
