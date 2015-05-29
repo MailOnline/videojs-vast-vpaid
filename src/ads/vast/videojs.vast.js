@@ -89,6 +89,7 @@ vjs.plugin('vast', function VASTPlugin(options) {
     });
   });
 
+  // 'initAds' needs to be called after all the event listeners have been registered for the ads to play with 'autoplay'
   initAds();
 
   return {

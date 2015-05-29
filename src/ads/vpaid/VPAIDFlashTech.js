@@ -12,7 +12,6 @@ function VPAIDFlashTech(mediaFile) {
     if (!mediaFile || !isString(mediaFile.src)) {
       throw new VASTError('on VPAIDFlashTech, invalid MediaFile');
     }
-
   }
 }
 
@@ -32,7 +31,6 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
 
     that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback)
   });
-
 
   /*** Local Functions ***/
   function sanityCheck(container, cb) {
