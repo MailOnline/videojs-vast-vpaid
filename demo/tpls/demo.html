@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
     <!-- CSS files --><% styles.forEach( function ( file ) { %>
-    <link rel="stylesheet" type="text/css" href="<%= file %>"/><% }); %>
+    <link rel="stylesheet" type="text/css" href="<%= file %>"/>
+    <% }); %>
 
     <script type="text/javascript">
         // this is mandatory for IE8 !!!!!
@@ -19,20 +20,27 @@
     <script type="text/javascript" src="scripts/video.dev.js"></script>
 
     <!-- PLUGIN js files --><% scripts.forEach( function ( file ) { %>
-    <script type="text/javascript" src="<%= file %>"></script> <% }); %>
+    <script type="text/javascript" src="<%= file %>"></script>
+    <% }); %>
 
     <!-- ADS SETUP DEMO PLUGIN -->
     <script type="text/javascript" src="scripts/ads-setup-plugin.js"></script>
-
 </head>
 <body>
 
-    <h1>video.js VAST plugin DEMO</h1>
+<h1>video.js VAST plugin DEMO</h1>
 
-    <video id="example_video_1" class="video-js vjs-default-skin"
-           controls preload="auto" width="640" height="264"
-           poster="http://video-js.zencoder.com/oceans-clip.png"
-           data-setup='{
+<div class="btns">
+
+    <button class="btn" onclick="selectBtn(this, AD_TAGS.VAST)">VAST</button>
+    <button class="btn selected" onclick="selectBtn(this, AD_TAGS.VPAID_EXPAND)">VPAID (expand)</button>
+    <button class="btn" onclick="selectBtn(this, AD_TAGS.VPAID_BUTTON)">VPAID (button)</button>
+</div>
+
+<video id="example_video_1" class="video-js vjs-default-skin"
+       controls preload="auto" width="640" height="264"
+       poster="http://video-js.zencoder.com/oceans-clip.png"
+       data-setup='{
                 "plugins": {
                         "ads-setup":{
                             "adsCancelTimeout": 5000,
@@ -40,11 +48,12 @@
                         }
                 }
            }'>
-        <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4' />
-        <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm' />
-        <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg' />
-        <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
-    </video>
+    <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
+    <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
+    <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
+    <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a
+            href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+</video>
 
 </body>
 

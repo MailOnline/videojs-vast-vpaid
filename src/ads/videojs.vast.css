@@ -59,6 +59,7 @@ div.vast-skip-button {
 /* Ad loading */
 .vjs-ad-playing.vjs-vast-ad-loading .vjs-loading-spinner {
   display: block;
+  z-index: 10;
 }
 
 .vjs-vast-ad-loading div.vjs-big-play-button {
