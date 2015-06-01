@@ -52,7 +52,7 @@ describe("VPAIDIntegrator", function () {
   });
 
   describe("instance", function () {
-    var vpaidIntegrator, callback, vpaidTesAdUnit;
+    var vpaidIntegrator, callback, vpaidTesAdUnit, fakeTech, response;
 
     function createMediaFile(url, type) {
       var xmlStr = '<MediaFile delivery="progressive" type="' + type + '" apiFramework="VPAID">' +
@@ -62,6 +62,7 @@ describe("VPAIDIntegrator", function () {
     }
 
     beforeEach(function () {
+      var mediaFile = createMediaFile('http://fakeMediaFile', 'application/x-fake');
       vpaidIntegrator = new VPAIDIntegrator(player, AD_START_TIMEOUT);
       callback = sinon.spy();
 
@@ -77,27 +78,149 @@ describe("VPAIDIntegrator", function () {
         'collapseAd': noop,
         'subscribe': noop,
         'unsubscribe': noop,
-        'unloadAdUnit': noop
+        'unloadAdUnit': noop,
+        'on': sinon.spy()
       };
+
+      fakeTech = function (){
+
+      };
+
+      fakeTech.prototype.loadAdUnit = sinon.spy();
+      fakeTech.prototype.unloadAdUnit = sinon.spy();
+      fakeTech.prototype.mediaFile = mediaFile;
+      fakeTech.supports = sinon.stub();
+
+      response = new VASTResponse();
+      response._addMediaFiles([mediaFile]);
+      this.clock = sinon.useFakeTimers();
+    });
+
+    afterEach(function(){
+      this.clock.restore();
     });
 
     describe("playAd", function () {
-      it("must complain if you don't pass a VASTResponse", function(){
-        vpaidIntegrator.playAd(null, callback);
-        sinon.assert.calledOnce(callback);
-        var error = firstArg(callback);
-        assert.instanceOf(error, VASTError);
-        assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse')
+        var loadAdUnit, playAdUnit, finishPlaying;
+
+        beforeEach(function(){
+          fakeTech.supports.returns(true);
+          VPAIDIntegrator.techs.unshift(fakeTech);
+
+          loadAdUnit = stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
+          playAdUnit = stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
+          finishPlaying = stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
+        });
+
+        afterEach(function(){
+          VPAIDIntegrator.techs.shift();
+        });
+
+        it("must complain if you don't pass a VASTResponse", function(){
+          vpaidIntegrator.playAd(null, callback);
+          sinon.assert.calledOnce(callback);
+          var error = firstArg(callback);
+          assert.instanceOf(error, VASTError);
+          assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse')
+        });
+
+        it("must add 'vjs-vpaid-ad' class to the player element", function(){
+          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+          vpaidIntegrator.playAd(response, callback);
+          assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+        });
+
+        it("must remove 'vjs-vpaid-ad' class once the adUnit finish playing", function(){
+          vpaidIntegrator.playAd(response, callback);
+          this.clock.tick(1);
+
+          loadAdUnit.flush(null, vpaidTesAdUnit, response);
+          playAdUnit.flush(null, vpaidTesAdUnit, response);
+          finishPlaying.flush(null, vpaidTesAdUnit, response);
+
+          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+        });
+
+        it("must remove 'vjs-vpaid-ad' class if there is  an ad start timeout", function(){
+          vpaidIntegrator.playAd(response, callback);
+          this.clock.tick(vpaidIntegrator.adStartTimeout);
+          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+        });
+
+        it("must pass an error to the callback if there is an ad start timeout", function(){
+          vpaidIntegrator.playAd(response, callback);
+          this.clock.tick(vpaidIntegrator.adStartTimeout);
+          sinon.assert.calledOnce(callback);
+          var error = firstArg(callback);
+          assert.instanceOf(error, VASTError);
+          assert.equal(error.message, 'VAST Error: on VPAIDIntegrator, timeout while waiting for the ad to start')
+        });
+
+        it("must unload the adUnit if there is an ad start timeout", function(){
+          vpaidIntegrator.playAd(response, callback);
+          this.clock.tick(vpaidIntegrator.adStartTimeout);
+          sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
+        });
+
+        it("must unload the adUnit if the ad finishes playing", function(){
+          vpaidIntegrator.playAd(response, callback);
+          this.clock.tick(1);
+          loadAdUnit.flush(null, vpaidTesAdUnit, response);
+          playAdUnit.flush(null, vpaidTesAdUnit, response);
+          finishPlaying.flush(null, vpaidTesAdUnit, response);
+          sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
+        });
+    });
+    
+    describe("loadAdUnit", function(){
+      it("must pass the containerEl", function(){
+        var testTech = new fakeTech();
+        vpaidIntegrator._loadAdUnit(testTech, response, callback);
+        sinon.assert.calledWithExactly(testTech.loadAdUnit, vpaidIntegrator.containerEl, sinon.match.func);
       });
 
-      it("must add the class 'vjs-vpaid-ad' class to the player element", function(){
-        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
-        vpaidIntegrator.playAd(new VASTResponse(), callback);
-        assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+      it("must pass the error , a wrapped adUnit and the vast response to the callback", function(){
+        var testTech = new fakeTech();
+        vpaidIntegrator._loadAdUnit(testTech, response, callback);
+        var techLoadAdUnitCb = secondArg(testTech.loadAdUnit);
+        techLoadAdUnitCb(null, vpaidTesAdUnit);
+        sinon.assert.calledWithExactly(callback, null, sinon.match.instanceOf(VPAIDAdUnitWrapper), response);
+      });
+    });
+
+    describe("playAdUnit", function(){
+      var initAd, setupEvents, startAd, handshake;
+
+      beforeEach(function(){
+        handshake = stubAsyncStep(vpaidIntegrator, '_handshake', this.clock);
+        initAd = stubAsyncStep(vpaidIntegrator, '_initAd', this.clock);
+        setupEvents = stubAsyncStep(vpaidIntegrator, '_setupEvents', this.clock);
+        startAd = stubAsyncStep(vpaidIntegrator, '_startAd', this.clock);
       });
 
-      it("must remove the class 'vjs-vpaid-ad' once the adUnit finish playing", function(){
-        //TODO: YET TO BE FINISHED
+      it("must exec the steps to play the adUnit", function(){
+        vpaidIntegrator._playAdUnit(vpaidTesAdUnit, response, callback);
+        this.clock.tick(1);
+        handshake.flush(null, vpaidTesAdUnit, response);
+        initAd.flush(null, vpaidTesAdUnit, response);
+        setupEvents.flush(null, vpaidTesAdUnit, response);
+        startAd.flush(null, vpaidTesAdUnit, response);
+
+        sinon.assert.calledOnce(handshake.stub());
+        sinon.assert.calledOnce(initAd.stub());
+        sinon.assert.calledOnce(setupEvents.stub());
+        sinon.assert.calledOnce(startAd.stub());
+      });
+
+      it("must call the adUnit with the error, adUnit and vastResponse", function(){
+        vpaidIntegrator._playAdUnit(vpaidTesAdUnit, response, callback);
+        this.clock.tick(1);
+        handshake.flush(null, vpaidTesAdUnit, response);
+        initAd.flush(null, vpaidTesAdUnit, response);
+        setupEvents.flush(null, vpaidTesAdUnit, response);
+        startAd.flush(null, vpaidTesAdUnit, response);
+
+        sinon.assert.calledWithExactly(callback, null, vpaidTesAdUnit, response);
       });
     });
 
@@ -187,12 +310,6 @@ describe("VPAIDIntegrator", function () {
         var respond = lastArg(adUnitWrapper.initAd);
         respond(fakeError);
         sinon.assert.calledWith(next, fakeError, adUnitWrapper, response);
-      });
-    });
-
-    describe("setupEvents", function () {
-      it("must be a function", function () {
-        assert.isFunction(vpaidIntegrator._setupEvents);
       });
     });
 

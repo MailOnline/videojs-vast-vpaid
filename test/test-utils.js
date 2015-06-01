@@ -16,6 +16,27 @@ function assertEmptyArray(array) {
   assert.equal(0, array.length, "The passed array should be empty");
 }
 
+function stubAsyncStep(context, method, clock) {
+  var stub = sinon.stub(context, method);
+  function tick(millis) {
+    if(clock) {
+      clock.tick(millis || 1)
+    }
+  }
+  return {
+    flush: function() {
+      var args = arrayLikeObjToArray(arguments);
+      var cb = lastArg(stub);
+      cb.apply(null, args);
+      tick(1);
+    },
+    stub: function() {
+      return stub;
+    }
+  };
+
+}
+
 function isChrome() {
   return !!navigator.userAgent.match(/chrome/i);
 }

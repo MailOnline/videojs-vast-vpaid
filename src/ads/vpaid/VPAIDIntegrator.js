@@ -92,24 +92,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   }
 };
 
-VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {
-  tech.loadAdUnit(this.containerEl, function(error, adUnit) {
-    next(error, new VPAIDAdUnitWrapper(adUnit, { src: tech.mediaFile.src }), vastResponse);
-  });
-};
-
-VPAIDIntegrator.prototype._playAdUnit = function(adUnit, vastResponse, callback) {
-  async.waterfall([
-    function (next) {
-      next(null, adUnit, vastResponse);
-    },
-    this._handshake.bind(this),
-    this._initAd.bind(this),
-    this._setupEvents.bind(this),
-    this._startAd.bind(this)
-  ], callback);
-};
-
 VPAIDIntegrator.prototype._findSupportedTech = function(vastResponse) {
   if(!(vastResponse instanceof VASTResponse)){
     return null;
@@ -144,6 +126,24 @@ VPAIDIntegrator.prototype._findSupportedTech = function(vastResponse) {
   }
 };
 
+VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {
+  tech.loadAdUnit(this.containerEl, function(error, adUnit) {
+    next(error, new VPAIDAdUnitWrapper(adUnit, { src: tech.mediaFile.src }), vastResponse);
+  });
+};
+
+VPAIDIntegrator.prototype._playAdUnit = function(adUnit, vastResponse, callback) {
+  async.waterfall([
+    function (next) {
+      next(null, adUnit, vastResponse);
+    },
+    this._handshake.bind(this),
+    this._initAd.bind(this),
+    this._setupEvents.bind(this),
+    this._startAd.bind(this)
+  ], callback);
+};
+
 VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, next) {
   adUnit.handshakeVersion('2.0', function (error, version) {
     if (error) {
@@ -171,12 +171,6 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
   var dimension = dom.getDimension(this.player.el());
   adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
-    next(error, adUnit, vastResponse);
-  });
-};
-
-VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
-  adUnit.startAd(function (error) {
     next(error, adUnit, vastResponse);
   });
 };
@@ -262,6 +256,12 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   next(null, adUnit, vastResponse);
+};
+
+VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
+  adUnit.startAd(function (error) {
+    next(error, adUnit, vastResponse);
+  });
 };
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
