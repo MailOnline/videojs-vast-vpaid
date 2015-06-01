@@ -203,3 +203,8 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
     this.adUnitAsyncCall(getterName, cb)
   };
 });
+
+//VPAID property setters
+VPAIDAdUnitWrapper.prototype.setAdVolume = function(volume, cb){
+  this.adUnitAsyncCall('setAdVolume',volume, cb)
+};

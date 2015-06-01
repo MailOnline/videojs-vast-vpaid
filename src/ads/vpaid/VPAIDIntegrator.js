@@ -56,9 +56,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   tech = this._findSupportedTech(vastResponse);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
-  if(tech){
+  if (tech) {
     async.waterfall([
-      function(next) {
+      function (next) {
         next(null, tech, vastResponse);
       },
       this._loadAdUnit.bind(this),
@@ -67,7 +67,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       this._finishPlaying.bind(this)
 
     ], function (error, adUnit, vastResponse) {
-      if(error) {
+      if (error) {
         that._trackError(vastResponse);
       }
 
@@ -85,15 +85,16 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     adStartTimeoutId = null;
     next(null, adUnit, vastResponse);
   }
-  
+
   function removeAdUnit() {
     tech.unloadAdUnit();
-    dom.removeClass(player.el(), 'vjs-vpaid-ad')
+    dom.removeClass(player.el(), 'vjs-vpaid-ad');
+    player.trigger('VPAID-adfinished');
   }
 };
 
-VPAIDIntegrator.prototype._findSupportedTech = function(vastResponse) {
-  if(!(vastResponse instanceof VASTResponse)){
+VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
+  if (!(vastResponse instanceof VASTResponse)) {
     return null;
   }
 
@@ -126,13 +127,13 @@ VPAIDIntegrator.prototype._findSupportedTech = function(vastResponse) {
   }
 };
 
-VPAIDIntegrator.prototype._loadAdUnit = function(tech, vastResponse, next) {
-  tech.loadAdUnit(this.containerEl, function(error, adUnit) {
-    next(error, new VPAIDAdUnitWrapper(adUnit, { src: tech.mediaFile.src }), vastResponse);
+VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
+  tech.loadAdUnit(this.containerEl, function (error, adUnit) {
+    next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
   });
 };
 
-VPAIDIntegrator.prototype._playAdUnit = function(adUnit, vastResponse, callback) {
+VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback) {
   async.waterfall([
     function (next) {
       next(null, adUnit, vastResponse);
@@ -140,6 +141,7 @@ VPAIDIntegrator.prototype._playAdUnit = function(adUnit, vastResponse, callback)
     this._handshake.bind(this),
     this._initAd.bind(this),
     this._setupEvents.bind(this),
+    this._linkPlayerControls.bind(this),
     this._startAd.bind(this)
   ], callback);
 };
@@ -258,6 +260,63 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   next(null, adUnit, vastResponse);
 };
 
+
+VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, next) {
+  linkVolumeControl(this.player, adUnit);
+  linkFullScreenControl(this.player, adUnit, this.VIEW_MODE);
+
+  //TODO: MISSING UNLINK OF PLAYER EVENTS
+  next(null, adUnit, vastResponse);
+
+  /*** Local functions ***/
+  function linkVolumeControl(player, adUnit) {
+    player.on('volumechange', updateAdUnitVolume);
+    adUnit.on('AdVolumeChange', updatePlayerVolume);
+
+    player.on('VPAID-adfinished', function() {
+      player.off('volumechange', updateAdUnitVolume);
+    });
+
+
+    /*** local functions ***/
+    function updateAdUnitVolume() {
+      adUnit.setAdVolume(player.volume(), logError);
+    }
+
+    function updatePlayerVolume() {
+      adUnit.getAdVolume(function (error, vol) {
+        if (error) {
+          logError(error);
+        } else {
+          player.volume(vol);
+        }
+      });
+    }
+  }
+
+  function linkFullScreenControl(player, adUnit, VIEW_MODE) {
+    player.on('fullscreenchange', updateViewSize);
+
+
+    player.on('VPAID-adfinished', function() {
+      player.off('fullscreenchange', updateViewSize);
+    });
+
+    /*** local functions ***/
+    function updateViewSize() {
+      var dimension = dom.getDimension(player.el());
+      var MODE = player.isFullscreen()? VIEW_MODE.FULLSCREEN: VIEW_MODE.NORMAL;
+      adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
+    }
+  }
+
+  function logError(error) {
+    if (error && console && console.log) {
+      console.log('ERROR: ' + error.message, error);
+    }
+  }
+};
+
 VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
   adUnit.startAd(function (error) {
     next(error, adUnit, vastResponse);
@@ -277,3 +336,4 @@ VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next)
 VPAIDIntegrator.prototype._trackError = function trackError(response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: 901});
 };
+
