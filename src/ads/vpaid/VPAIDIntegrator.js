@@ -267,7 +267,6 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
   linkVolumeControl(this.player, adUnit);
   linkFullScreenControl(this.player, adUnit, this.VIEW_MODE);
 
-  //TODO: MISSING UNLINK OF PLAYER EVENTS
   next(null, adUnit, vastResponse);
 
   /*** Local functions ***/
@@ -282,7 +281,8 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     /*** local functions ***/
     function updateAdUnitVolume() {
-      adUnit.setAdVolume(player.volume(), logError);
+      var vol = player.muted() ? 0 : player.volume();
+      adUnit.setAdVolume(vol, logError);
     }
 
     function updatePlayerVolume() {
@@ -298,8 +298,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
   function linkFullScreenControl(player, adUnit, VIEW_MODE) {
     player.on('fullscreenchange', updateViewSize);
-
-
+    
     player.on('VPAID-adfinished', function() {
       player.off('fullscreenchange', updateViewSize);
     });

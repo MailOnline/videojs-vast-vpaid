@@ -359,6 +359,13 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0.5);
         });
 
+        it("must update the adUnit volume to 0 if the player is muted", function(){
+          sinon.stub(player, 'muted').returns(true);
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
+          player.trigger('volumechange');
+          sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0);
+        });
+
         it("must update the player volume on 'AdVolumeChange'", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           var triggerAdVolumeChange = lastArg(adUnitWrapper.on);
