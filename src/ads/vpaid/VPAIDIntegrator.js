@@ -48,9 +48,10 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   }
 
   adStartTimeoutId = setTimeout(function () {
-    callback(new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start'));
+    var error = new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start');
+    callback(error);
     callback = noop;
-    removeAdUnit();
+    removeAdUnit(error);
   }, this.adStartTimeout);
 
   tech = this._findSupportedTech(vastResponse);
@@ -67,11 +68,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       this._finishPlaying.bind(this)
 
     ], function (error, adUnit, vastResponse) {
-      if (error) {
-        that._trackError(vastResponse);
-      }
-
-      removeAdUnit();
+      removeAdUnit(error);
 
       callback(error, vastResponse);
     });
@@ -86,7 +83,12 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     next(null, adUnit, vastResponse);
   }
 
-  function removeAdUnit() {
+  function removeAdUnit(error) {
+    if (error) {
+      that._trackError(vastResponse);
+      player.trigger('vast.aderror');
+    }
+
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
     player.trigger('VPAID-adfinished');
@@ -318,7 +320,12 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 };
 
 VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
+  var player = this.player;
+
   adUnit.startAd(function (error) {
+    if(!error) {
+      player.trigger('vast.adstart');
+    }
     next(error, adUnit, vastResponse);
   });
 };

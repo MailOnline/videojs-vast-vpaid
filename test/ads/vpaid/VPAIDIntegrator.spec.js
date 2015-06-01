@@ -53,7 +53,7 @@ describe("VPAIDIntegrator", function () {
   });
 
   describe("instance", function () {
-    var vpaidIntegrator, callback, fakeTech, response;
+    var vpaidIntegrator, callback, fakeTech, vastResponse;
 
     function createMediaFile(url, type) {
       var xmlStr = '<MediaFile delivery="progressive" type="' + type + '" apiFramework="VPAID">' +
@@ -67,7 +67,7 @@ describe("VPAIDIntegrator", function () {
       vpaidIntegrator = new VPAIDIntegrator(player, AD_START_TIMEOUT);
       callback = sinon.spy();
 
-      fakeTech = function (){
+      fakeTech = function () {
 
       };
 
@@ -76,131 +76,138 @@ describe("VPAIDIntegrator", function () {
       fakeTech.prototype.mediaFile = mediaFile;
       fakeTech.supports = sinon.stub();
 
-      response = new VASTResponse();
-      response._addMediaFiles([mediaFile]);
+      vastResponse = new VASTResponse();
+      vastResponse._addMediaFiles([mediaFile]);
       this.clock = sinon.useFakeTimers();
     });
 
-    afterEach(function(){
+    afterEach(function () {
       this.clock.restore();
     });
 
     describe("playAd", function () {
-        var loadAdUnit, playAdUnit, finishPlaying;
+      var loadAdUnit, playAdUnit, finishPlaying;
 
-        beforeEach(function(){
-          fakeTech.supports.returns(true);
-          VPAIDIntegrator.techs.unshift(fakeTech);
+      beforeEach(function () {
+        fakeTech.supports.returns(true);
+        VPAIDIntegrator.techs.unshift(fakeTech);
 
-          loadAdUnit = stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
-          playAdUnit = stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
-          finishPlaying = stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
-        });
+        loadAdUnit = stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
+        playAdUnit = stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
+        finishPlaying = stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
+      });
 
-        afterEach(function(){
-          VPAIDIntegrator.techs.shift();
-        });
+      afterEach(function () {
+        VPAIDIntegrator.techs.shift();
+      });
 
-        it("must complain if you don't pass a VASTResponse", function(){
-          vpaidIntegrator.playAd(null, callback);
-          sinon.assert.calledOnce(callback);
-          var error = firstArg(callback);
-          assert.instanceOf(error, VASTError);
-          assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse')
-        });
+      it("must complain if you don't pass a VASTResponse", function () {
+        vpaidIntegrator.playAd(null, callback);
+        sinon.assert.calledOnce(callback);
+        var error = firstArg(callback);
+        assert.instanceOf(error, VASTError);
+        assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse')
+      });
 
-        it("must add 'vjs-vpaid-ad' class to the player element", function(){
-          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
-          vpaidIntegrator.playAd(response, callback);
-          assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
-        });
+      it("must add 'vjs-vpaid-ad' class to the player element", function () {
+        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+        vpaidIntegrator.playAd(vastResponse, callback);
+        assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+      });
 
-        it("must remove 'vjs-vpaid-ad' class once the adUnit finish playing", function(){
-          vpaidIntegrator.playAd(response, callback);
-          this.clock.tick(1);
+      it("must remove 'vjs-vpaid-ad' class once the adUnit finish playing", function () {
+        vpaidIntegrator.playAd(vastResponse, callback);
+        this.clock.tick(1);
 
-          loadAdUnit.flush(null, vpaidAdUnit, response);
-          playAdUnit.flush(null, vpaidAdUnit, response);
-          finishPlaying.flush(null, vpaidAdUnit, response);
+        loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
+        playAdUnit.flush(null, vpaidAdUnit, vastResponse);
+        finishPlaying.flush(null, vpaidAdUnit, vastResponse);
 
-          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
-        });
+        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+      });
 
-        it("must remove 'vjs-vpaid-ad' class if there is  an ad start timeout", function(){
-          vpaidIntegrator.playAd(response, callback);
-          this.clock.tick(vpaidIntegrator.adStartTimeout);
-          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
-        });
+      it("must remove 'vjs-vpaid-ad' class if there is  an ad start timeout", function () {
+        vpaidIntegrator.playAd(vastResponse, callback);
+        this.clock.tick(vpaidIntegrator.adStartTimeout);
+        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+      });
 
-        it("must pass an error to the callback if there is an ad start timeout", function(){
-          vpaidIntegrator.playAd(response, callback);
-          this.clock.tick(vpaidIntegrator.adStartTimeout);
-          sinon.assert.calledOnce(callback);
-          var error = firstArg(callback);
-          assert.instanceOf(error, VASTError);
-          assert.equal(error.message, 'VAST Error: on VPAIDIntegrator, timeout while waiting for the ad to start')
-        });
+      it("must pass an error to the callback if there is an ad start timeout", function () {
+        vpaidIntegrator.playAd(vastResponse, callback);
+        this.clock.tick(vpaidIntegrator.adStartTimeout);
+        sinon.assert.calledOnce(callback);
+        var error = firstArg(callback);
+        assert.instanceOf(error, VASTError);
+        assert.equal(error.message, 'VAST Error: on VPAIDIntegrator, timeout while waiting for the ad to start')
+      });
 
-        it("must unload the adUnit if there is an ad start timeout", function(){
-          vpaidIntegrator.playAd(response, callback);
-          this.clock.tick(vpaidIntegrator.adStartTimeout);
-          sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
-        });
+      it("must unload the adUnit if there is an ad start timeout", function () {
+        vpaidIntegrator.playAd(vastResponse, callback);
+        this.clock.tick(vpaidIntegrator.adStartTimeout);
+        sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
+      });
 
-        it("must unload the adUnit if the ad finishes playing", function(){
-          vpaidIntegrator.playAd(response, callback);
-          this.clock.tick(1);
-          loadAdUnit.flush(null, vpaidAdUnit, response);
-          playAdUnit.flush(null, vpaidAdUnit, response);
-          finishPlaying.flush(null, vpaidAdUnit, response);
-          sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
-        });
+      it("must unload the adUnit if the ad finishes playing", function () {
+        vpaidIntegrator.playAd(vastResponse, callback);
+        this.clock.tick(1);
+        loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
+        playAdUnit.flush(null, vpaidAdUnit, vastResponse);
+        finishPlaying.flush(null, vpaidAdUnit, vastResponse);
+        sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
+      });
 
-        it("must trigger 'VPAID-adfinished'", function(){
-          player.on('VPAID-adfinished', callback);
-          vpaidIntegrator.playAd(response, noop);
-          this.clock.tick(1);
-          loadAdUnit.flush(null, vpaidAdUnit, response);
-          playAdUnit.flush(null, vpaidAdUnit, response);
-          finishPlaying.flush(null, vpaidAdUnit, response);
+      it("must trigger 'VPAID-adfinished'", function () {
+        player.on('VPAID-adfinished', callback);
+        vpaidIntegrator.playAd(vastResponse, noop);
+        this.clock.tick(1);
+        loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
+        playAdUnit.flush(null, vpaidAdUnit, vastResponse);
+        finishPlaying.flush(null, vpaidAdUnit, vastResponse);
 
-          sinon.assert.calledOnce(callback);
-        });
+        sinon.assert.calledOnce(callback);
+      });
+
+      it("must trigger 'vast.aderror' if there is an ad start timeout", function () {
+        player.on('vast.aderror', callback);
+        vpaidIntegrator.playAd(vastResponse, noop);
+        this.clock.tick(vpaidIntegrator.adStartTimeout);
+        sinon.assert.calledOnce(callback);
+      });
     });
-    
-    describe("loadAdUnit", function(){
-      it("must pass the containerEl", function(){
+
+    describe("loadAdUnit", function () {
+      it("must pass the containerEl", function () {
         var testTech = new fakeTech();
-        vpaidIntegrator._loadAdUnit(testTech, response, callback);
+        vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
         sinon.assert.calledWithExactly(testTech.loadAdUnit, vpaidIntegrator.containerEl, sinon.match.func);
       });
 
-      it("must pass the error , a wrapped adUnit and the vast response to the callback", function(){
+      it("must pass the error , a wrapped adUnit and the vast response to the callback", function () {
         var testTech = new fakeTech();
-        vpaidIntegrator._loadAdUnit(testTech, response, callback);
+        vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
         var techLoadAdUnitCb = secondArg(testTech.loadAdUnit);
         techLoadAdUnitCb(null, vpaidAdUnit);
-        sinon.assert.calledWithExactly(callback, null, sinon.match.instanceOf(VPAIDAdUnitWrapper), response);
+        sinon.assert.calledWithExactly(callback, null, sinon.match.instanceOf(VPAIDAdUnitWrapper), vastResponse);
       });
     });
 
-    describe("playAdUnit", function(){
+    describe("playAdUnit", function () {
       var initAd, setupEvents, startAd, handshake;
 
-      beforeEach(function(){
+      beforeEach(function () {
         handshake = stubAsyncStep(vpaidIntegrator, '_handshake', this.clock);
         initAd = stubAsyncStep(vpaidIntegrator, '_initAd', this.clock);
         setupEvents = stubAsyncStep(vpaidIntegrator, '_setupEvents', this.clock);
         startAd = stubAsyncStep(vpaidIntegrator, '_startAd', this.clock);
       });
 
-      it("must exec the steps to play the adUnit", function(){
-        vpaidIntegrator._playAdUnit(vpaidAdUnit, response, callback);
+      it("must exec the steps to play the adUnit", function () {
+        vpaidIntegrator._playAdUnit(vpaidAdUnit, vastResponse, callback);
         this.clock.tick(1);
-        handshake.flush(null, vpaidAdUnit, response);
-        initAd.flush(null, vpaidAdUnit, response);
-        setupEvents.flush(null, vpaidAdUnit, response);
-        startAd.flush(null, vpaidAdUnit, response);
+        handshake.flush(null, vpaidAdUnit, vastResponse);
+        initAd.flush(null, vpaidAdUnit, vastResponse);
+        setupEvents.flush(null, vpaidAdUnit, vastResponse);
+        startAd.flush(null, vpaidAdUnit, vastResponse);
 
         sinon.assert.calledOnce(handshake.stub());
         sinon.assert.calledOnce(initAd.stub());
@@ -208,15 +215,15 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(startAd.stub());
       });
 
-      it("must call the adUnit with the error, adUnit and vastResponse", function(){
-        vpaidIntegrator._playAdUnit(vpaidAdUnit, response, callback);
+      it("must call the adUnit with the error, adUnit and vastResponse", function () {
+        vpaidIntegrator._playAdUnit(vpaidAdUnit, vastResponse, callback);
         this.clock.tick(1);
-        handshake.flush(null, vpaidAdUnit, response);
-        initAd.flush(null, vpaidAdUnit, response);
-        setupEvents.flush(null, vpaidAdUnit, response);
-        startAd.flush(null, vpaidAdUnit, response);
+        handshake.flush(null, vpaidAdUnit, vastResponse);
+        initAd.flush(null, vpaidAdUnit, vastResponse);
+        setupEvents.flush(null, vpaidAdUnit, vastResponse);
+        startAd.flush(null, vpaidAdUnit, vastResponse);
 
-        sinon.assert.calledWithExactly(callback, null, vpaidAdUnit, response);
+        sinon.assert.calledWithExactly(callback, null, vpaidAdUnit, vastResponse);
       });
     });
 
@@ -324,7 +331,7 @@ describe("VPAIDIntegrator", function () {
         assert.isNull(vpaidIntegrator._findSupportedTech(vastResponse));
       });
 
-      it("must return an instance of the supported tech", function(){
+      it("must return an instance of the supported tech", function () {
         var vastResponse = new VASTResponse();
         vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', 'application/x-shockwave-flash')]);
 
@@ -332,28 +339,28 @@ describe("VPAIDIntegrator", function () {
       });
     });
 
-    describe("linkPlayerControls", function(){
-      describe("volume control", function(){
-        beforeEach(function(){
+    describe("linkPlayerControls", function () {
+      describe("volume control", function () {
+        beforeEach(function () {
           sinon.stub(adUnitWrapper, 'setAdVolume');
           sinon.stub(adUnitWrapper, 'getAdVolume');
           sinon.stub(adUnitWrapper, 'on');
           sinon.stub(player, 'volume').returns(0.5);
         });
 
-        it("must call the callback with null, adUnit and vast response", function(){
-          vpaidIntegrator._linkPlayerControls(adUnitWrapper, response, callback);
-          sinon.assert.calledWithExactly(callback, null, adUnitWrapper, response);
+        it("must call the callback with null, adUnit and vast response", function () {
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
+          sinon.assert.calledWithExactly(callback, null, adUnitWrapper, vastResponse);
         });
 
-        it("must update the adUnit volume on 'volumechange'", function(){
-          vpaidIntegrator._linkPlayerControls(adUnitWrapper, response, callback);
+        it("must update the adUnit volume on 'volumechange'", function () {
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           player.trigger('volumechange');
           sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0.5);
         });
 
-        it("must update the player volume on 'AdVolumeChange'", function(){
-          vpaidIntegrator._linkPlayerControls(adUnitWrapper, response, callback);
+        it("must update the player volume on 'AdVolumeChange'", function () {
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           var triggerAdVolumeChange = lastArg(adUnitWrapper.on);
           triggerAdVolumeChange();
           var getAdVolumeHandler = lastArg(adUnitWrapper.getAdVolume);
@@ -361,37 +368,75 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWith(player.volume, 0.1);
         });
 
-        it("must unsubscribe on 'VPAID-adfinished' events", function(){
-          vpaidIntegrator._linkPlayerControls(adUnitWrapper, response, callback);
+        it("must unsubscribe on 'VPAID-adfinished' events", function () {
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           player.trigger('VPAID-adfinished');
           player.trigger('volumechange');
           sinon.assert.notCalled(adUnitWrapper.setAdVolume);
         });
       });
 
-      describe("fullscreen change", function(){
-        beforeEach(function(){
+      describe("fullscreen change", function () {
+        beforeEach(function () {
           sinon.stub(adUnitWrapper, 'resizeAd');
         });
 
-        it("must resize the adUnit on fullscreenchange", function(){
+        it("must resize the adUnit on fullscreenchange", function () {
           sinon.stub(player, 'isFullscreen');
-          vpaidIntegrator._linkPlayerControls(adUnitWrapper, response, callback);
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           player.trigger('fullscreenchange');
-          sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480,  vpaidIntegrator.VIEW_MODE.NORMAL);
+          sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480, vpaidIntegrator.VIEW_MODE.NORMAL);
 
           player.isFullscreen.returns(true);
           player.trigger('fullscreenchange');
-          sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480,  vpaidIntegrator.VIEW_MODE.FULLSCREEN);
+          sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480, vpaidIntegrator.VIEW_MODE.FULLSCREEN);
         });
 
-        it("must unsubscribe on 'VPAID-adfinsished'", function(){
+        it("must unsubscribe on 'VPAID-adfinsished'", function () {
           sinon.stub(player, 'isFullscreen');
-          vpaidIntegrator._linkPlayerControls(adUnitWrapper, response, callback);
+          vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           player.trigger('VPAID-adfinished');
           player.trigger('fullscreenchange');
           sinon.assert.notCalled(adUnitWrapper.resizeAd);
         });
+      });
+    });
+
+    describe("startAd", function () {
+      it("must call adUnit.startAd and pass the adUnit and vastResponse to the callback", function () {
+        sinon.stub(adUnitWrapper, 'startAd');
+        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, callback);
+
+        sinon.assert.calledOnce(adUnitWrapper.startAd);
+
+        var startAdCb = lastArg(adUnitWrapper.startAd);
+        startAdCb(null);
+
+        sinon.assert.calledWithExactly(callback, null, adUnitWrapper, vastResponse);
+      });
+
+      it("must trigger 'vast.adstart'", function () {
+        sinon.stub(adUnitWrapper, 'startAd');
+        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, noop);
+        sinon.assert.calledOnce(adUnitWrapper.startAd);
+
+        player.on('vast.adstart', callback);
+        var startAdCb = lastArg(adUnitWrapper.startAd);
+        startAdCb(null);
+
+        sinon.assert.calledOnce(callback);
+      });
+
+      it("must not trigger 'vast.adstart' if there is an error on startAd", function () {
+        sinon.stub(adUnitWrapper, 'startAd');
+        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, noop);
+        sinon.assert.calledOnce(adUnitWrapper.startAd);
+
+        player.on('vast.adstart', callback);
+        var startAdCb = lastArg(adUnitWrapper.startAd);
+        startAdCb(new Error());
+
+        sinon.assert.notCalled(callback);
       });
     });
   });
