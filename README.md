@@ -1,5 +1,4 @@
 # videojs-vast-plugin
-
   This plugin allows videojs to monetise its videos. To do so, it implements the [VAST](https://www.google.es/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CCIQFjAA&url=http%3A%2F%2Fwww.iab.net%2Fmedia%2Ffile%2FVASTv3.0.pdf&ei=pLJtVY-4Ocb0UNrBg6AH&usg=AFQjCNGKWI6H1OgqsxcWN9aNUurhZfg5uQ&sig2=l3MNKUx4yXYcBz33StyH3w&bvm=bv.94911696,d.d24) and [VPAID](http://www.iab.net/media/file/VPAID_2.0_Final_04-10-2012.pdf) specifications from IAB.
   
   Currently we support VAST and VPAID Flash preroll ads. 
@@ -9,7 +8,7 @@
   
   You can find a demo of the plugin working together with video.js [here](http://mailonline.github.io/videojs-vast-plugin)
 
-## Integration with video.js##
+## Integration with video.js
   To integrate the plugin with videoJs you need to:
   
   1.- Add the videoJs to your page script and stylesheed to your page after you have added video js
@@ -72,9 +71,9 @@
       
     ```
   
-## Options ##
+## Options
   
-### url ###
+### url
   >Use it to pass the ad media tag, it can be a string containing the Media tag url
   >
   >##### Hardcoded Media Tag
@@ -102,11 +101,11 @@
   >```
   >On initialization, the plugin well call the function and store the returned Media tag to request the VAST/VPAID ads.
   
-### playAdAlways ###
+### playAdAlways
   >Flag to indicate if we must play an ad whenever possible. If set to true the plugin will play an ad every time the user watches a new video or replays the actual video.
   >Defaults to false
   
-### prerollTimeout ###
+### prerollTimeout
   >Number of milliseconds to wait for the ad to start before playing the video content. Defaults to 500
   >In order to give the users the best experience, you can ensure that the video starts playing if it takes longer than the specified timeout. When the ad becomes ready to play, the plugin will pause the content and display the ad.
   >
@@ -123,13 +122,13 @@
   > In the sample above the video content will never play before the ad has been played or canceled.
   
   
-## adCancelTimeout ###
+## adCancelTimeout
  >Number of milliseconds for the ad to start before canceling it. Defaults to 3000
  
-## adsEnabled ###
+## adsEnabled
  >Flag to disable the ads. Defaults to false.
  
-## Returned object ##
+## Returned object
  An invocation to ```player.vast({...})``` returns and object that with two functions that allow you to dynamically enable or disable the vast plugin.
   ```javascript
   
@@ -152,12 +151,16 @@
     
   ```
   
-## isEnabled ##
+### isEnabled
   >This function returns true if the player is enabled and false otherwise.
   
-## enable ##
+### enable
   >Enables the VAST plugin
   
-## disable ##
+### disable
   >Disables the plugin
   
+## License
+videojs-vast-plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
+
+Copyright (c) 2015 MailOnline
