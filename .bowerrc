@@ -1,6 +1,0 @@
-{
-    "registry": {
-        "search": ["http://bower.anglb.com", "https://bower.herokuapp.com/"],
-        "register": "http://bower.anglb.com"
-    }
-}
