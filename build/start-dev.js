@@ -9,8 +9,7 @@ gulp.task( "start-dev", function (callback) {
     'build-demo',
     [
       'dev-server',
-      'watch',
-      'unit-tests'
+      'watch'
     ],
     function (error) {
       if(error){

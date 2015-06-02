@@ -11,14 +11,14 @@ var BuildTaskDoc = require('./BuildTaskDoc');
 gulp.task('build-demo', function (callback) {
   runSequence(
     'build',
+    'build-demo-page',
     [
       'build-demo-scripts',
       'build-demo-styles',
       'build-demo-fonts',
-      'build-demo-assets',
-      'build-demo-page'
+      'build-demo-assets'
     ],
-    function (error) {
+  function (error) {
       if (error) {
         console.log(error.message.red);
       }
@@ -49,23 +49,11 @@ gulp.task('build-demo-assets', function () {
 });
 
 gulp.task('build-demo-page', function () {
-  var scripts, styles;
+  var scripts = [path.join(config.DEV, '/scripts/*.js')];
+  var styles =  [path.join(config.DEV, '/styles/*.css')];
 
-  if (config.env === 'production') {
-    scripts = [
-      config.plugin.scripts
-    ];
+  scripts = globUtils.syncGlobArray(scripts, {}, true, 'scripts');
 
-    scripts = globUtils.flattenFiles(scripts, 'scripts');
-
-  } else {
-    scripts = config.vendor.scripts
-      .concat(config.plugin.scripts);
-
-    scripts = globUtils.syncGlobArray(scripts, {}, true, 'scripts');
-  }
-
-  styles = config.demo.styles.concat(config.plugin.styles);
   styles = globUtils.syncGlobArray(styles, {}, true, 'styles');
 
   return gulp.src(config.demo.pages)

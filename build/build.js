@@ -12,6 +12,7 @@ var uglify = require("gulp-uglify");
 var flatten = require('gulp-flatten');
 var rename = require('gulp-rename');
 var del = require('del');
+var sourcemaps = require('gulp-sourcemaps');
 var BuildTaskDoc = require('./BuildTaskDoc');
 
 gulp.task('build', function (callback) {
@@ -20,7 +21,6 @@ gulp.task('build', function (callback) {
     [
       'build-scripts',
       'build-styles',
-      'build-sourcemaps',
       'build-assets'
     ]
   ];
@@ -41,34 +41,23 @@ gulp.task('clean', function (cb) {
   del([config.DEV], {force: true}, cb);
 });
 
-
 gulp.task('build-scripts', function () {
   var scriptsDistPath = path.join(config.DEV, '/scripts');
-  var appScriptsStream = gulp.src(config.plugin.scripts)
-    .pipe(gulpif(config.env === 'production', concat('temp.plugin.scripts.js', {newLine: '\n;\n'})))
-    .pipe(gulpif(config.env === 'production', header('(function () {')))
-    .pipe(gulpif(config.env === 'production', footer('})();')))
-    .pipe(flatten());
+  var vendorScriptsStream = gulp.src(config.vendor.scripts);
+  var pluginScriptsStream = gulp.src(config.plugin.scripts);
 
-  var vendorScriptsStream = gulp.src(config.vendor.scripts)
-    .pipe(gulpif(config.env === 'production', concat('temp.plugin.vendor.scripts.js', {newLine: '\n;\n'})));
-
-  return mergeStream(vendorScriptsStream, appScriptsStream)
-    .pipe(gulpif(config.env === 'production', concat(config.prodfile.scripts, {newLine: '\n;\n'})))
-    .pipe(gulp.dest(scriptsDistPath))
+  return mergeStream(vendorScriptsStream, pluginScriptsStream)
+    .pipe(sourcemaps.init())
+    .pipe(concat(config.prodfile.scripts, {newLine: '\n;\n'}))
+    .pipe(header('(function () {'))
+    .pipe(footer('})();'))
+    .pipe(concat(config.prodfile.scripts, {newLine: '\n;\n'}))
     .pipe(gulpif(config.env === 'production', uglify()))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
-    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)));
-});
-
-
-gulp.task('build-sourcemaps', function () {
-  var scriptsDistPath = path.join(config.DEV, '/scripts');
-
-  return gulp.src(config.vendor.sourcemaps)
+    .pipe(gulp.dest(scriptsDistPath))
+    .pipe(sourcemaps.write('../maps'))
     .pipe(gulp.dest(scriptsDistPath));
 });
-
 
 gulp.task('build-assets', function () {
   var assetsPath = path.join(config.DEV, '/');
@@ -76,7 +65,6 @@ gulp.task('build-assets', function () {
   return gulp.src(config.vendor.assets)
     .pipe(gulp.dest(assetsPath));
 });
-
 
 gulp.task('build-styles', function () {
   var distCssPath = path.join(config.DEV, 'styles');
@@ -87,4 +75,5 @@ gulp.task('build-styles', function () {
     .pipe(gulpif(config.env === 'production', minifyCSS({keepBreaks: false})))
     .pipe(gulp.dest(distCssPath));
 });
+
 module.exports = new BuildTaskDoc("build", "This task builds the plugin", 4);

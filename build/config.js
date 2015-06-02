@@ -9,8 +9,8 @@ var knownOptions = {
 
 var options = parseArgs(process.argv.slice(2), knownOptions);
 module.exports = {
+  options: options,
   env: options.env,
-
   //Files needed to build the demo
   demo: {
     pages: [
@@ -30,6 +30,7 @@ module.exports = {
     ],
 
     scripts: [
+      'bower_components/swfobject/swfobject/src/swfobject.js',
       'node_modules/es5-shim/es5-shim.js', //Required for the player to work on old browsers
       'bower_components/video.js/dist/video-js/video.dev.js',
       'demo/scripts/**/*.js'
@@ -39,7 +40,6 @@ module.exports = {
   //Vendor files
   vendor: {
     scripts: [
-      'bower_components/swfobject/swfobject/src/swfobject.js',
       'bower_components/flashVPAID/bin/VPAIDFlashToJS.js',
       'bower_components/videojs-contrib-ads/src/videojs.ads.js'
     ],
