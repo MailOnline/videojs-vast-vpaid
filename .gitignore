@@ -3,5 +3,6 @@ node_modules
 bower_components
 /dev
 .idea/
+/coverage
 *.swp
 *.swo
