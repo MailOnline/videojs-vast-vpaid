@@ -11,14 +11,21 @@ module.exports = function (karma) {
     files: [],
     exclude: [],
     frameworks: ['mocha', 'chai-sinon'],
-    plugins: ['karma-mocha', 'karma-chai-sinon', 'karma-firefox-launcher', 'karma-chrome-launcher', 'karma-safari-launcher'],
+    plugins: [
+      'karma-mocha',
+      'karma-chai-sinon',
+      'karma-firefox-launcher',
+      'karma-chrome-launcher',
+      'karma-safari-launcher',
+      'karma-coverage'
+    ],
     preprocessors: {},
 
     logLevel: 'ERROR',
     /**
      * How to report, by default.
      */
-    reporters: ['dots'],
+    reporters: ['dots', 'coverage'],
 
     /**
      * On which port should the browser connect, on which port is the test runner

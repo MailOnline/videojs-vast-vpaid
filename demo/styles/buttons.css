@@ -10,6 +10,7 @@
   text-decoration: none;
   display: inline-block;
   margin-left: 20px;
+  outline: none;
 }
 
 .btn:hover {

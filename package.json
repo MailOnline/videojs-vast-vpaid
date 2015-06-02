@@ -49,6 +49,7 @@
     "karma": "^0.12.31",
     "karma-chai-sinon": "^0.1.4",
     "karma-chrome-launcher": "^0.1.7",
+    "karma-coverage": "^0.3.1",
     "karma-firefox-launcher": "^0.1.4",
     "karma-mocha": "^0.1.10",
     "karma-safari-launcher": "^0.1.1",

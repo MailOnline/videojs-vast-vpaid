@@ -17,6 +17,14 @@
     return obj;
   }
 
+  function isString(str){
+    return typeof str === 'string';
+  }
+
+  function isNotEmptyString(str) {
+    return isString(str) && str.length !== 0;
+  }
+
   function isNull(o) {
     return o === null;
   }
