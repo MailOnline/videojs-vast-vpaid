@@ -27,45 +27,43 @@
   Below you have a simple ads-setup-plugin
     
   ```javascript
+  vjs.plugin('ads-setup', function (opts) {
+    var player = this;
+    var adsCancelTimeout = 3000;
   
-    vjs.plugin('ads-setup', function (opts) {
-      var player = this;
-      var adsCancelTimeout = 3000;
-  
-      var vastAd = player.vast({
-        //Media tag URL
-        url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
-        playAdAlways: true,
-        //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-        prerollTimeout: adsCancelTimeout,
-        adCancelTimeout: adsCancelTimeout,
-        adsEnabled: !!options.adsEnabled
-      });
+    var vastAd = player.vast({
+      //Media tag URL
+      url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+      playAdAlways: true,
+      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+      prerollTimeout: adsCancelTimeout,
+      adCancelTimeout: adsCancelTimeout,
+      adsEnabled: !!options.adsEnabled
     });
-    
+  });
   ```
   
   You can also configure the vast plugin using the data-setup attribute
   
 ```html
-       <video id="example_video_1" class="video-js vjs-default-skin"
-              controls preload="auto" width="640" height="264"
-              poster="http://video-js.zencoder.com/oceans-clip.png"
-              data-setup='{
-                       "plugins": {
-                               "vast":{
-                                   "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
-                                   "adsCancelTimeout": 5000,
-                                   "adsEnabled": true
-                               }
-                       }
-                  }'>
-           <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
-           <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
-           <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
-           <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a
-                   href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
-       </video>
+  <video id="example_video_1" class="video-js vjs-default-skin"
+         controls preload="auto" width="640" height="264"
+         poster="http://video-js.zencoder.com/oceans-clip.png"
+         data-setup='{
+                  "plugins": {
+                          "vast":{
+                              "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+                              "adsCancelTimeout": 5000,
+                              "adsEnabled": true
+                          }
+                  }
+             }'>
+      <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
+      <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
+      <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
+      <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a
+              href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+  </video>
 ```
   
 ## Options ##
@@ -75,10 +73,10 @@
   >
   >##### Hardcoded Media Tag
   >
-  >    var vastAd = player.vast({
-  >      url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
-  >     ...
-  >    });
+  > var vastAd = player.vast({
+  >   url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+  >  ...
+  > });
   >
   >
   >or a function that will return the Media tag whenever called
@@ -86,15 +84,14 @@
   >
   >#####  Dynamic Media Tag
   >```javascript
-  >    var vastAd = player.vast({
-  >    url: getAdsUrl,
-  >     ...
-  >    });
-  >    
-  >    function getAdsUrl() {
-  >          return "http://pubads.g.doubleclick.net/gampad/ads?env=....";
-  >    }
+  >var vastAd = player.vast({
+  >url: getAdsUrl,
+  > ...
+  >});
   >
+  >function getAdsUrl() {
+  >      return "http://pubads.g.doubleclick.net/gampad/ads?env=....";
+  >}
   >```
   >On initialization, the plugin well call the function and store the returned Media tag to request the VAST/VPAID ads.
   
@@ -109,11 +106,11 @@
   >This is a very polemic feature some people thing that this improves the user experience other people thinks the opposite. If your don't want the content to play before the ad has played. Set the same number for the 'prerollTimeout' and the 'adCancelTimeout' like in the sample below:
   >
   >```javascript
-  >    var vastAd = player.vast({
-  >      prerollTimeout: 5000,
-  >      adCancelTimeout: 5000,
-  >     ...
-  >    });
+  >var vastAd = player.vast({
+  >  prerollTimeout: 5000,
+  >  adCancelTimeout: 5000,
+  > ...
+  >});
   > ```
   >
   > In the sample above the video content will never play before the ad has been played or canceled.
@@ -128,24 +125,22 @@
 ## Returned object ##
  An invocation to ```player.vast({...})``` returns and object that with two functions that allow you to dynamically enable or disable the vast plugin.
   ```javascript
-  
-      var vastPlugin = player.vast({
-          url: getAdsUrl,
-          playAdAlways: true,
-          //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-          prerollTimeout: adsCancelTimeout,
-          adCancelTimeout: adsCancelTimeout,
-          adsEnabled: !!options.adsEnabled
-        });
+  var vastPlugin = player.vast({
+     url: getAdsUrl,
+     playAdAlways: true,
+     //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+     prerollTimeout: adsCancelTimeout,
+     adCancelTimeout: adsCancelTimeout,
+     adsEnabled: !!options.adsEnabled
+   });
     
-        player.on('reset', function () {
-          if (!vastPlugin.isEnabled()) {
-            vastPlugin.enable();
-          } vastPlugin {
-            vastAd.disable();
-          }
-        });
-    
+    player.on('reset', function () {
+       if (!vastPlugin.isEnabled()) {
+         vastPlugin.enable();
+       } vastPlugin {
+         vastAd.disable();
+       }
+   });
   ```
   
 ## isEnabled ##
@@ -156,4 +151,3 @@
   
 ## disable ##
   >Disables the plugin
-  
