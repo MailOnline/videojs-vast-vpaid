@@ -1,0 +1,27 @@
+.btn {
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  font-family: Courier New;
+  color: #ffffff;
+  font-size: 22px;
+  background: #0999f2;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 20px;
+  outline: none;
+}
+
+.btn:hover {
+  background: #66b5e3;
+  text-decoration: none;
+}
+
+.btn.selected {
+  background: #67d64b;
+}
+
+div.btns {
+  margin: 20px 0;
+}
