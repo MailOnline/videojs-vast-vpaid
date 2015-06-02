@@ -46,31 +46,27 @@
   ```
   
   You can also configure the vast plugin using the data-setup attribute
-  ```html
-    ...
-    
-     <video id="example_video_1" class="video-js vjs-default-skin"
-            controls preload="auto" width="640" height="264"
-            poster="http://video-js.zencoder.com/oceans-clip.png"
-            data-setup='{
-                     "plugins": {
-                             "vast":{
-                                 "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
-                                 "adsCancelTimeout": 5000,
-                                 "adsEnabled": true
-                             }
-                     }
-                }'>
-         <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
-         <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
-         <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
-         <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a
-                 href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
-     </video>
-     
-     ...
-      
-    ```
+  
+```html
+       <video id="example_video_1" class="video-js vjs-default-skin"
+              controls preload="auto" width="640" height="264"
+              poster="http://video-js.zencoder.com/oceans-clip.png"
+              data-setup='{
+                       "plugins": {
+                               "vast":{
+                                   "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+                                   "adsCancelTimeout": 5000,
+                                   "adsEnabled": true
+                               }
+                       }
+                  }'>
+           <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
+           <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
+           <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
+           <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a
+                   href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+       </video>
+```
   
 ## Options ##
   
