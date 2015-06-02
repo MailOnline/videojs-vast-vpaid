@@ -2,14 +2,14 @@
 
   This plugin allows videojs to monetise its videos. To do so, it implements the [VAST](https://www.google.es/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CCIQFjAA&url=http%3A%2F%2Fwww.iab.net%2Fmedia%2Ffile%2FVASTv3.0.pdf&ei=pLJtVY-4Ocb0UNrBg6AH&usg=AFQjCNGKWI6H1OgqsxcWN9aNUurhZfg5uQ&sig2=l3MNKUx4yXYcBz33StyH3w&bvm=bv.94911696,d.d24) and [VPAID](http://www.iab.net/media/file/VPAID_2.0_Final_04-10-2012.pdf) specifications from IAB.
   
-  Currently we only support VAST and VPAID (flash) preroll ads. 
-  We are working to support  VPAID (html5) preroll ads, and will ad more VAST ad types as we need them.
+  Currently we support VAST and VPAID Flash preroll ads. 
+  We are working to support VPAID HTML5 preroll ads, and we will add more VAST ad types as we need them.
   
   It is important to notice that **this plugin is still in beta** and we have not yet released a stable version.
   
   You can find a demo of the plugin working together with video.js  [here](http://mailonline.github.io/videojs-vast-plugin)
 
-### Integration with video.js###
+## Integration with video.js##
   To integrate the plugin with videoJs you need to:
   
   1.- Add the videoJs to your page script and stylesheed to your page after you have added video js
@@ -22,9 +22,9 @@
   <link href="/path/to/videojs-vast-plugin.css" rel="stylesheet">
   <script src="/path/to/videojs-vast-plugin.min.js"></script>
   ```
-  3.- Create you own ads plugin to pass a dfp tag to the plugin
+  3.- Create you own ads plugin to pass an add media tag to the plugin
   
-    Below you have a simple ads-setup-plugin
+  Below you have a simple ads-setup-plugin
     
   ```javascript
   
@@ -45,9 +45,9 @@
     
   ```
   
-  ###Options###
+  ##Options##
   
-  ##url##
+  ###url###
   >Use it to pass the ad media tag, it can be a string containing the Media tag url
   >
   >##### Hardcoded Media Tag
@@ -62,7 +62,7 @@
   >
   >
   >#####  Dynamic Media Tag
-  >
+  >```javascript
   >    var vastAd = player.vast({
   >    url: getAdsUrl,
   >     ...
@@ -72,36 +72,37 @@
   >          return "http://pubads.g.doubleclick.net/gampad/ads?env=....";
   >    }
   >
-  >
+  >```
   >On initialization, the plugin well call the function and store the returned Media tag to request the VAST/VPAID ads.
   
-  ##playAdAlways##
+  ###playAdAlways###
   >Flag to indicate if we must play an ad whenever possible. If set to true the plugin will play an ad every time the user watches a new video or replays the actual video.
   >Defaults to false
   
-  ##prerollTimeout##
+  ###prerollTimeout###
   >Number of milliseconds to wait for the ad to start before playing the video content. Defaults to 500
   >In order to give the users the best experience, you can ensure that the video starts playing if it takes longer than the specified timeout. When the ad becomes ready to play, the plugin will pause the content and display the ad.
   >
   >This is a very polemic feature some people thing that this improves the user experience other people thinks the opposite. If your don't want the content to play before the ad has played. Set the same number for the 'prerollTimeout' and the 'adCancelTimeout' like in the sample below:
   >
-  >
+  >```javascript
   >    var vastAd = player.vast({
   >      prerollTimeout: 5000,
   >      adCancelTimeout: 5000,
   >     ...
   >    });
-  >  
+  > ```
+  >
   > In the sample above the video content will never play before the ad has been played or canceled.
   
   
- ##adCancelTimeout##
+ ###adCancelTimeout###
  >Number of milliseconds for the ad to start before canceling it. Defaults to 3000
  
- ##adsEnabled##
+ ###adsEnabled###
  >Flag to disable the ads. Defaults to false.
  
- ###Returned object###
+ ##Returned object##
  An invocation to ```player.vast({...})``` returns and object that with two functions that allow you to dynamically enable or disable the vast plugin.
   ```javascript
   
