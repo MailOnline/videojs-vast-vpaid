@@ -1,4 +1,6 @@
 var gulp = require('gulp');
+var path = require('path');
+var flatten = require('gulp-flatten');
 var runSequence = require('run-sequence');
 var BuildTaskDoc = require('./BuildTaskDoc');
 var config = require('./config');
@@ -23,9 +25,11 @@ gulp.task('bump', function () {
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('add-DIST-to-git', function () {
-  return gulp.src('dist')
-    .pipe(git.add({args:'-f'}));
+gulp.task('DEV-to-DIST', function () {
+  var devFiles = path.join(config.DEV, '/**/*');
+  return gulp.src(devFiles)
+    .pipe(flatten())
+    .pipe(gulp.dest(config.DIST));
 });
 
 gulp.task('commit-build-to-git', function () {
@@ -51,10 +55,9 @@ gulp.task('release', function (callback) {
   config.env = 'production';
   runSequence(
     'clean-DIST',
-    'clean',
     'build',
+    'DEV-to-DIST',
     'bump',
-    'add-DIST-to-git',
     'commit-build-to-git',
     'push-to-master',
     'create-new-tag-version',

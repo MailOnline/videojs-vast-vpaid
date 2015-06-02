@@ -3,6 +3,5 @@ node_modules
 bower_components
 /dev
 .idea/
-/dist
 *.swp
 *.swo

@@ -83,6 +83,6 @@ module.exports = {
   },
 
   //Dist folder
-  DIST: path.normalize('__dirname/../dist'),
+  DIST: path.normalize('__dirname/../bin'),
   DEV: path.normalize('__dirname/../dev')
 };
