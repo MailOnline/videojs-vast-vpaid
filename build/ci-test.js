@@ -17,6 +17,13 @@ gulp.task('ci-test', function (done) {
     files: files,
     autoWatch: false,
     singleRun: true,
+    browsers: ['Firefox', 'Chrome_travis_ci'],
+    customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    },
 
     preprocessors: {
       // source files, that you wanna generate coverage for
@@ -35,15 +42,15 @@ gulp.task('ci-test', function (done) {
           file: 'coverage.txt'
         },
         {
-          type : 'html',
-          dir : 'coverage/'
+          type: 'html',
+          dir: 'coverage/'
         },
         {
           type: 'lcovonly',
           dir: 'coverage/',
           subdir: '.'
         },
-        { type: 'text-summary' }
+        {type: 'text-summary'}
       ]
     }
     // There is an error on karma gulp so we need to wrap done. Please see https://stackoverflow.com/questions/26614738/issue-running-karma-task-from-gulp/26958997#26958997
