@@ -17,7 +17,6 @@ gulp.task('ci-test', function (done) {
     files: files,
     autoWatch: false,
     singleRun: true,
-    browsers: ['PhantomJS'],
 
     preprocessors: {
       // source files, that you wanna generate coverage for
