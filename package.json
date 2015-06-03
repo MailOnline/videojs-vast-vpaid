@@ -10,7 +10,7 @@
     "dist/videojs-vast-plugin.min.css"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp ci-test"
   },
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
@@ -52,6 +52,7 @@
     "karma-coverage": "^0.3.1",
     "karma-firefox-launcher": "^0.1.4",
     "karma-mocha": "^0.1.10",
+    "karma-phantomjs-launcher": "^0.2.0",
     "karma-safari-launcher": "^0.1.1",
     "karma-sauce-launcher": "^0.2.10",
     "lodash": "~2.4.1",
@@ -59,6 +60,7 @@
     "minimist": "^1.1.0",
     "mobile-agent": "0.0.8",
     "mocha": "^2.1.0",
+    "phantomjs": "^1.9.17",
     "request": "^2.53.0",
     "require-dir": "^0.1.0",
     "run-sequence": "^1.0.2",
