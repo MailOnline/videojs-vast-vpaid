@@ -30,10 +30,16 @@ describe("VPAIDFlashTech", function () {
   });
 
   describe("instance", function () {
-    var vpaidFlashClient;
+    var vpaidFlashClient, testDiv;
 
     beforeEach(function () {
       vpaidFlashClient = new VPAIDFlashTech({src:'http://fake.mediaFile.url'});
+      testDiv = document.createElement("div");
+      document.body.appendChild(testDiv);
+    });
+
+    afterEach(function () {
+      dom.remove(testDiv);
     });
 
     describe("loadAdUnit", function () {
@@ -48,23 +54,22 @@ describe("VPAIDFlashTech", function () {
       it("must throw a VASTError if you don't pass a callback to call once the ad have been loaded", function(){
         [undefined, null, {}, 123].forEach(function (invalidCallback) {
           assert.throws(function () {
-            vpaidFlashClient.loadAdUnit(document.createElement('div'), invalidCallback);
+            vpaidFlashClient.loadAdUnit(testDiv, invalidCallback);
           }, VASTError, 'on VPAIDFlashTech.loadAdUnit, missing valid callback');
         });
       });
 
       it("must not throw an error if pass valid arguments", function(){
         assert.doesNotThrow(function () {
-          vpaidFlashClient.loadAdUnit(document.createElement('div'), noop);
+          vpaidFlashClient.loadAdUnit(testDiv, noop);
         });
       });
 
       it("must publish the containerEl and the vpaidFlashToJs into the instance", function(){
         assert.isNull(vpaidFlashClient.containerEl);
         assert.isNull(vpaidFlashClient.vpaidFlashToJS);
-        var container = document.createElement('div');
-        vpaidFlashClient.loadAdUnit(container, noop);
-        assert.equal(vpaidFlashClient.containerEl, container);
+        vpaidFlashClient.loadAdUnit(testDiv, noop);
+        assert.equal(vpaidFlashClient.containerEl, testDiv);
         assert.instanceOf(vpaidFlashClient.vpaidFlashToJS, VPAIDFlashToJS);
       });
     });
@@ -77,8 +82,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must unload the adUnit", function(){
-        var container = document.createElement('div');
-        vpaidFlashClient.loadAdUnit(container, noop);
+        vpaidFlashClient.loadAdUnit(testDiv, noop);
         var vpaidFlashToJS = vpaidFlashClient.vpaidFlashToJS;
         vpaidFlashToJS.destroy = sinon.spy();
 
@@ -88,20 +92,19 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must remove the containerEl", function(){
-        var container = document.createElement('div');
         sinon.stub(dom, 'remove');
-        vpaidFlashClient.loadAdUnit(container, noop);
+        vpaidFlashClient.loadAdUnit(testDiv, noop);
         //We mock destroy to prevent exception
         vpaidFlashClient.vpaidFlashToJS.destroy = noop;
         vpaidFlashClient.unloadAdUnit();
 
 
-        sinon.assert.calledWithExactly(dom.remove, container);
+        sinon.assert.calledWithExactly(dom.remove, testDiv);
         dom.remove.restore();
       });
 
       it("must set instance properties: containerEl and vpaidFlashToJS to null", function(){
-        vpaidFlashClient.loadAdUnit(document.createElement('div'), noop);
+        vpaidFlashClient.loadAdUnit(testDiv, noop);
         //We mock destroy to prevent exception
         vpaidFlashClient.vpaidFlashToJS.destroy = noop;
 
