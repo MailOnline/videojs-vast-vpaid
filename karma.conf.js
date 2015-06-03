@@ -51,7 +51,8 @@ module.exports = function (karma) {
     browsers: [
       //'Safari',
       'Firefox',
-      'Chrome'
+      'Chrome',
+      'ChromeCanary'
     ]
   });
 };
