@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "videojs-contrib-ads": "^1.0.2",
-    "flashVPAID": "0.0.3"
+    "flashVPAID": "0.0.2"
   },
   "devDependencies": {
     "video.js": "4.11.4"
