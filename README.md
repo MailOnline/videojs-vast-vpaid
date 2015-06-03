@@ -34,7 +34,7 @@
     var player = this;
     var adsCancelTimeout = 3000;
   
-    var vastAd = player.vast({
+    var vastAd = player.vastClient({
       //Media tag URL
       url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
       playAdAlways: true,
@@ -76,7 +76,7 @@
   >
   >##### Hardcoded Media Tag
   >
-  > var vastAd = player.vast({
+  > var vastAd = player.vastClient({
   >   url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
   >  ...
   > });
@@ -87,7 +87,7 @@
   >
   >#####  Dynamic Media Tag
   >```javascript
-  >var vastAd = player.vast({
+  >var vastAd = player.vastClient({
   >url: getAdsUrl,
   > ...
   >});
@@ -109,7 +109,7 @@
   >This is a very polemic feature some people thing that this improves the user experience other people thinks the opposite. If your don't want the content to play before the ad has played. Set the same number for the 'prerollTimeout' and the 'adCancelTimeout' like in the sample below:
   >
   >```javascript
-  >var vastAd = player.vast({
+  >var vastAd = player.vastClient({
   >  prerollTimeout: 5000,
   >  adCancelTimeout: 5000,
   > ...
@@ -126,9 +126,9 @@
  >Flag to disable the ads. Defaults to false.
  
 ## Returned object
- An invocation to ```player.vast({...})``` returns and object that with two functions that allow you to dynamically enable or disable the vast plugin.
+ An invocation to ```player.vastClient({...})``` returns and object that with some helper functions that allow you to dynamically enable or disable the vast plugin, or check if it is enabled.
   ```javascript
-  var vastPlugin = player.vast({
+  var vastPlugin = player.vastClient({
      url: getAdsUrl,
      playAdAlways: true,
      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
@@ -137,7 +137,7 @@
      adsEnabled: !!options.adsEnabled
    });
     
-    player.on('reset', function () {
+   player.on('reset', function () {
        if (!vastPlugin.isEnabled()) {
          vastPlugin.enable();
        } vastPlugin {
@@ -154,7 +154,27 @@
   
 ### disable
   >Disables the plugin
-  
+ 
+## player.vast
+  The returned object described above it is also published as a player property so that you can use it anywhere as long as you have access to the player instance.
+  ```javascript
+     player.vastClient({
+       url: getAdsUrl,
+       playAdAlways: true,
+       //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+       prerollTimeout: adsCancelTimeout,
+       adCancelTimeout: adsCancelTimeout,
+       adsEnabled: !!options.adsEnabled
+     });
+      
+     player.on('reset', function () {
+         if (!player.vast.isEnabled()) {
+           player.vast.enable();
+         } vastPlugin {
+           player.vast.disable();
+         }
+     });
+    ```
 ## License
 videojs-vast-plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
 

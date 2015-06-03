@@ -1,4 +1,4 @@
-vjs.plugin('vast', function VASTPlugin(options) {
+vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
 
@@ -92,7 +92,7 @@ vjs.plugin('vast', function VASTPlugin(options) {
   // 'initAds' needs to be called after all the event listeners have been registered for the ads to play with 'autoplay'
   initAds();
 
-  return {
+  player.vast = {
     isEnabled: function () {
       return settings.adsEnabled;
     },
@@ -107,6 +107,8 @@ vjs.plugin('vast', function VASTPlugin(options) {
       initAds();
     }
   };
+
+  return player.vast;
 
   /**** Local functions ****/
   function initAds() {

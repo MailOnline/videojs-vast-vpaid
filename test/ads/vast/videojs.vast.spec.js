@@ -32,7 +32,7 @@ describe("videojs.vast plugin", function () {
 
   it("must be instantiated as part of the player", function () {
     var player = videojs(videoEl, {});
-    assert.isDefined(player.vast);
+    assert.isDefined(player.vastClient);
   });
 
   it("must initialize ads plugin", function () {
@@ -44,7 +44,7 @@ describe("videojs.vast plugin", function () {
 
     videojs(document.createElement('video'), {
       plugins: {
-        'vast': {
+        'vastClient': {
           url: 'http://Fake.ads.url'
         }
       }
@@ -60,7 +60,7 @@ describe("videojs.vast plugin", function () {
 
     beforeEach(function () {
       player = videojs(document.createElement('video'), {});
-      vastAd = player.vast({url: 'http://fake.ad.url'});
+      vastAd = player.vastClient({url: 'http://fake.ad.url'});
     });
 
     describe("isEnabled", function () {
@@ -89,14 +89,49 @@ describe("videojs.vast plugin", function () {
       });
     });
 
+  describe("player.vast", function () {
+    var player;
+
+    beforeEach(function () {
+      player = videojs(document.createElement('video'), {});
+      player.vastClient({url: 'http://fake.ad.url'});
+    });
+
+    describe("isEnabled", function () {
+      it("must return true when the vast plugin is first enabled", function () {
+        assert.isTrue(player.vast.isEnabled());
+      });
+    });
+
+    describe("enable", function () {
+      it("must be a function", function () {
+        assert.isFunction(player.vast.enable);
+      });
+
+      it("must enable the ads", function () {
+        player.vast.disable();
+        assert.isFalse(player.vast.isEnabled());
+        player.vast.enable();
+        assert.isTrue(player.vast.isEnabled());
+      });
+
+      it("must trigger 'adsready' event", function () {
+        var adsreadySpy = sinon.spy();
+        player.on('adsready', adsreadySpy);
+        player.vast.enable();
+        sinon.assert.calledOnce(adsreadySpy);
+      });
+    });
+  });
+
     describe("disable", function () {
       it("must be a function", function () {
-        assert.isFunction(vastAd.enable);
+        assert.isFunction(player.vast.enable);
       });
 
       it("must disable the ads", function () {
-        vastAd.disable();
-        assert.isFalse(vastAd.isEnabled());
+        player.vast.disable();
+        assert.isFalse(player.vast.isEnabled());
       });
 
       it("must trigger 'adsCanceled' event and 'adsError' event to prevent the ad from being played", function () {
@@ -104,7 +139,7 @@ describe("videojs.vast plugin", function () {
         var adsErrorSpy = sinon.spy();
         player.on('adscanceled', adsCanceledSpy);
         player.on('adserror', adsErrorSpy);
-        vastAd.disable();
+        player.vast.disable();
         sinon.assert.calledOnce(adsCanceledSpy);
         sinon.assert.calledOnce(adsErrorSpy);
       });
@@ -115,7 +150,7 @@ describe("videojs.vast plugin", function () {
     // We spy the ads plugin
     var adsPlugin = sinon.spy(vjs.Player.prototype, 'ads');
     var player = videojs(document.createElement('video'), {});
-    player.vast();
+    player.vastClient();
 
     sinon.assert.notCalled(adsPlugin);
 
@@ -128,7 +163,7 @@ describe("videojs.vast plugin", function () {
     var player = videojs(document.createElement('video'), {});
 
     player.on('vast.aderror', spy);
-    player.vast();
+    player.vastClient();
     sinon.assert.calledOnce(spy);
     assertError(spy, 'on VideoJS VAST plugin, missing url on options object');
   });
@@ -137,7 +172,7 @@ describe("videojs.vast plugin", function () {
     var vastErrorSpy = sinon.spy();
     var player = videojs(document.createElement('video'), {});
     player.on('vast.aderror', vastErrorSpy);
-    player.vast({url: 'http://fake.ad.url'});
+    player.vastClient({url: 'http://fake.ad.url'});
     sinon.assert.notCalled(vastErrorSpy);
   });
 
@@ -145,7 +180,7 @@ describe("videojs.vast plugin", function () {
     var adsReadySpy = sinon.spy();
     var player = videojs(document.createElement('video'), {});
     player.on('adsready', adsReadySpy);
-    player.vast({url: 'http://fake.ad.url'});
+    player.vastClient({url: 'http://fake.ad.url'});
     sinon.assert.calledOnce(adsReadySpy);
   });
 
@@ -155,7 +190,7 @@ describe("videojs.vast plugin", function () {
     var adsErrorSpy = sinon.spy();
     player.on('adscanceled', adsCanceledSpy);
     player.on('adserror', adsErrorSpy);
-    player.vast({url: 'http://fake.ad.url', adsEnabled: false});
+    player.vastClient({url: 'http://fake.ad.url', adsEnabled: false});
     sinon.assert.calledOnce(adsCanceledSpy);
     sinon.assert.calledOnce(adsErrorSpy);
   });
@@ -164,7 +199,7 @@ describe("videojs.vast plugin", function () {
     var adsReadySpy = sinon.spy();
     var player = videojs(document.createElement('video'), {});
 
-    player.vast({url: 'http://fake.ad.url'});
+    player.vastClient({url: 'http://fake.ad.url'});
     player.on('adsready', adsReadySpy);
     player.trigger('contentupdate');
     sinon.assert.calledOnce(adsReadySpy);
@@ -174,7 +209,7 @@ describe("videojs.vast plugin", function () {
     var player = videojs(document.createElement('video'), {});
     var adsCanceledSpy = sinon.spy();
     var adsErrorSpy = sinon.spy();
-    player.vast({url: 'http://fake.ad.url', adsEnabled: false});
+    player.vastClient({url: 'http://fake.ad.url', adsEnabled: false});
     player.on('adscanceled', adsCanceledSpy);
     player.on('adserror', adsErrorSpy);
     player.trigger('contentupdate');
@@ -195,7 +230,7 @@ describe("videojs.vast plugin", function () {
       adsEnabled: true
     };
     var player = videojs(document.createElement('video'), {});
-    player.vast(adsOpts);
+    player.vastClient(adsOpts);
 
     sinon.assert.calledOnce(adsPlugin);
     assert.deepEqual(firstArg(adsPlugin), adsOpts);
@@ -245,7 +280,7 @@ describe("videojs.vast plugin", function () {
     });
 
     it("set to true, must try to play a new ad every time the users replays the ad", function () {
-      player.vast({
+      player.vastClient({
         url: echoFn('/fake.ad.url'),
         playAdAlways: true
       });
@@ -266,7 +301,7 @@ describe("videojs.vast plugin", function () {
     });
 
     it("set to false, must try not play a new ad every time the user replays the ad", function () {
-      player.vast({
+      player.vastClient({
         url: echoFn('/fake.ad.url'),
         playAdAlways: false
       });
@@ -319,7 +354,7 @@ describe("videojs.vast plugin", function () {
       sinon.stub(vastUtil, 'track').returns(null);
       sinon.spy(VASTIntegrator.prototype, 'playAd');
       player = videojs(document.createElement('video'), {});
-      player.vast({url: echoFn('/fake.ad.url')});
+      player.vastClient({url: echoFn('/fake.ad.url')});
       getVASTResponse = sinon.spy(VASTClient.prototype, 'getVASTResponse');
       player.trigger('readyforpreroll');
       this.clock.tick(1);
@@ -424,7 +459,7 @@ describe("videojs.vast plugin", function () {
     beforeEach(function(){
       this.clock = sinon.useFakeTimers();
       player = videojs(document.createElement('video'), {});
-      player.vast({url: 'http://fake.ad.url'});
+      player.vastClient({url: 'http://fake.ad.url'});
     });
 
     afterEach(function(){

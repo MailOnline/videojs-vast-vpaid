@@ -103,7 +103,7 @@
     var options = extend({}, this.options_, opts);
     var adsCancelTimeout = 3000;
 
-    var vastAd = player.vast({
+    var vastAd = player.vastClient({
       url: getAdsUrl,
       playAdAlways: true,
       //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
