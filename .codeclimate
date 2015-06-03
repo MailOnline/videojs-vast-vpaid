@@ -4,5 +4,5 @@ languages:
   PHP: false
   Python: false
 exclude_paths:
-- "bin/*"
-- "demo/*"
+- "bin/**/*"
+- "demo/**/*"
