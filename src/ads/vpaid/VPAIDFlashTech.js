@@ -29,7 +29,7 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
       callback(error);
     }
 
-    that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback)
+    that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback);
   });
 
   /*** Local Functions ***/
