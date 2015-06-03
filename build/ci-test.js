@@ -54,8 +54,8 @@ gulp.task('ci-test', function (done) {
       ]
     }
     // There is an error on karma gulp so we need to wrap done. Please see https://stackoverflow.com/questions/26614738/issue-running-karma-task-from-gulp/26958997#26958997
-  }, function () {
-    done();
+  }, function (error) {
+    done(error);
   });
 });
 
