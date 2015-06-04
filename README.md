@@ -174,7 +174,8 @@
            player.vast.disable();
          }
      });
-    ```
+  ```
+  
 ## License
 videojs-vast-plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
 
