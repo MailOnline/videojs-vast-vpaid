@@ -5,4 +5,4 @@ languages:
   Python: false
 exclude_paths:
 - "bin/**/*"
-- "demo/**/*"
+- "demo/scripts/ads-setup-plugin.js"

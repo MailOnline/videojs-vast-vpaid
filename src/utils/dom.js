@@ -148,8 +148,8 @@ dom.dispatchEvent = function dispatchEvent(el, event) {
 
 dom.isDescendant = function isDescendant(parent, child) {
   var node = child.parentNode;
-  while (node != null) {
-    if (node == parent) {
+  while (node !== null) {
+    if (node === parent) {
       return true;
     }
     node = node.parentNode;
@@ -208,5 +208,5 @@ dom.getDimension = function getDimension(element) {
   return {
     width: element.offsetWidth,
     height: element.offsetHeight
-  }
+  };
 };

@@ -1,3 +1,4 @@
+/*jshint unused:true */
 "use strict";
 
 var NODE_TYPE_ELEMENT = 1;
@@ -33,7 +34,7 @@ function isWindow(obj) {
 }
 
 function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]'
+  return Object.prototype.toString.call( array ) === '[object Array]';
 }
 
 function isArrayLike(obj) {
@@ -74,7 +75,7 @@ function forEach(obj, iterator, context) {
       for (key in obj) {
         // Need to check if hasOwnProperty exists,
         // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key != 'prototype' && key != 'length' && key != 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
           iterator.call(context, obj[key], key, obj);
         }
       }
@@ -186,7 +187,9 @@ function debounce (callback, wait) {
   var timeoutId;
 
   return function (){
-    timeoutId && clearTimeout(timeoutId);
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
     timeoutId = setTimeout(function(){
       callback.apply(this, arguments);
       timeoutId = undefined;

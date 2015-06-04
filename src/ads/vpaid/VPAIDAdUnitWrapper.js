@@ -39,11 +39,11 @@ VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUni
   /*** Local Functions ***/
 
   function canSubscribeToEvents(adUnit) {
-    return isFunction(adUnit.subscribe) || isFunction(adUnit.addEventListener) || isFunction(adUnit.on)
+    return isFunction(adUnit.subscribe) || isFunction(adUnit.addEventListener) || isFunction(adUnit.on);
   }
 
   function canUnsubscribeFromEvents(adUnit) {
-    return isFunction(adUnit.unsubscribe) || isFunction(adUnit.removeEventListener) || isFunction(adUnit.off)
+    return isFunction(adUnit.unsubscribe) || isFunction(adUnit.removeEventListener) || isFunction(adUnit.off);
 
   }
 };
@@ -67,11 +67,11 @@ VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
   /*** Local functions ***/
   function sanityCheck(method, cb, adUnit) {
     if (!isString(method) || !isFunction(adUnit[method])) {
-      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name")
+      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name");
     }
 
     if (!isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback")
+      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback");
     }
   }
 
@@ -111,11 +111,11 @@ VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
   /*** Local functions ***/
   function sanityCheck(evtName, cb) {
     if (!isString(evtName)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing evt name")
+      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing evt name");
     }
 
     if (!isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing callback")
+      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing callback");
     }
   }
 
@@ -134,9 +134,10 @@ VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
 
 // VPAID METHODS
 VPAIDAdUnitWrapper.prototype.handshakeVersion = function (version, cb) {
-  this.adUnitAsyncCall('handshakeVersion', version, cb)
+  this.adUnitAsyncCall('handshakeVersion', version, cb);
 };
 
+/*jshint maxargs:6*/
 VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desiredBitrate, adUnitData, cb) {
   this._adUnit.initAd(width, height, viewMode, desiredBitrate, adUnitData);
   this.waitForEvent('AdLoaded', cb);
@@ -200,7 +201,7 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   var getterName = 'get' + capitalize(property);
 
   VPAIDAdUnitWrapper.prototype[getterName] = function (cb) {
-    this.adUnitAsyncCall(getterName, cb)
+    this.adUnitAsyncCall(getterName, cb);
   };
 });
 
