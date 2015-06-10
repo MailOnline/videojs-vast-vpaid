@@ -26,7 +26,7 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
   this.containerEl = containerEl;
   this.vpaidFlashToJS = new VPAIDFlashToJS(containerEl, function (error) {
     if (error) {
-      callback(error);
+      return callback(error);
     }
 
     that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback);
