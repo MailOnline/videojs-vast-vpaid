@@ -19,7 +19,7 @@ gulp.task('ci-test', function (done) {
     singleRun: true,
     browsers: ['Chrome_travis_ci'],
     //browsers: ['Firefox'],
-    reporters: ['dots', 'coverage'],
+    reporters: ['spec', 'coverage'],
     customLaunchers: {
       Chrome_travis_ci: {
         base: 'Chrome',

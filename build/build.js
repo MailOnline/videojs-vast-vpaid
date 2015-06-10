@@ -1,4 +1,5 @@
 var gulp = require('gulp');
+var jshint = require('gulp-jshint');
 var runSequence = require('run-sequence');
 var config = require('./config');
 var path = require('path');
@@ -44,7 +45,9 @@ gulp.task('clean', function (cb) {
 gulp.task('build-scripts', function () {
   var scriptsDistPath = path.join(config.DEV, '/scripts');
   var vendorScriptsStream = gulp.src(config.vendor.scripts);
-  var pluginScriptsStream = gulp.src(config.plugin.scripts);
+  var pluginScriptsStream = gulp.src(config.plugin.scripts)
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'));
 
   return mergeStream(vendorScriptsStream, pluginScriptsStream)
     .pipe(sourcemaps.init())

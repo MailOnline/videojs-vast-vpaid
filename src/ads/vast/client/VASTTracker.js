@@ -49,7 +49,7 @@ VASTTracker.prototype.trackEvent = function trackEvent(eventName, trackOnce) {
     if (trackingEvents) {
       uris = [];
       trackingEvents.forEach(function (event) {
-        uris.push(event.uri)
+        uris.push(event.uri);
       });
     }
     return uris;
@@ -84,7 +84,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
   function addQuartileEvents(progress) {
     forEach(this.quartiles, function (quartileTime, eventName) {
       //We only fire the quartile event if the progress is bigger than the quartile time by one second at most.
-      addTrackEvent(eventName, ONCE, progress >= quartileTime && progress <= (quartileTime + 1000))
+      addTrackEvent(eventName, ONCE, progress >= quartileTime && progress <= (quartileTime + 1000));
     });
   }
 

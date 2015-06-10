@@ -35,7 +35,7 @@
       }
 
       if (wrapper) {
-        this._addWrapper(wrapper)
+        this._addWrapper(wrapper);
       }
     }
   };

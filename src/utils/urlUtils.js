@@ -76,11 +76,6 @@ function urlParts(url) {
 
   urlParsingNode.setAttribute('href', href);
 
-  //On some IE the host contains the port and the port property is empty
-  if(/(.*)\:(\d+)/.test(urlParsingNode.host)) {
-
-  }
-
   // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
   return {
     href: urlParsingNode.href,

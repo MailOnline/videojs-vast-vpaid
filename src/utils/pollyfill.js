@@ -12,7 +12,7 @@
     return parseNum(str.replace(/^0+/, ''));
    }
 
-   return parseNum(str)
+   return parseNum(str);
   };
  }
 })();

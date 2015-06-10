@@ -247,11 +247,11 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdVolumeChange', function () {
     var lastVolume = player.volume();
     adUnit.getAdVolume(function (currentVolume) {
-      if (currentVolume == 0 && lastVolume > 0) {
+      if (currentVolume === 0 && lastVolume > 0) {
         tracker.trackMute();
       }
 
-      if (currentVolume > 0 && lastVolume == 0) {
+      if (currentVolume > 0 && lastVolume === 0) {
         tracker.trackUnmute();
       }
 

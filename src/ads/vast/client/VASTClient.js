@@ -87,7 +87,7 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
     var adTree;
     try {
       adTree = that._buildVastTree(adXML);
-      getValidAd(adTree.ads, options.ads, callback)
+      getValidAd(adTree.ads, options.ads, callback);
     } catch (e) {
       callback(e);
     }
@@ -153,7 +153,7 @@ VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {
   }
 
   if(vastVersion && (vastVersion != 3 && vastVersion != 2)){
-    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102)
+    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102);
   }
 
   return vastTree;

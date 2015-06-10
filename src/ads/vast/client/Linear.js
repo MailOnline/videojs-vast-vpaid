@@ -25,7 +25,7 @@ function Linear(linearJTree) {
     if (isDefined(trackingEvents)) {
       trackingEvents = isArray(trackingEvents) ? trackingEvents : [trackingEvents];
       trackingEvents.forEach(function (trackingData) {
-        trackings.push(new TrackingEvent(trackingData, duration))
+        trackings.push(new TrackingEvent(trackingData, duration));
       });
     }
     return trackings;
@@ -37,7 +37,7 @@ function Linear(linearJTree) {
       mediaFilesJxonTree = isArray(mediaFilesJxonTree) ? mediaFilesJxonTree : [mediaFilesJxonTree];
 
       mediaFilesJxonTree.forEach(function (mfData) {
-        mediaFiles.push(new MediaFile(mfData))
+        mediaFiles.push(new MediaFile(mfData));
       });
     }
     return mediaFiles;

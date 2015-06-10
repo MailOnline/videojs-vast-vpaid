@@ -137,7 +137,7 @@ VPAIDAdUnitWrapper.prototype.handshakeVersion = function (version, cb) {
   this.adUnitAsyncCall('handshakeVersion', version, cb);
 };
 
-/*jshint maxargs:6*/
+/* jshint maxparams:6 */
 VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desiredBitrate, adUnitData, cb) {
   this._adUnit.initAd(width, height, viewMode, desiredBitrate, adUnitData);
   this.waitForEvent('AdLoaded', cb);
@@ -207,5 +207,5 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
 
 //VPAID property setters
 VPAIDAdUnitWrapper.prototype.setAdVolume = function(volume, cb){
-  this.adUnitAsyncCall('setAdVolume',volume, cb)
+  this.adUnitAsyncCall('setAdVolume',volume, cb);
 };
