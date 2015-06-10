@@ -69,7 +69,8 @@ xml.JXONTree = function JXONTree (oXMLParent) {
     var sCollectedTxt = "";
     for (var oNode, sProp, vContent, nItem = 0; nItem < oXMLParent.childNodes.length; nItem++) {
       oNode = oXMLParent.childNodes.item(nItem);
-      if ((oNode.nodeType - 1 || 1) === 3) { sCollectedTxt += oNode.nodeType === 3 ? oNode.nodeValue.trim() : oNode.nodeValue; }
+      /*jshint bitwise: false*/
+      if ((oNode.nodeType - 1 | 1) === 3) { sCollectedTxt += oNode.nodeType === 3 ? oNode.nodeValue.trim() : oNode.nodeValue; }
       else if (oNode.nodeType === 1 && !oNode.prefix) {
         sProp = decapitalize(oNode.nodeName);
         vContent = new xml.JXONTree(oNode);
