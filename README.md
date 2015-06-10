@@ -1,4 +1,5 @@
 # videojs-vast-plugin
+[![Build Status](https://travis-ci.org/MailOnline/videojs-vast-plugin.svg?branch=master)](https://travis-ci.org/MailOnline/videojs-vast-plugin)
 [![Code Climate](https://codeclimate.com/github/MailOnline/videojs-vast-plugin/badges/gpa.svg)](https://codeclimate.com/github/MailOnline/videojs-vast-plugin)
 [![Test Coverage](https://codeclimate.com/github/MailOnline/videojs-vast-plugin/badges/coverage.svg)](https://codeclimate.com/github/MailOnline/videojs-vast-plugin/coverage)
 
