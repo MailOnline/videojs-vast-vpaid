@@ -9,6 +9,10 @@
     "dist/videojs-vast-plugin.min.js",
     "dist/videojs-vast-plugin.min.css"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MailOnline/videojs-vast-plugin"
+  },
   "scripts": {
     "test": "gulp ci-test"
   },
