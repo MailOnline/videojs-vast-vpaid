@@ -4,5 +4,5 @@ languages:
   PHP: false
   Python: false
 exclude_paths:
-- "demo/scripts/ads-setup-plugin.js"
+- "demo/**/*"
 - "bin/**/*"
