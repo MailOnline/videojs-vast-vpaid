@@ -12,7 +12,12 @@ module.exports = function (karma) {
     exclude: [],
     frameworks: ['mocha', 'chai-sinon'],
     plugins: [
-      'karma-*'
+      'karma-mocha',
+      'karma-chai-sinon',
+      'karma-coverage',
+      'karma-chrome-launcher',
+      'karma-firefox-launcher',
+      'karma-safari-launcher'
     ],
     preprocessors: {},
 
