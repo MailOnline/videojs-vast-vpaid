@@ -233,7 +233,7 @@ describe("videojs.vast plugin", function () {
     player.vastClient(adsOpts);
 
     sinon.assert.calledOnce(adsPlugin);
-    assert.deepEqual(firstArg(adsPlugin), adsOpts);
+    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0}, adsOpts));
 
     //We restore the ads plugin
     vjs.Player.prototype.ads.restore();

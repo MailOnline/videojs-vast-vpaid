@@ -20,7 +20,7 @@ module.exports = function (karma) {
     /**
      * How to report, by default.
      */
-    reporters: ['spec'],
+    reporters: ['dots'],
 
     /**
      * On which port should the browser connect, on which port is the test runner
@@ -51,8 +51,7 @@ module.exports = function (karma) {
     browsers: [
       //'Safari',
       'Firefox',
-      'Chrome',
-      'ChromeCanary'
+      'Chrome'
     ]
   });
 };

@@ -3,13 +3,13 @@
  */
 
 /* Ad playback */
-.vjs-ad-playing.vjs-ad-playing .vjs-progress-control {
+.vjs-ad-playing .vjs-progress-control {
   pointer-events: none;
 }
 
-.vjs-ad-playing.vjs-ad-playing .vjs-play-control.vjs-paused,
-.vjs-ad-playing.vjs-ad-playing .vjs-volume-level,
-.vjs-ad-playing.vjs-ad-playing .vjs-play-progress {
+.vjs-ad-playing .vjs-play-control.vjs-paused,
+.vjs-ad-playing .vjs-volume-level,
+.vjs-ad-playing .vjs-play-progress {
   background-color: #ffe400 !important;
 }
 

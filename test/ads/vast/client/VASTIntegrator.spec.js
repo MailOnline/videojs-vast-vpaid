@@ -45,6 +45,7 @@ describe("VASTIntegrator", function () {
       AD_START_TIMEOUT = 500;
       player = videojs(document.createElement('video'), {});
       player.ads({});
+      player.ads.snapshot={}; //We fake the snapshot to prevent undesired errors in tests
       vastIntegrator = new VASTIntegrator(player, AD_START_TIMEOUT);
       callback = sinon.spy();
     });
@@ -84,7 +85,7 @@ describe("VASTIntegrator", function () {
         this.clock.tick(1);
         assert.isObject(skipButton(player));
         assert.isObject(clickThroughAnchor(player));
-        player.trigger('ended');
+        player.trigger('contentended');
         assertNoError(callback);
         assert.equal(response, secondArg(callback));
         assert.isNull(skipButton(player));
@@ -174,11 +175,11 @@ describe("VASTIntegrator", function () {
 
       it("must track fullscreen change", function () {
         player.isFullscreen(true);
-        player.trigger('fullscreenchange');
+        player.trigger('adfullscreenchange');
         sinon.assert.calledOnce(tracker.trackFullscreen);
         sinon.assert.notCalled(tracker.trackExitFullscreen);
         player.isFullscreen(false);
-        player.trigger('fullscreenchange');
+        player.trigger('adfullscreenchange');
         sinon.assert.calledOnce(tracker.trackFullscreen);
         sinon.assert.calledOnce(tracker.trackExitFullscreen);
       });
@@ -189,7 +190,7 @@ describe("VASTIntegrator", function () {
       });
 
       it("must track pause and resume events", function () {
-        player.trigger('pause');
+        player.trigger('adpause');
         sinon.assert.calledOnce(tracker.trackPause);
         sinon.assert.notCalled(tracker.trackResume);
         player.trigger('play');
@@ -198,21 +199,21 @@ describe("VASTIntegrator", function () {
       });
 
       it("must track progress", function () {
-        player.trigger('timeupdate');
+        player.trigger('adtimeupdate');
         sinon.assert.calledWithExactly(tracker.trackProgress, 0);
         sinon.stub(player, 'currentTime').returns(5);
-        player.trigger('timeupdate');
+        player.trigger('adtimeupdate');
         sinon.assert.calledWithExactly(tracker.trackProgress, 5000);
       });
 
       it("must track muted and unmuted events", function () {
         var muted = sinon.stub(player, 'muted');
         player.muted.returns(true);
-        player.trigger('volumechange');
+        player.trigger('advolumechange');
         sinon.assert.calledOnce(tracker.trackMute);
         sinon.assert.notCalled(tracker.trackUnmute);
         player.muted.returns(false);
-        player.trigger('volumechange');
+        player.trigger('advolumechange');
         sinon.assert.calledOnce(tracker.trackMute);
         sinon.assert.calledOnce(tracker.trackUnmute);
       });
@@ -232,9 +233,9 @@ describe("VASTIntegrator", function () {
 
         it("must stop tracking fullscreenchange", function () {
           player.isFullscreen(true);
-          player.trigger('fullscreenchange');
+          player.trigger('adfullscreenchange');
           player.isFullscreen(false);
-          player.trigger('fullscreenchange');
+          player.trigger('adfullscreenchange');
           sinon.assert.notCalled(tracker.trackFullscreen);
           sinon.assert.notCalled(tracker.trackExitFullscreen);
         });
@@ -245,23 +246,23 @@ describe("VASTIntegrator", function () {
         });
 
         it("must stop tracking pause and resume events", function () {
-          player.trigger('pause');
+          player.trigger('adPause');
           player.trigger('play');
           sinon.assert.notCalled(tracker.trackPause);
           sinon.assert.notCalled(tracker.trackResume);
         });
 
         it("must stop tracking progress", function () {
-          player.trigger('timeupdate');
+          player.trigger('adtimeupdate');
           sinon.assert.notCalled(tracker.trackProgress);
         });
 
         it("must stop tracking muted and unmuted events", function () {
           var muted = sinon.stub(player, 'muted');
           player.muted.returns(true);
-          player.trigger('volumechange');
+          player.trigger('advolumechange');
           player.muted.returns(false);
-          player.trigger('volumechange');
+          player.trigger('advolumechange');
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
         });
@@ -287,7 +288,7 @@ describe("VASTIntegrator", function () {
 
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
         //when the ad is ready to play there is a durationchange event
-        player.trigger('durationchange');
+        player.trigger('addurationchange');
         sinon.assert.calledOnce(spy);
       });
 
@@ -302,7 +303,7 @@ describe("VASTIntegrator", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
         sinon.assert.notCalled(player.play);
 
-        player.trigger('durationchange');
+        player.trigger('addurationchange');
         sinon.assert.calledOnce(player.play);
       });
 
@@ -312,13 +313,13 @@ describe("VASTIntegrator", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
         sinon.assert.notCalled(spy);
 
-        player.trigger('ended');
+        player.trigger('contentended');
         sinon.assert.calledOnce(spy);
       });
 
       it("must once the ad ended playing call the callback with the response and no error", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
-        player.trigger('ended');
+        player.trigger('contentended');
         sinon.assert.calledWithExactly(callback, null, response);
       });
 
@@ -403,7 +404,7 @@ describe("VASTIntegrator", function () {
 
         it("must trigger the end of the ad if you click on an enabled skip button", function () {
           var spy = sinon.spy();
-          player.on('ended', spy);
+          player.on('contentended', spy);
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           var skipBut = skipButton(player);
           dom.addClass(skipBut, 'enabled');
@@ -413,7 +414,7 @@ describe("VASTIntegrator", function () {
 
         it("must NOT trigger the end of the ad if you click on a skip button that is not enabled", function () {
           var spy = sinon.spy();
-          player.on('ended', spy);
+          player.on('contentended', spy);
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           var skipBut = skipButton(player);
           click(skipBut);
@@ -429,19 +430,19 @@ describe("VASTIntegrator", function () {
           sinon.stub(player, 'currentTime');
 
           player.currentTime.returns(0);
-          player.trigger('timeupdate');
+          player.trigger('adtimeupdate');
           assert.equal('Skip in 10...', skipBut.innerHTML);
 
           player.currentTime.returns(5);
-          player.trigger('timeupdate');
+          player.trigger('adtimeupdate');
           assert.equal('Skip in 05...', skipBut.innerHTML);
 
           player.currentTime.returns(10);
-          player.trigger('timeupdate');
+          player.trigger('adtimeupdate');
           assert.equal('Skip ad', skipBut.innerHTML);
 
           player.currentTime.returns(15);
-          player.trigger('timeupdate');
+          player.trigger('adtimeupdate');
           assert.equal('Skip ad', skipBut.innerHTML);
         });
       });
@@ -540,7 +541,7 @@ describe("VASTIntegrator", function () {
         );
 
         player.currentTime.returns(5);
-        player.trigger('timeupdate');
+        player.trigger('adtimeupdate');
         assert.equal(
           "http://fake.url?assetUri=" + mediaFile.src + "&contentPlayHead:00:00:05.000",
           clickThroughAnchor(player).getAttribute('href')

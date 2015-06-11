@@ -15,6 +15,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     // play the ad whenever is ready (i.e. the ads are not cancelled they are deferred).
     prerollTimeout: 500,
 
+    // for the moment we don't support post roll ads
+    postrollTimeout: 0,
+
     // maximun amount of time for the ad to actually start playing. If this timeout gets
     // triggered the ads will be cancelled
     adCancelTimeout: 3000,
@@ -82,8 +85,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
       if (settings.playAdAlways) {
         // No matter what happens we play a new ad before the user sees the video again.
-        player.one('ended', function () {
-          player.trigger('contentupdate');
+        player.one('contentended', function () {
+
+          setTimeout(function () {
+            player.trigger('contentupdate');
+          }, 0);
         });
       }
     });

@@ -41,7 +41,8 @@ module.exports = {
   vendor: {
     scripts: [
       'bower_components/flashVPAID/bin/VPAIDFlashToJS.js',
-      'bower_components/videojs-contrib-ads/src/videojs.ads.js'
+      //We are adding the ads plugin manually until this PR gets resolved https://github.com/videojs/videojs-contrib-ads/pull/92
+      'libs/videojs-contrib-ads/videojs.ads.global.MODIFIED.js'
     ],
     sourcemaps: [
       'bower_components/flashVPAID/bin/VPAIDFlashToJS.js.map'
