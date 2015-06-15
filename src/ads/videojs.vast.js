@@ -7,7 +7,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     // implementation after play has been requested. Ad implementations are
     // expected to load any dynamic libraries and make any requests to determine
     // ad policies for a video during this time.
-    timeout: 5000,
+    timeout: 500,
 
     // for the moment we don't support post roll ads
     postrollTimeout: 0,
@@ -38,21 +38,52 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
-  player.ads(settings); // initialize the ad framework
 
-  player.on('play', function () {
-    if(player.ads.state === 'preroll?'){
-      addSpinnerIcon();
+  player.on('play', playAdHandler);
+  player.on('readyforpreroll', playPrerollAd);
 
-      if (!player.paused()) {
-        player.pause();
+  // initialize videojs contrib ads plugin
+  player.ads(settings);
+
+  player.vast = {
+    isEnabled: function () {
+      return settings.adsEnabled;
+    },
+
+    enable: function () {
+      settings.adsEnabled = true;
+    },
+
+    disable: function () {
+      settings.adsEnabled = false;
+    }
+  };
+
+  return player.vast;
+
+  /**** Local functions ****/
+  function playAdHandler() {
+    if(settings.adsEnabled){
+      if(player.ads.state === 'content-set' && canPlayPrerollAd()){
+        initAds();
       }
+    }else{
+      cancelAds()
+    }
 
+    /*** Local functions ***/
+    function canPlayPrerollAd(){
+      var allowedPrerollDelay = settings.adCancelTimeout - settings.prerollTimeout;
+      return player.currentTime() <= allowedPrerollDelay;
+    }
+
+    function initAds() {
+      player.trigger('adsready');
+      addSpinnerIcon();
       player.on('vast.adstart', removeSpinnerIcon);
       player.on('vast.aderror', removeSpinnerIcon);
     }
 
-    /*** Local functions ***/
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
     }
@@ -64,14 +95,19 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         dom.removeClass(player.el(), 'vjs-vast-ad-loading');
         player.off('vast.adstart', removeSpinnerIcon);
         player.off('vast.aderror', removeSpinnerIcon);
-      }, 0);
+      }, 100);
     }
-  });
 
-  // request ads whenever there's new video content
-  player.on('contentupdate', initAds);
+  }
 
-  player.on('readyforpreroll', function () {
+  function cancelAds() {
+    // We trigger 'adscanceled' to cancel the ads if they are in 'content-set' or 'ads-read?' state
+    player.trigger('adscanceled');
+    //We trigger 'adserror' to cancel the ads if they are in 'adsready' or 'preroll?' or 'ad-playback' state
+    player.trigger('adserror');
+  }
+
+  function playPrerollAd() {
     async.waterfall([
       getVastResponse,
       playAd,
@@ -91,43 +127,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         });
       }
     });
-  });
-
-  // 'initAds' needs to be called after all the event listeners have been registered for the ads to play with 'autoplay'
-  initAds();
-
-  player.vast = {
-    isEnabled: function () {
-      return settings.adsEnabled;
-    },
-
-    enable: function () {
-      settings.adsEnabled = true;
-      initAds();
-    },
-
-    disable: function () {
-      settings.adsEnabled = false;
-      initAds();
-    }
-  };
-
-  return player.vast;
-
-  /**** Local functions ****/
-  function initAds() {
-    if (settings.adsEnabled) {
-      player.trigger('adsready');
-    } else {
-      cancelAds();
-    }
-  }
-
-  function cancelAds() {
-    // We trigger 'adscanceled' to cancel the ads if they are in 'content-set' or 'ads-read?' state
-    player.trigger('adscanceled');
-    //We trigger 'adserror' to cancel the ads if they are in 'adsready' or 'preroll?' or 'ad-playback' state
-    player.trigger('adserror');
   }
 
   function getVastResponse(callback) {
