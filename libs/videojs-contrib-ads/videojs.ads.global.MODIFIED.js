@@ -400,7 +400,7 @@ var
         redispatch = function(event) {
           if (player.ads.state === 'ad-playback') {
             triggerEvent('ad', event);
-//TODO: is if was added while waiting for the PR https://github.com/videojs/videojs-contrib-ads/issues/93
+//TODO: the if bellow was added while waiting for the PR https://github.com/videojs/videojs-contrib-ads/issues/93
             if(event.type === 'play'){
               player.hasStarted(true);
             }

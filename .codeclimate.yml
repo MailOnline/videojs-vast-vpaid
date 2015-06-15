@@ -7,3 +7,4 @@ exclude_paths:
 - "demo/*"
 - "bin/*"
 - "build/*"
+- "libs/*"
