@@ -102,11 +102,22 @@
   >Flag to indicate if we must play an ad whenever possible. If set to true the plugin will play an ad every time the user watches a new video or replays the actual video.
   >Defaults to false
   
-### prerollTimeout
-  >Number of milliseconds to wait for the ad to start before playing the video content. Defaults to 500
-  >In order to give the users the best experience, you can ensure that the video starts playing if it takes longer than the specified timeout. When the ad becomes ready to play, the plugin will pause the content and display the ad.
+## adCancelTimeout
+ >Number of milliseconds for the ad to start before canceling it. Defaults to 3000
+ 
+## prerollTimeout
+  >In order to give the users the best experience, you can ensure that the video starts playing if it takes longer than the specified prerollTimeout. When the ad becomes ready to play, the plugin will pause the content and display the ad.
+  >Defaults to the value of the adCancelTimeout option.
+  >In the sample below, the video content will never play befor the ad has been played or canceled
   >
-  >This is a very polemic feature some people thing that this improves the user experience other people thinks the opposite. If your don't want the content to play before the ad has played. Set the same number for the 'prerollTimeout' and the 'adCancelTimeout' like in the sample below:
+  >```javascript
+  >var vastAd = player.vastClient({
+  >  adCancelTimeout: 5000,
+  > ...
+  >});
+  > ```
+  >
+  >In the sample below if the ad is not ready after 500 milliseconds it will start playing the video content and if the ad becomes ready before 5000 milliseconds (adCancelTimeout) the plugin will stop the content and play the ad 
   >
   >```javascript
   >var vastAd = player.vastClient({
@@ -116,11 +127,6 @@
   >});
   > ```
   >
-  > In the sample above the video content will never play before the ad has been played or canceled.
-  
-  
-## adCancelTimeout
- >Number of milliseconds for the ad to start before canceling it. Defaults to 3000
  
 ## adsEnabled
  >Flag to disable the ads. Defaults to false.

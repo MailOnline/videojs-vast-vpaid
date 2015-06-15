@@ -9,12 +9,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     // ad policies for a video during this time.
     timeout: 5000,
 
-    // maximum amount of time in ms to wait for the ad implementation to start
-    // linear ad mode after `readyforpreroll` has fired.
-    // if this timeout triggers the player will start playing the video but it will
-    // play the ad whenever is ready (i.e. the ads are not cancelled they are deferred).
-    prerollTimeout: 500,
-
     // for the moment we don't support post roll ads
     postrollTimeout: 0,
 
@@ -31,6 +25,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   };
 
   var settings = extend({}, defaultOpts, options || {});
+
+  if(!settings.prerollTimeout) {
+    settings.prerollTimeout = settings.adCancelTimeout;
+  }
 
   if (isString(settings.url)) {
     settings.url = echoFn(settings.url);

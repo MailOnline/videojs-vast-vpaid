@@ -222,7 +222,7 @@ describe("videojs.vast plugin", function () {
     var adsPlugin = sinon.spy(vjs.Player.prototype, 'ads');
     var adsOpts = {
       timeout: 123,
-      prerollTimeout: 123,
+      prerollTimeout: 23,
       debug: null,
       url: echoFn('http://fake.ad.url'),
       adCancelTimeout: 123,
@@ -234,6 +234,26 @@ describe("videojs.vast plugin", function () {
 
     sinon.assert.calledOnce(adsPlugin);
     assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0}, adsOpts));
+
+    //We restore the ads plugin
+    vjs.Player.prototype.ads.restore();
+  });
+
+  it("must default the value of prerolTimeout to whatever value the adCancelTimeout has", function(){
+    var adsPlugin = sinon.spy(vjs.Player.prototype, 'ads');
+    var adsOpts = {
+      timeout: 123,
+      debug: null,
+      url: echoFn('http://fake.ad.url'),
+      adCancelTimeout: 123,
+      playAdAlways: true,
+      adsEnabled: true
+    };
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient(adsOpts);
+
+    sinon.assert.calledOnce(adsPlugin);
+    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, prerollTimeout: 123}, adsOpts));
 
     //We restore the ads plugin
     vjs.Player.prototype.ads.restore();

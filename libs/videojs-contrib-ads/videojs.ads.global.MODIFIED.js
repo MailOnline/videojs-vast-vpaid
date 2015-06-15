@@ -452,9 +452,6 @@ var
         return;  // do nothing
       }
 
-      player.one('play', function() {
-        console.log('PLAY event triggered');
-      });
       player.play();
     });
 

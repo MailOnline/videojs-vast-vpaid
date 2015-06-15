@@ -106,8 +106,6 @@
     var vastAd = player.vastClient({
       url: getAdsUrl,
       playAdAlways: true,
-      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-      prerollTimeout: adsCancelTimeout,
       adCancelTimeout: adsCancelTimeout,
       adsEnabled: !!options.adsEnabled
     });
