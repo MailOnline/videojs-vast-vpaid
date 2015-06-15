@@ -398,12 +398,13 @@ var
           });
         },
         redispatch = function(event) {
+          //TODO: the if bellow was added while waiting for the PR https://github.com/videojs/videojs-contrib-ads/issues/93
+          if(event.type === 'play' && (player.ads.state === 'ads-playback'|| player.ads.state === 'content-resuming')){
+            player.hasStarted(true);
+          }
+
           if (player.ads.state === 'ad-playback') {
             triggerEvent('ad', event);
-//TODO: the if bellow was added while waiting for the PR https://github.com/videojs/videojs-contrib-ads/issues/93
-            if(event.type === 'play'){
-              player.hasStarted(true);
-            }
           } else if (player.ads.state === 'content-playback' && event.type === 'ended') {
             triggerEvent('content', event);
 

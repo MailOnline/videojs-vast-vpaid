@@ -152,7 +152,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     skipButton.onclick = function (e) {
       if (dom.hasClass(skipButton, 'enabled')) {
         tracker.trackSkip();
-        player.trigger('contentended');//We trigger the end of the ad playing
+        player.trigger('adended');//We trigger the end of the ad playing
       }
 
       //We prevent event propagation to avoid problems with the clickThrough and so on
@@ -249,13 +249,13 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   adStartTimeoutID = setTimeout(function () {
     player.off('addurationchange', playAd);
-    player.off('contentended', finishPlayingAd);
+    player.off('adended', finishPlayingAd);
     player.off('error', handlePlayerError);
     callback(new VASTError("on VASTIntegrator, timeout while waiting for the video to start playing", 402), response);
   }, this.adStartTimeout);
 
   player.one('addurationchange', playAd);
-  player.one('contentended', finishPlayingAd);
+  player.one('adended', finishPlayingAd);
   player.one('error', handlePlayerError);
 
   /**** local functions ******/

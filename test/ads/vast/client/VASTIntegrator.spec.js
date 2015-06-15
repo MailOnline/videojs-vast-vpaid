@@ -85,7 +85,7 @@ describe("VASTIntegrator", function () {
         this.clock.tick(1);
         assert.isObject(skipButton(player));
         assert.isObject(clickThroughAnchor(player));
-        player.trigger('contentended');
+        player.trigger('adended');
         assertNoError(callback);
         assert.equal(response, secondArg(callback));
         assert.isNull(skipButton(player));
@@ -313,13 +313,13 @@ describe("VASTIntegrator", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
         sinon.assert.notCalled(spy);
 
-        player.trigger('contentended');
+        player.trigger('adended');
         sinon.assert.calledOnce(spy);
       });
 
       it("must once the ad ended playing call the callback with the response and no error", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
-        player.trigger('contentended');
+        player.trigger('adended');
         sinon.assert.calledWithExactly(callback, null, response);
       });
 
@@ -404,7 +404,7 @@ describe("VASTIntegrator", function () {
 
         it("must trigger the end of the ad if you click on an enabled skip button", function () {
           var spy = sinon.spy();
-          player.on('contentended', spy);
+          player.on('adended', spy);
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           var skipBut = skipButton(player);
           dom.addClass(skipBut, 'enabled');
@@ -414,7 +414,7 @@ describe("VASTIntegrator", function () {
 
         it("must NOT trigger the end of the ad if you click on a skip button that is not enabled", function () {
           var spy = sinon.spy();
-          player.on('contentended', spy);
+          player.on('adended', spy);
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           var skipBut = skipButton(player);
           click(skipBut);
