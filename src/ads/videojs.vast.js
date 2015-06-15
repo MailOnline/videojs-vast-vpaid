@@ -140,6 +140,31 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     player.one('vast.adstart', function () {
       player.controlBar.addChild('AdsLabel');
     });
+
+    preventManualProgress();
+
+    /*** Local functions ****/
+    function preventManualProgress(){
+      var PROGRESS_THRESHOLD = 0.5;
+      var previousTime = player.currentTime();
+      var tech = player.el().querySelector('.vjs-tech');
+
+      player.on('adtimeupdate', adTimeupdateHandler);
+      player.one('adended', function () {
+        player.off('adtimeupdate', adTimeupdateHandler)
+      });
+
+      /*** Local functions ***/
+      function adTimeupdateHandler() {
+        var currentTime = player.currentTime();
+        var progressDelta = Math.abs(currentTime - previousTime);
+        if (progressDelta > PROGRESS_THRESHOLD) {
+          player.currentTime(previousTime);
+        } else {
+          previousTime = currentTime;
+        }
+      }
+    }
   }
 
   function finishPlayingAd(vastResponse, callback) {

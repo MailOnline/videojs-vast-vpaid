@@ -399,7 +399,7 @@ var
         },
         redispatch = function(event) {
           //TODO: the if bellow was added while waiting for the PR https://github.com/videojs/videojs-contrib-ads/issues/93
-          if(event.type === 'play' && (player.ads.state === 'ads-playback'|| player.ads.state === 'content-resuming')){
+          if(event.type === 'play'){
             player.hasStarted(true);
           }
 
