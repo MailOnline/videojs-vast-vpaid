@@ -137,7 +137,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, options.adCancelTimeout) : new VASTIntegrator(player, options.adCancelTimeout);
     player.ads.startLinearAdMode();
     adIntegrator.playAd(vastResponse, callback);
-    player.controlBar.addChild('AdsLabel');
+    player.one('vast.adstart', function () {
+      player.controlBar.addChild('AdsLabel');
+    });
   }
 
   function finishPlayingAd(vastResponse, callback) {

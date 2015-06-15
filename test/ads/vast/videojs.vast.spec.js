@@ -325,13 +325,14 @@ describe("videojs.vast plugin", function () {
       sinon.assert.calledOnce(adstartSpy);
     });
 
-    it("must ad the adsLabel component", function () {
+    it("must ad the adsLabel component once we know the ad is going to start. (i.e. vast.adstart)", function () {
       var response = new VASTResponse();
       response._addMediaFiles([
         createMediaFile('http://fakeVideoFile', 'video/mp4')
       ]);
       callback(null, response);
-      this.clock.tick(2);
+      this.clock.tick(1);
+      player.trigger('vast.adstart');
       assert.isObject(player.controlBar.getChild('AdsLabel'));
     });
 
@@ -343,10 +344,10 @@ describe("videojs.vast plugin", function () {
       ]);
       player.on('adend', adEndSpy);
       callback(null, response);
-      this.clock.tick(2);
+      this.clock.tick(1);
       var playAdCallback = secondArg(VASTIntegrator.prototype.playAd);
       playAdCallback(null, response);
-      this.clock.tick(2);
+      this.clock.tick(1);
       sinon.assert.calledOnce(adEndSpy);
     });
 
@@ -356,10 +357,11 @@ describe("videojs.vast plugin", function () {
         createMediaFile('http://fakeVideoFile', 'video/mp4')
       ]);
       callback(null, response);
-      this.clock.tick(2);
+      this.clock.tick(1);
+      player.trigger('vast.adstart');
       var playAdCallback = secondArg(VASTIntegrator.prototype.playAd);
       playAdCallback(null, response);
-      this.clock.tick(2);
+      this.clock.tick(1);
       assert.isNull(player.controlBar.getChild('AdsLabel'));
     });
 
