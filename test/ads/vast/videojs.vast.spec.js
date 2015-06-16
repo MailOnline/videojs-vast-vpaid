@@ -309,8 +309,43 @@ describe("videojs.vast plugin", function () {
       ]);
       callback(null, response);
 
-      this.clock.tick(2);
+      this.clock.tick(1);
       sinon.assert.calledWith(VASTIntegrator.prototype.playAd, response);
+    });
+
+    it("must prevent manual progress when you play the ad", function(){
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      sinon.stub(player, 'currentTime').returns(1);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      player.currentTime.returns(10);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      sinon.assert.calledWithExactly(player.currentTime, 1);
+    });
+
+    it("must not prevent the manual progress after the ad has ended", function(){
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      sinon.stub(player, 'currentTime').returns(1);
+      var setCurrentTime = player.currentTime.withArgs(1);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      player.trigger('adended');
+      this.clock.tick(1);
+      player.currentTime.returns(10);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      sinon.assert.notCalled(setCurrentTime);
     });
 
     it("must start ad linear mode when the ad is about to be played", function () {
@@ -321,7 +356,7 @@ describe("videojs.vast plugin", function () {
       ]);
       player.on('adstart', adstartSpy);
       callback(null, response);
-      this.clock.tick(2);
+      this.clock.tick(1);
       sinon.assert.calledOnce(adstartSpy);
     });
 
