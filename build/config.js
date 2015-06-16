@@ -14,7 +14,8 @@ module.exports = {
   //Files needed to build the demo
   demo: {
     pages: [
-      'demo/tpls/demo.html'
+      'demo/tpls/demo.html',
+      'demo/tpls/mobile.html'
     ],
     styles: [
       'bower_components/video.js/dist/video-js/video-js.css',

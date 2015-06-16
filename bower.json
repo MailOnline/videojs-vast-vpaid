@@ -20,7 +20,7 @@
     "frontend/demo/*"
   ],
   "dependencies": {
-    "flashVPAID": "0.0.4"
+    "flashVPAID": "0.0.5"
   },
   "devDependencies": {
     "video.js": "4.11.4"
