@@ -1,17 +1,17 @@
 {
-  "name": "videojs-vast-plugin",
+  "name": "videojs-vast-vpaid",
   "version": "0.0.0",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
   "description": "VAST plugin to use with video.js",
   "main": [
-    "dist/videojs-vast-plugin.min.js",
-    "dist/videojs-vast-plugin.min.css"
+    "bin/videojs-vast-vpaid.min.js",
+    "bin/videojs-vast-vpaid.min.css"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/MailOnline/videojs-vast-plugin"
+    "url": "https://github.com/MailOnline/videojs-vast-vpaid"
   },
   "scripts": {
     "test": "gulp ci-test"

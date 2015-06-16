@@ -68,7 +68,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         initAds();
       }
     }else{
-      cancelAds()
+      cancelAds();
     }
 
     /*** Local functions ***/
@@ -151,7 +151,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
       player.on('adtimeupdate', adTimeupdateHandler);
       player.one('adended', function () {
-        player.off('adtimeupdate', adTimeupdateHandler)
+        player.off('adtimeupdate', adTimeupdateHandler);
       });
 
       /*** Local functions ***/
