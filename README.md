@@ -8,7 +8,7 @@
   Currently we support VAST and VPAID Flash preroll ads. 
   We are working to support VPAID HTML5 preroll ads, and we will add more VAST ad types as we need them.
   
-  It is important to notice that **this plugin is still in beta** and we have not yet released a stable version.
+  It is important to notice that **VPAID integration is still in beta** and we have not yet released a stable version.
   
   You can find a demo of the plugin working together with video.js [here](http://mailonline.github.io/videojs-vast-plugin)
 
