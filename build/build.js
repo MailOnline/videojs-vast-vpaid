@@ -55,10 +55,11 @@ gulp.task('build-scripts', function () {
     .pipe(header('(function () {'))
     .pipe(footer('})();'))
     .pipe(concat(config.prodfile.scripts, {newLine: '\n;\n'}))
+    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)))
     .pipe(gulpif(config.env === 'production', uglify()))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
     .pipe(gulp.dest(scriptsDistPath))
-    .pipe(sourcemaps.write('../maps'))
+    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(scriptsDistPath));
 });
 
@@ -71,10 +72,10 @@ gulp.task('build-assets', function () {
 
 gulp.task('build-styles', function () {
   var distCssPath = path.join(config.DEV, 'styles');
-
   return gulp.src(config.plugin.styles)
     .pipe(flatten())
     .pipe(gulpif(config.env === 'production', concat(config.prodfile.styles, {newLine: '\n;\n'})))
+    .pipe(gulpif(config.env === 'production', gulp.dest(distCssPath)))
     .pipe(gulpif(config.env === 'production', minifyCSS({keepBreaks: false})))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
     .pipe(gulp.dest(distCssPath));
