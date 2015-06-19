@@ -263,7 +263,9 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
     if (isDefined(adStartTimeoutID)) {
       window.clearTimeout(adStartTimeoutID);
     }
-    player.trigger('vast.adstart');
+    player.one('adplaying', function () {
+      player.trigger('vast.adstart');
+    });
   }
 
   function finishPlayingAd() {

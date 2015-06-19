@@ -329,6 +329,30 @@ describe("videojs.vast plugin", function () {
       sinon.assert.calledWithExactly(player.currentTime, 1);
     });
 
+    it("must pause the play if the user tries to skip the ad manually twice", function(){
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      sinon.stub(player, 'currentTime').returns(1);
+      callback(null, response);
+      this.clock.tick(1);
+      sinon.spy(player, 'pause');
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      player.currentTime.returns(10);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      sinon.assert.notCalled(player.pause);
+      player.currentTime.returns(10);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      sinon.assert.calledOnce(player.pause);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      sinon.assert.calledTwice(player.pause);
+    });
+
     it("must not prevent the manual progress after the ad has ended", function(){
       var response = new VASTResponse();
       response._addMediaFiles([
@@ -396,6 +420,20 @@ describe("videojs.vast plugin", function () {
       player.trigger('vast.adstart');
       var playAdCallback = secondArg(VASTIntegrator.prototype.playAd);
       playAdCallback(null, response);
+      this.clock.tick(1);
+      assert.isNull(player.controlBar.getChild('AdsLabel'));
+    });
+
+    it("must remove the adsLabel component on adserror", function () {
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('vast.adstart');
+      player.trigger('adserror');
+
       this.clock.tick(1);
       assert.isNull(player.controlBar.getChild('AdsLabel'));
     });

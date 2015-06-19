@@ -281,7 +281,7 @@ describe("VASTIntegrator", function () {
         assert.isFunction(vastIntegrator._playSelectedAd);
       });
 
-      it("must must trigger vast.adstart when the add is ready to be played", function () {
+      it("must must trigger vast.adstart when the add is playing for the first time", function () {
         var spy = sinon.spy();
         player.on('vast.adstart', spy);
         sinon.assert.notCalled(spy);
@@ -289,6 +289,21 @@ describe("VASTIntegrator", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
         //when the ad is ready to play there is a durationchange event
         player.trigger('addurationchange');
+        player.trigger('adplaying');
+
+        sinon.assert.calledOnce(spy);
+      });
+
+      it("must must not trigger vast.adstart when the ad is paused and played again", function () {
+        var spy = sinon.spy();
+        player.on('vast.adstart', spy);
+        vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        player.trigger('addurationchange');
+        player.trigger('adplaying');
+
+        sinon.assert.calledOnce(spy);
+        player.trigger('adplaying');
+
         sinon.assert.calledOnce(spy);
       });
 
