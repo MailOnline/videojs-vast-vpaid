@@ -1,6 +1,7 @@
 vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
+  var adsCanceled = false;
 
   var defaultOpts = {
     // maximum amount of time in ms to wait to receive `adsready` from the ad
@@ -79,7 +80,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function initAds() {
       var adCancelTimeoutId;
-
+      adsCanceled = false;
       if(!player.paused()){
         player.pause();
       }
@@ -128,6 +129,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     player.trigger('adscanceled');
     //We trigger 'adserror' to cancel the ads if they are in 'adsready' or 'preroll?' or 'ad-playback' state
     player.trigger('adserror');
+    adsCanceled = true;
   }
 
   function playPrerollAd() {
@@ -158,7 +160,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   function playAd(vastResponse, callback) {
     //If the state is not 'preroll?' it means the ads were canceled therefore, we break the waterfall
-    if(player.ads.state !== 'preroll?'){
+    if(adsCanceled){
       return;
     }
 
