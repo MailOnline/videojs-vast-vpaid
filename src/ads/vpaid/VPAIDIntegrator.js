@@ -1,6 +1,6 @@
-function VPAIDIntegrator(player, adStartTimeout) {
+function VPAIDIntegrator(player) {
   if (!(this instanceof VPAIDIntegrator)) {
-    return new VPAIDIntegrator(player, adStartTimeout);
+    return new VPAIDIntegrator(player);
   }
 
   this.VIEW_MODE = {
@@ -9,10 +9,8 @@ function VPAIDIntegrator(player, adStartTimeout) {
     THUMBNAIL: "thumbnail"
   };
   this.player = player;
-  this.adStartTimeout = adStartTimeout || 5000;
   this.containerEl = createVPAIDContainerEl(player);
   this.options = {
-    adStartTimeout: adStartTimeout || 5000,
     responseTimeout: 2000,
     VPAID_VERSION: {
       full: '2.0',
@@ -39,7 +37,7 @@ VPAIDIntegrator.techs = [
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
   var that = this;
-  var tech, adStartTimeoutId;
+  var tech;
   var player = this.player;
 
   callback = callback || noop;
@@ -47,12 +45,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  adStartTimeoutId = setTimeout(function () {
-    var error = new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start');
-    callback(error);
-    callback = noop;
-    removeAdUnit(error);
-  }, this.adStartTimeout);
+  player.one('adserror', function () {
+    removeAdUnit();
+  });
 
   tech = this._findSupportedTech(vastResponse);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
@@ -64,7 +59,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       },
       this._loadAdUnit.bind(this),
       this._playAdUnit.bind(this),
-      clearAdStartTimeout,
       this._finishPlaying.bind(this)
 
     ], function (error, adUnit, vastResponse) {
@@ -76,13 +70,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
   }
   /*** Local functions ***/
-
-  function clearAdStartTimeout(adUnit, vastResponse, next) {
-    clearTimeout(adStartTimeoutId);
-    adStartTimeoutId = null;
-    next(null, adUnit, vastResponse);
-  }
-
   function removeAdUnit(error) {
     if (error) {
       that._trackError(vastResponse);

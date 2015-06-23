@@ -33,7 +33,7 @@ describe("VASTIntegrator", function () {
   });
 
   describe("instance", function () {
-    var vastIntegrator, player, callback, AD_START_TIMEOUT;
+    var vastIntegrator, player, callback;
 
     function assertVASTTrackRequest(URLs, variables) {
       URLs = isArray(URLs) ? URLs : [URLs];
@@ -42,11 +42,10 @@ describe("VASTIntegrator", function () {
 
     beforeEach(function () {
       sinon.stub(vastUtil, 'track', noop);
-      AD_START_TIMEOUT = 500;
       player = videojs(document.createElement('video'), {});
       player.ads({});
       player.ads.snapshot={}; //We fake the snapshot to prevent undesired errors in tests
-      vastIntegrator = new VASTIntegrator(player, AD_START_TIMEOUT);
+      vastIntegrator = new VASTIntegrator(player);
       callback = sinon.spy();
     });
 
@@ -98,8 +97,10 @@ describe("VASTIntegrator", function () {
           createMediaFile('http://fakeVideoFile', 'video/mp4')
         ]);
         vastIntegrator.playAd(response, callback);
-        this.clock.tick(AD_START_TIMEOUT);
-        assertError(callback, 'on VASTIntegrator, timeout while waiting for the video to start playing');
+        this.clock.tick(1);
+        player.trigger('error');
+        this.clock.tick(1);
+        assertError(callback, 'on VASTIntegrator, Player is unable to play the Ad');
         assert.equal(response, secondArg(callback));
       });
 
@@ -110,8 +111,10 @@ describe("VASTIntegrator", function () {
           createMediaFile('http://fakeVideoFile', 'video/mp4')
         ]);
         vastIntegrator.playAd(response, callback);
-        this.clock.tick(AD_START_TIMEOUT);
-        assertVASTTrackRequest(['http://fake.error.url'],{ ERRORCODE: 402});
+        this.clock.tick(1);
+        player.trigger('error');
+        this.clock.tick(1);
+        assertVASTTrackRequest(['http://fake.error.url'],{ ERRORCODE: 400});
       });
     });
 
@@ -338,21 +341,10 @@ describe("VASTIntegrator", function () {
         sinon.assert.calledWithExactly(callback, null, response);
       });
 
-      it("must call the callback with an error if the player does not start playing the ad after a predefined timeout", function () {
-        var clock = sinon.useFakeTimers();
-        vastIntegrator._playSelectedAd(mediaFile, response, callback);
-        sinon.assert.notCalled(callback);
-
-        clock.tick(AD_START_TIMEOUT);
-        assertError(callback, "on VASTIntegrator, timeout while waiting for the video to start playing", 402);
-        assert.equal(secondArg(callback), response);
-        clock.restore();
-      });
-
       it("must call the callback with an error if the player had a problem playing the ad", function(){
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
         player.trigger('error');
-        assertError(callback, "on VASTIntegrator, Player is unable to play the Ad ", 400);
+        assertError(callback, "on VASTIntegrator, Player is unable to play the Ad", 400);
       });
     });
 

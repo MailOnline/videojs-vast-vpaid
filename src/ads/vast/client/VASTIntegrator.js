@@ -3,17 +3,15 @@
  *
  * @param player {object} instance of the player that will play the ad. It assumes that the videojs-contrib-ads plugin
  *                        has been initialized when you use its utility functions.
- * @param adStartTimeout Indicates in ms. how much time to wait for the ad to start playing before canceling the ad.
  *
  * @constructor
  */
-function VASTIntegrator(player, adStartTimeout) {
+function VASTIntegrator(player) {
   if (!(this instanceof VASTIntegrator)) {
-    return new VASTIntegrator(player, adStartTimeout);
+    return new VASTIntegrator(player);
   }
 
   this.player = player;
-  this.adStartTimeout = adStartTimeout || 5000;
 }
 
 VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
@@ -69,20 +67,22 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('adtimeupdate', trackProgress);
   player.on('advolumechange', trackVolumeChange);
 
-  player.one('vast.adend', function () {
-    tracker.trackComplete();
-    player.off('adfullscreenchange', trackFullscreenChange);
-    player.off('vast.adstart', trackImpressions);
-    player.off('adpause', trackPause);
-    player.off('adtimeupdate', trackProgress);
-    player.off('advolumechange', trackVolumeChange);
-  });
+  player.one('vast.adend', unbindEvents);
+  player.one('vast.aderror', unbindEvents);
 
   //NOTE: Pending tracking events skip, close, closeLinear, expand, collapse and creativeView. See VAST implementation
 
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
+  function unbindEvents() {
+    tracker.trackComplete();
+    player.off('adfullscreenchange', trackFullscreenChange);
+    player.off('vast.adstart', trackImpressions);
+    player.off('adpause', trackPause);
+    player.off('adtimeupdate', trackProgress);
+    player.off('advolumechange', trackVolumeChange);
+  }
 
   function trackFullscreenChange() {
     if (player.isFullscreen()) {
@@ -243,16 +243,8 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
-  var adStartTimeoutID;
 
   player.src(source);
-
-  adStartTimeoutID = setTimeout(function () {
-    player.off('addurationchange', playAd);
-    player.off('adended', finishPlayingAd);
-    player.off('error', handlePlayerError);
-    callback(new VASTError("on VASTIntegrator, timeout while waiting for the video to start playing", 402), response);
-  }, this.adStartTimeout);
 
   player.one('addurationchange', playAd);
   player.one('adended', finishPlayingAd);
@@ -260,9 +252,6 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   /**** local functions ******/
   function playAd() {
-    if (isDefined(adStartTimeoutID)) {
-      window.clearTimeout(adStartTimeoutID);
-    }
     player.one('adplaying', function () {
       player.trigger('vast.adstart');
     });
@@ -277,7 +266,7 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
   function handlePlayerError() {
     player.off('addurationchange', playAd);
     player.off('contentended', finishPlayingAd);
-    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad ", 400), response);
+    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
   }
 };
 

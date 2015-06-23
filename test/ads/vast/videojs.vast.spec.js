@@ -438,16 +438,18 @@ describe("videojs.vast plugin", function () {
       assert.isNull(player.controlBar.getChild('AdsLabel'));
     });
 
-    it("must track the error if there as a problem playing the ad ", function () {
+    it("must track the error if there as a problem playing the ad", function () {
       var response = new VASTResponse();
       var clock = this.clock;
       response._addMediaFiles([
         createMediaFile('http://fakeVideoFile', 'video/mp4')
       ]);
       callback(null, response);
+      clock.tick(1);
       assertTriggersTrackError(function () {
-        clock.tick(100000);
-      }, 'on VASTIntegrator, timeout while waiting for the video to start playing');
+        player.trigger('error');
+        clock.tick(1);
+      }, 'on VASTIntegrator, Player is unable to play the Ad');
     });
   });
   

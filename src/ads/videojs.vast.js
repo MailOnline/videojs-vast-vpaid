@@ -38,7 +38,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
-
   player.on('play', playAdHandler);
   player.on('readyforpreroll', playPrerollAd);
 
@@ -73,15 +72,39 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     /*** Local functions ***/
     function canPlayPrerollAd(){
+      //TODO: add the preroll delay to the options and remove this substraction
       var allowedPrerollDelay = settings.adCancelTimeout - settings.prerollTimeout;
       return player.currentTime() <= allowedPrerollDelay;
     }
 
     function initAds() {
+      var adCancelTimeoutId;
+
+      if(!player.paused()){
+        player.pause();
+      }
+
       player.trigger('adsready');
       addSpinnerIcon();
       player.on('vast.adstart', removeSpinnerIcon);
       player.on('vast.aderror', removeSpinnerIcon);
+
+      adCancelTimeoutId = setTimeout(function () {
+        trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
+      }, settings.adCancelTimeout);
+
+      player.one('vast.adstart', clearAdCancelTimeout);
+      player.one('vast.aderror', clearAdCancelTimeout);
+
+      /*** local functions ***/
+      function clearAdCancelTimeout(){
+        if(adCancelTimeoutId) {
+          clearTimeout(adCancelTimeoutId);
+          adCancelTimeoutId = null;
+          player.off('vast.adstart', clearAdCancelTimeout);
+          player.off('vast.aderror', clearAdCancelTimeout);
+        }
+      }
     }
 
     function addSpinnerIcon() {
@@ -134,7 +157,12 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAd(vastResponse, callback) {
-    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, options.adCancelTimeout) : new VASTIntegrator(player, options.adCancelTimeout);
+    //If the state is not 'preroll?' it means the ads were canceled therefore, we break the waterfall
+    if(player.ads.state !== 'preroll?'){
+      return;
+    }
+
+    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player) : new VASTIntegrator(player);
     player.ads.startLinearAdMode();
     adIntegrator.playAd(vastResponse, callback);
     player.one('vast.adstart', function () {

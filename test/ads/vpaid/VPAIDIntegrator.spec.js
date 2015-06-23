@@ -1,5 +1,5 @@
 describe("VPAIDIntegrator", function () {
-  var player, AD_START_TIMEOUT, vpaidAdUnit, adUnitWrapper, testDiv;
+  var player, vpaidAdUnit, adUnitWrapper, testDiv;
   beforeEach(function () {
 
     testDiv = document.createElement("div");
@@ -7,7 +7,6 @@ describe("VPAIDIntegrator", function () {
     var videoEl = document.createElement('video');
     testDiv.appendChild(videoEl);
 
-    AD_START_TIMEOUT = 500;
     player = videojs(videoEl, {});
     dom.addClass(player.el(), 'vjs-test-player');
     vpaidAdUnit = {
@@ -40,18 +39,6 @@ describe("VPAIDIntegrator", function () {
     assert.instanceOf(VPAIDIntegrator(player), VPAIDIntegrator);
   });
 
-  it("must publish the passed player and adStartTimeout", function () {
-    var vpaidIntegrator = new VPAIDIntegrator(player, AD_START_TIMEOUT);
-    assert.equal(vpaidIntegrator.player, player);
-    assert.equal(vpaidIntegrator.adStartTimeout, AD_START_TIMEOUT);
-  });
-
-  it("must set the adStartTimeout to 5000 ms if no timeout is passed to the constructor", function () {
-    var vpaidIntegrator = new VPAIDIntegrator(player);
-    assert.equal(vpaidIntegrator.player, player);
-    assert.equal(vpaidIntegrator.adStartTimeout, 5000);
-  });
-
   describe("instance", function () {
     var vpaidIntegrator, callback, fakeTech, vastResponse;
 
@@ -64,7 +51,7 @@ describe("VPAIDIntegrator", function () {
 
     beforeEach(function () {
       var mediaFile = createMediaFile('http://fakeMediaFile', 'application/x-fake');
-      vpaidIntegrator = new VPAIDIntegrator(player, AD_START_TIMEOUT);
+      vpaidIntegrator = new VPAIDIntegrator(player);
       callback = sinon.spy();
 
       fakeTech = function () {
@@ -126,24 +113,17 @@ describe("VPAIDIntegrator", function () {
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
       });
 
-      it("must remove 'vjs-vpaid-ad' class if there is  an ad start timeout", function () {
+      it("must remove 'vjs-vpaid-ad' class if there is  an adserror", function () {
         vpaidIntegrator.playAd(vastResponse, callback);
-        this.clock.tick(vpaidIntegrator.adStartTimeout);
+        player.trigger('adserror');
+        this.clock.tick(1);
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
       });
 
-      it("must pass an error to the callback if there is an ad start timeout", function () {
+      it("must unload the adUnit if there is an adserror", function () {
         vpaidIntegrator.playAd(vastResponse, callback);
-        this.clock.tick(vpaidIntegrator.adStartTimeout);
-        sinon.assert.calledOnce(callback);
-        var error = firstArg(callback);
-        assert.instanceOf(error, VASTError);
-        assert.equal(error.message, 'VAST Error: on VPAIDIntegrator, timeout while waiting for the ad to start')
-      });
-
-      it("must unload the adUnit if there is an ad start timeout", function () {
-        vpaidIntegrator.playAd(vastResponse, callback);
-        this.clock.tick(vpaidIntegrator.adStartTimeout);
+        player.trigger('adserror');
+        this.clock.tick(1);
         sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
       });
 
@@ -167,12 +147,6 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(callback);
       });
 
-      it("must trigger 'vast.aderror' if there is an ad start timeout", function () {
-        player.on('vast.aderror', callback);
-        vpaidIntegrator.playAd(vastResponse, noop);
-        this.clock.tick(vpaidIntegrator.adStartTimeout);
-        sinon.assert.calledOnce(callback);
-      });
     });
 
     describe("loadAdUnit", function () {

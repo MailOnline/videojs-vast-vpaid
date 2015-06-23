@@ -39,7 +39,6 @@
       url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
       playAdAlways: true,
       //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-      prerollTimeout: adsCancelTimeout,
       adCancelTimeout: adsCancelTimeout,
       adsEnabled: !!options.adsEnabled
     });
@@ -105,29 +104,6 @@
 ## adCancelTimeout
  >Number of milliseconds for the ad to start before canceling it. Defaults to 3000
  
-## prerollTimeout
-  >In order to give the users the best experience, you can ensure that the video starts playing if it takes longer than the specified prerollTimeout. When the ad becomes ready to play, the plugin will pause the content and display the ad.
-  >Defaults to the value of the adCancelTimeout option.
-  >In the sample below, the video content will never play befor the ad has been played or canceled
-  >
-  >```javascript
-  >var vastAd = player.vastClient({
-  >  adCancelTimeout: 5000,
-  > ...
-  >});
-  > ```
-  >
-  >In the sample below if the ad is not ready after 500 milliseconds it will start playing the video content and if the ad becomes ready before 5000 milliseconds (adCancelTimeout) the plugin will stop the content and play the ad 
-  >
-  >```javascript
-  >var vastAd = player.vastClient({
-  >  prerollTimeout: 5000,
-  >  adCancelTimeout: 5000,
-  > ...
-  >});
-  > ```
-  >
- 
 ## adsEnabled
  >Flag to disable the ads. Defaults to false.
  
@@ -138,7 +114,6 @@
      url: getAdsUrl,
      playAdAlways: true,
      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-     prerollTimeout: adsCancelTimeout,
      adCancelTimeout: adsCancelTimeout,
      adsEnabled: !!options.adsEnabled
    });
@@ -168,7 +143,6 @@
        url: getAdsUrl,
        playAdAlways: true,
        //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-       prerollTimeout: adsCancelTimeout,
        adCancelTimeout: adsCancelTimeout,
        adsEnabled: !!options.adsEnabled
      });

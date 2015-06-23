@@ -101,12 +101,11 @@
   videojs.plugin('ads-setup', function molVastSetup(opts) {
     var player = this;
     var options = extend({}, this.options_, opts);
-    var adsCancelTimeout = 3000;
 
     var vastAd = player.vastClient({
       url: getAdsUrl,
       playAdAlways: true,
-      adCancelTimeout: adsCancelTimeout,
+      adCancelTimeout: options.adCancelTimeout || 3000,
       adsEnabled: !!options.adsEnabled
     });
 
