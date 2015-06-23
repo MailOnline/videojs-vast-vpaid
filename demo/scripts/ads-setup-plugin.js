@@ -98,7 +98,7 @@
   };
 
   /*** ADS SETUP PLUGIN ***/
-  vjs.plugin('ads-setup', function molVastSetup(opts) {
+  videojs.plugin('ads-setup', function molVastSetup(opts) {
     var player = this;
     var options = extend({}, this.options_, opts);
     var adsCancelTimeout = 3000;
