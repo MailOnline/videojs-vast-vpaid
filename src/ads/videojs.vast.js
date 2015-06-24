@@ -81,7 +81,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
-      if(!player.paused()){
+      
+      if(player.paused()){
         player.pause();
       }
 
