@@ -160,6 +160,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAd(vastResponse, callback) {
+    //TODO: Find a better way to stop the play. The 'playPrerollWaterfall' ends in an inconsistent situation
     //If the state is not 'preroll?' it means the ads were canceled therefore, we break the waterfall
     if(adsCanceled){
       return;
