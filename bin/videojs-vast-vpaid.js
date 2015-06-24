@@ -1,4 +1,4 @@
-(function () {(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (window, document, vjs, undefined) {(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 //simple representation of the API
 'use strict';
 
@@ -2774,6 +2774,7 @@ vjs.AdsLabel.prototype.createEl = function(){
 vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
+  var adsCanceled = false;
 
   var defaultOpts = {
     // maximum amount of time in ms to wait to receive `adsready` from the ad
@@ -2811,7 +2812,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
-
   player.on('play', playAdHandler);
   player.on('readyforpreroll', playPrerollAd);
 
@@ -2846,15 +2846,40 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     /*** Local functions ***/
     function canPlayPrerollAd(){
+      //TODO: add the preroll delay to the options and remove this substraction
       var allowedPrerollDelay = settings.adCancelTimeout - settings.prerollTimeout;
       return player.currentTime() <= allowedPrerollDelay;
     }
 
     function initAds() {
+      var adCancelTimeoutId;
+      adsCanceled = false;
+      
+      if(player.paused()){
+        player.pause();
+      }
+
       player.trigger('adsready');
       addSpinnerIcon();
       player.on('vast.adstart', removeSpinnerIcon);
       player.on('vast.aderror', removeSpinnerIcon);
+
+      adCancelTimeoutId = setTimeout(function () {
+        trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
+      }, settings.adCancelTimeout);
+
+      player.one('vast.adstart', clearAdCancelTimeout);
+      player.one('vast.aderror', clearAdCancelTimeout);
+
+      /*** local functions ***/
+      function clearAdCancelTimeout(){
+        if(adCancelTimeoutId) {
+          clearTimeout(adCancelTimeoutId);
+          adCancelTimeoutId = null;
+          player.off('vast.adstart', clearAdCancelTimeout);
+          player.off('vast.aderror', clearAdCancelTimeout);
+        }
+      }
     }
 
     function addSpinnerIcon() {
@@ -2878,6 +2903,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     player.trigger('adscanceled');
     //We trigger 'adserror' to cancel the ads if they are in 'adsready' or 'preroll?' or 'ad-playback' state
     player.trigger('adserror');
+    adsCanceled = true;
   }
 
   function playPrerollAd() {
@@ -2907,7 +2933,13 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAd(vastResponse, callback) {
-    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, options.adCancelTimeout) : new VASTIntegrator(player, options.adCancelTimeout);
+    //TODO: Find a better way to stop the play. The 'playPrerollWaterfall' ends in an inconsistent situation
+    //If the state is not 'preroll?' it means the ads were canceled therefore, we break the waterfall
+    if(adsCanceled){
+      return;
+    }
+
+    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player) : new VASTIntegrator(player);
     player.ads.startLinearAdMode();
     adIntegrator.playAd(vastResponse, callback);
     player.one('vast.adstart', function () {
@@ -3257,9 +3289,9 @@ VPAIDFlashTech.prototype.unloadAdUnit = function () {
 };
 
 ;
-function VPAIDIntegrator(player, adStartTimeout) {
+function VPAIDIntegrator(player) {
   if (!(this instanceof VPAIDIntegrator)) {
-    return new VPAIDIntegrator(player, adStartTimeout);
+    return new VPAIDIntegrator(player);
   }
 
   this.VIEW_MODE = {
@@ -3268,10 +3300,8 @@ function VPAIDIntegrator(player, adStartTimeout) {
     THUMBNAIL: "thumbnail"
   };
   this.player = player;
-  this.adStartTimeout = adStartTimeout || 5000;
   this.containerEl = createVPAIDContainerEl(player);
   this.options = {
-    adStartTimeout: adStartTimeout || 5000,
     responseTimeout: 2000,
     VPAID_VERSION: {
       full: '2.0',
@@ -3298,7 +3328,7 @@ VPAIDIntegrator.techs = [
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
   var that = this;
-  var tech, adStartTimeoutId;
+  var tech;
   var player = this.player;
 
   callback = callback || noop;
@@ -3306,12 +3336,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  adStartTimeoutId = setTimeout(function () {
-    var error = new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start');
-    callback(error);
-    callback = noop;
-    removeAdUnit(error);
-  }, this.adStartTimeout);
+  player.one('adserror', function () {
+    removeAdUnit();
+  });
 
   tech = this._findSupportedTech(vastResponse);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
@@ -3323,7 +3350,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       },
       this._loadAdUnit.bind(this),
       this._playAdUnit.bind(this),
-      clearAdStartTimeout,
       this._finishPlaying.bind(this)
 
     ], function (error, adUnit, vastResponse) {
@@ -3335,13 +3361,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
   }
   /*** Local functions ***/
-
-  function clearAdStartTimeout(adUnit, vastResponse, next) {
-    clearTimeout(adStartTimeoutId);
-    adStartTimeoutId = null;
-    next(null, adUnit, vastResponse);
-  }
-
   function removeAdUnit(error) {
     if (error) {
       that._trackError(vastResponse);
@@ -4026,17 +4045,15 @@ VASTError.prototype.name = "VAST Error";
  *
  * @param player {object} instance of the player that will play the ad. It assumes that the videojs-contrib-ads plugin
  *                        has been initialized when you use its utility functions.
- * @param adStartTimeout Indicates in ms. how much time to wait for the ad to start playing before canceling the ad.
  *
  * @constructor
  */
-function VASTIntegrator(player, adStartTimeout) {
+function VASTIntegrator(player) {
   if (!(this instanceof VASTIntegrator)) {
-    return new VASTIntegrator(player, adStartTimeout);
+    return new VASTIntegrator(player);
   }
 
   this.player = player;
-  this.adStartTimeout = adStartTimeout || 5000;
 }
 
 VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
@@ -4092,20 +4109,22 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('adtimeupdate', trackProgress);
   player.on('advolumechange', trackVolumeChange);
 
-  player.one('vast.adend', function () {
-    tracker.trackComplete();
-    player.off('adfullscreenchange', trackFullscreenChange);
-    player.off('vast.adstart', trackImpressions);
-    player.off('adpause', trackPause);
-    player.off('adtimeupdate', trackProgress);
-    player.off('advolumechange', trackVolumeChange);
-  });
+  player.one('vast.adend', unbindEvents);
+  player.one('vast.aderror', unbindEvents);
 
   //NOTE: Pending tracking events skip, close, closeLinear, expand, collapse and creativeView. See VAST implementation
 
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
+  function unbindEvents() {
+    tracker.trackComplete();
+    player.off('adfullscreenchange', trackFullscreenChange);
+    player.off('vast.adstart', trackImpressions);
+    player.off('adpause', trackPause);
+    player.off('adtimeupdate', trackProgress);
+    player.off('advolumechange', trackVolumeChange);
+  }
 
   function trackFullscreenChange() {
     if (player.isFullscreen()) {
@@ -4266,16 +4285,8 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
-  var adStartTimeoutID;
 
   player.src(source);
-
-  adStartTimeoutID = setTimeout(function () {
-    player.off('addurationchange', playAd);
-    player.off('adended', finishPlayingAd);
-    player.off('error', handlePlayerError);
-    callback(new VASTError("on VASTIntegrator, timeout while waiting for the video to start playing", 402), response);
-  }, this.adStartTimeout);
 
   player.one('addurationchange', playAd);
   player.one('adended', finishPlayingAd);
@@ -4283,9 +4294,6 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   /**** local functions ******/
   function playAd() {
-    if (isDefined(adStartTimeoutID)) {
-      window.clearTimeout(adStartTimeoutID);
-    }
     player.one('adplaying', function () {
       player.trigger('vast.adstart');
     });
@@ -4300,7 +4308,7 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
   function handlePlayerError() {
     player.off('addurationchange', playAd);
     player.off('contentended', finishPlayingAd);
-    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad ", 400), response);
+    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
   }
 };
 
@@ -4820,4 +4828,4 @@ var vastUtil = {
   isVPAID: function isVPAIDMediaFile(mediaFile) {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
-};})();
+};})(window, document, videojs);
