@@ -136,8 +136,8 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
       });
 
-      it("must trigger 'VPAID-adfinished'", function () {
-        player.on('VPAID-adfinished', callback);
+      it("must trigger 'VPAID.adended'", function () {
+        player.on('VPAID.adended', callback);
         vpaidIntegrator.playAd(vastResponse, noop);
         this.clock.tick(1);
         loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
@@ -327,16 +327,16 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWithExactly(callback, null, adUnitWrapper, vastResponse);
         });
 
-        it("must update the adUnit volume on 'volumechange'", function () {
+        it("must update the adUnit volume on 'advolumechange'", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('volumechange');
+          player.trigger('advolumechange');
           sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0.5);
         });
 
         it("must update the adUnit volume to 0 if the player is muted", function(){
           sinon.stub(player, 'muted').returns(true);
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('volumechange');
+          player.trigger('advolumechange');
           sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0);
         });
 
@@ -349,10 +349,10 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWith(player.volume, 0.1);
         });
 
-        it("must unsubscribe on 'VPAID-adfinished' events", function () {
+        it("must unsubscribe on 'VPAID.adended' events", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('VPAID-adfinished');
-          player.trigger('volumechange');
+          player.trigger('VPAID.adended');
+          player.trigger('advolumechange');
           sinon.assert.notCalled(adUnitWrapper.setAdVolume);
         });
       });
@@ -376,7 +376,7 @@ describe("VPAIDIntegrator", function () {
         it("must unsubscribe on 'VPAID-adfinsished'", function () {
           sinon.stub(player, 'isFullscreen');
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('VPAID-adfinished');
+          player.trigger('VPAID.adended');
           player.trigger('fullscreenchange');
           sinon.assert.notCalled(adUnitWrapper.resizeAd);
         });
