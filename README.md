@@ -10,7 +10,7 @@
   
   It is important to notice that **VPAID integration is still in beta** and we have not yet released a stable version.
   
-  You can find a demo of the plugin working together with video.js [here](http://mailonline.github.io/videojs-vast-plugin)
+  You can find a demo of the plugin working together with video.js [here](http://mailonline.github.io/videojs-vast-vpaid)
 
 ## Integration with video.js
   To integrate the plugin with videoJs you need to:
