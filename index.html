@@ -4,14 +4,10 @@
     <title>video.js VAST plugin DEMO</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-    <!-- DEMO required styles-->
+    <!-- CSS files -->
     <link rel="stylesheet" type="text/css" href="styles/buttons.css"/>
     <link rel="stylesheet" type="text/css" href="styles/video-js.css"/>
-
-    <!-- CSS files -->
-    <link rel="stylesheet" type="text/css" href="styles/ads-label.css"/>
-    <link rel="stylesheet" type="text/css" href="styles/videojs.vast.css"/>
-    <link rel="stylesheet" type="text/css" href="styles/videojs.vpaid.css"/>
+    <link rel="stylesheet" type="text/css" href="styles/videojs-vast-vpaid.css"/>
 
     <script type="text/javascript">
         // this is mandatory for IE8 !!!!!
@@ -26,7 +22,7 @@
     <script type="text/javascript" src="scripts/video.dev.js"></script>
 
     <!-- PLUGIN js files -->
-    <script type="text/javascript" src="scripts/videojs-vast-plugin.js"></script>
+    <script type="text/javascript" src="scripts/videojs-vast-vpaid.js"></script>
 
     <!-- ADS SETUP DEMO PLUGIN -->
     <script type="text/javascript" src="scripts/ads-setup-plugin.js"></script>
@@ -37,8 +33,8 @@
 
 <div class="btns">
 
-    <button class="btn" onclick="selectBtn(this, AD_TAGS.VAST)">VAST</button>
-    <button class="btn selected" onclick="selectBtn(this, AD_TAGS.VPAID_EXPAND)">VPAID (expand)</button>
+    <button class="btn selected" onclick="selectBtn(this, AD_TAGS.VAST)">VAST</button>
+    <button class="btn" onclick="selectBtn(this, AD_TAGS.VPAID_EXPAND)">VPAID (expand)</button>
     <button class="btn" onclick="selectBtn(this, AD_TAGS.VPAID_BUTTON)">VPAID (button)</button>
 </div>
 
@@ -48,7 +44,7 @@
        data-setup='{
                 "plugins": {
                         "ads-setup":{
-                            "adsCancelTimeout": 10000,
+                            "adCancelTimeout": 10000,
                             "adsEnabled": true
                         }
                 }

@@ -1,150 +1,5 @@
-(function () {/**
- There is a bug on android 4.2 ont the way it parses string
- The code bellow fixes the problem if there is a problem
- */
-(function () {
- var parseNum;
- if(parseInt('09') !== 9) {
-  parseNum = window.parseInt;
-  window.parseInt = function(str) {
-   if(typeof str === 'string' && !/^(\s+)?0+(\s+)?$/.test(str)){
-    //We remove the 0 from the left of the number
-    return parseNum(str.replace(/^0+/, ''));
-   }
-
-   return parseNum(str)
-  };
- }
-})();
-;
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-//if this code already run once don't do anything
-var VPAIDFlashToJS = (function () {
-    if (window.VPAIDFlashToJS) return;
-
-    var JSFlashBridge = require('./jsFlashBridge').JSFlashBridge;
-    var VPAIDAdUnit = require('./VPAIDAdUnit').VPAIDAdUnit;
-
-    var noop = require('./utils').noop;
-    var isPositiveInt = require('./utils').isPositiveInt;
-    var createElementWithID = require('./utils').createElementWithID;
-    var uniqueVPAID = require('./utils').unique('vpaid');
-
-    var ERROR = 'error';
-
-    var VPAIDFlashToJS = (function () {
-        function VPAIDFlashToJS(vpaidParentEl, callback) {
-            var swfConfig = arguments[2] === undefined ? { data: 'VPAIDFlash.swf', width: 800, height: 400 } : arguments[2];
-            var version = arguments[3] === undefined ? '9' : arguments[3];
-            var params = arguments[4] === undefined ? { wmode: 'transparent', salign: 'tl', align: 'left', allowScriptAccess: 'always', scale: 'noScale', allowFullScreen: 'true', quality: 'high' } : arguments[4];
-            var debug = arguments[5] === undefined ? false : arguments[5];
-
-            _classCallCheck(this, VPAIDFlashToJS);
-
-            if (!swfobject) throw new Error('no swfobject in global scope. check: https://github.com/swfobject/swfobject or https://code.google.com/p/swfobject/');
-
-            this._vpaidParentEl = vpaidParentEl;
-            this._flashID = uniqueVPAID();
-            this._load = callback || noop;
-            this._destroyed = false;
-
-            //validate the height
-            swfConfig.width = isPositiveInt(swfConfig.width, 800);
-            swfConfig.height = isPositiveInt(swfConfig.height, 400);
-
-            createElementWithID(vpaidParentEl, this._flashID);
-
-            params.movie = swfConfig.data;
-            params.FlashVars = 'flashid=' + this._flashID + '&handler=' + JSFlashBridge.VPAID_FLASH_HANDLER + '&debug=' + debug + '&salign=' + params.salign;
-
-            if (swfobject.hasFlashPlayerVersion(version)) {
-                this.el = swfobject.createSWF(swfConfig, params, this._flashID);
-                this._flash = new JSFlashBridge(this.el, swfConfig.data, this._flashID, swfConfig.width, swfConfig.height, callback || noop);
-            }
-        }
-
-        _createClass(VPAIDFlashToJS, [{
-            key: 'destroy',
-            value: function destroy() {
-                this._flash.destroy();
-                this._flash = null;
-                this.el = null;
-                this._adUnitLoad._destroy();
-                this._adUnitLoad = null;
-                this._destroyed = true;
-            }
-        }, {
-            key: 'isDestroyed',
-            value: function isDestroyed() {
-                return this._destroyed;
-            }
-        }, {
-            key: 'loadAdUnit',
-            value: function loadAdUnit(adURL, callback) {
-                var _this = this;
-
-                if (this._adUnit) {
-                    throw new error('AdUnit still exists');
-                }
-
-                this._adUnitLoad = function (err, message) {
-                    if (!err) {
-                        _this._adUnit = new VPAIDAdUnit(_this._flash);
-                    }
-                    _this._adUnitLoad = null;
-                    callback(err, _this._adUnit);
-                };
-
-                this._flash.callFlashMethod('loadAdUnit', [adURL], this._adUnitLoad);
-            }
-        }, {
-            key: 'unloadAdUnit',
-            value: function unloadAdUnit() {
-                var callback = arguments[0] === undefined ? undefined : arguments[0];
-
-                if (!this._adUnit) {
-                    throw new Error('Can\'t unload a adUnit that doesn\'t exist');
-                }
-
-                if (this._adUnitLoad) {
-                    this._adUnitLoad = null;
-                    this._flash.removeCallback(this._adUnitLoad);
-                }
-
-                this._adUnit._destroy();
-                this._adUnit = null;
-
-                this._flash.callFlashMethod('unloadAdUnit', [], callback);
-            }
-        }, {
-            key: 'getFlashID',
-            value: function getFlashID() {
-                return this._flash.getFlashID();
-            }
-        }, {
-            key: 'getFlashURL',
-            value: function getFlashURL() {
-                return this._flash.getFlashURL();
-            }
-        }]);
-
-        return VPAIDFlashToJS;
-    })();
-
-    window.VPAIDFlashToJS = VPAIDFlashToJS;
-
-    return VPAIDFlashToJS;
-})();
-
-module.exports = VPAIDFlashToJS;
-
-},{"./VPAIDAdUnit":3,"./jsFlashBridge":4,"./utils":7}],2:[function(require,module,exports){
+(function (window, document, vjs, undefined) {(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+//simple representation of the API
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -154,8 +9,6 @@ Object.defineProperty(exports, '__esModule', {
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-//simple representation of the API
 
 var IVPAIDAdUnit = (function () {
     function IVPAIDAdUnit() {
@@ -271,7 +124,7 @@ Object.defineProperty(IVPAIDAdUnit, 'EVENTS', {
     'AdVolumeChange', 'AdImpression', 'AdVideoStart', 'AdVideoFirstQuartile', 'AdVideoMidpoint', 'AdVideoThirdQuartile', 'AdVideoComplete', 'AdClickThru', 'AdInteraction', 'AdUserAcceptInvitation', 'AdUserMinimize', 'AdUserClose', 'AdPaused', 'AdPlaying', 'AdLog', 'AdError']
 });
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -280,9 +133,7 @@ Object.defineProperty(exports, '__esModule', {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x15, _x16, _x17) { var _again = true; _function: while (_again) { desc = parent = getter = undefined; _again = false; var object = _x15,
-    property = _x16,
-    receiver = _x17; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x15 = parent; _x16 = property; _x17 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x15, _x16, _x17) { var _again = true; _function: while (_again) { var object = _x15, property = _x16, receiver = _x17; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x15 = parent; _x16 = property; _x17 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -298,6 +149,7 @@ var VPAIDAdUnit = (function (_IVPAIDAdUnit) {
         _classCallCheck(this, VPAIDAdUnit);
 
         _get(Object.getPrototypeOf(VPAIDAdUnit.prototype), 'constructor', this).call(this);
+        this._destroyed = false;
         this._flash = flash;
     }
 
@@ -306,14 +158,17 @@ var VPAIDAdUnit = (function (_IVPAIDAdUnit) {
     _createClass(VPAIDAdUnit, [{
         key: '_destroy',
         value: function _destroy() {
-            var _this2 = this;
+            var _this = this;
 
+            this._destroyed = true;
             ALL_VPAID_METHODS.forEach(function (methodName) {
-                _this2._flash.removeCallbackByMethodName(methodName);
+                _this._flash.removeCallbackByMethodName(methodName);
             });
             IVPAIDAdUnit.EVENTS.forEach(function (event) {
-                _this2._flash.offEvent(event);
+                _this._flash.offEvent(event);
             });
+
+            this._flash = null;
         }
     }, {
         key: 'on',
@@ -473,7 +328,170 @@ var VPAIDAdUnit = (function (_IVPAIDAdUnit) {
 
 exports.VPAIDAdUnit = VPAIDAdUnit;
 
-},{"./IVPAIDAdUnit":2}],4:[function(require,module,exports){
+},{"./IVPAIDAdUnit":1}],3:[function(require,module,exports){
+//if this code already run once don't do anything
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var VPAIDFlashToJS = (function () {
+    if (window.VPAIDFlashToJS) return;
+
+    var JSFlashBridge = require('./jsFlashBridge').JSFlashBridge;
+    var VPAIDAdUnit = require('./VPAIDAdUnit').VPAIDAdUnit;
+
+    var noop = require('./utils').noop;
+    var callbackTimeout = require('./utils').callbackTimeout;
+    var isPositiveInt = require('./utils').isPositiveInt;
+    var createElementWithID = require('./utils').createElementWithID;
+    var uniqueVPAID = require('./utils').unique('vpaid');
+
+    var ERROR = 'error';
+    var FLASH_VERSION = '10.1.0';
+
+    var VPAIDFlashToJS = (function () {
+        function VPAIDFlashToJS(vpaidParentEl, callback) {
+            var swfConfig = arguments[2] === undefined ? { data: 'VPAIDFlash.swf', width: 800, height: 400 } : arguments[2];
+            var params = arguments[3] === undefined ? { wmode: 'transparent', salign: 'tl', align: 'left', allowScriptAccess: 'always', scale: 'noScale', allowFullScreen: 'true', quality: 'high' } : arguments[3];
+            var vpaidOptions = arguments[4] === undefined ? { debug: false, timeout: 10000 } : arguments[4];
+
+            _classCallCheck(this, VPAIDFlashToJS);
+
+            if (!swfobject) {
+                return onError({ msg: 'no swfobject in global scope. check: https://github.com/swfobject/swfobject or https://code.google.com/p/swfobject/' });
+            }
+
+            this._vpaidParentEl = vpaidParentEl;
+            this._flashID = uniqueVPAID();
+            this._destroyed = false;
+
+            //validate the height
+            swfConfig.width = isPositiveInt(swfConfig.width, 800);
+            swfConfig.height = isPositiveInt(swfConfig.height, 400);
+
+            createElementWithID(vpaidParentEl, this._flashID);
+
+            params.movie = swfConfig.data;
+            params.FlashVars = 'flashid=' + this._flashID + '&handler=' + JSFlashBridge.VPAID_FLASH_HANDLER + '&debug=' + vpaidOptions.debug + '&salign=' + params.salign;
+
+            if (!VPAIDFlashToJS.isSupported()) {
+                return onError({ msg: 'user don\'t support flash or doesn\'t have the minimum required version of flash', version: FLASH_VERSION });
+            }
+
+            this.el = swfobject.createSWF(swfConfig, params, this._flashID);
+
+            if (!this.el) {
+                return onError({ msg: 'swfobject failed to create object in element' });
+            }
+
+            this._flash = new JSFlashBridge(this.el, swfConfig.data, this._flashID, swfConfig.width, swfConfig.height, callbackTimeout(vpaidOptions.timeout, callback, function () {
+                callback({ msg: 'vpaid flash load timeout', timeout: vpaidOptions.timeout });
+            }));
+
+            function onError(error) {
+                setTimeout(function () {
+                    callback(error);
+                }, 0);
+                return this;
+            }
+        }
+
+        _createClass(VPAIDFlashToJS, [{
+            key: 'destroy',
+            value: function destroy() {
+                this._destroyAdUnit();
+                if (this._flash) {
+                    this._flash.destroy();
+                    this._flash = null;
+                }
+                this.el = null;
+                this._destroyed = true;
+            }
+        }, {
+            key: 'isDestroyed',
+            value: function isDestroyed() {
+                return this._destroyed;
+            }
+        }, {
+            key: '_destroyAdUnit',
+            value: function _destroyAdUnit() {
+                if (this._adUnitLoad) {
+                    this._adUnitLoad = null;
+                    this._flash.removeCallback(this._adUnitLoad);
+                }
+
+                if (this._adUnit) {
+                    this._adUnit._destroy();
+                    this._adUnit = null;
+                }
+            }
+        }, {
+            key: 'loadAdUnit',
+            value: function loadAdUnit(adURL, callback) {
+                var _this = this;
+
+                if (this._destroyed) {
+                    throw new error('VPAIDFlashToJS is destroyed!');
+                }
+                if (this._adUnit) {
+                    throw new error('AdUnit still exists');
+                }
+
+                this._adUnitLoad = function (err, message) {
+                    if (!err) {
+                        _this._adUnit = new VPAIDAdUnit(_this._flash);
+                    }
+                    _this._adUnitLoad = null;
+                    callback(err, _this._adUnit);
+                };
+
+                this._flash.callFlashMethod('loadAdUnit', [adURL], this._adUnitLoad);
+            }
+        }, {
+            key: 'unloadAdUnit',
+            value: function unloadAdUnit() {
+                var callback = arguments[0] === undefined ? undefined : arguments[0];
+
+                if (this._destroyed) {
+                    throw new error('VPAIDFlashToJS is destroyed!');
+                }
+
+                this._destroyAdUnit();
+                this._flash.callFlashMethod('unloadAdUnit', [], callback);
+            }
+        }, {
+            key: 'getFlashID',
+            value: function getFlashID() {
+                return this._flash.getFlashID();
+            }
+        }, {
+            key: 'getFlashURL',
+            value: function getFlashURL() {
+                return this._flash.getFlashURL();
+            }
+        }]);
+
+        return VPAIDFlashToJS;
+    })();
+
+    Object.defineProperty(VPAIDFlashToJS, 'isSupported', {
+        writable: false,
+        configurable: false,
+        value: function value() {
+            return swfobject.hasFlashPlayerVersion(FLASH_VERSION);
+        }
+    });
+
+    window.VPAIDFlashToJS = VPAIDFlashToJS;
+
+    return VPAIDFlashToJS;
+})();
+
+module.exports = VPAIDFlashToJS;
+
+},{"./VPAIDAdUnit":2,"./jsFlashBridge":4,"./utils":7}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -486,6 +504,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var unique = require('./utils').unique;
 var isPositiveInt = require('./utils').isPositiveInt;
+var stringEndsWith = require('./utils').stringEndsWith;
 var SingleValueRegistry = require('./registry').SingleValueRegistry;
 var MultipleValuesRegistry = require('./registry').MultipleValuesRegistry;
 var registry = require('./jsFlashBridgeRegistry');
@@ -538,7 +557,7 @@ var JSFlashBridge = (function () {
             var callbackID = '';
             // if no callback, some methods the return is void so they don't need callback
             if (callback) {
-                var callbackID = '' + this._uniqueMethodIdentifier() + '_' + methodName;
+                callbackID = '' + this._uniqueMethodIdentifier() + '_' + methodName;
                 this._callbacks.add(callbackID, callback);
             }
 
@@ -570,7 +589,7 @@ var JSFlashBridge = (function () {
             var _this = this;
 
             this._callbacks.filterKeys(function (key) {
-                return key.endsWith(suffix);
+                return stringEndsWith(key, suffix);
             }).forEach(function (key) {
                 _this._callbacks.remove(key);
             });
@@ -904,9 +923,10 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.unique = unique;
 exports.noop = noop;
+exports.callbackTimeout = callbackTimeout;
 exports.createElementWithID = createElementWithID;
 exports.isPositiveInt = isPositiveInt;
-'use strict';
+exports.stringEndsWith = stringEndsWith;
 
 function unique(prefix) {
     var count = -1;
@@ -917,6 +937,20 @@ function unique(prefix) {
 
 function noop() {}
 
+function callbackTimeout(timer, onSuccess, onTimeout) {
+
+    var timeout = setTimeout(function () {
+
+        onSuccess = noop;
+        onTimeout();
+    }, timer);
+
+    return function () {
+        clearTimeout(timeout);
+        onSuccess.apply(this, arguments);
+    };
+}
+
 function createElementWithID(parent, id) {
     var nEl = document.createElement('div');
     nEl.id = id;
@@ -926,263 +960,52 @@ function createElementWithID(parent, id) {
 }
 
 function isPositiveInt(newVal, oldVal) {
-    return Number.isSafeInteger(newVal) && newVal > 0 ? newVal : oldVal;
+    return !isNaN(parseFloat(newVal)) && isFinite(newVal) && newVal > 0 ? newVal : oldVal;
 }
 
-},{}]},{},[1])
+var endsWith = (function () {
+    if (String.prototype.endsWith) return String.prototype.endsWith;
+    return function endsWith(searchString, position) {
+        var subjectString = this.toString();
+        if (position === undefined || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
+})();
+
+function stringEndsWith(string, search) {
+    return endsWith.call(string, search);
+}
+
+},{}]},{},[3])
 
 
 //# sourceMappingURL=VPAIDFlashToJS.js.map
 ;
-"use strict";
-
-var NODE_TYPE_ELEMENT = 1;
-
-function noop(){ }
-
-function isNull(o) {
-  return o === null;
-}
-
-function isDefined(o){
-  return o !== undefined;
-}
-
-function isUndefined(o){
-  return o === undefined;
-}
-
-function isObject(obj) {
-  return typeof obj === 'object';
-}
-
-function isFunction(str){
-  return typeof str === 'function';
-}
-
-function isNumber(num){
-  return typeof num === 'number';
-}
-
-function isWindow(obj) {
-  return isObject(obj) && obj.window === obj;
-}
-
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]'
-}
-
-function isArrayLike(obj) {
-  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
-    return false;
-  }
-
-  var length = obj.length;
-
-  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
-    return true;
-  }
-
-  return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
-}
-
-function isString(str){
-  return typeof str === 'string';
-}
-
-function isEmptyString(str) {
-  return isString(str) && str.length === 0;
-}
-
-function isNotEmptyString(str) {
-  return isString(str) && str.length !== 0;
-}
-
-function arrayLikeObjToArray(args) {
-  return Array.prototype.slice.call(args);
-}
-
-function forEach(obj, iterator, context) {
-  var key, length;
-  if (obj) {
-    if (isFunction(obj)) {
-      for (key in obj) {
-        // Need to check if hasOwnProperty exists,
-        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key != 'prototype' && key != 'length' && key != 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
-      for (key = 0, length = obj.length; key < length; key++) {
-        if (isPrimitive || key in obj) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (obj.forEach && obj.forEach !== forEach) {
-      obj.forEach(iterator, context, obj);
-    } else {
-      for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-
-var SNAKE_CASE_REGEXP = /[A-Z]/g;
-function snake_case(name, separator) {
-  separator = separator || '_';
-  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-    return (pos ? separator : '') + letter.toLowerCase();
-  });
-}
-
-function isValidEmail(email){
-  if(!isString(email)){
-    return false;
-  }
-  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
-  return EMAIL_REGEXP.test(email.trim());
-}
-
-function extend (obj) {
-  var arg, i, k;
-  for (i = 1; i < arguments.length; i++) {
-    arg = arguments[i];
-    for (k in arg) {
-      if (arg.hasOwnProperty(k)) {
-        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
-          obj[k] = extend({}, obj[k], arg[k]);
-        }else {
-          obj[k] = arg[k];
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-function capitalize(s){
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function decapitalize(s) {
-  return s.charAt(0).toLowerCase() + s.slice(1);
-}
-
 /**
- * This method works the same way array.prototype.map works but if the transformer returns undefine, then
- * it won't be added to the transformed Array.
+ There is a bug on android 4.2 ont the way it parses string
+ The code bellow fixes the problem if there is a problem
  */
-function transformArray(array, transformer) {
-  var transformedArray = [];
+(function () {
+ var parseNum;
+ if(parseInt('09') !== 9) {
+  parseNum = window.parseInt;
+  window.parseInt = function(str) {
+   if(typeof str === 'string' && !/^(\s+)?0+(\s+)?$/.test(str)){
+    //We remove the 0 from the left of the number
+    return parseNum(str.replace(/^0+/, ''));
+   }
 
-  array.forEach(function(item, index){
-    var transformedItem = transformer(item, index);
-    if(isDefined(transformedItem)) {
-      transformedArray.push(transformedItem);
-    }
-  });
-
-  return transformedArray;
-}
-
-function toFixedDigits(num, digits) {
-  var formattedNum = num + '';
-  digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
-  if(isNumber(num) && !isNaN(num)){
-    formattedNum = num + '';
-    while(formattedNum.length < digits) {
-      formattedNum = '0' + formattedNum;
-    }
-    return formattedNum;
-  }
-  return NaN + '';
-}
-
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime() - (delay + 1);
-  return function() {
-    var time = new Date().getTime();
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(this, arguments);
-    }
+   return parseNum(str);
   };
-}
-
-function debounce (callback, wait) {
-  var timeoutId;
-
-  return function (){
-    timeoutId && clearTimeout(timeoutId);
-    timeoutId = setTimeout(function(){
-      callback.apply(this, arguments);
-      timeoutId = undefined;
-    }, wait);
-  };
-}
-
-// a function designed to blow up the stack in a naive way
-// but it is ok for videoJs children components
-function treeSearch(root, getChildren, found){
-  var children = getChildren(root);
-  for (var i = 0; i < children.length; i++){
-    if (found(children[i])) {
-      return children[i];
-    }
-    else {
-      var el = treeSearch(children[i], getChildren, found);
-      if (el){
-        return el;
-      }
-    }
-  }
-}
-
-function echoFn(val) {
-  return function () {
-    return val;
-  };
-}
-
-//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
-// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-function isISO8601(value) {
-  if(isNumber(value)){
-    value = value + '';  //we make sure that we are working with strings
-  }
-
-  if(!isString(value)){
-    return false;
-  }
-
-  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-  return iso8086Regex.test(value.trim());
-}
+ }
+})();
 ;
-(function(factory){
-    "use strict";
-    if (typeof define === 'function' && define.amd) {
-        define('videojs-contrib-ads', ['videojs'], function(vjs){factory(window, document, vjs);});
-    } else if (typeof exports === 'object' && typeof module === 'object') {
-        factory(window, document, require('video.js'));
-    } else {
-        factory(window, document, videojs);
-    }
-})
-/**
- * Basic Ad support plugin for video.js.
- *
- * Common code to support ad integrations.
- */
+/*! videojs-contrib-ads - v2.1.0 - 2015-06-11
+* Copyright (c) 2015 Brightcove; Licensed  */
 (function(window, document, vjs, undefined) {
 "use strict";
 
@@ -1331,6 +1154,7 @@ var
       i,
       suppressedTracks = [],
       snapshot = {
+        ended: player.ended(),
         src: player.currentSrc(),
         currentTime: player.currentTime(),
         type: player.currentType()
@@ -1393,31 +1217,67 @@ var
 
       // finish restoring the playback state
       resume = function() {
+        var
+          ended = false,
+          updateEnded = function() {
+            ended = true;
+          };
         player.currentTime(snapshot.currentTime);
-        //If this wasn't a postroll resume
-        if (!player.ended()) {
+
+        // Resume playback if this wasn't a postroll
+        if (!snapshot.ended) {
           player.play();
+        } else {
+          // On iOS 8.1, the "ended" event will not fire if you seek
+          // directly to the end of a video. To make that behavior
+          // consistent with the standard, fire a synthetic event if
+          // "ended" does not fire within 250ms. Note that the ended
+          // event should occur whether the browser actually has data
+          // available for that position
+          // (https://html.spec.whatwg.org/multipage/embedded-content.html#seeking),
+          // so it should not be necessary to wait for the seek to
+          // indicate completion.
+          window.setTimeout(function() {
+            if (!ended) {
+              player.play();
+            }
+            player.off('ended', updateEnded);
+          }, 250);
+          player.on('ended', updateEnded);
         }
       },
 
       // determine if the video element has loaded enough of the snapshot source
       // to be ready to apply the rest of the state
       tryToResume = function() {
+        if (tech.readyState > 1) {
+          // some browsers and media aren't "seekable".
+          // readyState greater than 1 allows for seeking without exceptions
+          return resume();
+        }
+
         if (tech.seekable === undefined) {
           // if the tech doesn't expose the seekable time ranges, try to
           // resume playback immediately
-          resume();
-          return;
+          return resume();
         }
+
         if (tech.seekable.length > 0) {
           // if some period of the video is seekable, resume playback
-          resume();
-          return;
+          return resume();
         }
 
         // delay a bit and then check again unless we're out of attempts
         if (attempts--) {
           setTimeout(tryToResume, 50);
+        } else {
+          (function() {
+            try {
+              resume();
+            } catch(e) {
+              videojs.log.warn('Failed to resume the content after an advertisement', e);
+            }
+          })();
         }
       },
 
@@ -1452,16 +1312,16 @@ var
     }
 
     if (srcChanged) {
-      // on ios7, fiddling with textTracks too early will cause it safari to crash
-      player.one('loadedmetadata', restoreTracks);
+      // on ios7, fiddling with textTracks too early will cause safari to crash
+      player.one('contentloadedmetadata', restoreTracks);
 
       // if the src changed for ad playback, reset it
       player.src({ src: snapshot.src, type: snapshot.type });
       // safari requires a call to `load` to pick up a changed source
       player.load();
       // and then resume from the snapshots time once the original src has loaded
-      player.one('loadedmetadata', tryToResume);
-    } else if (!player.ended()) {
+      player.one('contentcanplay', tryToResume);
+    } else if (!player.ended() || !snapshot.ended) {
       // if we didn't change the src, just restore the tracks
       restoreTracks();
 
@@ -1502,6 +1362,10 @@ var
     // the standard timeout.
     prerollTimeout: 100,
 
+    // maximum amount of time in ms to wait for the ad implementation to start
+    // linear ad mode after `contentended` has fired.
+    postrollTimeout: 100,
+
     // when truthy, instructs the plugin to output additional information about
     // plugin state to the video.js log. On most devices, the video.js log is
     // the same as the developer console.
@@ -1516,6 +1380,87 @@ var
       settings = extend({}, defaults, options || {}),
 
       fsmHandler;
+
+    // prefix all video element events during ad playback
+    // if the video element emits ad-related events directly,
+    // plugins that aren't ad-aware will break. prefixing allows
+    // plugins that wish to handle ad events to do so while
+    // avoiding the complexity for common usage
+    (function() {
+      var
+        videoEvents = videojs.Html5.Events,
+        i = videoEvents.length,
+        returnTrue = function() { return true; },
+        triggerEvent = function(type, event) {
+          // pretend we called stopImmediatePropagation because we want the native
+          // element events to continue propagating
+          event.isImmediatePropagationStopped = returnTrue;
+          event.cancelBubble = true;
+          event.isPropagationStopped = returnTrue;
+          player.trigger({
+            type: type + event.type,
+            state: player.ads.state,
+            originalEvent: event
+          });
+        },
+        redispatch = function(event) {
+          //TODO: the if bellow was added while waiting for the PR https://github.com/videojs/videojs-contrib-ads/issues/93
+          if(event.type === 'play'){
+            player.hasStarted(true);
+          }
+
+          if (player.ads.state === 'ad-playback') {
+            triggerEvent('ad', event);
+          } else if (player.ads.state === 'content-playback' && event.type === 'ended') {
+            triggerEvent('content', event);
+
+          } else if (player.ads.state === 'content-resuming') {
+            if (player.ads.snapshot) {
+              // the video element was recycled for ad playback
+              if (player.currentSrc() !== player.ads.snapshot.src) {
+                if (event.type === 'loadstart') {
+                  return;
+                }
+                return triggerEvent('content', event);
+
+              // we ended playing postrolls and the video itself
+              // the content src is back in place
+              } else if (player.ads.snapshot.ended) {
+                if ((event.type === 'pause' ||
+                    event.type === 'ended')) {
+                  // after loading a video, the natural state is to not be started
+                  // in this case, it actually has, so, we do it manually
+                  player.addClass('vjs-has-started');
+                  // let `pause` and `ended` events through, naturally
+                  return;
+                }
+                // prefix all other events in content-resuming with `content`
+                return triggerEvent('content', event);
+              }
+            }
+            if (event.type !== 'playing') {
+              triggerEvent('content', event);
+            }
+          }
+        };
+
+      while (i--) {
+        player.on(videoEvents[i], redispatch);
+      }
+      return redispatch;
+    })();
+
+    // We now auto-play when an ad gets loaded if we're playing ads in the same video element as the content.
+    // The problem is that in IE11, we cannot play in addurationchange but in iOS8, we cannot play from adcanplay.
+    // This will allow ad-integrations from needing to do this themselves.
+    player.on(['addurationchange', 'adcanplay'], function() {
+      var snapshot = player.ads.snapshot;
+      if (player.currentSrc() === snapshot.src) {
+        return;  // do nothing
+      }
+
+      player.play();
+    });
 
     // replace the ad initializer with the ad namespace
     player.ads = {
@@ -1628,6 +1573,7 @@ var
             enter: function() {
               // capture current player state snapshot (playing, currentTime, src)
               this.snapshot = getPlayerSnapshot(player);
+
               // remove the poster so it doesn't flash between videos
               removeNativePoster(player);
               // We no longer need to supress play events once an ad is playing.
@@ -1639,19 +1585,81 @@ var
             },
             leave: function() {
               removeClass(player.el(), 'vjs-ad-playing');
+
               restorePlayerSnapshot(player, this.snapshot);
-              if (fsm.triggerevent !== 'adend') {
-                //trigger 'adend' as a consistent notification
-                //event that we're exiting ad-playback.
+              if (player.ads.triggerevent !== 'adend') {
+                // trigger 'adend' as a consistent notification
+                // event that we're exiting ad-playback.
                 player.trigger('adend');
               }
             },
             events: {
               'adend': function() {
-                this.state = 'content-playback';
+                this.state = 'content-resuming';
               },
               'adserror': function() {
+                this.state = 'content-resuming';
+              }
+            }
+          },
+          'content-resuming': {
+            enter: function() {
+              if (this.snapshot.ended) {
+                window.clearTimeout(player.ads._fireEndedTimeout);
+                // in some cases, ads are played in a swf or another video element
+                // so we do not get an ended event in this state automatically.
+                // If we don't get an ended event we can use, we need to trigger
+                // one ourselves or else we won't actually ever end the current video.
+                player.ads._fireEndedTimeout = window.setTimeout(function() {
+                  player.trigger('ended');
+                }, 1000);
+              }
+            },
+            leave: function() {
+              window.clearTimeout(player.ads._fireEndedTimeout);
+            },
+            events: {
+              'contentupdate': function() {
+                this.state = 'content-set';
+              },
+              'playing': function() {
                 this.state = 'content-playback';
+              },
+              'ended': function() {
+                this.state = 'content-playback';
+              }
+            }
+          },
+          'postroll?': {
+            enter: function() {
+              this.snapshot = getPlayerSnapshot(player);
+
+              player.el().className += ' vjs-ad-loading';
+
+              player.ads.timeout = window.setTimeout(function() {
+                player.trigger('adtimeout');
+              }, settings.postrollTimeout);
+            },
+            leave: function() {
+              window.clearTimeout(player.ads.timeout);
+              removeClass(player.el(), 'vjs-ad-loading');
+            },
+            events: {
+              'adstart': function() {
+                this.state = 'ad-playback';
+                player.el().className += ' vjs-ad-playing';
+              },
+              'adtimeout': function() {
+                this.state = 'content-resuming';
+                setImmediate(function() {
+                  player.trigger('ended');
+                });
+              },
+              'adserror': function() {
+                this.state = 'content-resuming';
+                setImmediate(function() {
+                  player.trigger('ended');
+                });
               }
             }
           },
@@ -1666,7 +1674,7 @@ var
               // 'play' event was canceled earlier.
               player.trigger({
                 type: 'contentplayback',
-                triggerevent: fsm.triggerevent
+                triggerevent: player.ads.triggerevent
               });
             },
             events: {
@@ -1686,6 +1694,9 @@ var
                 } else {
                   this.state = 'ads-ready?';
                 }
+              },
+              'contentended': function() {
+                this.state = 'postroll?';
               }
             }
           }
@@ -1695,15 +1706,21 @@ var
         var noop = function() {};
 
         // process the current event with a noop default handler
-        (fsm[state].events[event.type] || noop).apply(player.ads);
+        ((fsm[state].events || {})[event.type] || noop).apply(player.ads);
 
-        // execute leave/enter callbacks if present
+        // check whether the state has changed
         if (state !== player.ads.state) {
-          fsm.triggerevent = event.type;
+
+          // record the event that caused the state transition
+          player.ads.triggerevent = event.type;
+
+          // execute leave/enter callbacks if present
           (fsm[state].leave || noop).apply(player.ads);
           (fsm[player.ads.state].enter || noop).apply(player.ads);
+
+          // output debug logging
           if (settings.debug) {
-            videojs.log('ads', fsm.triggerevent + ' triggered: ' + state + ' -> ' + player.ads.state);
+            videojs.log('ads', player.ads.triggerevent + ' triggered: ' + state + ' -> ' + player.ads.state);
           }
         }
 
@@ -1716,6 +1733,9 @@ var
       // events emitted by ad plugin
       'adtimeout',
       'contentupdate',
+      'contentplaying',
+      'contentended',
+
       // events emitted by third party ad implementors
       'adsready',
       'adserror',
@@ -1749,7 +1769,7 @@ var
           }
         };
       // loadstart reliably indicates a new src has been set
-      player.on('loadstart', checkSrc);
+      player.on(['loadstart'], checkSrc);
       // check immediately in case we missed the loadstart
       setImmediate(checkSrc);
     })();
@@ -1765,8 +1785,246 @@ var
   // register the ad plugin framework
   vjs.plugin('ads', adFramework);
 
-});
+})(window, document, videojs);
 
+;
+/*jshint unused:false */
+"use strict";
+
+var NODE_TYPE_ELEMENT = 1;
+
+function noop(){ }
+
+function isNull(o) {
+  return o === null;
+}
+
+function isDefined(o){
+  return o !== undefined;
+}
+
+function isUndefined(o){
+  return o === undefined;
+}
+
+function isObject(obj) {
+  return typeof obj === 'object';
+}
+
+function isFunction(str){
+  return typeof str === 'function';
+}
+
+function isNumber(num){
+  return typeof num === 'number';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isArray(array){
+  return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isArrayLike(obj) {
+  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
+    return false;
+  }
+
+  var length = obj.length;
+
+  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
+    return true;
+  }
+
+  return isString(obj) || isArray(obj) || length === 0 ||
+    typeof length === 'number' && length > 0 && (length - 1) in obj;
+}
+
+function isString(str){
+  return typeof str === 'string';
+}
+
+function isEmptyString(str) {
+  return isString(str) && str.length === 0;
+}
+
+function isNotEmptyString(str) {
+  return isString(str) && str.length !== 0;
+}
+
+function arrayLikeObjToArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function forEach(obj, iterator, context) {
+  var key, length;
+  if (obj) {
+    if (isFunction(obj)) {
+      for (key in obj) {
+        // Need to check if hasOwnProperty exists,
+        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (isArray(obj)) {
+      var isPrimitive = typeof obj !== 'object';
+      for (key = 0, length = obj.length; key < length; key++) {
+        if (isPrimitive || key in obj) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (obj.forEach && obj.forEach !== forEach) {
+      obj.forEach(iterator, context, obj);
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+
+var SNAKE_CASE_REGEXP = /[A-Z]/g;
+function snake_case(name, separator) {
+  separator = separator || '_';
+  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return (pos ? separator : '') + letter.toLowerCase();
+  });
+}
+
+function isValidEmail(email){
+  if(!isString(email)){
+    return false;
+  }
+  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+  return EMAIL_REGEXP.test(email.trim());
+}
+
+function extend (obj) {
+  var arg, i, k;
+  for (i = 1; i < arguments.length; i++) {
+    arg = arguments[i];
+    for (k in arg) {
+      if (arg.hasOwnProperty(k)) {
+        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
+          obj[k] = extend({}, obj[k], arg[k]);
+        }else {
+          obj[k] = arg[k];
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function decapitalize(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * This method works the same way array.prototype.map works but if the transformer returns undefine, then
+ * it won't be added to the transformed Array.
+ */
+function transformArray(array, transformer) {
+  var transformedArray = [];
+
+  array.forEach(function(item, index){
+    var transformedItem = transformer(item, index);
+    if(isDefined(transformedItem)) {
+      transformedArray.push(transformedItem);
+    }
+  });
+
+  return transformedArray;
+}
+
+function toFixedDigits(num, digits) {
+  var formattedNum = num + '';
+  digits = isNumber(digits) ? digits : 0;
+  num = isNumber(num) ? num : parseInt(num);
+  if(isNumber(num) && !isNaN(num)){
+    formattedNum = num + '';
+    while(formattedNum.length < digits) {
+      formattedNum = '0' + formattedNum;
+    }
+    return formattedNum;
+  }
+  return NaN + '';
+}
+
+function throttle(callback, delay) {
+  var previousCall = new Date().getTime() - (delay + 1);
+  return function() {
+    var time = new Date().getTime();
+    if ((time - previousCall) >= delay) {
+      previousCall = time;
+      callback.apply(this, arguments);
+    }
+  };
+}
+
+function debounce (callback, wait) {
+  var timeoutId;
+
+  return function (){
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(function(){
+      callback.apply(this, arguments);
+      timeoutId = undefined;
+    }, wait);
+  };
+}
+
+// a function designed to blow up the stack in a naive way
+// but it is ok for videoJs children components
+function treeSearch(root, getChildren, found){
+  var children = getChildren(root);
+  for (var i = 0; i < children.length; i++){
+    if (found(children[i])) {
+      return children[i];
+    }
+    else {
+      var el = treeSearch(children[i], getChildren, found);
+      if (el){
+        return el;
+      }
+    }
+  }
+}
+
+function echoFn(val) {
+  return function () {
+    return val;
+  };
+}
+
+//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
+// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+function isISO8601(value) {
+  if(isNumber(value)){
+    value = value + '';  //we make sure that we are working with strings
+  }
+
+  if(!isString(value)){
+    return false;
+  }
+
+  /*jslint maxlen: 500 */
+  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
+  return iso8086Regex.test(value.trim());
+}
 ;
 //Small subset of async
 var async = {};
@@ -2001,8 +2259,8 @@ dom.dispatchEvent = function dispatchEvent(el, event) {
 
 dom.isDescendant = function isDescendant(parent, child) {
   var node = child.parentNode;
-  while (node != null) {
-    if (node == parent) {
+  while (node !== null) {
+    if (node === parent) {
       return true;
     }
     node = node.parentNode;
@@ -2061,7 +2319,7 @@ dom.getDimension = function getDimension(element) {
   return {
     width: element.offsetWidth,
     height: element.offsetHeight
-  }
+  };
 };
 
 ;
@@ -2286,11 +2544,6 @@ function urlParts(url) {
 
   urlParsingNode.setAttribute('href', href);
 
-  //On some IE the host contains the port and the port property is empty
-  if(/(.*)\:(\d+)/.test(urlParsingNode.host)) {
-
-  }
-
   // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
   return {
     href: urlParsingNode.href,
@@ -2424,6 +2677,7 @@ xml.JXONTree = function JXONTree (oXMLParent) {
     var sCollectedTxt = "";
     for (var oNode, sProp, vContent, nItem = 0; nItem < oXMLParent.childNodes.length; nItem++) {
       oNode = oXMLParent.childNodes.item(nItem);
+      /*jshint bitwise: false*/
       if ((oNode.nodeType - 1 | 1) === 3) { sCollectedTxt += oNode.nodeType === 3 ? oNode.nodeValue.trim() : oNode.nodeValue; }
       else if (oNode.nodeType === 1 && !oNode.prefix) {
         sProp = decapitalize(oNode.nodeName);
@@ -2517,22 +2771,20 @@ vjs.AdsLabel.prototype.createEl = function(){
   });
 };
 ;
-vjs.plugin('vast', function VASTPlugin(options) {
+vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
+  var adsCanceled = false;
 
   var defaultOpts = {
     // maximum amount of time in ms to wait to receive `adsready` from the ad
     // implementation after play has been requested. Ad implementations are
     // expected to load any dynamic libraries and make any requests to determine
     // ad policies for a video during this time.
-    timeout: 5000,
+    timeout: 500,
 
-    // maximum amount of time in ms to wait for the ad implementation to start
-    // linear ad mode after `readyforpreroll` has fired.
-    // if this timeout triggers the player will start playing the video but it will
-    // play the ad whenever is ready (i.e. the ads are not cancelled they are deferred).
-    prerollTimeout: 500,
+    // for the moment we don't support post roll ads
+    postrollTimeout: 0,
 
     // maximun amount of time for the ad to actually start playing. If this timeout gets
     // triggered the ads will be cancelled
@@ -2548,6 +2800,10 @@ vjs.plugin('vast', function VASTPlugin(options) {
 
   var settings = extend({}, defaultOpts, options || {});
 
+  if(!settings.prerollTimeout) {
+    settings.prerollTimeout = settings.adCancelTimeout;
+  }
+
   if (isString(settings.url)) {
     settings.url = echoFn(settings.url);
   }
@@ -2556,21 +2812,76 @@ vjs.plugin('vast', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
-  player.ads(settings); // initialize the ad framework
+  player.on('play', playAdHandler);
+  player.on('readyforpreroll', playPrerollAd);
 
-  player.on('play', function () {
-    if(player.ads.state === 'preroll?'){
-      addSpinnerIcon();
+  // initialize videojs contrib ads plugin
+  player.ads(settings);
 
-      if (!player.paused()) {
-        player.pause();
+  player.vast = {
+    isEnabled: function () {
+      return settings.adsEnabled;
+    },
+
+    enable: function () {
+      settings.adsEnabled = true;
+    },
+
+    disable: function () {
+      settings.adsEnabled = false;
+    }
+  };
+
+  return player.vast;
+
+  /**** Local functions ****/
+  function playAdHandler() {
+    if(settings.adsEnabled){
+      if(player.ads.state === 'content-set' && canPlayPrerollAd()){
+        initAds();
       }
-
-      player.on('vast.adstart', removeSpinnerIcon);
-      player.on('vast.aderror', removeSpinnerIcon);
+    }else{
+      cancelAds();
     }
 
     /*** Local functions ***/
+    function canPlayPrerollAd(){
+      //TODO: add the preroll delay to the options and remove this substraction
+      var allowedPrerollDelay = settings.adCancelTimeout - settings.prerollTimeout;
+      return player.currentTime() <= allowedPrerollDelay;
+    }
+
+    function initAds() {
+      var adCancelTimeoutId;
+      adsCanceled = false;
+      
+      if(player.paused()){
+        player.pause();
+      }
+
+      player.trigger('adsready');
+      addSpinnerIcon();
+      player.on('vast.adstart', removeSpinnerIcon);
+      player.on('vast.aderror', removeSpinnerIcon);
+
+      adCancelTimeoutId = setTimeout(function () {
+        trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
+      }, settings.adCancelTimeout);
+
+      player.one('vast.adstart', clearAdCancelTimeout);
+      player.one('vast.aderror', clearAdCancelTimeout);
+
+      /*** local functions ***/
+      function clearAdCancelTimeout(){
+        if(adCancelTimeoutId) {
+          clearTimeout(adCancelTimeoutId);
+          adCancelTimeoutId = null;
+          player.off('vast.adstart', clearAdCancelTimeout);
+          player.off('vast.aderror', clearAdCancelTimeout);
+        }
+      }
+    }
+
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
     }
@@ -2582,14 +2893,20 @@ vjs.plugin('vast', function VASTPlugin(options) {
         dom.removeClass(player.el(), 'vjs-vast-ad-loading');
         player.off('vast.adstart', removeSpinnerIcon);
         player.off('vast.aderror', removeSpinnerIcon);
-      }, 0);
+      }, 100);
     }
-  });
 
-  // request ads whenever there's new video content
-  player.on('contentupdate', initAds);
+  }
 
-  player.on('readyforpreroll', function () {
+  function cancelAds() {
+    // We trigger 'adscanceled' to cancel the ads if they are in 'content-set' or 'ads-read?' state
+    player.trigger('adscanceled');
+    //We trigger 'adserror' to cancel the ads if they are in 'adsready' or 'preroll?' or 'ad-playback' state
+    player.trigger('adserror');
+    adsCanceled = true;
+  }
+
+  function playPrerollAd() {
     async.waterfall([
       getVastResponse,
       playAd,
@@ -2601,46 +2918,14 @@ vjs.plugin('vast', function VASTPlugin(options) {
 
       if (settings.playAdAlways) {
         // No matter what happens we play a new ad before the user sees the video again.
-        player.one('ended', function () {
-          player.trigger('contentupdate');
+        player.one('contentended', function () {
+
+          setTimeout(function () {
+            player.trigger('contentupdate');
+          }, 0);
         });
       }
     });
-  });
-
-  // 'initAds' needs to be called after all the event listeners have been registered for the ads to play with 'autoplay'
-  initAds();
-
-  return {
-    isEnabled: function () {
-      return settings.adsEnabled;
-    },
-
-    enable: function () {
-      settings.adsEnabled = true;
-      initAds();
-    },
-
-    disable: function () {
-      settings.adsEnabled = false;
-      initAds();
-    }
-  };
-
-  /**** Local functions ****/
-  function initAds() {
-    if (settings.adsEnabled) {
-      player.trigger('adsready');
-    } else {
-      cancelAds();
-    }
-  }
-
-  function cancelAds() {
-    // We trigger 'adscanceled' to cancel the ads if they are in 'content-set' or 'ads-read?' state
-    player.trigger('adscanceled');
-    //We trigger 'adserror' to cancel the ads if they are in 'adsready' or 'preroll?' or 'ad-playback' state
-    player.trigger('adserror');
   }
 
   function getVastResponse(callback) {
@@ -2648,10 +2933,54 @@ vjs.plugin('vast', function VASTPlugin(options) {
   }
 
   function playAd(vastResponse, callback) {
-    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, options.adCancelTimeout) : new VASTIntegrator(player, options.adCancelTimeout);
+    //TODO: Find a better way to stop the play. The 'playPrerollWaterfall' ends in an inconsistent situation
+    //If the state is not 'preroll?' it means the ads were canceled therefore, we break the waterfall
+    if(adsCanceled){
+      return;
+    }
+
+    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player) : new VASTIntegrator(player);
     player.ads.startLinearAdMode();
     adIntegrator.playAd(vastResponse, callback);
-    player.controlBar.addChild('AdsLabel');
+    player.one('vast.adstart', function () {
+      player.controlBar.addChild('AdsLabel');
+      player.one('adended', removeAdsLabel);
+      player.one('adserror', removeAdsLabel);
+    });
+
+    preventManualProgress();
+
+    /*** Local functions ****/
+    function removeAdsLabel() {
+      player.controlBar.removeChild('AdsLabel');
+    }
+
+    function preventManualProgress(){
+      var PROGRESS_THRESHOLD = 0.5;
+      var previousTime = player.currentTime();
+      var tech = player.el().querySelector('.vjs-tech');
+      var skipad_attempts = 0;
+
+      player.on('adtimeupdate', adTimeupdateHandler);
+      player.one('adended', function () {
+        player.off('adtimeupdate', adTimeupdateHandler);
+      });
+
+      /*** Local functions ***/
+      function adTimeupdateHandler() {
+        var currentTime = player.currentTime();
+        var progressDelta = Math.abs(currentTime - previousTime);
+        if (progressDelta > PROGRESS_THRESHOLD) {
+          skipad_attempts+=1;
+          if(skipad_attempts >= 2){
+            player.pause();
+          }
+          player.currentTime(previousTime);
+        } else {
+          previousTime = currentTime;
+        }
+      }
+    }
   }
 
   function finishPlayingAd(vastResponse, callback) {
@@ -2722,11 +3051,11 @@ VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUni
   /*** Local Functions ***/
 
   function canSubscribeToEvents(adUnit) {
-    return isFunction(adUnit.subscribe) || isFunction(adUnit.addEventListener) || isFunction(adUnit.on)
+    return isFunction(adUnit.subscribe) || isFunction(adUnit.addEventListener) || isFunction(adUnit.on);
   }
 
   function canUnsubscribeFromEvents(adUnit) {
-    return isFunction(adUnit.unsubscribe) || isFunction(adUnit.removeEventListener) || isFunction(adUnit.off)
+    return isFunction(adUnit.unsubscribe) || isFunction(adUnit.removeEventListener) || isFunction(adUnit.off);
 
   }
 };
@@ -2750,11 +3079,11 @@ VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
   /*** Local functions ***/
   function sanityCheck(method, cb, adUnit) {
     if (!isString(method) || !isFunction(adUnit[method])) {
-      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name")
+      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name");
     }
 
     if (!isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback")
+      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback");
     }
   }
 
@@ -2794,11 +3123,11 @@ VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
   /*** Local functions ***/
   function sanityCheck(evtName, cb) {
     if (!isString(evtName)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing evt name")
+      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing evt name");
     }
 
     if (!isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing callback")
+      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing callback");
     }
   }
 
@@ -2817,9 +3146,10 @@ VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
 
 // VPAID METHODS
 VPAIDAdUnitWrapper.prototype.handshakeVersion = function (version, cb) {
-  this.adUnitAsyncCall('handshakeVersion', version, cb)
+  this.adUnitAsyncCall('handshakeVersion', version, cb);
 };
 
+/* jshint maxparams:6 */
 VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desiredBitrate, adUnitData, cb) {
   this._adUnit.initAd(width, height, viewMode, desiredBitrate, adUnitData);
   this.waitForEvent('AdLoaded', cb);
@@ -2883,13 +3213,13 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   var getterName = 'get' + capitalize(property);
 
   VPAIDAdUnitWrapper.prototype[getterName] = function (cb) {
-    this.adUnitAsyncCall(getterName, cb)
+    this.adUnitAsyncCall(getterName, cb);
   };
 });
 
 //VPAID property setters
 VPAIDAdUnitWrapper.prototype.setAdVolume = function(volume, cb){
-  this.adUnitAsyncCall('setAdVolume',volume, cb)
+  this.adUnitAsyncCall('setAdVolume',volume, cb);
 };
 ;
 function VPAIDFlashTech(mediaFile) {
@@ -2920,10 +3250,10 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
   this.containerEl = containerEl;
   this.vpaidFlashToJS = new VPAIDFlashToJS(containerEl, function (error) {
     if (error) {
-      callback(error);
+      return callback(error);
     }
 
-    that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback)
+    that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback);
   });
 
   /*** Local Functions ***/
@@ -2959,9 +3289,9 @@ VPAIDFlashTech.prototype.unloadAdUnit = function () {
 };
 
 ;
-function VPAIDIntegrator(player, adStartTimeout) {
+function VPAIDIntegrator(player) {
   if (!(this instanceof VPAIDIntegrator)) {
-    return new VPAIDIntegrator(player, adStartTimeout);
+    return new VPAIDIntegrator(player);
   }
 
   this.VIEW_MODE = {
@@ -2970,10 +3300,8 @@ function VPAIDIntegrator(player, adStartTimeout) {
     THUMBNAIL: "thumbnail"
   };
   this.player = player;
-  this.adStartTimeout = adStartTimeout || 5000;
   this.containerEl = createVPAIDContainerEl(player);
   this.options = {
-    adStartTimeout: adStartTimeout || 5000,
     responseTimeout: 2000,
     VPAID_VERSION: {
       full: '2.0',
@@ -3000,7 +3328,7 @@ VPAIDIntegrator.techs = [
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
   var that = this;
-  var tech, adStartTimeoutId;
+  var tech;
   var player = this.player;
 
   callback = callback || noop;
@@ -3008,12 +3336,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  adStartTimeoutId = setTimeout(function () {
-    var error = new VASTError('on VPAIDIntegrator, timeout while waiting for the ad to start');
-    callback(error);
-    callback = noop;
-    removeAdUnit(error);
-  }, this.adStartTimeout);
+  player.one('adserror', function () {
+    removeAdUnit();
+  });
 
   tech = this._findSupportedTech(vastResponse);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
@@ -3025,7 +3350,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       },
       this._loadAdUnit.bind(this),
       this._playAdUnit.bind(this),
-      clearAdStartTimeout,
       this._finishPlaying.bind(this)
 
     ], function (error, adUnit, vastResponse) {
@@ -3037,13 +3361,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
   }
   /*** Local functions ***/
-
-  function clearAdStartTimeout(adUnit, vastResponse, next) {
-    clearTimeout(adStartTimeoutId);
-    adStartTimeoutId = null;
-    next(null, adUnit, vastResponse);
-  }
-
   function removeAdUnit(error) {
     if (error) {
       that._trackError(vastResponse);
@@ -3208,11 +3525,11 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdVolumeChange', function () {
     var lastVolume = player.volume();
     adUnit.getAdVolume(function (currentVolume) {
-      if (currentVolume == 0 && lastVolume > 0) {
+      if (currentVolume === 0 && lastVolume > 0) {
         tracker.trackMute();
       }
 
-      if (currentVolume > 0 && lastVolume == 0) {
+      if (currentVolume > 0 && lastVolume === 0) {
         tracker.trackUnmute();
       }
 
@@ -3403,7 +3720,7 @@ function Linear(linearJTree) {
     if (isDefined(trackingEvents)) {
       trackingEvents = isArray(trackingEvents) ? trackingEvents : [trackingEvents];
       trackingEvents.forEach(function (trackingData) {
-        trackings.push(new TrackingEvent(trackingData, duration))
+        trackings.push(new TrackingEvent(trackingData, duration));
       });
     }
     return trackings;
@@ -3415,7 +3732,7 @@ function Linear(linearJTree) {
       mediaFilesJxonTree = isArray(mediaFilesJxonTree) ? mediaFilesJxonTree : [mediaFilesJxonTree];
 
       mediaFilesJxonTree.forEach(function (mfData) {
-        mediaFiles.push(new MediaFile(mfData))
+        mediaFiles.push(new MediaFile(mfData));
       });
     }
     return mediaFiles;
@@ -3548,7 +3865,7 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
     var adTree;
     try {
       adTree = that._buildVastTree(adXML);
-      getValidAd(adTree.ads, options.ads, callback)
+      getValidAd(adTree.ads, options.ads, callback);
     } catch (e) {
       callback(e);
     }
@@ -3614,7 +3931,7 @@ VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {
   }
 
   if(vastVersion && (vastVersion != 3 && vastVersion != 2)){
-    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102)
+    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102);
   }
 
   return vastTree;
@@ -3728,17 +4045,15 @@ VASTError.prototype.name = "VAST Error";
  *
  * @param player {object} instance of the player that will play the ad. It assumes that the videojs-contrib-ads plugin
  *                        has been initialized when you use its utility functions.
- * @param adStartTimeout Indicates in ms. how much time to wait for the ad to start playing before canceling the ad.
  *
  * @constructor
  */
-function VASTIntegrator(player, adStartTimeout) {
+function VASTIntegrator(player) {
   if (!(this instanceof VASTIntegrator)) {
-    return new VASTIntegrator(player, adStartTimeout);
+    return new VASTIntegrator(player);
   }
 
   this.player = player;
-  this.adStartTimeout = adStartTimeout || 5000;
 }
 
 VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
@@ -3788,26 +4103,28 @@ VASTIntegrator.prototype._createVASTTracker = function createVASTTracker(adMedia
 VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracker, response, callback) {
   var previouslyMuted;
   var player = this.player;
-  player.on('fullscreenchange', trackFullscreenChange);
+  player.on('adfullscreenchange', trackFullscreenChange);
   player.on('vast.adstart', trackImpressions);
-  player.on('pause', trackPause);
-  player.on('timeupdate', trackProgress);
-  player.on('volumechange', trackVolumeChange);
+  player.on('adpause', trackPause);
+  player.on('adtimeupdate', trackProgress);
+  player.on('advolumechange', trackVolumeChange);
 
-  player.one('vast.adend', function () {
-    tracker.trackComplete();
-    player.off('fullscreenchange', trackFullscreenChange);
-    player.off('vast.adstart', trackImpressions);
-    player.off('pause', trackPause);
-    player.off('timeupdate', trackProgress);
-    player.off('volumechange', trackVolumeChange);
-  });
+  player.one('vast.adend', unbindEvents);
+  player.one('vast.aderror', unbindEvents);
 
   //NOTE: Pending tracking events skip, close, closeLinear, expand, collapse and creativeView. See VAST implementation
 
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
+  function unbindEvents() {
+    tracker.trackComplete();
+    player.off('adfullscreenchange', trackFullscreenChange);
+    player.off('vast.adstart', trackImpressions);
+    player.off('adpause', trackPause);
+    player.off('adtimeupdate', trackProgress);
+    player.off('advolumechange', trackVolumeChange);
+  }
 
   function trackFullscreenChange() {
     if (player.isFullscreen()) {
@@ -3859,13 +4176,13 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     var updateSkipButton = updateSkipButtonState.bind(this, skipButton, skipOffset, player);
 
     player.el().appendChild(skipButton);
-    player.on('timeupdate', updateSkipButton);
+    player.on('adtimeupdate', updateSkipButton);
 
     player.one('vast.adend', removeSkipButton);
     player.one('vast.aderror', removeSkipButton);
 
     function removeSkipButton() {
-      player.off('timeupdate', updateSkipButton);
+      player.off('adtimeupdate', updateSkipButton);
       dom.remove(skipButton);
     }
   }
@@ -3877,7 +4194,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     skipButton.onclick = function (e) {
       if (dom.hasClass(skipButton, 'enabled')) {
         tracker.trackSkip();
-        player.trigger('ended');//We trigger the end of the ad playing
+        player.trigger('adended');//We trigger the end of the ad playing
       }
 
       //We prevent event propagation to avoid problems with the clickThrough and so on
@@ -3910,7 +4227,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
   var updateBlocker = updateBlockerURL.bind(this, blocker, response, player);
 
   player.el().insertBefore(blocker, player.controlBar.el());
-  player.on('timeupdate', updateBlocker);
+  player.on('adtimeupdate', updateBlocker);
   player.one('vast.adend', removeBlocker);
   player.one('vast.aderror', removeBlocker);
 
@@ -3961,35 +4278,25 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
   }
 
    function removeBlocker(){
-     player.off('timeupdate', updateBlocker);
+     player.off('adtimeupdate', updateBlocker);
      dom.remove(blocker);
    }
 };
 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
-  var adStartTimeoutID;
 
   player.src(source);
 
-  adStartTimeoutID = setTimeout(function () {
-    player.off('durationchange', playAd);
-    player.off('ended', finishPlayingAd);
-    player.off('error', handlePlayerError);
-    callback(new VASTError("on VASTIntegrator, timeout while waiting for the video to start playing", 402), response);
-  }, this.adStartTimeout);
-
-  player.one('durationchange', playAd);
-  player.one('ended', finishPlayingAd);
+  player.one('addurationchange', playAd);
+  player.one('adended', finishPlayingAd);
   player.one('error', handlePlayerError);
 
   /**** local functions ******/
   function playAd() {
-    if (isDefined(adStartTimeoutID)) {
-      window.clearTimeout(adStartTimeoutID);
-    }
-    player.play();
-    player.trigger('vast.adstart');
+    player.one('adplaying', function () {
+      player.trigger('vast.adstart');
+    });
   }
 
   function finishPlayingAd() {
@@ -3999,9 +4306,9 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
   }
 
   function handlePlayerError() {
-    player.off('durationchange', playAd);
-    player.off('ended', finishPlayingAd);
-    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad ", 400), response);
+    player.off('addurationchange', playAd);
+    player.off('contentended', finishPlayingAd);
+    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
   }
 };
 
@@ -4047,7 +4354,7 @@ VASTIntegrator.prototype._trackError = function trackError(error, response) {
       }
 
       if (wrapper) {
-        this._addWrapper(wrapper)
+        this._addWrapper(wrapper);
       }
     }
   };
@@ -4238,7 +4545,7 @@ VASTTracker.prototype.trackEvent = function trackEvent(eventName, trackOnce) {
     if (trackingEvents) {
       uris = [];
       trackingEvents.forEach(function (event) {
-        uris.push(event.uri)
+        uris.push(event.uri);
       });
     }
     return uris;
@@ -4273,7 +4580,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
   function addQuartileEvents(progress) {
     forEach(this.quartiles, function (quartileTime, eventName) {
       //We only fire the quartile event if the progress is bigger than the quartile time by one second at most.
-      addTrackEvent(eventName, ONCE, progress >= quartileTime && progress <= (quartileTime + 1000))
+      addTrackEvent(eventName, ONCE, progress >= quartileTime && progress <= (quartileTime + 1000));
     });
   }
 
@@ -4521,5 +4828,4 @@ var vastUtil = {
   isVPAID: function isVPAIDMediaFile(mediaFile) {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
-};})();
-//# sourceMappingURL=../maps/videojs-vast-plugin.js.map
+};})(window, document, videojs);

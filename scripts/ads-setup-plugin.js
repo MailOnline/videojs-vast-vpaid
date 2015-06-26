@@ -81,7 +81,7 @@
     VPAID_BUTTON: 'http://cdn-tags.brainient.com/1228/34f8e4e6-e83c-46da-8bf6-a37ae9ed5134/vast.xml?platform=vpaid&v=v6&proto=http'
   };
 
-  window.AD_TAG = AD_TAGS.VPAID_EXPAND;
+  window.AD_TAG = AD_TAGS.VAST;
 
   window. selectBtn = function selectBtn(btn, adTag) {
     function unselectBtns() {
@@ -98,17 +98,14 @@
   };
 
   /*** ADS SETUP PLUGIN ***/
-  vjs.plugin('ads-setup', function molVastSetup(opts) {
+  videojs.plugin('ads-setup', function molVastSetup(opts) {
     var player = this;
     var options = extend({}, this.options_, opts);
-    var adsCancelTimeout = 3000;
 
-    var vastAd = player.vast({
+    var vastAd = player.vastClient({
       url: getAdsUrl,
       playAdAlways: true,
-      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
-      prerollTimeout: adsCancelTimeout,
-      adCancelTimeout: adsCancelTimeout,
+      adCancelTimeout: options.adCancelTimeout || 3000,
       adsEnabled: !!options.adsEnabled
     });
 
