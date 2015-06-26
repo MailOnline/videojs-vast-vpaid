@@ -199,8 +199,21 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackComplete();
   });
 
-  adUnit.on('AdClickThru', function () {
+  adUnit.on('AdClickThru', function (url, id, playerHandles) {
+    var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
     tracker.trackClick();
+    if(playerHandles && clickThruUrl) {
+      window.open(clickThruUrl);
+    }
+
+    function generateClickThroughURL(clickThroughMacro) {
+      var variables = {
+        ASSETURI: adUnit.options.src,
+        CONTENTPLAYHEAD: 0 //In VPAID there is no method to know the current time from the adUnit
+      };
+
+      return clickThroughMacro ? vastUtil.parseURLMacro(clickThroughMacro, variables) : null;
+    }
   });
 
   adUnit.on('AdUserAcceptInvitation', function () {

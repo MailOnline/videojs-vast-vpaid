@@ -387,11 +387,39 @@ describe("VPAIDIntegrator", function () {
       });
 
       describe("on 'AdClickThru',", function(){
+        beforeEach(function(){
+          sinon.stub(window, 'open');
+        });
+
+        afterEach(function(){
+          window.open.restore();
+        });
+
         it("must track click", function(){
           adUnit.trigger('AdClickThru');
           sinon.assert.calledOnce(tracker.trackClick);
         });
 
+        it("must not open a new window if the playerHandles is false", function(){
+          adUnit.trigger('AdClickThru', 'fake/click/thru/url', 0001, false);
+          sinon.assert.notCalled(window.open);
+        });
+
+        it("must open the url passed if the playerHandles flag is true", function(){
+          adUnit.trigger('AdClickThru', 'fake/click/thru/url', 0001, true);
+          sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url');
+        });
+
+        it("must no open any window if there is no click thru url passed or in the vastResponse", function(){
+          adUnit.trigger('AdClickThru', '', 0001, true);
+          sinon.assert.notCalled(window.open);
+        });
+
+        it("must use the vastResponse clickThru macro if no url is passed", function(){
+          vastResponse.clickThrough = 'fake/click/thru/url/[ASSETURI]';
+          adUnit.trigger('AdClickThru', null, 0001, true);
+          sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url/fakeSrc');
+        });
       });
 
       it("on 'AdUserAcceptInvitation' event, must track acceptInvitation", function(){
