@@ -386,9 +386,12 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(tracker.trackComplete);
       });
 
-      it("on 'AdClickThru' event, must track click", function(){
-        adUnit.trigger('AdClickThru');
-        sinon.assert.calledOnce(tracker.trackClick);
+      describe("on 'AdClickThru',", function(){
+        it("must track click", function(){
+          adUnit.trigger('AdClickThru');
+          sinon.assert.calledOnce(tracker.trackClick);
+        });
+
       });
 
       it("on 'AdUserAcceptInvitation' event, must track acceptInvitation", function(){
