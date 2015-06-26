@@ -290,6 +290,182 @@ describe("VPAIDIntegrator", function () {
       });
     });
 
+    describe("setupEvents", function(){
+      var tracker, adUnit, vastResponse, next;
+
+      function FakeAdUnit() {
+        var events = {};
+        this.options = {
+          src: 'fakeSrc'
+        };
+        this.volume = 0;
+
+        this.setVolume = function(vol) {
+          this.volume = vol;
+        };
+
+        this.getAdVolume = function(fn) {
+          fn(this.volume);
+        };
+
+        this.on = function(evtName, handler) {
+          if(!events[evtName]){
+            events[evtName] = [];
+          }
+
+          events[evtName].push(handler);
+        };
+
+        this.trigger = function() {
+          var args = arrayLikeObjToArray(arguments);
+          var evtName = args.shift();
+          var handlers = events[evtName];
+
+          if(handlers){
+            forEach(handlers, function(handler) {
+              handler.apply(null, args);
+            });
+          }
+        };
+      }
+
+      beforeEach(function(){
+        tracker = sinon.createStubInstance(VASTTracker);
+        sinon.stub(window, 'VASTTracker').returns(tracker);
+        adUnit = new FakeAdUnit();
+        vastResponse = new VASTResponse();
+        next = sinon.spy();
+        vpaidIntegrator._setupEvents(adUnit, vastResponse, next);
+      });
+
+      afterEach(function(){
+        VASTTracker.restore();
+      });
+
+
+      it("must call next with no error and the passed adUnit and vastResponse", function(){
+        sinon.assert.calledWithExactly(next, null, adUnit, vastResponse);
+      });
+
+      it("must create a tracker passing the adUnit src and the vast response", function(){
+        sinon.assert.calledWithExactly(VASTTracker, adUnit.options.src, vastResponse);
+      });
+
+      it("on 'AdSkipped' event, must track skip", function(){
+        adUnit.trigger('AdSkipped');
+        sinon.assert.calledOnce(tracker.trackSkip);
+      });
+
+      it("on 'AdImpression' event, must track impressions", function(){
+        adUnit.trigger('AdImpression');
+        sinon.assert.calledOnce(tracker.trackImpressions);
+      });
+
+      it("on 'AdVideoStart' event, must track start", function(){
+        adUnit.trigger('AdVideoStart');
+        sinon.assert.calledOnce(tracker.trackStart);
+      });
+
+      it("on 'AdVideoFirstQuartile' event, must track first quartile", function(){
+        adUnit.trigger('AdVideoFirstQuartile');
+        sinon.assert.calledOnce(tracker.trackFirstQuartile);
+      });
+
+      it("on 'AdVideoMidpoint' event, must track midpoint", function(){
+        adUnit.trigger('AdVideoMidpoint');
+        sinon.assert.calledOnce(tracker.trackMidpoint);
+      });
+
+      it("on 'AdVideoThirdQuartile' event, must track third quartile", function(){
+        adUnit.trigger('AdVideoThirdQuartile');
+        sinon.assert.calledOnce(tracker.trackThirdQuartile);
+      });
+
+      it("on 'AdVideoComplete' event, must track complete", function(){
+        adUnit.trigger('AdVideoComplete');
+        sinon.assert.calledOnce(tracker.trackComplete);
+      });
+
+      it("on 'AdClickThru' event, must track click", function(){
+        adUnit.trigger('AdClickThru');
+        sinon.assert.calledOnce(tracker.trackClick);
+      });
+
+      it("on 'AdUserAcceptInvitation' event, must track acceptInvitation", function(){
+        adUnit.trigger('AdUserAcceptInvitation');
+        sinon.assert.calledOnce(tracker.trackAcceptInvitation);
+        sinon.assert.calledOnce(tracker.trackAcceptInvitationLinear);
+      });
+
+      it("on 'AdUserClose' event, must track close", function(){
+        adUnit.trigger('AdUserClose');
+        sinon.assert.calledOnce(tracker.trackClose);
+        sinon.assert.calledOnce(tracker.trackCloseLinear);
+      });
+
+      it("on 'AdPaused' event, must track pause", function(){
+        adUnit.trigger('AdPaused');
+        sinon.assert.calledOnce(tracker.trackPause);
+      });
+
+      it("on 'AdUserMinimize' event, must track collapse", function(){
+        adUnit.trigger('AdUserMinimize');
+        sinon.assert.calledOnce(tracker.trackCollapse);
+      });
+
+      it("on 'AdError' event, must track error with code 901", function(){
+        adUnit.trigger('AdError');
+        sinon.assert.calledWithExactly(tracker.trackErrorWithCode, 901);
+      });
+
+      it("on 'AdPlaying' event, must track resume", function(){
+        adUnit.trigger('AdPlaying');
+        sinon.assert.calledOnce(tracker.trackResume);
+      });
+
+      describe("on 'AdVolumeChange' evt,", function(){
+        beforeEach(function(){
+          sinon.stub(player, 'volume');
+        });
+
+        it("must track mute if the volume was not 0 but gets updated to 0", function(){
+          player.volume.returns(10);
+          adUnit.setVolume(0);
+          adUnit.trigger('AdVolumeChange');
+          sinon.assert.calledOnce(tracker.trackMute);
+          sinon.assert.notCalled(tracker.trackUnmute);
+          sinon.assert.calledWithExactly(player.volume, 0);
+        });
+
+        it("must not track mute if the volume was already 0", function(){
+          player.volume.returns(0);
+          adUnit.setVolume(0);
+          adUnit.trigger('AdVolumeChange');
+          sinon.assert.notCalled(tracker.trackMute);
+          sinon.assert.notCalled(tracker.trackUnmute);
+          sinon.assert.calledWithExactly(player.volume, 0);
+        });
+
+        it("must tack unmute if the volume was 0 and changes to not cero", function(){
+          player.volume.returns(0);
+          adUnit.setVolume(10);
+          adUnit.trigger('AdVolumeChange');
+          sinon.assert.notCalled(tracker.trackMute);
+          sinon.assert.calledOnce(tracker.trackUnmute);
+          sinon.assert.calledWithExactly(player.volume, 10);
+        });
+        it("must not tack unmute if the volume was not 0 and changes to not cero", function(){
+          player.volume.returns(5);
+          adUnit.setVolume(10);
+          adUnit.trigger('AdVolumeChange');
+          sinon.assert.notCalled(tracker.trackMute);
+          sinon.assert.notCalled(tracker.trackUnmute);
+          sinon.assert.calledWithExactly(player.volume, 10);
+        });
+      });
+
+    });
+
     describe("findSupportedTech", function () {
       it("must return null if you pass a wrong vastREsponse", function () {
         [undefined, null, [], {}, ''].forEach(function (wrongResponse) {
