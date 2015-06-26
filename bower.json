@@ -1,6 +1,6 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
@@ -24,7 +24,7 @@
     "frontend/demo/*"
   ],
   "dependencies": {
-    "flashVPAID": "0.0.6"
+    "flashVPAID": "0.0.7"
   },
   "devDependencies": {
     "video.js": "4.11.4"
