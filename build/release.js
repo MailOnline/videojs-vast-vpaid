@@ -52,9 +52,23 @@ gulp.task('create-new-tag-version', function (cb) {
   });
 });
 
-gulp.task('deploy-demo-page', function() {
-  return gulp.src(path.join(config.DIST, '**/*'))
+gulp.task('update-gh-pages', function() {
+  return gulp.src(path.join(config.DEV, '**/*'))
     .pipe(ghPages());
+});
+
+
+gulp.task('deploy-demo-page', function(callback) {
+  runSequence(
+    'build-demo',
+    'update-gh-pages',
+    function (error) {
+      if(error){
+        console.log(error.message.red);
+      }
+      console.log('BUILD FINISHED SUCCESSFULLY'.green);
+      callback();
+    });
 });
 
 gulp.task('release', function (callback) {
