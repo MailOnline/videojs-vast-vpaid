@@ -74,7 +74,7 @@ gulp.task('build-styles', function () {
   var distCssPath = path.join(config.DEV, 'styles');
   return gulp.src(config.plugin.styles)
     .pipe(flatten())
-    .pipe(gulpif(config.env === 'production', concat(config.prodfile.styles, {newLine: '\n;\n'})))
+    .pipe(gulpif(config.env === 'production', concat(config.prodfile.styles, {newLine: '\n\n'})))
     .pipe(gulpif(config.env === 'production', gulp.dest(distCssPath)))
     .pipe(gulpif(config.env === 'production', minifyCSS({keepBreaks: false})))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))

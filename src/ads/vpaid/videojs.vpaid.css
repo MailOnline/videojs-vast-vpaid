@@ -13,3 +13,7 @@ div.vjs-vpaid-ad div.vjs-time-divider,
 div.vjs-vpaid-ad div.vjs-play-control{
   display: none;
 }
+
+div.vjs-vpaid-ad .vjs-tech {
+  z-index: -1;
+}
