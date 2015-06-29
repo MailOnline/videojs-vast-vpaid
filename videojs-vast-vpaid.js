@@ -359,7 +359,7 @@ var VPAIDFlashToJS = (function () {
 
             _classCallCheck(this, VPAIDFlashToJS);
 
-            if (!window.swfobject) {
+            if (!swfobject) {
                 return onError({ msg: 'no swfobject in global scope. check: https://github.com/swfobject/swfobject or https://code.google.com/p/swfobject/' });
             }
 
@@ -2434,31 +2434,6 @@ HttpRequest.prototype.get = function (url, callback, options) {
   }
 };
 
-HttpRequest.getJSONP = function getJSONP (url, cb, timeout, callback_name){
-  var has_callback_called = false;
-  timeout = timeout || 3000;
-  callback_name = callback_name || ("_cb_" + Math.floor((Math.random()*100000)).toString()); // for jsonp
-
-  setTimeout(function (){
-    if (has_callback_called){ // function has timed out
-      return;
-    }
-    cb("JSONP request timed up (or returned an error)");
-    delete window[callback_name]; //cleaning up
-  }, timeout);
-
-  // I create the callback
-  window[callback_name] = function (data){
-    has_callback_called = true;
-    cb(null, data);
-    delete window[callback_name]; //cleaning up
-  };
-
-  var s = document.createElement('script');
-  s.src = url + "?cb=" + callback_name;
-  document.head.appendChild(s);
-};
-
 function createXhr() {
   return new window.XMLHttpRequest();
 }
@@ -3035,8 +3010,9 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
 }
 
 VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUnit) {
+  //NOTE: skipAd is not part of the method list because it only appears in VPAID 2.0 and we support VPAID 1.0
   var VPAIDInterfaceMethods = [
-    'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd'
+    'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd'
   ];
 
   for (var i = 0, len = VPAIDInterfaceMethods.length; i < len; i++) {
@@ -3156,8 +3132,9 @@ VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desired
 };
 
 VPAIDAdUnitWrapper.prototype.resizeAd = function (width, height, viewMode, cb) {
-  this._adUnit.resizeAd(width, height, viewMode);
-  this.waitForEvent('AdSizeChange', cb);
+  // NOTE: AdSizeChange event is only supported on VPAID 2.0 so for the moment we are not going to use it
+  // and will assume that everything is fine after the async call
+  this.adUnitAsyncCall('resizeAd', width, height, viewMode, cb);
 };
 
 VPAIDAdUnitWrapper.prototype.startAd = function (cb) {
@@ -3193,8 +3170,6 @@ VPAIDAdUnitWrapper.prototype.collapseAd = function (cb) {
 VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   this._adUnit.skipAd();
   this.waitForEvent('AdSkipped', cb);
-
-  //TODO: what about: AdSkippableStateChange
 };
 
 //VPAID property getters
@@ -3409,7 +3384,11 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
 
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
   tech.loadAdUnit(this.containerEl, function (error, adUnit) {
-    next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
+    try {
+      next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
+    } catch (e) {
+      next(e, adUnit, vastResponse);
+    }
   });
 };
 
@@ -3490,8 +3469,21 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackComplete();
   });
 
-  adUnit.on('AdClickThru', function () {
+  adUnit.on('AdClickThru', function (url, id, playerHandles) {
+    var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
     tracker.trackClick();
+    if(playerHandles && clickThruUrl) {
+      window.open(clickThruUrl);
+    }
+
+    function generateClickThroughURL(clickThroughMacro) {
+      var variables = {
+        ASSETURI: adUnit.options.src,
+        CONTENTPLAYHEAD: 0 //In VPAID there is no method to know the current time from the adUnit
+      };
+
+      return clickThroughMacro ? vastUtil.parseURLMacro(clickThroughMacro, variables) : null;
+    }
   });
 
   adUnit.on('AdUserAcceptInvitation', function () {
