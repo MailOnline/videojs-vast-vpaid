@@ -17,7 +17,7 @@
   display: block;
 }
 
-
+;
 /**
  * videojs.ads.css
  */
@@ -96,7 +96,7 @@ div.vast-skip-button {
 .vjs-ad-playing .vjs-slider-handle:before{
   display: none
 }
-
+;
 div.VPAID-container{
   position: absolute;
   top: 0;

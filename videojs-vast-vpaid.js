@@ -359,7 +359,7 @@ var VPAIDFlashToJS = (function () {
 
             _classCallCheck(this, VPAIDFlashToJS);
 
-            if (!swfobject) {
+            if (!window.swfobject) {
                 return onError({ msg: 'no swfobject in global scope. check: https://github.com/swfobject/swfobject or https://code.google.com/p/swfobject/' });
             }
 
@@ -3369,7 +3369,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
-    player.trigger('VPAID-adfinished');
+    player.trigger('VPAID.adended');
   }
 };
 
@@ -3540,7 +3540,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   next(null, adUnit, vastResponse);
 };
 
-
 VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, next) {
   linkVolumeControl(this.player, adUnit);
   linkFullScreenControl(this.player, adUnit, this.VIEW_MODE);
@@ -3549,11 +3548,11 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
   /*** Local functions ***/
   function linkVolumeControl(player, adUnit) {
-    player.on('volumechange', updateAdUnitVolume);
+    player.on('advolumechange', updateAdUnitVolume);
     adUnit.on('AdVolumeChange', updatePlayerVolume);
 
-    player.on('VPAID-adfinished', function() {
-      player.off('volumechange', updateAdUnitVolume);
+    player.on('VPAID.adended', function() {
+      player.off('advolumechange', updateAdUnitVolume);
     });
 
 
@@ -3576,8 +3575,8 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
   function linkFullScreenControl(player, adUnit, VIEW_MODE) {
     player.on('fullscreenchange', updateViewSize);
-    
-    player.on('VPAID-adfinished', function() {
+
+    player.on('VPAID.adended', function() {
       player.off('fullscreenchange', updateViewSize);
     });
 
