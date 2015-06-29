@@ -23,8 +23,9 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
 }
 
 VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUnit) {
+  //NOTE: skipAd is not part of the method list because it only appears in VPAID 2.0 and we support VPAID 1.0
   var VPAIDInterfaceMethods = [
-    'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd'
+    'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd'
   ];
 
   for (var i = 0, len = VPAIDInterfaceMethods.length; i < len; i++) {

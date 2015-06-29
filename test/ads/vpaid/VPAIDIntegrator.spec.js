@@ -163,6 +163,19 @@ describe("VPAIDIntegrator", function () {
         techLoadAdUnitCb(null, vpaidAdUnit);
         sinon.assert.calledWithExactly(callback, null, sinon.match.instanceOf(VPAIDAdUnitWrapper), vastResponse);
       });
+
+      it("must pass the error if there is a problem creating the VPAIDAdUnitWrapper", function(){
+        var testTech = new fakeTech();
+        vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
+        var techLoadAdUnitCb = secondArg(testTech.loadAdUnit);
+        //We make the adUnit invalid
+        vpaidAdUnit.initAd = undefined;
+
+        techLoadAdUnitCb(null, vpaidAdUnit);
+        sinon.assert.calledWithExactly(callback, sinon.match.instanceOf(VASTError), vpaidAdUnit, vastResponse);
+        var error = firstArg(callback);
+        assert.equal(error.message, 'VAST Error: on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface')
+      });
     });
 
     describe("playAdUnit", function () {

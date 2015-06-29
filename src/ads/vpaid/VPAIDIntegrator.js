@@ -118,7 +118,11 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
 
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
   tech.loadAdUnit(this.containerEl, function (error, adUnit) {
-    next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
+    try {
+      next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
+    } catch (e) {
+      next(e, adUnit, vastResponse);
+    }
   });
 };
 
