@@ -206,7 +206,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdClickThru', function (url, id, playerHandles) {
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
     tracker.trackClick();
-    if(playerHandles && clickThruUrl) {
+    if (playerHandles && clickThruUrl) {
       window.open(clickThruUrl);
     }
 
@@ -266,6 +266,57 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   next(null, adUnit, vastResponse);
 };
 
+VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next) {
+  var skipButton;
+  var player = this.player;
+
+  adUnit.on('AdSkippableStateChange', updateSkipButtonState);
+
+  player.one('vast.adend', removeSkipButton);
+  player.one('vast.aderror', removeSkipButton);
+
+  next(null, adUnit, vastResponse);
+
+  /*** Local function ***/
+  function updateSkipButtonState() {
+    adUnit.getAdSkippableState(function (isSkippable) {
+      if (isSkippable) {
+        addSkipButton(player);
+      } else {
+        removeSkipButton(player)
+      }
+    });
+  }
+
+  function addSkipButton(player) {
+    skipButton = createSkipButton(player);
+    player.el().appendChild(skipButton);
+  }
+
+  function removeSkipButton() {
+    dom.remove(skipButton);
+    skipButton = null;
+  }
+
+  function createSkipButton() {
+    var skipButton = window.document.createElement("div");
+    dom.addClass(skipButton, "vast-skip-button");
+
+    skipButton.onclick = function (e) {
+      adUnit.skipAd();//We skip the adUnit
+
+      //We prevent event propagation to avoid problems with the clickThrough and so on
+      if (window.Event.prototype.stopPropagation !== undefined) {
+        e.stopPropagation();
+      } else {
+        return false;
+      }
+    };
+
+    return skipButton;
+  }
+};
+
 VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, next) {
   linkVolumeControl(this.player, adUnit);
   linkFullScreenControl(this.player, adUnit, this.VIEW_MODE);
@@ -277,7 +328,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
     player.on('advolumechange', updateAdUnitVolume);
     adUnit.on('AdVolumeChange', updatePlayerVolume);
 
-    player.on('VPAID.adended', function() {
+    player.on('VPAID.adended', function () {
       player.off('advolumechange', updateAdUnitVolume);
     });
 
@@ -302,14 +353,14 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
   function linkFullScreenControl(player, adUnit, VIEW_MODE) {
     player.on('fullscreenchange', updateViewSize);
 
-    player.on('VPAID.adended', function() {
+    player.on('VPAID.adended', function () {
       player.off('fullscreenchange', updateViewSize);
     });
 
     /*** local functions ***/
     function updateViewSize() {
       var dimension = dom.getDimension(player.el());
-      var MODE = player.isFullscreen()? VIEW_MODE.FULLSCREEN: VIEW_MODE.NORMAL;
+      var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
       adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
     }
   }
@@ -325,7 +376,7 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
   var player = this.player;
 
   adUnit.startAd(function (error) {
-    if(!error) {
+    if (!error) {
       player.trigger('vast.adstart');
     }
     next(error, adUnit, vastResponse);

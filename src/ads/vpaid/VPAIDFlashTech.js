@@ -45,7 +45,6 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
   }
 };
 
-
 VPAIDFlashTech.prototype.unloadAdUnit = function () {
   if (this.vpaidFlashToJS) {
     try{
