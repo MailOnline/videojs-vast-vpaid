@@ -145,8 +145,9 @@ VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desired
 };
 
 VPAIDAdUnitWrapper.prototype.resizeAd = function (width, height, viewMode, cb) {
-  this._adUnit.resizeAd(width, height, viewMode);
-  this.waitForEvent('AdSizeChange', cb);
+  // NOTE: AdSizeChange event is only supported on VPAID 2.0 so for the moment we are not going to use it
+  // and will assume that everything is fine after the async call
+  this.adUnitAsyncCall('resizeAd', width, height, viewMode, cb);
 };
 
 VPAIDAdUnitWrapper.prototype.startAd = function (cb) {
@@ -182,8 +183,6 @@ VPAIDAdUnitWrapper.prototype.collapseAd = function (cb) {
 VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   this._adUnit.skipAd();
   this.waitForEvent('AdSkipped', cb);
-
-  //TODO: what about: AdSkippableStateChange
 };
 
 //VPAID property getters
