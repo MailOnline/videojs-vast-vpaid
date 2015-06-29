@@ -6,6 +6,7 @@ var BuildTaskDoc = require('./BuildTaskDoc');
 var config = require('./config');
 var bump = require('gulp-bump');
 var gutil = require('gulp-util');
+var ghPages = require('gulp-gh-pages');
 var git = require('gulp-git');
 var del = require('del');
 var fs = require('fs');
@@ -51,6 +52,11 @@ gulp.task('create-new-tag-version', function (cb) {
   });
 });
 
+gulp.task('deploy-demo-page', function() {
+  return gulp.src(path.join(config.DIST, '**/*'))
+    .pipe(ghPages());
+});
+
 gulp.task('release', function (callback) {
   config.env = 'production';
   runSequence(
@@ -61,6 +67,7 @@ gulp.task('release', function (callback) {
     'commit-build-to-git',
     'push-to-master',
     'create-new-tag-version',
+    'deploy-demo-page',
     function (error) {
       if (error) {
         console.log(error.message.red);

@@ -14,7 +14,7 @@ module.exports = {
   //Files needed to build the demo
   demo: {
     pages: [
-      'demo/tpls/demo.html',
+      'demo/tpls/index.html',
       'demo/tpls/mobile.html'
     ],
     styles: [

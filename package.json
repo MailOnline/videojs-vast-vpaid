@@ -36,6 +36,7 @@
     "gulp-concat": "^2.5.2",
     "gulp-flatten": "0.0.4",
     "gulp-footer": "^1.0.5",
+    "gulp-gh-pages": "^0.5.2",
     "gulp-git": "^1.2.4",
     "gulp-header": "^1.2.2",
     "gulp-if": "^1.2.5",
