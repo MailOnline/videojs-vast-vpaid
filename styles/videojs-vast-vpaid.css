@@ -17,7 +17,7 @@
   display: block;
 }
 
-;
+
 /**
  * videojs.ads.css
  */
@@ -96,7 +96,7 @@ div.vast-skip-button {
 .vjs-ad-playing .vjs-slider-handle:before{
   display: none
 }
-;
+
 div.VPAID-container{
   position: absolute;
   top: 0;
@@ -111,4 +111,8 @@ div.vjs-vpaid-ad div.vjs-time-controls,
 div.vjs-vpaid-ad div.vjs-time-divider,
 div.vjs-vpaid-ad div.vjs-play-control{
   display: none;
+}
+
+div.vjs-vpaid-ad .vjs-tech {
+  z-index: -1;
 }
