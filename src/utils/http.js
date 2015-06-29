@@ -109,31 +109,6 @@ HttpRequest.prototype.get = function (url, callback, options) {
   }
 };
 
-HttpRequest.getJSONP = function getJSONP (url, cb, timeout, callback_name){
-  var has_callback_called = false;
-  timeout = timeout || 3000;
-  callback_name = callback_name || ("_cb_" + Math.floor((Math.random()*100000)).toString()); // for jsonp
-
-  setTimeout(function (){
-    if (has_callback_called){ // function has timed out
-      return;
-    }
-    cb("JSONP request timed up (or returned an error)");
-    delete window[callback_name]; //cleaning up
-  }, timeout);
-
-  // I create the callback
-  window[callback_name] = function (data){
-    has_callback_called = true;
-    cb(null, data);
-    delete window[callback_name]; //cleaning up
-  };
-
-  var s = document.createElement('script');
-  s.src = url + "?cb=" + callback_name;
-  document.head.appendChild(s);
-};
-
 function createXhr() {
   return new window.XMLHttpRequest();
 }
