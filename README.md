@@ -53,7 +53,7 @@
          poster="http://video-js.zencoder.com/oceans-clip.png"
          data-setup='{
                   "plugins": {
-                          "vast":{
+                          "vastClient":{
                               "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
                               "adsCancelTimeout": 5000,
                               "adsEnabled": true
