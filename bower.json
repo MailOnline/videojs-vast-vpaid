@@ -24,7 +24,7 @@
     "frontend/demo/*"
   ],
   "dependencies": {
-    "flashVPAID": "0.0.7"
+    "VPAIDFLASHClient": "0.0.8"
   },
   "devDependencies": {
     "video.js": "4.11.4"

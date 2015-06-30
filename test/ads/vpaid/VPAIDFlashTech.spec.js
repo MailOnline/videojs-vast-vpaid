@@ -30,10 +30,10 @@ describe("VPAIDFlashTech", function () {
   });
 
   describe("instance", function () {
-    var vpaidFlashClient, testDiv;
+    var vpaidFlashTech, testDiv;
 
     beforeEach(function () {
-      vpaidFlashClient = new VPAIDFlashTech({src:'http://fake.mediaFile.url'});
+      vpaidFlashTech = new VPAIDFlashTech({src:'http://fake.mediaFile.url'});
       testDiv = document.createElement("div");
       document.body.appendChild(testDiv);
     });
@@ -46,7 +46,7 @@ describe("VPAIDFlashTech", function () {
       it("must throw a VASTError if you don't pass a valid dom Element to contain the ad", function(){
         [undefined, null, {}, 123].forEach(function (invalidDomElement) {
           assert.throws(function () {
-            vpaidFlashClient.loadAdUnit(invalidDomElement);
+            vpaidFlashTech.loadAdUnit(invalidDomElement);
           }, VASTError, 'on VPAIDFlashTech.loadAdUnit, invalid dom container element');
         });
       });
@@ -54,64 +54,64 @@ describe("VPAIDFlashTech", function () {
       it("must throw a VASTError if you don't pass a callback to call once the ad have been loaded", function(){
         [undefined, null, {}, 123].forEach(function (invalidCallback) {
           assert.throws(function () {
-            vpaidFlashClient.loadAdUnit(testDiv, invalidCallback);
+            vpaidFlashTech.loadAdUnit(testDiv, invalidCallback);
           }, VASTError, 'on VPAIDFlashTech.loadAdUnit, missing valid callback');
         });
       });
 
       it("must not throw an error if pass valid arguments", function(){
         assert.doesNotThrow(function () {
-          vpaidFlashClient.loadAdUnit(testDiv, noop);
+          vpaidFlashTech.loadAdUnit(testDiv, noop);
         });
       });
 
       it("must publish the containerEl and the vpaidFlashToJs into the instance", function(){
-        assert.isNull(vpaidFlashClient.containerEl);
-        assert.isNull(vpaidFlashClient.vpaidFlashToJS);
-        vpaidFlashClient.loadAdUnit(testDiv, noop);
-        assert.equal(vpaidFlashClient.containerEl, testDiv);
-        assert.instanceOf(vpaidFlashClient.vpaidFlashToJS, VPAIDFlashToJS);
+        assert.isNull(vpaidFlashTech.containerEl);
+        assert.isNull(vpaidFlashTech.vpaidFlashClient);
+        vpaidFlashTech.loadAdUnit(testDiv, noop);
+        assert.equal(vpaidFlashTech.containerEl, testDiv);
+        assert.instanceOf(vpaidFlashTech.vpaidFlashClient, VPAIDFLASHClient);
       });
     });
 
     describe("unloadUnit", function(){
       it("must do nothing if the there is no loaded adUnit", function(){
         assert.doesNotThrow(function() {
-          vpaidFlashClient.unloadAdUnit();
+          vpaidFlashTech.unloadAdUnit();
         });
       });
 
       it("must unload the adUnit", function(){
-        vpaidFlashClient.loadAdUnit(testDiv, noop);
-        var vpaidFlashToJS = vpaidFlashClient.vpaidFlashToJS;
-        vpaidFlashToJS.destroy = sinon.spy();
+        vpaidFlashTech.loadAdUnit(testDiv, noop);
+        var vpaidFlashClient = vpaidFlashTech.vpaidFlashClient;
+        vpaidFlashClient.destroy = sinon.spy();
 
-        vpaidFlashClient.unloadAdUnit();
+        vpaidFlashTech.unloadAdUnit();
 
-        sinon.assert.calledOnce(vpaidFlashToJS.destroy);
+        sinon.assert.calledOnce(vpaidFlashClient.destroy);
       });
 
       it("must remove the containerEl", function(){
         sinon.stub(dom, 'remove');
-        vpaidFlashClient.loadAdUnit(testDiv, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, noop);
         //We mock destroy to prevent exception
-        vpaidFlashClient.vpaidFlashToJS.destroy = noop;
-        vpaidFlashClient.unloadAdUnit();
+        vpaidFlashTech.vpaidFlashClient.destroy = noop;
+        vpaidFlashTech.unloadAdUnit();
 
 
         sinon.assert.calledWithExactly(dom.remove, testDiv);
         dom.remove.restore();
       });
 
-      it("must set instance properties: containerEl and vpaidFlashToJS to null", function(){
-        vpaidFlashClient.loadAdUnit(testDiv, noop);
+      it("must set instance properties: containerEl and vpaidFlashClient to null", function(){
+        vpaidFlashTech.loadAdUnit(testDiv, noop);
         //We mock destroy to prevent exception
-        vpaidFlashClient.vpaidFlashToJS.destroy = noop;
+        vpaidFlashTech.vpaidFlashClient.destroy = noop;
 
-        vpaidFlashClient.unloadAdUnit();
+        vpaidFlashTech.unloadAdUnit();
 
-        assert.isNull(vpaidFlashClient.vpaidFlashToJS);
-        assert.isNull(vpaidFlashClient.containerEl);
+        assert.isNull(vpaidFlashTech.vpaidFlashClient);
+        assert.isNull(vpaidFlashTech.containerEl);
       });
     });
   });

@@ -41,18 +41,18 @@ module.exports = {
   //Vendor files
   vendor: {
     scripts: [
-      'bower_components/flashVPAID/bin/VPAIDFlashToJS.js',
+      'bower_components/VPAIDFLASHClient/bin/VPAIDFLASHClient.js',
       //We are adding the ads plugin manually until this PR gets resolved https://github.com/videojs/videojs-contrib-ads/pull/92
       'libs/videojs-contrib-ads/videojs.ads.global.MODIFIED.js'
     ],
     sourcemaps: [
-      'bower_components/flashVPAID/bin/VPAIDFlashToJS.js.map'
+      'bower_components/VPAIDFLASHClient/bin/VPAIDFLASHClient.js.map'
     ],
     styles: [
       //Empty for the moment
     ],
     assets: [
-      'bower_components/flashVPAID/bin/VPAIDFlash.swf'
+      'bower_components/VPAIDFLASHClient/bin/VPAIDFlash.swf'
     ],
     fonts: [
       //Empty for the moment

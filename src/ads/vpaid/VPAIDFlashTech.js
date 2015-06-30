@@ -5,7 +5,7 @@ function VPAIDFlashTech(mediaFile) {
   sanityCheck(mediaFile);
   this.mediaFile = mediaFile;
   this.containerEl = null;
-  this.vpaidFlashToJS = null;
+  this.vpaidFlashClient = null;
 
   /*** local functions ***/
   function sanityCheck(mediaFile) {
@@ -24,12 +24,12 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
   sanityCheck(containerEl, callback);
 
   this.containerEl = containerEl;
-  this.vpaidFlashToJS = new VPAIDFlashToJS(containerEl, function (error) {
+  this.vpaidFlashClient = new VPAIDFLASHClient(containerEl, function (error) {
     if (error) {
       return callback(error);
     }
 
-    that.vpaidFlashToJS.loadAdUnit(that.mediaFile.src, callback);
+    that.vpaidFlashClient.loadAdUnit(that.mediaFile.src, callback);
   });
 
   /*** Local Functions ***/
@@ -46,15 +46,15 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ca
 };
 
 VPAIDFlashTech.prototype.unloadAdUnit = function () {
-  if (this.vpaidFlashToJS) {
+  if (this.vpaidFlashClient) {
     try{
-      this.vpaidFlashToJS.destroy();
+      this.vpaidFlashClient.destroy();
     } catch(e){
       if(console && isFunction(console.log)){
         console.log('VAST ERROR: trying to unload the VPAID adunit');
       }
     }
-    this.vpaidFlashToJS = null;
+    this.vpaidFlashClient = null;
   }
 
   if (this.containerEl) {
