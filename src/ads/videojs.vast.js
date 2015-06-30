@@ -42,6 +42,15 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   player.on('play', playAdHandler);
   player.on('readyforpreroll', playPrerollAd);
 
+  if (settings.playAdAlways) {
+    // No matter what happens we play a new ad before the user sees the video again.
+    player.on('ended', function () {
+      setTimeout(function () {
+        player.trigger('contentupdate');
+      }, 0);
+    });
+  }
+
   // initialize videojs contrib ads plugin
   player.ads(settings);
 
@@ -141,15 +150,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     ], function (error, response) {
       if (error) {
         trackAdError(error, response);
-      }
-
-      if (settings.playAdAlways) {
-        // No matter what happens we play a new ad before the user sees the video again.
-        player.one('ended', function () {
-          setTimeout(function () {
-            player.trigger('contentupdate');
-          }, 0);
-        });
       }
     });
   }
