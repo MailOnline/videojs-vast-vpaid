@@ -1,5 +1,55 @@
 describe("VPAIDIntegrator", function () {
   var player, vpaidAdUnit, adUnitWrapper, testDiv;
+
+  function FakeAdUnit() {
+    var events = {};
+    this.options = {
+      src: 'fakeSrc'
+    };
+    this.volume = 0;
+    this.isSkippable = false;
+
+    this.skipAd = sinon.spy();
+    this.setVolume = function(vol) {
+      this.volume = vol;
+    };
+
+    this.getAdVolume = function(fn) {
+      var vol = this.volume;
+      window.setTimeout(function() {
+        fn(vol);
+      }, 0)
+
+    };
+
+    this.on = function(evtName, handler) {
+      if(!events[evtName]){
+        events[evtName] = [];
+      }
+
+      events[evtName].push(handler);
+    };
+
+    this.getAdSkippableState = function(fn) {
+      var skippable = this.isSkippable;
+      window.setTimeout(function() {
+        fn(skippable);
+      }, 0)
+    };
+
+    this.trigger = function() {
+      var args = arrayLikeObjToArray(arguments);
+      var evtName = args.shift();
+      var handlers = events[evtName];
+
+      if(handlers){
+        forEach(handlers, function(handler) {
+          handler.apply(null, args);
+        });
+      }
+    };
+  }
+
   beforeEach(function () {
 
     testDiv = document.createElement("div");
@@ -306,42 +356,6 @@ describe("VPAIDIntegrator", function () {
     describe("setupEvents", function(){
       var tracker, adUnit, vastResponse, next;
 
-      function FakeAdUnit() {
-        var events = {};
-        this.options = {
-          src: 'fakeSrc'
-        };
-        this.volume = 0;
-
-        this.setVolume = function(vol) {
-          this.volume = vol;
-        };
-
-        this.getAdVolume = function(fn) {
-          fn(this.volume);
-        };
-
-        this.on = function(evtName, handler) {
-          if(!events[evtName]){
-            events[evtName] = [];
-          }
-
-          events[evtName].push(handler);
-        };
-
-        this.trigger = function() {
-          var args = arrayLikeObjToArray(arguments);
-          var evtName = args.shift();
-          var handlers = events[evtName];
-
-          if(handlers){
-            forEach(handlers, function(handler) {
-              handler.apply(null, args);
-            });
-          }
-        };
-      }
-
       beforeEach(function(){
         tracker = sinon.createStubInstance(VASTTracker);
         sinon.stub(window, 'VASTTracker').returns(tracker);
@@ -469,13 +483,19 @@ describe("VPAIDIntegrator", function () {
 
       describe("on 'AdVolumeChange' evt,", function(){
         beforeEach(function(){
+          this.clock = sinon.useFakeTimers();
           sinon.stub(player, 'volume');
+        });
+
+        afterEach(function(){
+          this.clock.restore();
         });
 
         it("must track mute if the volume was not 0 but gets updated to 0", function(){
           player.volume.returns(10);
           adUnit.setVolume(0);
           adUnit.trigger('AdVolumeChange');
+          this.clock.tick(1);
           sinon.assert.calledOnce(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 0);
@@ -485,6 +505,7 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(0);
           adUnit.setVolume(0);
           adUnit.trigger('AdVolumeChange');
+          this.clock.tick(1);
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 0);
@@ -494,6 +515,7 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(0);
           adUnit.setVolume(10);
           adUnit.trigger('AdVolumeChange');
+          this.clock.tick(1);
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.calledOnce(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 10);
@@ -502,9 +524,82 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(5);
           adUnit.setVolume(10);
           adUnit.trigger('AdVolumeChange');
+          this.clock.tick(1);
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 10);
+        });
+      });
+
+    });
+
+    describe("addSkipButton", function(){
+      var adUnit, vastResponse, next;
+
+      beforeEach(function(){
+        this.clock = sinon.useFakeTimers();
+        adUnit = new FakeAdUnit();
+        vastResponse = new VASTResponse();
+        next = sinon.spy();
+        vpaidIntegrator._addSkipButton(adUnit, vastResponse, next);
+      });
+
+      afterEach(function(){
+        this.clock.restore();
+      });
+
+      it("must call next with no error and the passed adUnit and vastResponse", function(){
+        sinon.assert.calledWithExactly(next, null, adUnit, vastResponse);
+      });
+
+      describe("on 'AdSkippableStateChange'", function(){
+        it("must add the skip button if the adUnit is skippable", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+
+          assert.isNotNull(player.el().querySelector('.vast-skip-button'));
+        });
+
+        it("must remove the skip button if the adUnit is no longer skippable", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          adUnit.isSkippable = false;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          assert.isNull(player.el().querySelector('.vast-skip-button'));
+
+        });
+
+        it("must remove the adUnit when you click on the skip button", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+
+          var skipButton = player.el().querySelector('.vast-skip-button');
+          click(skipButton);
+          sinon.assert.calledOnce(adUnit.skipAd);
+        });
+
+        it("must remove the adUnit on 'vast.adend' event", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          adUnit.isSkippable = false;
+          player.trigger('vast.adend');
+          this.clock.tick(1);
+          assert.isNull(player.el().querySelector('.vast-skip-button'));
+        });
+
+        it("must remove the adUnit on 'vast.aderror' event", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          adUnit.isSkippable = false;
+          player.trigger('vast.aderror');
+          this.clock.tick(1);
+          assert.isNull(player.el().querySelector('.vast-skip-button'));
         });
       });
 
