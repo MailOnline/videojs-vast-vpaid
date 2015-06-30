@@ -284,7 +284,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
       if (isSkippable) {
         addSkipButton(player);
       } else {
-        removeSkipButton(player)
+        removeSkipButton(player);
       }
     });
   }

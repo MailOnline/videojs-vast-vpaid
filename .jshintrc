@@ -71,7 +71,7 @@
     "TrackingEvent":true,
     "Creative":true,
     "InLine":true,
-    "VPAIDFlashToJS":true,
+    "VPAIDFLASHClient":true,
     "VPAIDFlashTech":true,
     "VASTIntegrator":true,
     "VPAIDIntegrator":true,
