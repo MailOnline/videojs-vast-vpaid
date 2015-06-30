@@ -2,11 +2,12 @@ var gulp = require('gulp');
 var karma = require('karma').server;
 var config = require('./config');
 var BuildTaskDoc = require('./BuildTaskDoc');
+var TASK_NAME = 'test';
 
 /**
  * Run test once and exit
  */
-gulp.task('test', function (done) {
+gulp.task(TASK_NAME, function (done) {
   var files = config.demo.scripts
     .concat(config.vendor.scripts)
     .concat(config.plugin.scripts)
@@ -25,4 +26,4 @@ gulp.task('test', function (done) {
   });
 });
 
-module.exports = new BuildTaskDoc("tests", "Starts karma on 'autowatch' mode with all the libs, \nsources and tests of the player", 6.1);
+module.exports = new BuildTaskDoc(TASK_NAME, "Starts karma on 'autowatch' mode with all the libs, \nsources and tests of the player", 6.1);
