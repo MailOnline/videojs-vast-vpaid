@@ -134,6 +134,7 @@ VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback
     this._handshake.bind(this),
     this._initAd.bind(this),
     this._setupEvents.bind(this),
+    this._addSkipButton.bind(this),
     this._linkPlayerControls.bind(this),
     this._startAd.bind(this)
   ], callback);
@@ -301,9 +302,11 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
   function createSkipButton() {
     var skipButton = window.document.createElement("div");
     dom.addClass(skipButton, "vast-skip-button");
+    dom.addClass(skipButton, "enabled");
+    skipButton.innerHTML = "Skip ad";
 
     skipButton.onclick = function (e) {
-      adUnit.skipAd();//We skip the adUnit
+      adUnit.skipAd(noop);//We skip the adUnit
 
       //We prevent event propagation to avoid problems with the clickThrough and so on
       if (window.Event.prototype.stopPropagation !== undefined) {
