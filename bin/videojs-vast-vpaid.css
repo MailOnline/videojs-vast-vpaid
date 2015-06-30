@@ -36,15 +36,17 @@
 div.vast-skip-button {
   display: block;
   position: absolute;
-  bottom: 30%;
+  bottom: 20%;
   right: 0;
   background-color: #000;
   color: white;
   font-size: 15px;
   font-weight: bold;
   width: auto;
-  padding: 15px;
+  padding: 8px;
   z-index: 2;
+  border: 1px solid white;
+  border-right: none;
 }
 
 .vast-skip-button.enabled {
@@ -74,7 +76,7 @@ div.vast-skip-button {
   content: ">>";
   position: relative;
   top: 1px;
-  margin-left: 15px;
+  margin-left: 8px;
 }
 /* Ad loading */
 .vjs-ad-playing.vjs-vast-ad-loading .vjs-loading-spinner {
