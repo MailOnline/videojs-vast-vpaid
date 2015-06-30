@@ -81,7 +81,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
-      
+
       if(player.paused()){
         player.pause();
       }
@@ -145,8 +145,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
       if (settings.playAdAlways) {
         // No matter what happens we play a new ad before the user sees the video again.
-        player.one('contentended', function () {
-
+        player.one('ended', function () {
           setTimeout(function () {
             player.trigger('contentupdate');
           }, 0);
