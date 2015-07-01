@@ -12,13 +12,19 @@ function VPAIDHTML5Tech(mediaFile) {
   }
 }
 
-VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, callback) {
-  sanityCheck(containerEl, callback);
-  //TODO: will need a videoElement in this point
+VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
+  sanityCheck(containerEl, videoEl, callback);
+  //TODO: change default timeout
 
+  this.containerEl = containerEl;
+  this.vpaidHTMLClient = new VPAIDHTML5Client(containerEl, videoEl, {});
 
-  function sanityCheck(container, cb) {
+  function sanityCheck(container, video, cb) {
     if (!dom.isDomElement(container)) {
+      throw new VASTError(VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL);
+    }
+
+    if (!dom.isDomElement(video) || video.tagName.toLowerCase() !== 'video') {
       throw new VASTError(VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL);
     }
 
@@ -31,5 +37,6 @@ VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, callback)
 var PREFIX = 'on VPAIDHTML5Tech';
 VPAIDHTML5Tech.INVALID_MEDIA_FILE = PREFIX + ', invalid MediaFile';
 VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL = PREFIX + ', invalid container HtmlElement';
+VPAIDHTML5Tech.INVALID_DOM_VIDEO_EL = PREFIX + ', invalid HTMLVideoElement';
 VPAIDHTML5Tech.MISSING_CALLBACK = PREFIX + ', missing valid callback';
 

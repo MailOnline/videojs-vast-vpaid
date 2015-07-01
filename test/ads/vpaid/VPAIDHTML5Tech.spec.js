@@ -18,16 +18,18 @@ describe("VPAIDHTML5Tech", function() {
   });
 
   describe("instance", function() {
-    var vpaidTech, testDiv;
+    var vpaidTech, testDiv, testVideo;
 
     beforeEach(function () {
       vpaidTech = new VPAIDHTML5Tech({src: 'http://fake.mediaFile.url'});
       testDiv = document.createElement("div");
+      testVideo = document.createElement("video");
       document.body.appendChild(testDiv);
     });
 
     afterEach(function () {
       dom.remove(testDiv);
+      dom.remove(testVideo);
     });
 
     describe("loadAdUnit", function() {
@@ -39,13 +41,28 @@ describe("VPAIDHTML5Tech", function() {
           });
       });
 
+      it("must throw a VASTError if you don't pass a valid vide Element to contain the video ad", function() {
+          [undefined, null, {}, [], 123].forEach(function (invalidDOMElement) {
+            assert.throws(function (){
+              vpaidTech.loadAdUnit(testDiv, invalidDOMElement);
+            }, VASTError, VAST_ERROR_PREFIX + VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL);
+          });
+      });
+
       it("must throw a VASTError if you don't pass a callback to call once the ad have been loaded", function () {
         [undefined, null, {}, 123].forEach(function(invalidCallback) {
           assert.throws(function () {
-            vpaidTech.loadAdUnit(testDiv, invalidCallback);
+            vpaidTech.loadAdUnit(testDiv, testVideo, invalidCallback);
           }, VASTError, VAST_ERROR_PREFIX + VPAIDHTML5Tech.MISSING_CALLBACK);
         });
-      })
+      });
+
+      it("must not throw an error if pass valid arguments", function(){
+        assert.doesNotThrow(function () {
+          vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+        });
+      });
+
     });
   })
 });
