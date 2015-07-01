@@ -16,6 +16,7 @@ gulp.task("watch", function () {
 
   //Demo files
   var demoScriptsWatcher = gulp.watch(config.demo.scripts, ['build-demo-scripts'].concat(tasks));
+  var demoStylesWatcher = gulp.watch(config.demo.styles, ['build-demo-styles'].concat(tasks));
   var demoPageWatcher = gulp.watch(config.demo.pages, ['build-demo-page'].concat(tasks));
 
   scriptsWatcher.on('change', logFileChange);
@@ -24,6 +25,7 @@ gulp.task("watch", function () {
 
   demoScriptsWatcher.on('change', logFileChange);
   demoPageWatcher.on('change', logFileChange);
+  demoStylesWatcher.on('change', logFileChange);
 
 
   function logFileChange(event) {
