@@ -1,0 +1,51 @@
+body label {
+  display: inline-block;
+  font-size: 1em;
+  line-height: 1.6;
+  font-weight: normal;
+}
+
+.label {
+  margin-bottom: .5rem;
+  font-weight: 400;
+}
+
+.title.main {
+  text-align: center;
+  font-weight: 400;
+}
+
+.vjs-video-container{
+  position: relative;
+  width: 100%;     /* desired width */
+  overflow: hidden;
+}
+
+.vjs-video-container:before{
+  content: "";
+  display: block;
+  padding-top: 56.2%;  /* initial ratio of 16:9*/
+}
+
+.vjs-poster {
+  /*centering the poster in the canvas*/
+  background-position: 50% 50%; /*ie8*/
+}
+
+.vjs-video-container > *{
+  position:  absolute!important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width:  100% !important;
+  height: 100% !important;
+}
+
+.vjs-video-container .vjs-tech {
+  height: 100%; /*ie9+*/
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  margin: auto;
+}

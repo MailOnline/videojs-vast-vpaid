@@ -1001,6 +1001,1085 @@ function stringEndsWith(string, search) {
  }
 })();
 ;
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+
+var METHODS = [
+    'handshakeVersion',
+    'initAd',
+    'startAd',
+    'stopAd',
+    'skipAd', // VPAID 2.0 new method
+    'resizeAd',
+    'pauseAd',
+    'resumeAd',
+    'expandAd',
+    'collapseAd',
+    'subscribe',
+    'unsubscribe'
+];
+
+var EVENTS = [
+    'AdLoaded',
+    'AdStarted',
+    'AdStopped',
+    'AdSkipped',
+    'AdSkippableStateChange', // VPAID 2.0 new event
+    'AdSizeChange', // VPAID 2.0 new event
+    'AdLinearChange',
+    'AdDurationChange', // VPAID 2.0 new event
+    'AdExpandedChange',
+    'AdRemainingTimeChange', // [Deprecated in 2.0] but will be still fired for backwards compatibility
+    'AdVolumeChange',
+    'AdImpression',
+    'AdVideoStart',
+    'AdVideoFirstQuartile',
+    'AdVideoMidpoint',
+    'AdVideoThirdQuartile',
+    'AdVideoComplete',
+    'AdClickThru',
+    'AdInteraction', // VPAID 2.0 new event
+    'AdUserAcceptInvitation',
+    'AdUserMinimize',
+    'AdUserClose',
+    'AdPaused',
+    'AdPlaying',
+    'AdLog',
+    'AdError'
+];
+
+var GETTERS = [
+    'getAdLinear',
+    'getAdWidth', // VPAID 2.0 new getter
+    'getAdHeight', // VPAID 2.0 new getter
+    'getAdExpanded',
+    'getAdSkippableState', // VPAID 2.0 new getter
+    'getAdRemainingTime',
+    'getAdDuration', // VPAID 2.0 new getter
+    'getAdVolume',
+    'getAdCompanions', // VPAID 2.0 new getter
+    'getAdIcons' // VPAID 2.0 new getter
+];
+
+var SETTERS = [
+    'setAdVolume'
+];
+
+
+/**
+ * This callback is displayed as global member. The callback use nodejs error-first callback style
+ * @callback NodeStyleCallback
+ * @param {string|null}
+ * @param {undefined|object}
+ */
+
+
+/**
+ * IVPAIDAdUnit
+ *
+ * @class
+ *
+ * @param {object} creative
+ * @param {HTMLElement} el
+ * @param {HTMLVideoElement} video
+ */
+function IVPAIDAdUnit(creative, el, video) {}
+
+
+/**
+ * handshakeVersion
+ *
+ * @param {string} VPAIDVersion
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.handshakeVersion = function (VPAIDVersion, callback) {};
+
+/**
+ * initAd
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {string} viewMode can be 'normal', 'thumbnail' or 'fullscreen'
+ * @param {number} desiredBitrate indicates the desired bitrate in kbps
+ * @param {object} [creativeData] used for additional initialization data
+ * @param {object} [environmentVars] used for passing implementation-specific of js version
+ * @param {NodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.initAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars, callback) {};
+
+/**
+ * startAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.startAd = function(callback) {};
+
+/**
+ * stopAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.stopAd = function(callback) {};
+
+/**
+ * skipAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.skipAd = function(callback) {};
+
+/**
+ * resizeAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.resizeAd = function(callback) {};
+
+/**
+ * pauseAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.pauseAd = function(callback) {};
+
+/**
+ * resumeAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.resumeAd = function(callback) {};
+
+/**
+ * expandAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.expandAd = function(callback) {};
+
+/**
+ * collapseAd
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.collapseAd = function(callback) {};
+
+/**
+ * subscribe
+ *
+ * @param {string} event
+ * @param {nodeStyleCallback} handler
+ * @param {object} context
+ */
+IVPAIDAdUnit.prototype.subscribe = function(event, handler, context) {};
+
+/**
+ * startAd
+ *
+ * @param {string} event
+ * @param {function} handler
+ */
+IVPAIDAdUnit.prototype.unsubscribe = function(event, handler) {};
+
+
+
+/**
+ * getAdLinear
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdLinear = function(callback) {};
+
+/**
+ * getAdWidth
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdWidth = function(callback) {};
+
+/**
+ * getAdHeight
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdHeight = function(callback) {};
+
+/**
+ * getAdExpanded
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdExpanded = function(callback) {};
+
+/**
+ * getAdSkippableState
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdSkippableState = function(callback) {};
+
+/**
+ * getAdRemainingTime
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdRemainingTime = function(callback) {};
+
+/**
+ * getAdDuration
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdDuration = function(callback) {};
+
+/**
+ * getAdVolume
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdVolume = function(callback) {};
+
+/**
+ * getAdCompanions
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdCompanions = function(callback) {};
+
+/**
+ * getAdIcons
+ *
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.getAdIcons = function(callback) {};
+
+/**
+ * setAdVolume
+ *
+ * @param {number} volume
+ * @param {nodeStyleCallback} callback
+ */
+IVPAIDAdUnit.prototype.setAdVolume = function(volume, callback) {};
+
+addStaticToInterface(IVPAIDAdUnit, 'METHODS', METHODS);
+addStaticToInterface(IVPAIDAdUnit, 'GETTERS', GETTERS);
+addStaticToInterface(IVPAIDAdUnit, 'SETTERS', SETTERS);
+
+
+var VPAID1_METHODS = METHODS.filter(function(method) {
+    return ['skipAd'].indexOf(method) === -1;
+});
+
+addStaticToInterface(IVPAIDAdUnit, 'checkVPAIDInterface', function checkVPAIDInterface (creative) {
+    var result = VPAID1_METHODS.every(function(key) {
+        return typeof creative[key] === 'function';
+    });
+    return result;
+});
+
+module.exports = IVPAIDAdUnit;
+
+function addStaticToInterface(Interface, name, value) {
+    Object.defineProperty(Interface, name, {
+        writable: false,
+        configurable: false,
+        value: value
+    });
+}
+
+
+},{}],2:[function(require,module,exports){
+'use strict';
+
+var IVPAIDAdUnit = require('./IVPAIDAdUnit');
+var checkVPAIDInterface = IVPAIDAdUnit.checkVPAIDInterface;
+var utils = require('./utils');
+var METHODS = IVPAIDAdUnit.METHODS;
+
+/**
+ * This callback is displayed as global member. The callback use nodejs error-first callback style
+ * @callback NodeStyleCallback
+ * @param {string|null}
+ * @param {undefined|object}
+ */
+
+
+/**
+ * VPAIDAdUnit
+ * @class
+ *
+ * @param VPAIDCreative
+ * @param {HTMLElement} [el] this will be used in initAd environmentVars.slot if defined
+ * @param {HTMLVideoElement} [video] this will be used in initAd environmentVars.videoSlot if defined
+ */
+function VPAIDAdUnit(VPAIDCreative, el, video) {
+    this._isValid = checkVPAIDInterface(VPAIDCreative);
+    if (this._isValid) {
+        this._creative = VPAIDCreative;
+        this._el = el;
+        this._videoEl = video;
+    }
+}
+
+VPAIDAdUnit.prototype = Object.create(IVPAIDAdUnit.prototype);
+
+/**
+ * isValidVPAIDAd will return if the VPAIDCreative passed in constructor is valid or not
+ *
+ * @return {boolean}
+ */
+VPAIDAdUnit.prototype.isValidVPAIDAd = function isValidVPAIDAd() {
+    return this._isValid;
+};
+
+IVPAIDAdUnit.METHODS.forEach(function(method) {
+    //this methods arguments order are implemented differently from the spec
+    var ignores = [
+        'subscribe',
+        'unsubscribe',
+        'initAd'
+    ];
+
+    if (ignores.indexOf(method) !== -1) return;
+
+    VPAIDAdUnit.prototype[method] = function () {
+        var ariaty = IVPAIDAdUnit.prototype[method].length;
+        // TODO avoid leaking arguments
+        // https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#32-leaking-arguments
+        var args = Array.prototype.slice.call(arguments);
+        var callback = (ariaty === args.length) ? args.pop() : undefined;
+
+        setTimeout(function () {
+            var result, error = null;
+            try {
+                result = this._creative[method].apply(this._creative, args);
+            } catch(e) {
+                error = e;
+            }
+
+            callOrTriggerEvent(callback, error, result);
+        }.bind(this), 0);
+    };
+});
+
+
+/**
+ * initAd concreate implementation
+ *
+ * @param {number} width
+ * @param {number} height
+ * @param {string} viewMode can be 'normal', 'thumbnail' or 'fullscreen'
+ * @param {number} desiredBitrate indicates the desired bitrate in kbps
+ * @param {object} [creativeData] used for additional initialization data
+ * @param {object} [environmentVars] used for passing implementation-specific of js version, if el & video was used in constructor slot & videoSlot will be added to the object
+ * @param {NodeStyleCallback} callback
+ */
+VPAIDAdUnit.prototype.initAd = function initAd(width, height, viewMode, desiredBitrate, creativeData, environmentVars, callback) {
+    creativeData = creativeData || {};
+    environmentVars = utils.extend({
+        slot: this._el,
+        videoSlot: this._videoEl
+    }, environmentVars || {});
+
+    setTimeout(function () {
+        var error;
+        try {
+            this._creative.initAd(width, height, viewMode, desiredBitrate, creativeData, environmentVars);
+        } catch (e) {
+            error = e;
+        }
+
+        callOrTriggerEvent(callback, error);
+    }.bind(this), 0);
+};
+
+/**
+ * subscribe
+ *
+ * @param {string} event
+ * @param {nodeStyleCallback} handler
+ * @param {object} context
+ */
+VPAIDAdUnit.prototype.subscribe = function subscribe(event, handler, context) {
+    this._creative.subscribe(handler, event, context);
+};
+
+
+/**
+ * unsubscribe
+ *
+ * @param {string} event
+ * @param {nodeStyleCallback} handler
+ */
+VPAIDAdUnit.prototype.unsubscribe = function unsubscribe(event, handler) {
+    this._creative.unsubscribe(handler, event);
+};
+
+//alias
+VPAIDAdUnit.prototype.on = VPAIDAdUnit.prototype.subscribe;
+VPAIDAdUnit.prototype.off = VPAIDAdUnit.prototype.unsubscribe;
+
+IVPAIDAdUnit.GETTERS.forEach(function(getter) {
+    VPAIDAdUnit.prototype[getter] = function (callback) {
+        setTimeout(function () {
+
+            var result, error = null;
+            try {
+                result = this._creative[getter]();
+            } catch(e) {
+                error = e;
+            }
+
+            callOrTriggerEvent(callback, error, result);
+        }.bind(this), 0);
+    };
+});
+
+/**
+ * setAdVolume
+ *
+ * @param volume
+ * @param {nodeStyleCallback} callback
+ */
+VPAIDAdUnit.prototype.setAdVolume = function setAdVolume(volume, callback) {
+    setTimeout(function () {
+
+        var result, error = null;
+        try {
+            this._creative.setAdVolume(volume);
+            result = this._creative.getAdVolume();
+        } catch(e) {
+            error = e;
+        }
+
+        if (!error) {
+            error = utils.validate(result === volume, 'failed to apply volume: ' + volume);
+        }
+        callOrTriggerEvent(callback, error, result);
+    }.bind(this), 0);
+};
+
+
+function callOrTriggerEvent(callback, error, result) {
+    if (callback) {
+        callback(error, result);
+    } else if (error) {
+        //todo use error subscribe
+    }
+}
+
+module.exports = VPAIDAdUnit;
+
+
+},{"./IVPAIDAdUnit":1,"./utils":4}],3:[function(require,module,exports){
+'use strict';
+
+
+var utils = require('./utils');
+var unique = utils.unique('vpaidIframe');
+var VPAIDAdUnit = require('./VPAIDAdUnit');
+var defaultTemplate = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n</head>\n<body>\n    <script type=\"text/javascript\" src=\"{{iframeURL_JS}}\"></script>\n    <script>\n        parent.postMessage('{\"event\": \"ready\", \"id\": \"{{iframeID}}\"}', window.location.origin);\n    </script>\n</body>\n</html>\n";
+
+/**
+ * This callback is displayed as global member. The callback use nodejs error-first callback style
+ * @callback NodeStyleCallback
+ * @param {string|null}
+ * @param {undefined|object}
+ */
+
+/**
+ * VPAIDHTML5Client
+ * @class
+ *
+ * @param {HTMLElement} el that will contain the iframe to load adUnit and a el to add to adUnit slot
+ * @param {HTMLVideoElement} video default video element to be used by adUnit
+ * @param {object} [templateConfig] template: html template to be used instead of the default, extraOptions: to be used when rendering the template
+ * @param {object} [vpaidOptions] timeout: when loading adUnit
+ */
+function VPAIDHTML5Client(el, video, templateConfig, vpaidOptions) {
+    templateConfig = templateConfig || {};
+
+    this._id = unique();
+    this._destroyed = false;
+
+    this._el = utils.createElementInEl(el, 'div', this._id);
+    this._frameContainer = utils.createElementInEl(this._el, 'div');
+    this._adElContainer = utils.createElementInEl(this._el, 'div');
+    this._adElContainer.className = 'adEl';
+    this._videoEl = video;
+    this._vpaidOptions = vpaidOptions || {timeout: 1000};
+
+    this._templateConfig = {
+        template: templateConfig.template || defaultTemplate,
+        extraOptions: templateConfig.extraOptions || {}
+    };
+
+}
+
+/**
+ * destroy
+ *
+ */
+VPAIDHTML5Client.prototype.destroy = function destroy() {
+    this._destroyed = true;
+    this.unloadAdUnit();
+};
+
+/**
+ * isDestroyed
+ *
+ * @return {boolean}
+ */
+VPAIDHTML5Client.prototype.isDestroyed = function isDestroyed() {
+    return this._destroyed;
+};
+
+/**
+ * loadAdUnit
+ *
+ * @param {string} adURL url of the js of the adUnit
+ * @param {nodeStyleCallback} callback
+ */
+VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
+    $throwIfDestroyed.call(this);
+
+    this._frame = utils.createIframeWithContent(
+        this._frameContainer,
+        this._templateConfig.template,
+        utils.extend({
+            iframeURL_JS: adURL,
+            iframeID: this.getID()
+        }, this._templateConfig.extraOptions)
+    );
+
+    //TODO maybe rethink the timeout if is too hidden logic
+    this._onLoad = utils.callbackTimeout(
+        this._vpaidOptions.timeout,
+        onLoad.bind(this),
+        onTimeout.bind(this)
+    );
+
+    window.addEventListener('message', this._onLoad);
+
+    function onLoad (e) {
+        //don't clear timeout
+        if (e.origin !== window.location.origin) return;
+        var result = JSON.parse(e.data);
+
+        //don't clear timeout
+        if (result.id !== this.getID()) return;
+
+        var adUnit, error;
+        if (!this._frame.contentWindow) {
+
+            error = 'the iframe is not anymore in the DOM tree';
+
+        } else {
+            var createAd = this._frame.contentWindow.getVPAIDAd;
+            error = utils.validate(typeof createAd === 'function', 'the ad didn\'t return a function to create an ad');
+        }
+
+        if (!error) {
+            adUnit = new VPAIDAdUnit(createAd(), this._adElContainer, this._videoEl);
+            error = utils.validate(adUnit.isValidVPAIDAd(), 'the add is not fully complaint with VPAID specification');
+        }
+
+        this._adUnit = adUnit;
+        $destroyLoadListener.call(this);
+        callback(error, error ? null : adUnit);
+
+        //clear timeout
+        return true;
+    }
+
+    function onTimeout() {
+        callback('timeout', null);
+    }
+};
+
+/**
+ * unloadAdUnit
+ *
+ */
+VPAIDHTML5Client.prototype.unloadAdUnit = function unloadAdUnit() {
+    $destroyLoadListener.call(this);
+
+    $removeEl.call(this, '_frame');
+    $removeEl.call(this, '_adEl');
+
+    if (this._adUnit) {
+        this._adUnit.stopAd();
+        delete this._adUnit;
+    }
+
+};
+
+/**
+ * getID will return the unique id
+ *
+ * @return {string}
+ */
+VPAIDHTML5Client.prototype.getID = function () {
+    return this._id;
+};
+
+/**
+ * $removeEl
+ *
+ * @param {string} key
+ * @param {HTMLElement} parent
+ */
+function $removeEl(key, parent) {
+    if (this[key]) {
+        this[key].parentElement.remove(this[key]);
+        delete this[key];
+    }
+}
+
+/**
+ * $destroyLoadListener
+ *
+ */
+function $destroyLoadListener() {
+    if (this._onLoad) {
+        window.removeEventListener('message', this._onLoad);
+        utils.clearCallbackTimeout(this._onLoad);
+        delete this._onLoad;
+    }
+};
+
+/**
+ * $throwIfDestroyed
+ *
+ */
+function $throwIfDestroyed() {
+    if (this._destroyed) {
+        throw new Error ('VPAIDHTML5Client already destroyed!');
+    }
+};
+
+module.exports = VPAIDHTML5Client;
+window.VPAIDHTML5Client = VPAIDHTML5Client;
+
+
+},{"./VPAIDAdUnit":2,"./utils":4}],4:[function(require,module,exports){
+'use strict';
+
+/**
+ * noop a empty function
+ */
+function noop() {}
+
+/**
+ * validate if is not validate will return an Error with the message
+ *
+ * @param {boolean} isValid
+ * @param {string} message
+ */
+function validate(isValid, message) {
+    return isValid ? null : new Error(message);
+}
+
+var timeouts = {};
+/**
+ * clearCallbackTimeout
+ *
+ * @param {function} func handler to remove
+ */
+function clearCallbackTimeout(func) {
+    var timeout = timeouts[func];
+    if (timeout) {
+        clearTimeout(timeout);
+        delete timeouts[func];
+    }
+}
+
+/**
+ * callbackTimeout if the onSuccess is not called and returns true in the timelimit then onTimeout will be called
+ *
+ * @param {number} timer
+ * @param {function} onSuccess
+ * @param {function} onTimeout
+ */
+function callbackTimeout(timer, onSuccess, onTimeout) {
+    var callback, timeout;
+
+    timeout = setTimeout(function () {
+        onSuccess = noop;
+        delete timeout[callback]
+        onTimeout();
+    }, timer);
+
+    callback = function () {
+        // TODO avoid leaking arguments
+        // https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#32-leaking-arguments
+        if (onSuccess.apply(this, arguments)) {
+            clearCallbackTimeout(callback);
+        }
+    };
+
+    timeouts[callback] = timeout;
+
+    return callback;
+}
+
+
+/**
+ * createElementInEl
+ *
+ * @param {HTMLElement} parent
+ * @param {string} tagName
+ * @param {string} id
+ */
+function createElementInEl(parent, tagName, id) {
+    var nEl = document.createElement(tagName);
+    if (id) nEl.id = id;
+    parent.appendChild(nEl);
+    return nEl;
+}
+
+/**
+ * createIframeWithContent
+ *
+ * @param {HTMLElement} parent
+ * @param {string} template simple template using {{var}}
+ * @param {object} data
+ */
+function createIframeWithContent(parent, template, data) {
+    var iframe = createIframe(parent);
+    if (!setIframeContent(iframe, simpleTemplate(template, data))) return;
+    return iframe;
+}
+
+/**
+ * createIframe
+ *
+ * @param {HTMLElement} parent
+ * @param {string} url
+ */
+function createIframe(parent, url) {
+    var nEl = document.createElement('iframe');
+    nEl.src = url || 'about:blank';
+    nEl.width = 0;
+    nEl.height = 0;
+    parent.innerHTML = '';
+    parent.appendChild(nEl);
+    return nEl;
+}
+
+/**
+ * simpleTemplate
+ *
+ * @param {string} template
+ * @param {object} data
+ */
+function simpleTemplate(template, data) {
+    Object.keys(data).forEach(function (key) {
+        var value = (typeof value === 'object') ? JSON.stringify(data[key]) : data[key];
+        template = template.replace(new RegExp('{{' + key + '}}', 'g'), value);
+    });
+    return template;
+}
+
+/**
+ * setIframeContent
+ *
+ * @param {HTMLIframeElement} iframeEl
+ * @param content
+ */
+function setIframeContent(iframeEl, content) {
+    var iframeDoc = iframeEl.contentWindow && iframeEl.contentWindow.document;
+    if (!iframeDoc) return false;
+
+    iframeDoc.write(content);
+
+    return true;
+}
+
+
+/**
+ * extend object with keys from another object
+ *
+ * @param {object} toExtend
+ * @param {object} fromSource
+ */
+function extend(toExtend, fromSource) {
+    Object.keys(fromSource).forEach(function(key) {
+        toExtend[key] = fromSource[key];
+    });
+    return toExtend;
+}
+
+
+/**
+ * unique will create a unique string everytime is called, sequentially and prefixed
+ *
+ * @param {string} prefix
+ */
+function unique(prefix) {
+    var count = -1;
+    return function () {
+        return prefix + '_' + (++count);
+    };
+}
+
+module.exports = {
+    noop: noop,
+    validate: validate,
+    clearCallbackTimeout: clearCallbackTimeout,
+    callbackTimeout: callbackTimeout,
+    createElementInEl: createElementInEl,
+    createIframeWithContent: createIframeWithContent,
+    createIframe: createIframe,
+    simpleTemplate: simpleTemplate,
+    setIframeContent: setIframeContent,
+    extend: extend,
+    unique: unique
+};
+
+
+},{}]},{},[3])
+
+
+//# sourceMappingURL=VPAIDHTML5Client.js.map
+;
+/*jshint unused:false */
+"use strict";
+
+var NODE_TYPE_ELEMENT = 1;
+
+function noop(){ }
+
+function isNull(o) {
+  return o === null;
+}
+
+function isDefined(o){
+  return o !== undefined;
+}
+
+function isUndefined(o){
+  return o === undefined;
+}
+
+function isObject(obj) {
+  return typeof obj === 'object';
+}
+
+function isFunction(str){
+  return typeof str === 'function';
+}
+
+function isNumber(num){
+  return typeof num === 'number';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isArray(array){
+  return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isArrayLike(obj) {
+  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
+    return false;
+  }
+
+  var length = obj.length;
+
+  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
+    return true;
+  }
+
+  return isString(obj) || isArray(obj) || length === 0 ||
+    typeof length === 'number' && length > 0 && (length - 1) in obj;
+}
+
+function isString(str){
+  return typeof str === 'string';
+}
+
+function isEmptyString(str) {
+  return isString(str) && str.length === 0;
+}
+
+function isNotEmptyString(str) {
+  return isString(str) && str.length !== 0;
+}
+
+function arrayLikeObjToArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function forEach(obj, iterator, context) {
+  var key, length;
+  if (obj) {
+    if (isFunction(obj)) {
+      for (key in obj) {
+        // Need to check if hasOwnProperty exists,
+        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (isArray(obj)) {
+      var isPrimitive = typeof obj !== 'object';
+      for (key = 0, length = obj.length; key < length; key++) {
+        if (isPrimitive || key in obj) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (obj.forEach && obj.forEach !== forEach) {
+      obj.forEach(iterator, context, obj);
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+
+var SNAKE_CASE_REGEXP = /[A-Z]/g;
+function snake_case(name, separator) {
+  separator = separator || '_';
+  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return (pos ? separator : '') + letter.toLowerCase();
+  });
+}
+
+function isValidEmail(email){
+  if(!isString(email)){
+    return false;
+  }
+  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+  return EMAIL_REGEXP.test(email.trim());
+}
+
+function extend (obj) {
+  var arg, i, k;
+  for (i = 1; i < arguments.length; i++) {
+    arg = arguments[i];
+    for (k in arg) {
+      if (arg.hasOwnProperty(k)) {
+        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
+          obj[k] = extend({}, obj[k], arg[k]);
+        }else {
+          obj[k] = arg[k];
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function decapitalize(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * This method works the same way array.prototype.map works but if the transformer returns undefine, then
+ * it won't be added to the transformed Array.
+ */
+function transformArray(array, transformer) {
+  var transformedArray = [];
+
+  array.forEach(function(item, index){
+    var transformedItem = transformer(item, index);
+    if(isDefined(transformedItem)) {
+      transformedArray.push(transformedItem);
+    }
+  });
+
+  return transformedArray;
+}
+
+function toFixedDigits(num, digits) {
+  var formattedNum = num + '';
+  digits = isNumber(digits) ? digits : 0;
+  num = isNumber(num) ? num : parseInt(num);
+  if(isNumber(num) && !isNaN(num)){
+    formattedNum = num + '';
+    while(formattedNum.length < digits) {
+      formattedNum = '0' + formattedNum;
+    }
+    return formattedNum;
+  }
+  return NaN + '';
+}
+
+function throttle(callback, delay) {
+  var previousCall = new Date().getTime() - (delay + 1);
+  return function() {
+    var time = new Date().getTime();
+    if ((time - previousCall) >= delay) {
+      previousCall = time;
+      callback.apply(this, arguments);
+    }
+  };
+}
+
+function debounce (callback, wait) {
+  var timeoutId;
+
+  return function (){
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(function(){
+      callback.apply(this, arguments);
+      timeoutId = undefined;
+    }, wait);
+  };
+}
+
+// a function designed to blow up the stack in a naive way
+// but it is ok for videoJs children components
+function treeSearch(root, getChildren, found){
+  var children = getChildren(root);
+  for (var i = 0; i < children.length; i++){
+    if (found(children[i])) {
+      return children[i];
+    }
+    else {
+      var el = treeSearch(children[i], getChildren, found);
+      if (el){
+        return el;
+      }
+    }
+  }
+}
+
+function echoFn(val) {
+  return function () {
+    return val;
+  };
+}
+
+//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
+// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+function isISO8601(value) {
+  if(isNumber(value)){
+    value = value + '';  //we make sure that we are working with strings
+  }
+
+  if(!isString(value)){
+    return false;
+  }
+
+  /*jslint maxlen: 500 */
+  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
+  return iso8086Regex.test(value.trim());
+}
+;
 /*! videojs-contrib-ads - v2.1.0 - 2015-06-11
 * Copyright (c) 2015 Brightcove; Licensed  */
 (function(window, document, vjs, undefined) {
@@ -1785,244 +2864,6 @@ var
 })(window, document, videojs);
 
 ;
-/*jshint unused:false */
-"use strict";
-
-var NODE_TYPE_ELEMENT = 1;
-
-function noop(){ }
-
-function isNull(o) {
-  return o === null;
-}
-
-function isDefined(o){
-  return o !== undefined;
-}
-
-function isUndefined(o){
-  return o === undefined;
-}
-
-function isObject(obj) {
-  return typeof obj === 'object';
-}
-
-function isFunction(str){
-  return typeof str === 'function';
-}
-
-function isNumber(num){
-  return typeof num === 'number';
-}
-
-function isWindow(obj) {
-  return isObject(obj) && obj.window === obj;
-}
-
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]';
-}
-
-function isArrayLike(obj) {
-  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
-    return false;
-  }
-
-  var length = obj.length;
-
-  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
-    return true;
-  }
-
-  return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
-}
-
-function isString(str){
-  return typeof str === 'string';
-}
-
-function isEmptyString(str) {
-  return isString(str) && str.length === 0;
-}
-
-function isNotEmptyString(str) {
-  return isString(str) && str.length !== 0;
-}
-
-function arrayLikeObjToArray(args) {
-  return Array.prototype.slice.call(args);
-}
-
-function forEach(obj, iterator, context) {
-  var key, length;
-  if (obj) {
-    if (isFunction(obj)) {
-      for (key in obj) {
-        // Need to check if hasOwnProperty exists,
-        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
-      for (key = 0, length = obj.length; key < length; key++) {
-        if (isPrimitive || key in obj) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (obj.forEach && obj.forEach !== forEach) {
-      obj.forEach(iterator, context, obj);
-    } else {
-      for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-
-var SNAKE_CASE_REGEXP = /[A-Z]/g;
-function snake_case(name, separator) {
-  separator = separator || '_';
-  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-    return (pos ? separator : '') + letter.toLowerCase();
-  });
-}
-
-function isValidEmail(email){
-  if(!isString(email)){
-    return false;
-  }
-  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
-  return EMAIL_REGEXP.test(email.trim());
-}
-
-function extend (obj) {
-  var arg, i, k;
-  for (i = 1; i < arguments.length; i++) {
-    arg = arguments[i];
-    for (k in arg) {
-      if (arg.hasOwnProperty(k)) {
-        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
-          obj[k] = extend({}, obj[k], arg[k]);
-        }else {
-          obj[k] = arg[k];
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-function capitalize(s){
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function decapitalize(s) {
-  return s.charAt(0).toLowerCase() + s.slice(1);
-}
-
-/**
- * This method works the same way array.prototype.map works but if the transformer returns undefine, then
- * it won't be added to the transformed Array.
- */
-function transformArray(array, transformer) {
-  var transformedArray = [];
-
-  array.forEach(function(item, index){
-    var transformedItem = transformer(item, index);
-    if(isDefined(transformedItem)) {
-      transformedArray.push(transformedItem);
-    }
-  });
-
-  return transformedArray;
-}
-
-function toFixedDigits(num, digits) {
-  var formattedNum = num + '';
-  digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
-  if(isNumber(num) && !isNaN(num)){
-    formattedNum = num + '';
-    while(formattedNum.length < digits) {
-      formattedNum = '0' + formattedNum;
-    }
-    return formattedNum;
-  }
-  return NaN + '';
-}
-
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime() - (delay + 1);
-  return function() {
-    var time = new Date().getTime();
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(this, arguments);
-    }
-  };
-}
-
-function debounce (callback, wait) {
-  var timeoutId;
-
-  return function (){
-    if(timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(function(){
-      callback.apply(this, arguments);
-      timeoutId = undefined;
-    }, wait);
-  };
-}
-
-// a function designed to blow up the stack in a naive way
-// but it is ok for videoJs children components
-function treeSearch(root, getChildren, found){
-  var children = getChildren(root);
-  for (var i = 0; i < children.length; i++){
-    if (found(children[i])) {
-      return children[i];
-    }
-    else {
-      var el = treeSearch(children[i], getChildren, found);
-      if (el){
-        return el;
-      }
-    }
-  }
-}
-
-function echoFn(val) {
-  return function () {
-    return val;
-  };
-}
-
-//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
-// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-function isISO8601(value) {
-  if(isNumber(value)){
-    value = value + '';  //we make sure that we are working with strings
-  }
-
-  if(!isString(value)){
-    return false;
-  }
-
-  /*jslint maxlen: 500 */
-  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-  return iso8086Regex.test(value.trim());
-}
-;
 //Small subset of async
 var async = {};
 
@@ -2726,11 +3567,10 @@ vjs.AdsLabel = vjs.Component.extend({
 
     // We asynchronously reposition the ads label element
     setTimeout(function () {
-      var currentTimeComp = player.controlBar && player.controlBar.getChild("currentTimeDisplay");
+      var currentTimeComp = player.controlBar &&( player.controlBar.getChild("timerControls") || player.controlBar.getChild("currentTimeDisplay") );
       if(currentTimeComp) {
         player.controlBar.el().insertBefore(that.el(), currentTimeComp.el());
       }
-
       dom.removeClass(that.el(), 'vjs-label-hidden');
     }, 0);
   }
@@ -2927,7 +3767,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function preventManualProgress(){
-      var PROGRESS_THRESHOLD = 0.5;
+      var PROGRESS_THRESHOLD = 1.5;
       var previousTime = player.currentTime();
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;
@@ -2941,6 +3781,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       function adTimeupdateHandler() {
         var currentTime = player.currentTime();
         var progressDelta = Math.abs(currentTime - previousTime);
+
         if (progressDelta > PROGRESS_THRESHOLD) {
           skipad_attempts+=1;
           if(skipad_attempts >= 2){
@@ -3259,6 +4100,87 @@ VPAIDFlashTech.prototype.unloadAdUnit = function () {
 };
 
 ;
+function VPAIDHTML5Tech(mediaFile) {
+
+  if(!(this instanceof VPAIDHTML5Tech)) {
+    return new VPAIDHTML5Tech(mediaFile);
+  }
+
+  sanityCheck(mediaFile);
+
+  this.containerEl = null;
+  this.videoEl = null;
+  this.vpaidHTMLClient = null;
+
+  this.mediaFile = mediaFile;
+
+  function sanityCheck(mediaFile) {
+      if (!mediaFile || !isString(mediaFile.src)) {
+        throw new VASTError(VPAIDHTML5Tech.INVALID_MEDIA_FILE);
+      }
+  }
+}
+
+VPAIDHTML5Tech.supports = function (type) {
+  return type === 'application/javascript';
+};
+
+VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
+  sanityCheck(containerEl, videoEl, callback);
+  //TODO: change default timeout
+
+  this.containerEl = containerEl;
+  this.videoEl = videoEl;
+  this.vpaidHTMLClient = new VPAIDHTML5Client(containerEl, videoEl, {});
+  this.vpaidHTMLClient.loadAdUnit(this.mediaFile.src, callback);
+
+  function sanityCheck(container, video, cb) {
+    if (!dom.isDomElement(container)) {
+      throw new VASTError(VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL);
+    }
+
+    if (!dom.isDomElement(video) || video.tagName.toLowerCase() !== 'video') {
+      throw new VASTError(VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL);
+    }
+
+    if (!isFunction(cb)) {
+      throw new VASTError(VPAIDHTML5Tech.MISSING_CALLBACK);
+    }
+  }
+};
+
+VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
+  if (this.vpaidHTMLClient) {
+    try {
+      this.vpaidHTMLClient.destroy();
+    } catch(e) {
+      if (console && isFunction(console.log)) {
+        console.log('VAST ERROR: trying to unload the VPAID adunit');
+      }
+    }
+
+    this.vpaidHTMLClient = null;
+  }
+
+  if (this.containerEl) {
+    dom.remove(this.containerEl);
+    this.containerEl = null;
+  }
+
+  if (this.videoEl) {
+    dom.remove(this.videoEl);
+    this.videoEl = null;
+  }
+};
+
+var PREFIX = 'on VPAIDHTML5Tech';
+VPAIDHTML5Tech.INVALID_MEDIA_FILE = PREFIX + ', invalid MediaFile';
+VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL = PREFIX + ', invalid container HtmlElement';
+VPAIDHTML5Tech.INVALID_DOM_VIDEO_EL = PREFIX + ', invalid HTMLVideoElement';
+VPAIDHTML5Tech.MISSING_CALLBACK = PREFIX + ', missing valid callback';
+
+
+;
 function VPAIDIntegrator(player) {
   if (!(this instanceof VPAIDIntegrator)) {
     return new VPAIDIntegrator(player);
@@ -3294,6 +4216,7 @@ function VPAIDIntegrator(player) {
 //List of supported VPAID technologies
 VPAIDIntegrator.techs = [
   VPAIDFlashTech
+  //VPAIDHTML5Tech
 ];
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
@@ -3545,7 +4468,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
       if (isSkippable) {
         addSkipButton(player);
       } else {
-        removeSkipButton(player)
+        removeSkipButton(player);
       }
     });
   }
