@@ -7,11 +7,10 @@ vjs.AdsLabel = vjs.Component.extend({
 
     // We asynchronously reposition the ads label element
     setTimeout(function () {
-      var currentTimeComp = player.controlBar && player.controlBar.getChild("timerControls");
+      var currentTimeComp = player.controlBar &&( player.controlBar.getChild("timerControls") || player.controlBar.getChild("currentTimeDisplay") );
       if(currentTimeComp) {
         player.controlBar.el().insertBefore(that.el(), currentTimeComp.el());
       }
-
       dom.removeClass(that.el(), 'vjs-label-hidden');
     }, 0);
   }

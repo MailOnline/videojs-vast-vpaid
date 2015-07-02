@@ -73,6 +73,7 @@
     "InLine":true,
     "VPAIDFLASHClient":true,
     "VPAIDFlashTech":true,
+    "VPAIDHTML5Tech":true,
     "VASTIntegrator":true,
     "VPAIDIntegrator":true,
     "VASTClient":true,
