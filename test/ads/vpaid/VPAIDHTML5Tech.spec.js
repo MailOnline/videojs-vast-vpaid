@@ -92,8 +92,8 @@ describe("VPAIDHTML5Tech", function() {
         vpaidTech.unloadAdUnit();
 
         assert(vpaidClient.destroy.calledOnce);
-      })
-    })
-  })
+      });
+    });
+  });
 });
 
