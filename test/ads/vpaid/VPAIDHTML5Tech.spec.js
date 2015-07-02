@@ -75,6 +75,25 @@ describe("VPAIDHTML5Tech", function() {
       });
 
     });
+
+    describe("unloadAdUnit", function() {
+      it("must do nothing if there is no loaded adUnit", function() {
+        assert.doesNotThrow(function() {
+          vpaidTech.unloadAdUnit();
+        });
+      });
+
+      it("must unload the adUnit", function() {
+        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+
+        var vpaidClient = vpaidTech.vpaidHTMLClient;
+        vpaidClient.destroy = sinon.spy();
+
+        vpaidTech.unloadAdUnit();
+
+        assert(vpaidClient.destroy.calledOnce);
+      })
+    })
   })
 });
 

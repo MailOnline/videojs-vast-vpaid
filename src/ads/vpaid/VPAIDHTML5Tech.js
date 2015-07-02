@@ -43,6 +43,25 @@ VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, 
   }
 }
 
+VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
+  if (this.vpaidHTMLClient) {
+    try {
+      this.vpaidHTMLClient.destroy();
+    } catch(e) {
+      if (console && isFunction(console.log)) {
+        console.log('VAST ERROR: trying to unload the VPAID adunit');
+      }
+    }
+
+    this.vpaidHTMLClient = null;
+  }
+
+  if (this.containerEl) {
+    dom.remove(this.containerEl);
+    this.containerEl = null;
+  }
+}
+
 var PREFIX = 'on VPAIDHTML5Tech';
 VPAIDHTML5Tech.INVALID_MEDIA_FILE = PREFIX + ', invalid MediaFile';
 VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL = PREFIX + ', invalid container HtmlElement';
