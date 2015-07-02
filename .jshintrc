@@ -72,6 +72,7 @@
     "Creative":true,
     "InLine":true,
     "VPAIDFLASHClient":true,
+    "VPAIDHTML5Client":true,
     "VPAIDFlashTech":true,
     "VPAIDHTML5Tech":true,
     "VASTIntegrator":true,
