@@ -108,8 +108,6 @@ describe("VPAIDHTML5Tech", function() {
       it("must set instance properties: to null", function() {
         vpaidTech.loadAdUnit(testDiv, testVideo, noop);
 
-        vpaidTech.vpaidHTMLClient.destroy = noop;
-
         vpaidTech.unloadAdUnit();
 
         assert.isNull(vpaidTech.vpaidHTMLClient);
