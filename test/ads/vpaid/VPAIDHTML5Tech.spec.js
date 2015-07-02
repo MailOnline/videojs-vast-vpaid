@@ -93,6 +93,29 @@ describe("VPAIDHTML5Tech", function() {
 
         assert(vpaidClient.destroy.calledOnce);
       });
+
+      it("must remove the containerEl", function() {
+        sinon.stub(dom, 'remove');
+        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+
+        vpaidTech.vpaidHTMLClient.destroy = noop;
+        vpaidTech.unloadAdUnit();
+
+        assert(dom.remove.calledWithExactly(testDiv));
+        dom.remove.restore();
+      });
+
+      it("must set instance properties: to null", function() {
+        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+
+        vpaidTech.vpaidHTMLClient.destroy = noop;
+
+        vpaidTech.unloadAdUnit();
+
+        assert.isNull(vpaidTech.vpaidHTMLClient);
+        assert.isNull(vpaidTech.containerEl);
+        assert.isNull(vpaidTech.videoEl);
+      });
     });
   });
 });
