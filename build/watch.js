@@ -15,7 +15,7 @@ gulp.task("watch", function () {
   var assetsWatcher = gulp.watch(config.plugin.assets, ['build-assets'].concat(tasks));
 
   //Demo files
-  var demoScriptsWatcher = gulp.watch(config.demo.scripts, ['build-demo-scripts'].concat(tasks));
+  var demoScriptsWatcher = gulp.watch(config.demo.scripts.concat(['./demo/scripts/**/*.js']), ['build-demo-scripts'].concat(tasks));
   var demoStylesWatcher = gulp.watch(config.demo.styles, ['build-demo-styles'].concat(tasks));
   var demoPageWatcher = gulp.watch(config.demo.pages, ['build-demo-page'].concat(tasks));
 

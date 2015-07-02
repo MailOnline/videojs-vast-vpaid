@@ -6,7 +6,9 @@ var template = require('gulp-template');
 var globUtils = require('./globUtils');
 var flatten = require('gulp-flatten');
 var BuildTaskDoc = require('./BuildTaskDoc');
-
+var browserify = require('gulp-browserify');
+var rename = require('gulp-rename');
+var mergeStream = require('merge-stream');
 
 gulp.task('build-demo', function (callback) {
   runSequence(
@@ -18,7 +20,7 @@ gulp.task('build-demo', function (callback) {
       'build-demo-fonts',
       'build-demo-assets'
     ],
-  function (error) {
+    function (error) {
       if (error) {
         console.log(error.message.red);
       }
@@ -66,10 +68,20 @@ gulp.task('build-demo-page', function () {
 
 
 gulp.task('build-demo-scripts', function () {
+  var mainScript = path.join('demo/scripts', 'main.js');
   var scriptsDistPath = path.join(config.DEV, '/scripts');
 
-  return gulp.src(config.demo.scripts)
-    .pipe(flatten())
+  var dependencies_stream = gulp.src(config.demo.scripts)
+    .pipe(flatten());
+
+  var bundle_stream = gulp.src([mainScript])
+    .pipe(browserify({
+      insertGlobals : true,
+      debug : true
+    }))
+    .pipe(rename('demo_bundle.js'));
+
+  return mergeStream(dependencies_stream, bundle_stream)
     .pipe(gulp.dest(scriptsDistPath));
 });
 

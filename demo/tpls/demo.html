@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="styles/normalize.css"/>
     <link rel="stylesheet" type="text/css" href="styles/skeleton.css"/>
     <link rel="stylesheet" type="text/css" href="styles/video-js.css"/>
+    <link rel="stylesheet" type="text/css" href="styles/demo.css"/>
 
     <!-- Fonts -->
     <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
@@ -32,8 +33,7 @@
     <script type="text/javascript" src="<%= file %>"></script>
     <% }); %>
 
-    <!-- ADS SETUP DEMO PLUGIN -->
-    <script type="text/javascript" src="scripts/ads-setup-plugin.js"></script>
+    <script type="text/javascript" src="scripts/demo_bundle.js"></script>
 </head>
 <body>
 
@@ -46,38 +46,39 @@
                 <section class="header">
                     <h3 class="title">VAST Ad Response</h3>
                 </section>
-
-                <div class="row">
-                    <div class="one-third column label">Input type:</div>
-                    <div class="one-third column">
-                        <input type="radio" name="vast-type" checked="checked" id="vast-tag-radio">
-                        <label for="vast-tag-radio">VAST tag</label>
+                <form id="vast-form">
+                    <div class="row">
+                        <div class="one-third column label">Input type:</div>
+                        <div class="one-third column">
+                            <input type="radio" name="vast-type" checked="checked" id="vast-tag-radio">
+                            <label for="vast-tag-radio">VAST tag</label>
+                        </div>
+                        <div class="one-third column">
+                            <input type="radio" name="vast-type" id="vast-xml-radio">
+                            <label for="vast-xml-radio">VAST XML</label>
+                        </div>
                     </div>
-                    <div class="one-third column">
-                        <input type="radio" name="vast-type" id="vast-xml-radio">
-                        <label for="vast-xml-radio">VAST XML</label>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <label for="vast-tag">VAST XML</label>
+                            <input id="vast-tag" type="text" name="vast-type" class="u-full-width">
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="twelve columns">
-                        <label for="vast-tag">VAST XML</label>
-                        <input id="vast-tag" type="text" name="vast-type" class="u-full-width">
+                    <div class="row">
+                        <div class="twelve columns">
+                            <label for="vast-samples">VAST XML Samples</label>
+                            <select id="vast-samples" class="u-full-width">
+                                <option value="value1">Preroll Linear</option>
+                                <option value="value2">Skippable Preroll Linear</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="twelve columns">
-                        <label for="vast-samples">VAST XML Samples</label>
-                        <select id="vast-samples" class="u-full-width">
-                            <option value="value1">Preroll Linear</option>
-                            <option value="value2">Skippable Preroll Linear</option>
-                        </select>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <textarea class="u-full-width" placeholder="Sample VAST XMl"></textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="twelve columns">
-                        <textarea class="u-full-width" placeholder="Sample VAST XMl"></textarea>
-                    </div>
-                </div>
+                </form>
 
                 <div class="row">
                     <div class="twelve columns">

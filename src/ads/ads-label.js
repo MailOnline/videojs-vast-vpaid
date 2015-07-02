@@ -7,7 +7,7 @@ vjs.AdsLabel = vjs.Component.extend({
 
     // We asynchronously reposition the ads label element
     setTimeout(function () {
-      var currentTimeComp = player.controlBar && player.controlBar.getChild("currentTimeDisplay");
+      var currentTimeComp = player.controlBar && player.controlBar.getChild("timerControls"));
       if(currentTimeComp) {
         player.controlBar.el().insertBefore(that.el(), currentTimeComp.el());
       }
