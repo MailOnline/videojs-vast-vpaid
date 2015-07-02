@@ -63,6 +63,17 @@ describe("VPAIDHTML5Tech", function() {
         });
       });
 
+      it("must set properties into vpaidTech", function () {
+        assert.isNull(vpaidTech.containerEl);
+        assert.isNull(vpaidTech.vpaidHTMLClient);
+
+        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+
+        assert.equal(vpaidTech.containerEl, testDiv);
+        assert.equal(vpaidTech.videoEl, testVideo);
+        assert.instanceOf(vpaidTech.vpaidHTMLClient, VPAIDHTML5Client);
+      });
+
     });
   })
 });

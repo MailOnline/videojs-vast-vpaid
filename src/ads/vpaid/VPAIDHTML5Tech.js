@@ -1,8 +1,15 @@
 function VPAIDHTML5Tech(mediaFile) {
+
   if(!(this instanceof VPAIDHTML5Tech)) {
     return new VPAIDHTML5Tech(mediaFile);
   }
+
   sanityCheck(mediaFile);
+
+  this.containerEl = null;
+  this.videoEl = null;
+  this.vpaidHTMLClient = null;
+
   this.mediaFile = mediaFile;
 
   function sanityCheck(mediaFile) {
@@ -17,7 +24,9 @@ VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, 
   //TODO: change default timeout
 
   this.containerEl = containerEl;
+  this.videoEl = videoEl;
   this.vpaidHTMLClient = new VPAIDHTML5Client(containerEl, videoEl, {});
+  this.vpaidHTMLClient.loadAdUnit(this.mediaFile.src, callback);
 
   function sanityCheck(container, video, cb) {
     if (!dom.isDomElement(container)) {
