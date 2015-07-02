@@ -9,6 +9,13 @@ describe("VPAIDHTML5Tech", function() {
     assert.instanceOf(VPAIDHTML5Tech({src: 'fakeSource'}), VPAIDHTML5Tech);
   });
 
+
+  it("must implement supports", function () {
+    assert.isFunction(VPAIDHTML5Tech.supports);
+    assert(!VPAIDHTML5Tech.supports('application/x-shockwave-flash'));
+    assert(VPAIDHTML5Tech.supports('application/javascript'));
+  });
+
   it("must complain if you don't pass a valid media file", function () {
       [undefined, null, {}, []].forEach(function(invalidMediaFile) {
           assert.throws(function () {
