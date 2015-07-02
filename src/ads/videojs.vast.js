@@ -182,7 +182,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function preventManualProgress(){
-      var PROGRESS_THRESHOLD = 0.5;
+      var PROGRESS_THRESHOLD = 1.5;
       var previousTime = player.currentTime();
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;
@@ -196,6 +196,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       function adTimeupdateHandler() {
         var currentTime = player.currentTime();
         var progressDelta = Math.abs(currentTime - previousTime);
+
         if (progressDelta > PROGRESS_THRESHOLD) {
           skipad_attempts+=1;
           if(skipad_attempts >= 2){

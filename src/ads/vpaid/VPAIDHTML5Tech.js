@@ -45,7 +45,7 @@ VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, 
       throw new VASTError(VPAIDHTML5Tech.MISSING_CALLBACK);
     }
   }
-}
+};
 
 VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
   if (this.vpaidHTMLClient) {
@@ -69,7 +69,7 @@ VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
     dom.remove(this.videoEl);
     this.videoEl = null;
   }
-}
+};
 
 var PREFIX = 'on VPAIDHTML5Tech';
 VPAIDHTML5Tech.INVALID_MEDIA_FILE = PREFIX + ', invalid MediaFile';
