@@ -4215,8 +4215,8 @@ function VPAIDIntegrator(player) {
 
 //List of supported VPAID technologies
 VPAIDIntegrator.techs = [
-  VPAIDFlashTech
-  //VPAIDHTML5Tech
+  VPAIDFlashTech,
+  VPAIDHTML5Tech
 ];
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
