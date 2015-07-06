@@ -35,6 +35,7 @@
     "isArrayLike":true,
     "isString":true,
     "isEmptyString":true,
+    "isIDevice":true,
     "isNotEmptyString":true,
     "arrayLikeObjToArray":true,
     "forEach":true,
