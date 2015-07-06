@@ -3756,21 +3756,34 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player) : new VASTIntegrator(player);
+    var adFinished = false;
+
     player.ads.startLinearAdMode();
     adIntegrator.playAd(vastResponse, callback);
-    player.one('vast.adstart', function () {
-      player.controlBar.addChild('AdsLabel');
-      player.one('adended', removeAdsLabel);
-      player.one('adserror', removeAdsLabel);
-    });
+    player.one('vast.adstart', adAdsLabel);
+    player.one('adend', removeAdsLabel);
+    player.one('adserror', removeAdsLabel);
+    player.one('vast.aderror', removeAdsLabel);
 
     if(isIDevice()) {
       preventManualProgress();
     }
 
     /*** Local functions ****/
+
+    function adAdsLabel(){
+      if(adFinished) {
+        return;
+      }
+      player.controlBar.addChild('AdsLabel');
+    }
+
     function removeAdsLabel() {
+      if(adFinished) {
+        return;
+      }
       player.controlBar.removeChild('AdsLabel');
+      adFinished = true;
     }
 
     function preventManualProgress(){
@@ -3804,7 +3817,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   function finishPlayingAd(vastResponse, callback) {
     player.ads.endLinearAdMode();
-    player.controlBar.removeChild('AdsLabel');
     callback(null, vastResponse);
   }
 
