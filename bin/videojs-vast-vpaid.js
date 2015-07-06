@@ -2079,89 +2079,11 @@ function isISO8601(value) {
   var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
   return iso8086Regex.test(value.trim());
 }
-;
-//Small subset of async
-var async = {};
 
-async.setImmediate = function (fn) {
-  setTimeout(fn, 0);
-};
-
-async.iterator = function (tasks) {
-  var makeCallback = function (index) {
-    var fn = function () {
-      if (tasks.length) {
-        tasks[index].apply(null, arguments);
-      }
-      return fn.next();
-    };
-    fn.next = function () {
-      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
-    };
-    return fn;
-  };
-  return makeCallback(0);
-};
-
-
-async.waterfall = function (tasks, callback) {
-  callback = callback || function () { };
-  if (!isArray(tasks)) {
-    var err = new Error('First argument to waterfall must be an array of functions');
-    return callback(err);
-  }
-  if (!tasks.length) {
-    return callback();
-  }
-  var wrapIterator = function (iterator) {
-    return function (err) {
-      if (err) {
-        callback.apply(null, arguments);
-        callback = function () {
-        };
-      }
-      else {
-        var args = Array.prototype.slice.call(arguments, 1);
-        var next = iterator.next();
-        if (next) {
-          args.push(wrapIterator(next));
-        }
-        else {
-          args.push(callback);
-        }
-        async.setImmediate(function () {
-          iterator.apply(null, args);
-        });
-      }
-    };
-  };
-  wrapIterator(async.iterator(tasks))();
-};
-
-async.when = function (condition, callback) {
-  if (!isFunction(callback)) {
-    throw new Error("async.when error: missing callback argument");
-  }
-
-  var isAllowed = isFunction(condition) ? condition : function () {
-    return !!condition;
-  };
-
-  return function () {
-    var args = arrayLikeObjToArray(arguments);
-    var next = args.pop();
-
-    if (isAllowed.apply(null, args)) {
-      return callback.apply(this, arguments);
-    }
-
-    args.unshift(null);
-    return next.apply(null, args);
-  };
-};
-
-
-
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
 ;
 /*! videojs-contrib-ads - v2.1.0 - 2015-06-11
 * Copyright (c) 2015 Brightcove; Licensed  */
@@ -2945,6 +2867,89 @@ var
   vjs.plugin('ads', adFramework);
 
 })(window, document, videojs);
+
+;
+//Small subset of async
+var async = {};
+
+async.setImmediate = function (fn) {
+  setTimeout(fn, 0);
+};
+
+async.iterator = function (tasks) {
+  var makeCallback = function (index) {
+    var fn = function () {
+      if (tasks.length) {
+        tasks[index].apply(null, arguments);
+      }
+      return fn.next();
+    };
+    fn.next = function () {
+      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
+    };
+    return fn;
+  };
+  return makeCallback(0);
+};
+
+
+async.waterfall = function (tasks, callback) {
+  callback = callback || function () { };
+  if (!isArray(tasks)) {
+    var err = new Error('First argument to waterfall must be an array of functions');
+    return callback(err);
+  }
+  if (!tasks.length) {
+    return callback();
+  }
+  var wrapIterator = function (iterator) {
+    return function (err) {
+      if (err) {
+        callback.apply(null, arguments);
+        callback = function () {
+        };
+      }
+      else {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var next = iterator.next();
+        if (next) {
+          args.push(wrapIterator(next));
+        }
+        else {
+          args.push(callback);
+        }
+        async.setImmediate(function () {
+          iterator.apply(null, args);
+        });
+      }
+    };
+  };
+  wrapIterator(async.iterator(tasks))();
+};
+
+async.when = function (condition, callback) {
+  if (!isFunction(callback)) {
+    throw new Error("async.when error: missing callback argument");
+  }
+
+  var isAllowed = isFunction(condition) ? condition : function () {
+    return !!condition;
+  };
+
+  return function () {
+    var args = arrayLikeObjToArray(arguments);
+    var next = args.pop();
+
+    if (isAllowed.apply(null, args)) {
+      return callback.apply(this, arguments);
+    }
+
+    args.unshift(null);
+    return next.apply(null, args);
+  };
+};
+
+
 
 ;
 "use strict";
@@ -3759,7 +3764,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       player.one('adserror', removeAdsLabel);
     });
 
-    preventManualProgress();
+    if(isIDevice()) {
+      preventManualProgress();
+    }
 
     /*** Local functions ****/
     function removeAdsLabel() {
@@ -3767,7 +3774,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function preventManualProgress(){
-      var PROGRESS_THRESHOLD = 1.5;
+      var PROGRESS_THRESHOLD = 1;
       var previousTime = player.currentTime();
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;

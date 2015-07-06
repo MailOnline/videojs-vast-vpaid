@@ -513,10 +513,7 @@ describe("transform", function(){
       }
     ]
   });
-  it("must be a function", function(){
-    assert.isFunction(transformArray);
-  });
-
+  
   it("must call the transform function with each item of the array and its index", function(){
     var spy = sinon.spy();
 
@@ -572,7 +569,6 @@ describe("toFixedDigits", function(){
     assert.equal(toFixedDigits(45454, 2), '45454');
   });
 });
-
 
 describe("throttle, debounce", function(){
   var clock;
@@ -729,5 +725,33 @@ describe("isISO8601", function(){
     assert.isFalse(isISO8601("2009-05-19 14.5.44"));
     assert.isFalse(isISO8601("2010-02-18T16:23.33.600"));
     assert.isFalse(isISO8601("2010-02-18T16,25:23:48,444"));
+  });
+});
+
+describe("isIDevice", function(){
+  var old_UA;
+
+  beforeEach(function(){
+    old_UA = _UA;
+  });
+
+  afterEach(function(){
+    _UA = old_UA;
+  });
+
+
+  it("must return true if the userAgent contains iPhone", function(){
+    _UA = "browser iPhone";
+    assert.isTrue(isIDevice());
+  });
+  
+  it("must return true it the userAgent contains iPad", function(){
+    _UA = "browser iPad";
+    assert.isTrue(isIDevice());
+  });
+
+  it("must return false it the userAgent does not contains iPad or iPhone", function(){
+    _UA = "browser android";
+    assert.isFalse(isIDevice());
   });
 });

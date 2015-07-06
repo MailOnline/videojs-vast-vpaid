@@ -174,7 +174,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       player.one('adserror', removeAdsLabel);
     });
 
-    preventManualProgress();
+    if(isIDevice()) {
+      preventManualProgress();
+    }
 
     /*** Local functions ****/
     function removeAdsLabel() {
@@ -182,7 +184,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function preventManualProgress(){
-      var PROGRESS_THRESHOLD = 1.5;
+      var PROGRESS_THRESHOLD = 1;
       var previousTime = player.currentTime();
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;

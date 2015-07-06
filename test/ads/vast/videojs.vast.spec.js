@@ -270,9 +270,12 @@ describe("videojs.vast plugin", function () {
   });
 
   describe("on 'readyforpreroll'", function () {
-    var getVASTResponse, callback;
+    var getVASTResponse, callback, old_UA;
 
     beforeEach(function () {
+      old_UA = _UA;
+      window._UA = "iPhone";
+
       this.clock = sinon.useFakeTimers();
       sinon.stub(vastUtil, 'track').returns(null);
       sinon.spy(VASTIntegrator.prototype, 'playAd');
@@ -289,6 +292,7 @@ describe("videojs.vast plugin", function () {
       vastUtil.track.restore();
       getVASTResponse.restore();
       VASTIntegrator.prototype.playAd.restore();
+      window._UA = old_UA;
     });
 
     it("must request the vastResponse", function () {
@@ -311,6 +315,23 @@ describe("videojs.vast plugin", function () {
 
       this.clock.tick(1);
       sinon.assert.calledWith(VASTIntegrator.prototype.playAd, response);
+    });
+
+    it("must not prevent manual progress if you play the ad on a no IDevice", function(){
+      window._UA = "android";
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      sinon.stub(player, 'currentTime').returns(1);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      player.currentTime.returns(10);
+      player.trigger('adtimeupdate');
+      this.clock.tick(1);
+      sinon.assert.alwaysCalledWith(player.currentTime);
     });
 
     it("must prevent manual progress when you play the ad", function(){
