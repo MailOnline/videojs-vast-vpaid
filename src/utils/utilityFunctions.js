@@ -99,7 +99,6 @@ function forEach(obj, iterator, context) {
   return obj;
 }
 
-
 var SNAKE_CASE_REGEXP = /[A-Z]/g;
 function snake_case(name, separator) {
   separator = separator || '_';

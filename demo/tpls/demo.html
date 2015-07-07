@@ -50,21 +50,21 @@
                     <div class="row">
                         <div class="one-third column label">Input type:</div>
                         <div class="one-third column">
-                            <input type="radio" name="vast-type" checked="checked" id="vast-tag-radio">
+                            <input type="radio" name="vast-type" checked="checked" id="vast-tag-radio" value="TAG">
                             <label for="vast-tag-radio">VAST tag</label>
                         </div>
                         <div class="one-third column">
-                            <input type="radio" name="vast-type" id="vast-xml-radio">
+                            <input type="radio" name="vast-type" id="vast-xml-radio" value="XML">
                             <label for="vast-xml-radio">VAST XML</label>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row tag-type">
                         <div class="twelve columns">
-                            <label for="vast-tag">VAST XML</label>
+                            <label for="vast-tag">VAST Tag</label>
                             <input id="vast-tag" type="text" name="vast-type" class="u-full-width">
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row xml-type">
                         <div class="twelve columns">
                             <label for="vast-samples">VAST XML Samples</label>
                             <select id="vast-samples" class="u-full-width">
@@ -73,7 +73,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row custom-xml">
                         <div class="twelve columns">
                             <textarea class="u-full-width" placeholder="Sample VAST XMl"></textarea>
                         </div>
@@ -113,39 +113,41 @@
                 <section class="header">
                     <h3 class="title">VPAID Ad Response</h3>
                 </section>
+                <form id="vpaid-form">
+                    <div class="row">
+                        <div class="one-third column label">Input type:</div>
+                        <div class="one-third column">
+                            <input type="radio" name="vpaid-type" checked="checked" id="vpaid-tag-radio">
+                            <label for="vpaid-tag-radio">VPAID tag</label>
+                        </div>
+                        <div class="one-third column">
+                            <input type="radio" name="vpaid-type" id="vpaid-xml-radio">
+                            <label for="vpaid-xml-radio">VPAID XML</label>
+                        </div>
+                    </div>
+                    <div class="row tag-type">
+                        <div class="twelve columns">
+                            <label for="vpaid-tag">VPAID Tag</label>
+                            <input id="vpaid-tag" type="text" name="vpaid-type" class="u-full-width">
+                        </div>
+                    </div>
+                    <div class="row xml-type">
+                        <div class="twelve columns">
+                            <label for="vpaid-samples">VPAID XML Samples</label>
+                            <select id="vpaid-samples" class="u-full-width">
+                                <option value="value1">Flash Preroll Linear</option>
+                                <option value="value1">Html5 Preroll Linear</option>
+                                <option value="value2">Skippable Preroll Linear</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row custom-xml">
+                        <div class="twelve columns">
+                            <textarea class="u-full-width" placeholder="Sample VPAID XMl"></textarea>
+                        </div>
+                    </div>
+                </form>
 
-                <div class="row">
-                    <div class="one-third column label">Input type:</div>
-                    <div class="one-third column">
-                        <input type="radio" name="vast-type" checked="checked" id="vpaid-tag-radio">
-                        <label for="vast-tag-radio">VPAID tag</label>
-                    </div>
-                    <div class="one-third column">
-                        <input type="radio" name="vast-type" id="vpaid-xml-radio">
-                        <label for="vast-xml-radio">VPAID XML</label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="twelve columns">
-                        <label for="vpaid-tag">VPAID XML</label>
-                        <input id="vpaid-tag" type="text" name="vpaid-type" class="u-full-width">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="twelve columns">
-                        <label for="vpaid-samples">VPAID XML Samples</label>
-                        <select id="vpaid-samples" class="u-full-width">
-                            <option value="value1">Flash Preroll Linear</option>
-                            <option value="value1">Html5 Preroll Linear</option>
-                            <option value="value2">Skippable Preroll Linear</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="twelve columns">
-                        <textarea class="u-full-width" placeholder="Sample VPAID XMl"></textarea>
-                    </div>
-                </div>
                 <div class="row">
                     <div class="twelve columns">
                         <div class="vjs-video-container">

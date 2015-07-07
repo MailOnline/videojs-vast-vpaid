@@ -3,7 +3,35 @@ var adsSetupPlugin = require('./ads-setup-plugin');
 
 videojs.plugin('ads-setup', adsSetupPlugin);
 
-var vastType = document.querySelector('input[name="vast-type"]');
+dom.onReady(function () {
+  //VAST DEMO
+  var vastForm = document.querySelector('form#vast-form');
+  var vastTagType = document.querySelector('input#vast-tag-radio');
+  var vastXMLType = document.querySelector('input#vast-xml-radio');
+
+  initForm(vastForm, vastTagType, vastXMLType);
+
+  //VPAID DEMO
+  var vpaidForm = document.querySelector('form#vpaid-form');
+  var vpaidTagType = document.querySelector('input#vpaid-tag-radio');
+  var vpaidXMLType = document.querySelector('input#vpaid-xml-radio');
+
+  initForm(vpaidForm, vpaidTagType, vpaidXMLType);
+
+  /*** Local functions ***/
+  function initForm(formEl, tagTypeEl, xmlTypeEl){
+    updateVisibility(formEl);
+    dom.addEventListener(tagTypeEl, 'change', updateVisibility);
+    dom.addEventListener(xmlTypeEl, 'change', updateVisibility);
+
+    /*** Local functions ***/
+    function updateVisibility() {
+      dom.removeClass(formEl, 'TAG');
+      dom.removeClass(formEl, 'XML');
+      dom.addClass(formEl, tagTypeEl.checked ? 'TAG' : 'XML');
+    }
+  }
+});
 
 
 /*** DEMO BUTTONS LOGIC ***/
@@ -15,7 +43,7 @@ window.AD_TAGS = {
 
 window.AD_TAG = AD_TAGS.VAST;
 
-window. selectBtn = function selectBtn(btn, adTag) {
+window.selectBtn = function selectBtn(btn, adTag) {
   function unselectBtns() {
     var btns = document.querySelectorAll('button.btn');
     var i, len;
