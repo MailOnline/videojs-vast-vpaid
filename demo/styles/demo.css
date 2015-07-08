@@ -50,8 +50,16 @@ body label {
   margin: auto;
 }
 
-/* demo styles */
+/* Fonts */
+h1 {
+  font-size: 5.6vw;
+}
 
+h3 {
+  font-size: 3.6vw;
+}
+
+/* demo styles */
 form.TAG .tag-type {
   display: block;
 }
