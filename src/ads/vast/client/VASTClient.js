@@ -128,12 +128,16 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
 };
 
 VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
-  http.get(url, function (error, response, status){
-    if(error) {
-      return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
-    }
-    callback(null, response);
-  });
+  try{
+    http.get(url, function (error, response, status){
+      if(error) {
+        return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
+      }
+      callback(null, response);
+    });
+  }catch(e){
+    callback(e);
+  }
 };
 
 VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {

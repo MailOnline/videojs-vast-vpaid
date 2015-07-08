@@ -362,6 +362,18 @@ describe("VASTClient", function () {
         assert.equal('http://foo.bar/', requests[0].url);
       });
 
+      it("must pass an error to the callback if http service throws an exception", function(){
+        var callback = sinon.spy();
+        xhr.onCreate = function() {
+          throw new Error('Error creating xhr');
+        };
+
+        vast._requestVASTXml(url, callback);
+
+        sinon.assert.calledWithExactly(callback, sinon.match(Error));
+        assert.equal(firstArg(callback).message, 'Error creating xhr');
+      });
+
       describe("on XHR GET request error", function () {
         it("must call the callback with an explanatory error and the VASTResponse", function () {
           var callback = sinon.spy();
