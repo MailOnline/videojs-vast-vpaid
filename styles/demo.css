@@ -49,3 +49,31 @@ body label {
   position: absolute;
   margin: auto;
 }
+
+/* Fonts */
+h1 {
+  font-size: 5.6vw;
+}
+
+h3 {
+  font-size: 3.6vw;
+}
+
+/* demo styles */
+form.TAG .tag-type {
+  display: block;
+}
+form.TAG .xml-type {
+  display: none;
+}
+
+form.XML .tag-type {
+  display: none;
+}
+form.XML .xml-type {
+  display: block;
+}
+
+.custom-xml {
+  display: none;
+}
