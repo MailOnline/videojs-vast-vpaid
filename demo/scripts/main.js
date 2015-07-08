@@ -1,5 +1,6 @@
 var dom = require('./miniDom');
 var adsSetupPlugin = require('./ads-setup-plugin');
+var messages = require('./messages');
 
 videojs.plugin('ads-setup', adsSetupPlugin);
 
@@ -22,7 +23,10 @@ dom.onReady(function () {
     updateVisibility(formEl);
     dom.addEventListener(tagTypeEl, 'change', updateVisibility);
     dom.addEventListener(xmlTypeEl, 'change', updateVisibility);
-    dom.addEventListener(updateBtn, 'click', updateDemo);
+    dom.addEventListener(updateBtn, 'click', function() {
+      updateDemo();
+      messages.success("Demo updated!!!");
+    });
 
     updateDemo();
 

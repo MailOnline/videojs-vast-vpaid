@@ -1,4 +1,5 @@
 var _ = require('./utils');
+var messages = require('./messages');
 
 module.exports = function molVastSetup(opts) {
   var player = this;
@@ -16,6 +17,14 @@ module.exports = function molVastSetup(opts) {
       vastAd.enable();
     } else {
       vastAd.disable();
+    }
+  });
+
+  player.on('vast.aderror', function(evt) {
+    var error = evt.error;
+
+    if(error && error.message) {
+      messages.error(error.message);
     }
   });
 

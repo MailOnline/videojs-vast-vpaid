@@ -146,4 +146,17 @@ dom.onReady = (function () {
   }
 })();
 
+dom.prependChild = function prependChild(parent, child) {
+  if(child.parentNode){
+    child.parentNode.removeChild(child);
+  }
+  return parent.insertBefore(child, parent.firstChild);
+};
+
+dom.remove = function removeNode(node){
+  if(node && node.parentNode){
+    node.parentNode.removeChild(node);
+  }
+};
+
 module.exports = dom;

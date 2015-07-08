@@ -1,0 +1,36 @@
+div.messages {
+  display: block;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left:0;
+  right:0;
+  margin-top: 10px;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 10px 15px;
+  width: 200px;
+  text-align: center;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-transition: opacity 0.5s ease-in-out;
+  -moz-transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.5s ease-in-out;}
+
+div.messages.msg-success,
+div.messages.msg-error {
+  opacity: 1;
+}
+
+div.messages.msg-success {
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+div.messages.msg-error {
+  color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+}
