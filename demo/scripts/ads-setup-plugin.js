@@ -21,6 +21,6 @@ module.exports = function molVastSetup(opts) {
 
   /**** Local functions ******/
   function getAdsUrl() {
-    return AD_TAG;
+    return options.adsTag;
   }
 };

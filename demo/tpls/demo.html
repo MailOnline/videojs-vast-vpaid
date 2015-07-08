@@ -50,26 +50,25 @@
                     <div class="row">
                         <div class="one-third column label">Input type:</div>
                         <div class="one-third column">
-                            <input type="radio" name="vast-type" checked="checked" id="vast-tag-radio" value="TAG">
+                            <input type="radio" name="vast-type" class="tag-type-radio" id="vast-tag-radio" value="TAG">
                             <label for="vast-tag-radio">VAST tag</label>
                         </div>
                         <div class="one-third column">
-                            <input type="radio" name="vast-type" id="vast-xml-radio" value="XML">
+                            <input type="radio" name="vast-type" class="xml-type-radio" checked="checked" id="vast-xml-radio" value="XML">
                             <label for="vast-xml-radio">VAST XML</label>
                         </div>
                     </div>
                     <div class="row tag-type">
                         <div class="twelve columns">
                             <label for="vast-tag">VAST Tag</label>
-                            <input id="vast-tag" type="text" name="vast-type" class="u-full-width">
+                            <input id="vast-tag" type="text" name="vast-type" class="u-full-width tag-el">
                         </div>
                     </div>
                     <div class="row xml-type">
                         <div class="twelve columns">
                             <label for="vast-samples">VAST XML Samples</label>
-                            <select id="vast-samples" class="u-full-width">
-                                <option value="value1">Preroll Linear</option>
-                                <option value="value2">Skippable Preroll Linear</option>
+                            <select id="vast-samples" class="u-full-width xml-el">
+                                <option selected="selected" value="http://pubads.g.doubleclick.net/gampad/ads?env=vp&gdfp_req=1&impl=s&output=xml_vast3&unviewed_position_start=1&hl=en&iu=%2F5765%2Fdm.video%2Fdm_video_vasttest&correlator=1432047711631&cust_params=length%3D0%26videoWidth%3D308%26videoHeight%3D173%26play%3Dfirst%26embed%3Dfalse%26videoTitle%3DThe_girl_with_the_Dragon_tattoo%26asi%3D%26sz%3D308x173&description_url=http%3A%2F%2Fwww.dailymail.co.uk%2Ffemail%2Farticle-2937570%2FJennifer-Aniston-Jennifer-Lawrence-Kate-Hudson-lead-silicone-free-trend-proving-natural-silhouette-in.html%23v-3983661116001&url=http%3A%2F%2Fwww.dailymail.co.uk%2Ffemail%2Farticle-2937570%2FJennifer-Aniston-Jennifer-Lawrence-Kate-Hudson-lead-silicone-free-trend-proving-natural-silhouette-in.html%23v-3983661116001&scor=1432047711695&sz=308x173&ged=ta1_ve2_eb11_pt20.16.20_td20_tt1_pd1_bs10_tv1_is0_er2930.0.3288.636_sv2_sp1_vi2491.0.3775.534_vp84_ct1_vb1_vl1_vr0&vid=1234567">Preroll Linear</option>
                             </select>
                         </div>
                     </div>
@@ -78,34 +77,18 @@
                             <textarea class="u-full-width" placeholder="Sample VAST XMl"></textarea>
                         </div>
                     </div>
-                </form>
-
-                <div class="row">
-                    <div class="twelve columns">
-                        <div class="vjs-video-container">
-                            <video id="vast-sample-video" class="video-js vjs-default-skin"
-                                   controls preload="auto"
-                                   poster="http://video-js.zencoder.com/oceans-clip.png"
-                                   data-setup='{
-                            "plugins": {
-                                    "ads-setup":{
-                                        "adCancelTimeout": 5000,
-                                        "adsEnabled": true
-                                    }
-                            }
-                       }'>
-                                <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
-                                <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
-                                <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
-                                <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading
-                                    to a web
-                                    browser that <a
-                                            href="http://videojs.com/html5-video-support/" target="_blank">supports
-                                        HTML5 video</a></p>
-                            </video>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <a class="button button-primary" href="#">Update</a>
                         </div>
                     </div>
-                </div>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <div class="vjs-video-container">
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
         <div class="six columns">
@@ -117,27 +100,27 @@
                     <div class="row">
                         <div class="one-third column label">Input type:</div>
                         <div class="one-third column">
-                            <input type="radio" name="vpaid-type" checked="checked" id="vpaid-tag-radio">
+                            <input type="radio" name="vpaid-type" class="tag-type-radio"
+                                   id="vpaid-tag-radio">
                             <label for="vpaid-tag-radio">VPAID tag</label>
                         </div>
                         <div class="one-third column">
-                            <input type="radio" name="vpaid-type" id="vpaid-xml-radio">
+                            <input type="radio" name="vpaid-type" checked="checked" class="xml-type-radio" id="vpaid-xml-radio">
                             <label for="vpaid-xml-radio">VPAID XML</label>
                         </div>
                     </div>
                     <div class="row tag-type">
                         <div class="twelve columns">
                             <label for="vpaid-tag">VPAID Tag</label>
-                            <input id="vpaid-tag" type="text" name="vpaid-type" class="u-full-width">
+                            <input id="vpaid-tag" type="text" name="vpaid-type" class="u-full-width tag-el">
                         </div>
                     </div>
                     <div class="row xml-type">
                         <div class="twelve columns">
                             <label for="vpaid-samples">VPAID XML Samples</label>
-                            <select id="vpaid-samples" class="u-full-width">
-                                <option value="value1">Flash Preroll Linear</option>
-                                <option value="value1">Html5 Preroll Linear</option>
-                                <option value="value2">Skippable Preroll Linear</option>
+                            <select id="vpaid-samples" class="u-full-width xml-el">
+                                <option selected="selected" value="http://cdn-tags.brainient.com/1228/cba8794a-38a5-448b-ad31-e3f6169645c1/vast.xml?platform=vpaid&v=v6&proto=http">Flash Preroll Linear Expand</option>
+                                <option value="http://cdn-tags.brainient.com/1228/34f8e4e6-e83c-46da-8bf6-a37ae9ed5134/vast.xml?platform=vpaid&v=v6&proto=http">Flash Preroll Linear Button</option>
                             </select>
                         </div>
                     </div>
@@ -146,34 +129,18 @@
                             <textarea class="u-full-width" placeholder="Sample VPAID XMl"></textarea>
                         </div>
                     </div>
-                </form>
-
-                <div class="row">
-                    <div class="twelve columns">
-                        <div class="vjs-video-container">
-                            <video id="vpaid-sample-video" class="video-js vjs-default-skin"
-                                   controls preload="auto"
-                                   poster="http://video-js.zencoder.com/oceans-clip.png"
-                                   data-setup='{
-                            "plugins": {
-                                    "ads-setup":{
-                                        "adCancelTimeout": 5000,
-                                        "adsEnabled": true
-                                    }
-                            }
-                       }'>
-                                <source src="http://video-js.zencoder.com/oceans-clip.mp4" type='video/mp4'/>
-                                <source src="http://video-js.zencoder.com/oceans-clip.webm" type='video/webm'/>
-                                <source src="http://video-js.zencoder.com/oceans-clip.ogv" type='video/ogg'/>
-                                <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading
-                                    to a web
-                                    browser that <a
-                                            href="http://videojs.com/html5-video-support/" target="_blank">supports
-                                        HTML5 video</a></p>
-                            </video>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <a class="button button-primary" href="#">Update</a>
                         </div>
                     </div>
-                </div>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <div class="vjs-video-container">
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

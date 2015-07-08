@@ -4,25 +4,27 @@ var adsSetupPlugin = require('./ads-setup-plugin');
 videojs.plugin('ads-setup', adsSetupPlugin);
 
 dom.onReady(function () {
-  //VAST DEMO
   var vastForm = document.querySelector('form#vast-form');
-  var vastTagType = document.querySelector('input#vast-tag-radio');
-  var vastXMLType = document.querySelector('input#vast-xml-radio');
-
-  initForm(vastForm, vastTagType, vastXMLType);
-
-  //VPAID DEMO
   var vpaidForm = document.querySelector('form#vpaid-form');
-  var vpaidTagType = document.querySelector('input#vpaid-tag-radio');
-  var vpaidXMLType = document.querySelector('input#vpaid-xml-radio');
 
-  initForm(vpaidForm, vpaidTagType, vpaidXMLType);
+  initForm(vastForm);
+  initForm(vpaidForm);
 
   /*** Local functions ***/
-  function initForm(formEl, tagTypeEl, xmlTypeEl){
+  function initForm(formEl){
+    var tagTypeEl = formEl.querySelector('input.tag-type-radio');
+    var xmlTypeEl = formEl.querySelector('input.xml-type-radio');
+    var updateBtn = formEl.querySelector('.button.button-primary');
+    var tagEl = formEl.querySelector('input.tag-el');
+    var xmlEl = formEl.querySelector('select.xml-el');
+    var videoContainer = formEl.querySelector('div.vjs-video-container');
+
     updateVisibility(formEl);
     dom.addEventListener(tagTypeEl, 'change', updateVisibility);
     dom.addEventListener(xmlTypeEl, 'change', updateVisibility);
+    dom.addEventListener(updateBtn, 'click', updateDemo);
+
+    updateDemo();
 
     /*** Local functions ***/
     function updateVisibility() {
@@ -30,29 +32,42 @@ dom.onReady(function () {
       dom.removeClass(formEl, 'XML');
       dom.addClass(formEl, tagTypeEl.checked ? 'TAG' : 'XML');
     }
-  }
-});
 
+    function updateDemo(){
+      createVideoEl(videoContainer, function(videoEl){
+        var adsTag = activeMode() === 'TAG'? tagEl.value : xmlEl.value;
+        videojs(videoEl, {
+          "plugins": {
+            "ads-setup":{
+              "adCancelTimeout": 5000,
+              "adsEnabled": true,
+              "adsTag": adsTag
+            }
+          }
+        });
+      });
+    }
 
-/*** DEMO BUTTONS LOGIC ***/
-window.AD_TAGS = {
-  VAST: 'http://pubads.g.doubleclick.net/gampad/ads?env=vp&gdfp_req=1&impl=s&output=xml_vast3&unviewed_position_start=1&hl=en&iu=%2F5765%2Fdm.video%2Fdm_video_vasttest&correlator=1432047711631&cust_params=length%3D0%26videoWidth%3D308%26videoHeight%3D173%26play%3Dfirst%26embed%3Dfalse%26videoTitle%3DThe_girl_with_the_Dragon_tattoo%26asi%3D%26sz%3D308x173&description_url=http%3A%2F%2Fwww.dailymail.co.uk%2Ffemail%2Farticle-2937570%2FJennifer-Aniston-Jennifer-Lawrence-Kate-Hudson-lead-silicone-free-trend-proving-natural-silhouette-in.html%23v-3983661116001&url=http%3A%2F%2Fwww.dailymail.co.uk%2Ffemail%2Farticle-2937570%2FJennifer-Aniston-Jennifer-Lawrence-Kate-Hudson-lead-silicone-free-trend-proving-natural-silhouette-in.html%23v-3983661116001&scor=1432047711695&sz=308x173&ged=ta1_ve2_eb11_pt20.16.20_td20_tt1_pd1_bs10_tv1_is0_er2930.0.3288.636_sv2_sp1_vi2491.0.3775.534_vp84_ct1_vb1_vl1_vr0&vid=1234567',
-  VPAID_EXPAND: 'http://cdn-tags.brainient.com/1228/cba8794a-38a5-448b-ad31-e3f6169645c1/vast.xml?platform=vpaid&v=v6&proto=http',
-  VPAID_BUTTON: 'http://cdn-tags.brainient.com/1228/34f8e4e6-e83c-46da-8bf6-a37ae9ed5134/vast.xml?platform=vpaid&v=v6&proto=http'
-};
+    function activeMode(){
+      return tagTypeEl.checked ? 'TAG' : 'XML';
+    }
 
-window.AD_TAG = AD_TAGS.VAST;
+    function createVideoEl(container, cb){
+      var videoTag = '<video class="video-js vjs-default-skin" controls preload="auto" poster="http://video-js.zencoder.com/oceans-clip.png" >' +
+                        '<source src="http://video-js.zencoder.com/oceans-clip.mp4" type="video/mp4"/>' +
+                        '<source src="http://video-js.zencoder.com/oceans-clip.webm" type="video/webm"/>' +
+                        '<source src="http://video-js.zencoder.com/oceans-clip.ogv" type="video/ogg"/>' +
+                        '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
+                            '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
+                        '</p>' +
+                      '</video>';
+      container.innerHTML = videoTag;
 
-window.selectBtn = function selectBtn(btn, adTag) {
-  function unselectBtns() {
-    var btns = document.querySelectorAll('button.btn');
-    var i, len;
-    for (i = 0, len = btns.length; i < len; i += 1) {
-      dom.removeClass(btns[i], 'selected');
+      //We do this asynchronously to give time for the dom to be updated
+      setTimeout(function () {
+        var videoEl = container.querySelector('.video-js');
+        cb(videoEl);
+      }, 0);
     }
   }
-
-  unselectBtns();
-  dom.addClass(btn, 'selected');
-  window.AD_TAG = adTag;
-};
+});
