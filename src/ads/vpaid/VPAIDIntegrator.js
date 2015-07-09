@@ -208,11 +208,11 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdClickThru', function (data) {
     var url= data.url;
     var playerHandles = data.playerHandles;
-
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
+
     tracker.trackClick();
     if (playerHandles && clickThruUrl) {
-      window.open(clickThruUrl);
+      window.open(clickThruUrl, '_blank');
     }
 
     function generateClickThroughURL(clickThroughMacro) {

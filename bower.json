@@ -24,7 +24,7 @@
     "frontend/demo/*"
   ],
   "dependencies": {
-    "VPAIDFLASHClient": "0.1.0",
+    "VPAIDFLASHClient": "0.1.1",
     "VPAIDHTML5Client": "0.1.0"
   },
   "devDependencies": {
