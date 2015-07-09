@@ -176,6 +176,11 @@ var VPAIDAdUnit = (function (_IVPAIDAdUnit) {
             this._flash = null;
         }
     }, {
+        key: 'isDestroyed',
+        value: function isDestroyed() {
+            return this._destroyed;
+        }
+    }, {
         key: 'on',
         value: function on(eventName, callback) {
             this._flash.on(eventName, callback);
@@ -355,20 +360,23 @@ var FLASH_VERSION = '10.1.0';
 var VPAIDFLASHClient = (function () {
     function VPAIDFLASHClient(vpaidParentEl, callback) {
         var swfConfig = arguments[2] === undefined ? { data: 'VPAIDFlash.swf', width: 800, height: 400 } : arguments[2];
+
+        var _this = this;
+
         var params = arguments[3] === undefined ? { wmode: 'transparent', salign: 'tl', align: 'left', allowScriptAccess: 'always', scale: 'noScale', allowFullScreen: 'true', quality: 'high' } : arguments[3];
         var vpaidOptions = arguments[4] === undefined ? { debug: false, timeout: 10000 } : arguments[4];
 
         _classCallCheck(this, VPAIDFLASHClient);
 
-        if (!window.swfobject) {
-            return onError({ msg: 'no swfobject in global scope. check: https://github.com/swfobject/swfobject or https://code.google.com/p/swfobject/' });
+        if (!VPAIDFLASHClient.hasExternalDependencies()) {
+            return onError('no swfobject in global scope. check: https://github.com/swfobject/swfobject or https://code.google.com/p/swfobject/');
         }
 
         this._vpaidParentEl = vpaidParentEl;
         this._flashID = uniqueVPAID();
         this._destroyed = false;
+        callback = callback || noop;
 
-        //validate the height
         swfConfig.width = isPositiveInt(swfConfig.width, 800);
         swfConfig.height = isPositiveInt(swfConfig.height, 400);
 
@@ -378,22 +386,27 @@ var VPAIDFLASHClient = (function () {
         params.FlashVars = 'flashid=' + this._flashID + '&handler=' + JSFlashBridge.VPAID_FLASH_HANDLER + '&debug=' + vpaidOptions.debug + '&salign=' + params.salign;
 
         if (!VPAIDFLASHClient.isSupported()) {
-            return onError({ msg: 'user don\'t support flash or doesn\'t have the minimum required version of flash', version: FLASH_VERSION });
+            return onError('user don\'t support flash or doesn\'t have the minimum required version of flash ' + FLASH_VERSION);
         }
 
         this.el = swfobject.createSWF(swfConfig, params, this._flashID);
 
         if (!this.el) {
-            return onError({ msg: 'swfobject failed to create object in element' });
+            return onError('swfobject failed to create object in element');
         }
 
-        this._flash = new JSFlashBridge(this.el, swfConfig.data, this._flashID, swfConfig.width, swfConfig.height, callbackTimeout(vpaidOptions.timeout, callback, function () {
-            callback({ msg: 'vpaid flash load timeout', timeout: vpaidOptions.timeout });
-        }));
+        var handler = callbackTimeout(vpaidOptions.timeout, function (err, data) {
+            $loadPendedAdUnit.call(_this);
+            callback(err, data);
+        }, function () {
+            callback('vpaid flash load timeout ' + vpaidOptions.timeout);
+        });
+
+        this._flash = new JSFlashBridge(this.el, swfConfig.data, this._flashID, swfConfig.width, swfConfig.height, handler);
 
         function onError(error) {
             setTimeout(function () {
-                callback(error);
+                callback(new Error(error));
             }, 0);
             return this;
         }
@@ -403,6 +416,7 @@ var VPAIDFLASHClient = (function () {
         key: 'destroy',
         value: function destroy() {
             this._destroyAdUnit();
+
             if (this._flash) {
                 this._flash.destroy();
                 this._flash = null;
@@ -418,6 +432,8 @@ var VPAIDFLASHClient = (function () {
     }, {
         key: '_destroyAdUnit',
         value: function _destroyAdUnit() {
+            delete this._loadLater;
+
             if (this._adUnitLoad) {
                 this._adUnitLoad = null;
                 this._flash.removeCallback(this._adUnitLoad);
@@ -431,33 +447,34 @@ var VPAIDFLASHClient = (function () {
     }, {
         key: 'loadAdUnit',
         value: function loadAdUnit(adURL, callback) {
-            var _this = this;
+            var _this2 = this;
 
-            if (this._destroyed) {
-                throw new error('VPAIDFlashToJS is destroyed!');
-            }
+            $throwIfDestroyed.call(this);
+
             if (this._adUnit) {
-                throw new error('AdUnit still exists');
+                this._destroyAdUnit();
             }
 
-            this._adUnitLoad = function (err, message) {
-                if (!err) {
-                    _this._adUnit = new VPAIDAdUnit(_this._flash);
-                }
-                _this._adUnitLoad = null;
-                callback(err, _this._adUnit);
-            };
+            if (this._flash.isReady()) {
+                this._adUnitLoad = function (err, message) {
+                    if (!err) {
+                        _this2._adUnit = new VPAIDAdUnit(_this2._flash);
+                    }
+                    _this2._adUnitLoad = null;
+                    callback(err, _this2._adUnit);
+                };
 
-            this._flash.callFlashMethod('loadAdUnit', [adURL], this._adUnitLoad);
+                this._flash.callFlashMethod('loadAdUnit', [adURL], this._adUnitLoad);
+            } else {
+                this._loadLater = { url: adURL, callback: callback };
+            }
         }
     }, {
         key: 'unloadAdUnit',
         value: function unloadAdUnit() {
             var callback = arguments[0] === undefined ? undefined : arguments[0];
 
-            if (this._destroyed) {
-                throw new error('VPAIDFlashToJS is destroyed!');
-            }
+            $throwIfDestroyed.call(this);
 
             this._destroyAdUnit();
             this._flash.callFlashMethod('unloadAdUnit', [], callback);
@@ -465,11 +482,13 @@ var VPAIDFLASHClient = (function () {
     }, {
         key: 'getFlashID',
         value: function getFlashID() {
+            $throwIfDestroyed.call(this);
             return this._flash.getFlashID();
         }
     }, {
         key: 'getFlashURL',
         value: function getFlashURL() {
+            $throwIfDestroyed.call(this);
             return this._flash.getFlashURL();
         }
     }]);
@@ -477,13 +496,34 @@ var VPAIDFLASHClient = (function () {
     return VPAIDFLASHClient;
 })();
 
-Object.defineProperty(VPAIDFLASHClient, 'isSupported', {
-    writable: false,
-    configurable: false,
-    value: function value() {
-        return swfobject.hasFlashPlayerVersion(FLASH_VERSION);
-    }
+setStaticProperty('isSupported', function () {
+    return VPAIDFLASHClient.hasExternalDependencies() && swfobject.hasFlashPlayerVersion(FLASH_VERSION);
 });
+
+setStaticProperty('hasExternalDependencies', function () {
+    return !!window.swfobject;
+});
+
+function $throwIfDestroyed() {
+    if (this._destroyed) {
+        throw new error('VPAIDFlashToJS is destroyed!');
+    }
+}
+
+function $loadPendedAdUnit() {
+    if (this._loadLater) {
+        this.loadAdUnit(this._loadLater.url, this._loadLater.callback);
+        delete this._loadLater;
+    }
+}
+
+function setStaticProperty(propertyName, value) {
+    Object.defineProperty(VPAIDFLASHClient, propertyName, {
+        writable: false,
+        configurable: false,
+        value: value
+    });
+}
 
 window.VPAIDFLASHClient = VPAIDFLASHClient;
 module.exports = VPAIDFLASHClient;
@@ -506,7 +546,7 @@ var SingleValueRegistry = require('./registry').SingleValueRegistry;
 var MultipleValuesRegistry = require('./registry').MultipleValuesRegistry;
 var registry = require('./jsFlashBridgeRegistry');
 var VPAID_FLASH_HANDLER = 'vpaid_video_flash_handler';
-var ERROR = 'error';
+var ERROR = 'AdError';
 
 var JSFlashBridge = (function () {
     function JSFlashBridge(el, flashURL, flashID, width, height, loadHandShake) {
@@ -520,7 +560,8 @@ var JSFlashBridge = (function () {
         this._handlers = new MultipleValuesRegistry();
         this._callbacks = new SingleValueRegistry();
         this._uniqueMethodIdentifier = unique(this._flashID);
-        this._loadHandShake = loadHandShake;
+        this._ready = false;
+        this._handShakeHandler = loadHandShake;
 
         registry.addInstance(this._flashID, this);
     }
@@ -571,7 +612,7 @@ var JSFlashBridge = (function () {
                 } else {
 
                     //if there isn't any callback to return error use error event handler
-                    this._trigger(ERROR, [e]);
+                    this._trigger(ERROR, e);
                 }
             }
         }
@@ -598,11 +639,10 @@ var JSFlashBridge = (function () {
         }
     }, {
         key: '_trigger',
-        value: function _trigger(eventName, err, result) {
-            //TODO: check if forEach and isArray is added to the browser with babeljs
+        value: function _trigger(eventName, event) {
             this._handlers.get(eventName).forEach(function (callback) {
                 setTimeout(function () {
-                    callback(err, result);
+                    callback(event);
                 }, 0);
             });
         }
@@ -616,7 +656,7 @@ var JSFlashBridge = (function () {
             //but if there exist an error, fire the error event
             if (!callback) {
                 if (err && callbackID === '') {
-                    this.trigger(ERROR, err, result);
+                    this.trigger(ERROR, err);
                 }
                 return;
             }
@@ -626,6 +666,15 @@ var JSFlashBridge = (function () {
             }, 0);
 
             this._callbacks.remove(callbackID);
+        }
+    }, {
+        key: '_handShake',
+        value: function _handShake(err, data) {
+            this._ready = true;
+            if (this._handShakeHandler) {
+                this._handShakeHandler(err, data);
+                delete this._handShakeHandler;
+            }
         }
     }, {
         key: 'getSize',
@@ -673,6 +722,11 @@ var JSFlashBridge = (function () {
             return this._flashURL;
         }
     }, {
+        key: 'isReady',
+        value: function isReady() {
+            return this._ready;
+        }
+    }, {
         key: 'destroy',
         value: function destroy() {
             this.offAll();
@@ -699,12 +753,12 @@ window[VPAID_FLASH_HANDLER] = function (flashID, type, event, callID, error, dat
     var instance = registry.getInstanceByID(flashID);
     if (!instance) return;
     if (event === 'handShake') {
-        instance._loadHandShake(error, data);
+        instance._handShake(error, data);
     } else {
         if (type !== 'event') {
             instance._callCallback(event, callID, error, data);
         } else {
-            instance._trigger(event, error, data);
+            instance._trigger(event, data);
         }
     }
 };
@@ -785,7 +839,6 @@ var MultipleValuesRegistry = (function () {
         value: function findByValue(value) {
             var _this = this;
 
-            //TODO: check if keys and find is added to the browser with babeljs
             var keys = Object.keys(this._registries).filter(function (key) {
                 return _this._registries[key].indexOf(value) !== -1;
             });
@@ -869,7 +922,6 @@ var SingleValueRegistry = (function () {
         value: function findByValue(value) {
             var _this3 = this;
 
-            //TODO: check if keys is added to the browser with babeljs
             var keys = Object.keys(this._registries).filter(function (key) {
                 return _this3._registries[key] === value;
             });
@@ -1291,9 +1343,12 @@ function addStaticToInterface(Interface, name, value) {
 'use strict';
 
 var IVPAIDAdUnit = require('./IVPAIDAdUnit');
+var Subscriber = require('./subscriber');
 var checkVPAIDInterface = IVPAIDAdUnit.checkVPAIDInterface;
 var utils = require('./utils');
 var METHODS = IVPAIDAdUnit.METHODS;
+var ERROR = 'AdError';
+var AD_CLICK = 'AdClickThru';
 
 /**
  * This callback is displayed as global member. The callback use nodejs error-first callback style
@@ -1317,6 +1372,8 @@ function VPAIDAdUnit(VPAIDCreative, el, video) {
         this._creative = VPAIDCreative;
         this._el = el;
         this._videoEl = video;
+        this._subscribers = new Subscriber();
+        this._creative.subscribe($clickThruHook.bind(this), AD_CLICK);
     }
 }
 
@@ -1332,7 +1389,7 @@ VPAIDAdUnit.prototype.isValidVPAIDAd = function isValidVPAIDAd() {
 };
 
 IVPAIDAdUnit.METHODS.forEach(function(method) {
-    //this methods arguments order are implemented differently from the spec
+    //NOTE: this methods arguments order are implemented differently from the spec
     var ignores = [
         'subscribe',
         'unsubscribe',
@@ -1356,7 +1413,7 @@ IVPAIDAdUnit.METHODS.forEach(function(method) {
                 error = e;
             }
 
-            callOrTriggerEvent(callback, error, result);
+            callOrTriggerEvent(callback, this._subscribers, error, result);
         }.bind(this), 0);
     };
 });
@@ -1388,7 +1445,7 @@ VPAIDAdUnit.prototype.initAd = function initAd(width, height, viewMode, desiredB
             error = e;
         }
 
-        callOrTriggerEvent(callback, error);
+        callOrTriggerEvent(callback, this._subscribers, error);
     }.bind(this), 0);
 };
 
@@ -1400,7 +1457,9 @@ VPAIDAdUnit.prototype.initAd = function initAd(width, height, viewMode, desiredB
  * @param {object} context
  */
 VPAIDAdUnit.prototype.subscribe = function subscribe(event, handler, context) {
-    this._creative.subscribe(handler, event, context);
+    $getSubscriber.call(this, event).forEach(function (pub) {
+        pub.subscribe(handler, event, context);
+    });
 };
 
 
@@ -1411,7 +1470,9 @@ VPAIDAdUnit.prototype.subscribe = function subscribe(event, handler, context) {
  * @param {nodeStyleCallback} handler
  */
 VPAIDAdUnit.prototype.unsubscribe = function unsubscribe(event, handler) {
-    this._creative.unsubscribe(handler, event);
+    $getSubscriber.call(this, event).forEach(function(pub) {
+        pub.unsubscribe(handler, event);
+    });
 };
 
 //alias
@@ -1429,7 +1490,7 @@ IVPAIDAdUnit.GETTERS.forEach(function(getter) {
                 error = e;
             }
 
-            callOrTriggerEvent(callback, error, result);
+            callOrTriggerEvent(callback, this._subscribers, error, result);
         }.bind(this), 0);
     };
 });
@@ -1454,23 +1515,45 @@ VPAIDAdUnit.prototype.setAdVolume = function setAdVolume(volume, callback) {
         if (!error) {
             error = utils.validate(result === volume, 'failed to apply volume: ' + volume);
         }
-        callOrTriggerEvent(callback, error, result);
+        callOrTriggerEvent(callback, this._subscribers, error, result);
     }.bind(this), 0);
 };
 
+VPAIDAdUnit.prototype._destroy = function destroy() {
+    this.stopAd();
+    this._subscribers.unsubscribeAll();
+};
 
-function callOrTriggerEvent(callback, error, result) {
+function $clickThruHook(url, id, playerHandles) {
+    this._subscribers.trigger(AD_CLICK, {url: url, id: id, playerHandles: playerHandles});
+}
+
+function $getSubscriber(eventName) {
+    var pub = [];
+    switch (eventName) {
+        case AD_CLICK:
+            pub.push(this._subscribers);
+            break;
+        case ERROR:
+            pub.push(this._subscribers);
+        default:
+            pub.push(this._creative);
+    }
+    return pub;
+}
+
+function callOrTriggerEvent(callback, subscribers, error, result) {
     if (callback) {
         callback(error, result);
     } else if (error) {
-        //todo use error subscribe
+        subscribers.trigger(ERROR, error);
     }
 }
 
 module.exports = VPAIDAdUnit;
 
 
-},{"./IVPAIDAdUnit":1,"./utils":4}],3:[function(require,module,exports){
+},{"./IVPAIDAdUnit":1,"./subscriber":4,"./utils":5}],3:[function(require,module,exports){
 'use strict';
 
 
@@ -1503,8 +1586,6 @@ function VPAIDHTML5Client(el, video, templateConfig, vpaidOptions) {
 
     this._el = utils.createElementInEl(el, 'div', this._id);
     this._frameContainer = utils.createElementInEl(this._el, 'div');
-    this._adElContainer = utils.createElementInEl(this._el, 'div');
-    this._adElContainer.className = 'adEl';
     this._videoEl = video;
     this._vpaidOptions = vpaidOptions || {timeout: 1000};
 
@@ -1521,7 +1602,7 @@ function VPAIDHTML5Client(el, video, templateConfig, vpaidOptions) {
  */
 VPAIDHTML5Client.prototype.destroy = function destroy() {
     this._destroyed = true;
-    this.unloadAdUnit();
+    $unloadPreviousAdUnit.call(this);
 };
 
 /**
@@ -1541,8 +1622,12 @@ VPAIDHTML5Client.prototype.isDestroyed = function isDestroyed() {
  */
 VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
     $throwIfDestroyed.call(this);
+    $unloadPreviousAdUnit.call(this);
 
-    this._frame = utils.createIframeWithContent(
+    this._adElContainer = utils.createElementInEl(this._el, 'div');
+    this._adElContainer.className = 'adEl';
+
+    var frame = utils.createIframeWithContent(
         this._frameContainer,
         this._templateConfig.template,
         utils.extend({
@@ -1550,8 +1635,8 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
             iframeID: this.getID()
         }, this._templateConfig.extraOptions)
     );
+    this._frame = frame;
 
-    //TODO maybe rethink the timeout if is too hidden logic
     this._onLoad = utils.callbackTimeout(
         this._vpaidOptions.timeout,
         onLoad.bind(this),
@@ -1561,6 +1646,7 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
     window.addEventListener('message', this._onLoad);
 
     function onLoad (e) {
+        /*jshint validthis: false */
         //don't clear timeout
         if (e.origin !== window.location.origin) return;
         var result = JSON.parse(e.data);
@@ -1568,13 +1654,13 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
         //don't clear timeout
         if (result.id !== this.getID()) return;
 
-        var adUnit, error;
+        var adUnit, error, createAd;
         if (!this._frame.contentWindow) {
 
             error = 'the iframe is not anymore in the DOM tree';
 
         } else {
-            var createAd = this._frame.contentWindow.getVPAIDAd;
+            createAd = this._frame.contentWindow.getVPAIDAd;
             error = utils.validate(typeof createAd === 'function', 'the ad didn\'t return a function to create an ad');
         }
 
@@ -1601,16 +1687,7 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
  *
  */
 VPAIDHTML5Client.prototype.unloadAdUnit = function unloadAdUnit() {
-    $destroyLoadListener.call(this);
-
-    $removeEl.call(this, '_frame');
-    $removeEl.call(this, '_adEl');
-
-    if (this._adUnit) {
-        this._adUnit.stopAd();
-        delete this._adUnit;
-    }
-
+    $unloadPreviousAdUnit.call(this);
 };
 
 /**
@@ -1622,17 +1699,25 @@ VPAIDHTML5Client.prototype.getID = function () {
     return this._id;
 };
 
+
 /**
  * $removeEl
  *
  * @param {string} key
- * @param {HTMLElement} parent
  */
-function $removeEl(key, parent) {
-    if (this[key]) {
-        this[key].parentElement.remove(this[key]);
+function $removeEl(key) {
+    var el = this[key];
+    if (el) {
+        el.remove();
         delete this[key];
     }
+}
+
+function $unloadPreviousAdUnit() {
+    $removeEl.call(this, '_adElContainer');
+    $removeEl.call(this, '_frame');
+    $destroyLoadListener.call(this);
+    $destroyAdUnit.call(this);
 }
 
 /**
@@ -1645,7 +1730,15 @@ function $destroyLoadListener() {
         utils.clearCallbackTimeout(this._onLoad);
         delete this._onLoad;
     }
-};
+}
+
+
+function $destroyAdUnit() {
+    if (this._adUnit) {
+        this._adUnit.stopAd();
+        delete this._adUnit;
+    }
+}
 
 /**
  * $throwIfDestroyed
@@ -1655,13 +1748,52 @@ function $throwIfDestroyed() {
     if (this._destroyed) {
         throw new Error ('VPAIDHTML5Client already destroyed!');
     }
-};
+}
 
 module.exports = VPAIDHTML5Client;
 window.VPAIDHTML5Client = VPAIDHTML5Client;
 
 
-},{"./VPAIDAdUnit":2,"./utils":4}],4:[function(require,module,exports){
+},{"./VPAIDAdUnit":2,"./utils":5}],4:[function(require,module,exports){
+'use strict';
+
+function Subscriber() {
+    this._subscribers = {};
+}
+
+Subscriber.prototype.subscribe = function subscribe(handler, eventName, context) {
+    this.get(eventName).push({handler: handler, context: context});
+};
+
+Subscriber.prototype.unsubscribe = function unsubscribe(handler, eventName) {
+    this._subscribers[eventName] = this.get(eventName).filter(function (subscriber) {
+        return handler === subscriber.handler;
+    });
+};
+
+Subscriber.prototype.unsubscribeAll = function unsubscribeAll() {
+    this._subscribers = {};
+};
+
+Subscriber.prototype.trigger = function(eventName, data) {
+    this.get(eventName).forEach(function (subscriber) {
+        setTimeout(function () {
+            subscriber.handler.call(subscriber.context, data);
+        }, 0);
+    });
+};
+
+Subscriber.prototype.get = function get(eventName) {
+    if (!this._subscribers[eventName]) {
+        this._subscribers[eventName] = [];
+    }
+    return this._subscribers[eventName];
+};
+
+module.exports = Subscriber;
+
+
+},{}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -1705,7 +1837,7 @@ function callbackTimeout(timer, onSuccess, onTimeout) {
 
     timeout = setTimeout(function () {
         onSuccess = noop;
-        delete timeout[callback]
+        delete timeout[callback];
         onTimeout();
     }, timer);
 
@@ -4406,7 +4538,10 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackComplete();
   });
 
-  adUnit.on('AdClickThru', function (url, id, playerHandles) {
+  adUnit.on('AdClickThru', function (data) {
+    var url= data.url;
+    var playerHandles = data.playerHandles;
+
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
     tracker.trackClick();
     if (playerHandles && clickThruUrl) {
