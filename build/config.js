@@ -30,6 +30,7 @@ module.exports = {
     ],
 
     scripts: [
+      'bower_components/xhook/dist/xhook.js',
       'bower_components/swfobject/swfobject/src/swfobject.js',
       'node_modules/es5-shim/es5-shim.js', //Required for the player to work on old browsers
       'bower_components/video.js/dist/video-js/video.dev.js'

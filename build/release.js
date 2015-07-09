@@ -57,7 +57,6 @@ gulp.task('update-gh-pages', function() {
     .pipe(ghPages());
 });
 
-
 gulp.task('deploy-demo-page', function(callback) {
   runSequence(
     'build-demo',
