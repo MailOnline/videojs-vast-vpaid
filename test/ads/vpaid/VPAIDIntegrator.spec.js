@@ -440,7 +440,7 @@ describe("VPAIDIntegrator", function () {
 
         it("must open the url passed if the playerHandles flag is true", function(){
           adUnit.trigger('AdClickThru', {url: 'fake/click/thru/url', playerHandles: true });
-          sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url');
+          sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url', '_blank');
         });
 
         it("must no open any window if there is no click thru url passed or in the vastResponse", function(){
@@ -451,7 +451,7 @@ describe("VPAIDIntegrator", function () {
         it("must use the vastResponse clickThru macro if no url is passed", function(){
           vastResponse.clickThrough = 'fake/click/thru/url/[ASSETURI]';
           adUnit.trigger('AdClickThru', {url: null, playerHandles: true });
-          sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url/fakeSrc');
+          sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url/fakeSrc', '_blank');
         });
       });
 
