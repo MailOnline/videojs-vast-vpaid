@@ -1,6 +1,6 @@
 body label {
   display: inline-block;
-  font-size: 1em;
+  font-size: 0.9em;
   line-height: 1.6;
   font-weight: normal;
 }
@@ -8,6 +8,10 @@ body label {
 .label {
   margin-bottom: .5rem;
   font-weight: 400;
+}
+
+.row textarea {
+  min-height: 59px;
 }
 
 .title.main {
@@ -56,24 +60,43 @@ h1 {
 }
 
 h3 {
-  font-size: 3.6vw;
+  font-size: 3vw;
 }
 
 /* demo styles */
 form.TAG .tag-type {
   display: block;
 }
+
 form.TAG .xml-type {
+  display: none;
+}
+
+form.TAG .custom-type {
   display: none;
 }
 
 form.XML .tag-type {
   display: none;
 }
+
 form.XML .xml-type {
   display: block;
 }
 
-.custom-xml {
+form.XML .custom-type {
   display: none;
+}
+
+
+form.CUSTOM .tag-type {
+  display: none;
+}
+
+form.CUSTOM .xml-type {
+  display: none;
+}
+
+form.CUSTOM .custom-type {
+  display: block;
 }

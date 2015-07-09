@@ -31,6 +31,7 @@
 
     <!-- DEMO required scripts -->
     <script type="text/javascript" src="scripts/es5-shim.js"></script>
+    <script type="text/javascript" src="scripts/xhook.js"></script>
     <script type="text/javascript" src="scripts/swfobject.js"></script>
     <script type="text/javascript" src="scripts/video.dev.js"></script>
 
@@ -53,14 +54,17 @@
                 </section>
                 <form id="vast-form">
                     <div class="row">
-                        <div class="one-third column label">Input type:</div>
                         <div class="one-third column">
-                            <input type="radio" name="vast-type" class="tag-type-radio" id="vast-tag-radio" value="TAG">
+                            <input type="radio" name="vast-type" class="tag-type-radio" id="vast-tag-radio">
                             <label for="vast-tag-radio">VAST tag</label>
                         </div>
                         <div class="one-third column">
-                            <input type="radio" name="vast-type" class="xml-type-radio" checked="checked" id="vast-xml-radio" value="XML">
-                            <label for="vast-xml-radio">VAST XML</label>
+                            <input type="radio" name="vast-type" class="xml-type-radio" checked="checked" id="vast-sample-radio">
+                            <label for="vast-sample-radio">VAST sample</label>
+                        </div>
+                        <div class="one-third column">
+                            <input type="radio" name="vast-type" class="custom-type-radio" id="vast-custom-radio">
+                            <label for="vast-custom-radio">VAST custom</label>
                         </div>
                     </div>
                     <div class="row tag-type">
@@ -79,9 +83,9 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row custom-xml">
+                    <div class="row custom-type">
                         <div class="twelve columns">
-                            <textarea class="u-full-width" placeholder="Sample VAST XMl"></textarea>
+                            <textarea class="u-full-width custom-el" placeholder="Sample VAST XMl"></textarea>
                         </div>
                     </div>
                     <div class="row">
@@ -105,7 +109,6 @@
                 </section>
                 <form id="vpaid-form">
                     <div class="row">
-                        <div class="one-third column label">Input type:</div>
                         <div class="one-third column">
                             <input type="radio" name="vpaid-type" class="tag-type-radio"
                                    id="vpaid-tag-radio">
@@ -113,7 +116,11 @@
                         </div>
                         <div class="one-third column">
                             <input type="radio" name="vpaid-type" checked="checked" class="xml-type-radio" id="vpaid-xml-radio">
-                            <label for="vpaid-xml-radio">VPAID XML</label>
+                            <label for="vpaid-xml-radio">VPAID Sample</label>
+                        </div>
+                        <div class="one-third column">
+                            <input type="radio" name="VPAID-type" class="custom-type-radio" id="vpaid-custom-radio">
+                            <label for="vpaid-custom-radio">VPAID custom</label>
                         </div>
                     </div>
                     <div class="row tag-type">
@@ -131,9 +138,9 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row custom-xml">
+                    <div class="row custom-type">
                         <div class="twelve columns">
-                            <textarea class="u-full-width" placeholder="Sample VPAID XMl"></textarea>
+                            <textarea class="u-full-width custom-el" placeholder="Sample VPAID XMl"></textarea>
                         </div>
                     </div>
                     <div class="row">
