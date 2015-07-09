@@ -641,9 +641,14 @@ var JSFlashBridge = (function () {
         key: '_trigger',
         value: function _trigger(eventName, event) {
             this._handlers.get(eventName).forEach(function (callback) {
-                setTimeout(function () {
+                //clickThru has to be sync, if not will be block by the popupblocker
+                if (eventName === 'AdClickThru') {
                     callback(event);
-                }, 0);
+                } else {
+                    setTimeout(function () {
+                        callback(event);
+                    }, 0);
+                }
             });
         }
     }, {
@@ -4541,11 +4546,11 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdClickThru', function (data) {
     var url= data.url;
     var playerHandles = data.playerHandles;
-
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
+
     tracker.trackClick();
     if (playerHandles && clickThruUrl) {
-      window.open(clickThruUrl);
+      window.open(clickThruUrl, '_blank');
     }
 
     function generateClickThroughURL(clickThroughMacro) {
