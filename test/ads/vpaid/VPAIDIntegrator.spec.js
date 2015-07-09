@@ -429,17 +429,17 @@ describe("VPAIDIntegrator", function () {
         });
 
         it("must track click", function(){
-          adUnit.trigger('AdClickThru');
+          adUnit.trigger('AdClickThru', {});
           sinon.assert.calledOnce(tracker.trackClick);
         });
 
         it("must not open a new window if the playerHandles is false", function(){
-          adUnit.trigger('AdClickThru', 'fake/click/thru/url', 0001, false);
+          adUnit.trigger('AdClickThru', {url: 'fake/click/thru/url', playerHandles: false });
           sinon.assert.notCalled(window.open);
         });
 
         it("must open the url passed if the playerHandles flag is true", function(){
-          adUnit.trigger('AdClickThru', 'fake/click/thru/url', 0001, true);
+          adUnit.trigger('AdClickThru', {url: 'fake/click/thru/url', playerHandles: true });
           sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url');
         });
 
@@ -450,7 +450,7 @@ describe("VPAIDIntegrator", function () {
 
         it("must use the vastResponse clickThru macro if no url is passed", function(){
           vastResponse.clickThrough = 'fake/click/thru/url/[ASSETURI]';
-          adUnit.trigger('AdClickThru', null, 0001, true);
+          adUnit.trigger('AdClickThru', {url: null, playerHandles: true });
           sinon.assert.calledWithExactly(window.open, 'fake/click/thru/url/fakeSrc');
         });
       });

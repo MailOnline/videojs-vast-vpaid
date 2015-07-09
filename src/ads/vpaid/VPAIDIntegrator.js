@@ -205,7 +205,10 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackComplete();
   });
 
-  adUnit.on('AdClickThru', function (url, id, playerHandles) {
+  adUnit.on('AdClickThru', function (data) {
+    var url= data.url;
+    var playerHandles = data.playerHandles;
+
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
     tracker.trackClick();
     if (playerHandles && clickThruUrl) {
