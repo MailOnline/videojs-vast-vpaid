@@ -41,7 +41,17 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
 };
 
 VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, callback) {
-  var source = this.player.selectSource(response.mediaFiles).source;
+  var source;
+
+  var playerWidth = dom.getDimension(this.player.el()).width;
+  response.mediaFiles.sort(function compareTo(a, b) {
+    var deltaA = Math.abs(playerWidth - a.width);
+    var deltaB = Math.abs(playerWidth - b.width);
+    return deltaA - deltaB;
+  });
+
+  source = this.player.selectSource(response.mediaFiles).source;
+
   if (source) {
     return callback(null, source, response);
   }
@@ -235,10 +245,10 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
     return clickThroughMacro ? vastUtil.parseURLMacro(clickThroughMacro, variables) : '#';
   }
 
-   function removeBlocker(){
-     player.off('adtimeupdate', updateBlocker);
-     dom.remove(blocker);
-   }
+  function removeBlocker() {
+    player.off('adtimeupdate', updateBlocker);
+    dom.remove(blocker);
+  }
 };
 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {

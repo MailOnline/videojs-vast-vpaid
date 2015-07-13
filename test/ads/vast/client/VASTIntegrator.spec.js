@@ -137,6 +137,25 @@ describe("VASTIntegrator", function () {
         vastIntegrator._selectAdSource(response, callback);
         sinon.assert.calledWithExactly(callback, null, mediaFile, response);
       });
+
+      it("must return the best match for the player width", function(){
+        var response = new VASTResponse();
+        var mediaFile1 = createMediaFile('http://foo.video.url.mp4', 'video/mp4');
+        var mediaFile2 = createMediaFile('http://foo.video.url.mp4', 'video/mp4');
+        mediaFile2.width = 640;
+        response._addMediaFiles([mediaFile1, mediaFile2]);
+
+        //We set the player width to 640px
+        player.el().getBoundingClientRect = function (){
+          return {
+            width: 640,
+            height: 280
+          };
+        };
+
+        vastIntegrator._selectAdSource(response, callback);
+        sinon.assert.calledWithExactly(callback, null, mediaFile2, response);
+      });
     });
 
     describe("_createVASTTracker", function () {
