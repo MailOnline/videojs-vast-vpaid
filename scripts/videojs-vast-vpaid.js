@@ -3699,36 +3699,11 @@ xml.decode = function decodeXML(str) {
     .replace(/&amp;/g, '&');
 };
 ;
-vjs.AdsLabel = vjs.Component.extend({
-  /** @constructor */
-  init: function (player, options) {
-    vjs.Component.call(this, player, options);
-
-    var that = this;
-
-    // We asynchronously reposition the ads label element
-    setTimeout(function () {
-      var currentTimeComp = player.controlBar &&( player.controlBar.getChild("timerControls") || player.controlBar.getChild("currentTimeDisplay") );
-      if(currentTimeComp) {
-        player.controlBar.el().insertBefore(that.el(), currentTimeComp.el());
-      }
-      dom.removeClass(that.el(), 'vjs-label-hidden');
-    }, 0);
-  }
-});
-
-vjs.AdsLabel.prototype.createEl = function(){
-  return vjs.Component.prototype.createEl.call(this, 'div', {
-    className: 'vjs-ads-label vjs-control vjs-label-hidden',
-    innerHTML: 'Advertisement'
-  });
-};
-;
 vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
   var adsCanceled = false;
-
+  var volumeSnapshot;
   var defaultOpts = {
     // maximum amount of time in ms to wait to receive `adsready` from the ad
     // implementation after play has been requested. Ad implementations are
@@ -3765,6 +3740,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
+  player.addChild('blackPoster');
+  volumeSnapshot = saveVolumeSnapshot();
+  player.muted(true);
+
   player.on('play', playAdHandler);
   player.on('readyforpreroll', playPrerollAd);
 
@@ -3797,9 +3776,33 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   return player.vast;
 
   /**** Local functions ****/
+  function saveVolumeSnapshot(){
+    return {
+      muted: player.muted(),
+      volume: player.volume()
+    };
+  }
+
+  function restoreVolumeSnapshot(snapshot){
+    player.volume(snapshot.volume);
+    player.muted(snapshot.muted);
+  }
+
   function playAdHandler() {
+    if(!dom.hasClass(player.el(), 'vjs-vast-ready')){
+      player.currentTime(0);
+      restoreVolumeSnapshot(volumeSnapshot);
+      dom.addClass(player.el(), 'vjs-vast-ready');
+
+      player.one('ended', function () {
+        dom.removeClass(player.el(), 'vjs-vast-ready');
+        volumeSnapshot = saveVolumeSnapshot();
+        player.muted(true);
+      });
+    }
+
     if(settings.adsEnabled){
-      if(player.ads.state === 'content-set' && canPlayPrerollAd()){
+      if (player.ads.state === 'content-set') {
         initAds();
       }
     }else{
@@ -3807,12 +3810,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     /*** Local functions ***/
-    function canPlayPrerollAd(){
-      //TODO: add the preroll delay to the options and remove this substraction
-      var allowedPrerollDelay = settings.adCancelTimeout - settings.prerollTimeout;
-      return player.currentTime() <= allowedPrerollDelay;
-    }
-
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
@@ -3976,6 +3973,64 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 });
 
+;
+vjs.AdsLabel = vjs.Component.extend({
+  /** @constructor */
+  init: function (player, options) {
+    vjs.Component.call(this, player, options);
+
+    var that = this;
+
+    // We asynchronously reposition the ads label element
+    setTimeout(function () {
+      var currentTimeComp = player.controlBar &&( player.controlBar.getChild("timerControls") || player.controlBar.getChild("currentTimeDisplay") );
+      if(currentTimeComp) {
+        player.controlBar.el().insertBefore(that.el(), currentTimeComp.el());
+      }
+      dom.removeClass(that.el(), 'vjs-label-hidden');
+    }, 0);
+  }
+});
+
+vjs.AdsLabel.prototype.createEl = function(){
+  return vjs.Component.prototype.createEl.call(this, 'div', {
+    className: 'vjs-ads-label vjs-control vjs-label-hidden',
+    innerHTML: 'Advertisement'
+  });
+};
+;
+/**
+ * The component that shows a black screen until the ads plugin has decided if it can or it can not play the ad.
+ *
+ * @param {vjs.Player|Object} player
+ * @param {Object=} options
+ * @constructor
+ */
+vjs.BlackPoster = vjs.Component.extend({
+  /** @constructor */
+  init: function(player, options){
+    vjs.Component.call(this, player, options);
+
+    var posterImg = player.getChild('posterImage');
+
+    //We need to do it asynchronously to be sure that the black poster el is on the dom.
+    setTimeout(function() {
+      if(posterImg) {
+        player.el().insertBefore(this.el(), posterImg.el());
+      }
+    }.bind(this), 0);
+  }
+});
+
+/**
+ * Create the black poster div element
+ * @return {Element}
+ */
+vjs.BlackPoster.prototype.createEl = function(){
+  return vjs.createEl('div', {
+    className: 'vjs-black-poster',
+  });
+};
 ;
 function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
   if (!(this instanceof VPAIDAdUnitWrapper)) {
@@ -5964,4 +6019,3 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
-//# sourceMappingURL=videojs-vast-vpaid.js.map
