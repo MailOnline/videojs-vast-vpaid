@@ -2221,89 +2221,6 @@ function isIDevice() {
   return /iP(hone|ad)/.test(_UA);
 }
 ;
-//Small subset of async
-var async = {};
-
-async.setImmediate = function (fn) {
-  setTimeout(fn, 0);
-};
-
-async.iterator = function (tasks) {
-  var makeCallback = function (index) {
-    var fn = function () {
-      if (tasks.length) {
-        tasks[index].apply(null, arguments);
-      }
-      return fn.next();
-    };
-    fn.next = function () {
-      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
-    };
-    return fn;
-  };
-  return makeCallback(0);
-};
-
-
-async.waterfall = function (tasks, callback) {
-  callback = callback || function () { };
-  if (!isArray(tasks)) {
-    var err = new Error('First argument to waterfall must be an array of functions');
-    return callback(err);
-  }
-  if (!tasks.length) {
-    return callback();
-  }
-  var wrapIterator = function (iterator) {
-    return function (err) {
-      if (err) {
-        callback.apply(null, arguments);
-        callback = function () {
-        };
-      }
-      else {
-        var args = Array.prototype.slice.call(arguments, 1);
-        var next = iterator.next();
-        if (next) {
-          args.push(wrapIterator(next));
-        }
-        else {
-          args.push(callback);
-        }
-        async.setImmediate(function () {
-          iterator.apply(null, args);
-        });
-      }
-    };
-  };
-  wrapIterator(async.iterator(tasks))();
-};
-
-async.when = function (condition, callback) {
-  if (!isFunction(callback)) {
-    throw new Error("async.when error: missing callback argument");
-  }
-
-  var isAllowed = isFunction(condition) ? condition : function () {
-    return !!condition;
-  };
-
-  return function () {
-    var args = arrayLikeObjToArray(arguments);
-    var next = args.pop();
-
-    if (isAllowed.apply(null, args)) {
-      return callback.apply(this, arguments);
-    }
-
-    args.unshift(null);
-    return next.apply(null, args);
-  };
-};
-
-
-
-;
 /*! videojs-contrib-ads - v2.1.0 - 2015-06-11
 * Copyright (c) 2015 Brightcove; Licensed  */
 (function(window, document, vjs, undefined) {
@@ -3088,6 +3005,89 @@ var
 })(window, document, videojs);
 
 ;
+//Small subset of async
+var async = {};
+
+async.setImmediate = function (fn) {
+  setTimeout(fn, 0);
+};
+
+async.iterator = function (tasks) {
+  var makeCallback = function (index) {
+    var fn = function () {
+      if (tasks.length) {
+        tasks[index].apply(null, arguments);
+      }
+      return fn.next();
+    };
+    fn.next = function () {
+      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
+    };
+    return fn;
+  };
+  return makeCallback(0);
+};
+
+
+async.waterfall = function (tasks, callback) {
+  callback = callback || function () { };
+  if (!isArray(tasks)) {
+    var err = new Error('First argument to waterfall must be an array of functions');
+    return callback(err);
+  }
+  if (!tasks.length) {
+    return callback();
+  }
+  var wrapIterator = function (iterator) {
+    return function (err) {
+      if (err) {
+        callback.apply(null, arguments);
+        callback = function () {
+        };
+      }
+      else {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var next = iterator.next();
+        if (next) {
+          args.push(wrapIterator(next));
+        }
+        else {
+          args.push(callback);
+        }
+        async.setImmediate(function () {
+          iterator.apply(null, args);
+        });
+      }
+    };
+  };
+  wrapIterator(async.iterator(tasks))();
+};
+
+async.when = function (condition, callback) {
+  if (!isFunction(callback)) {
+    throw new Error("async.when error: missing callback argument");
+  }
+
+  var isAllowed = isFunction(condition) ? condition : function () {
+    return !!condition;
+  };
+
+  return function () {
+    var args = arrayLikeObjToArray(arguments);
+    var next = args.pop();
+
+    if (isAllowed.apply(null, args)) {
+      return callback.apply(this, arguments);
+    }
+
+    args.unshift(null);
+    return next.apply(null, args);
+  };
+};
+
+
+
+;
 "use strict";
 
 var dom = {};
@@ -3789,16 +3789,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAdHandler() {
-    if(!dom.hasClass(player.el(), 'vjs-vast-ready')){
+    var firstPlay = !dom.hasClass(player.el(), 'vjs-vast-ready');
+
+    if(firstPlay){
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
-      dom.addClass(player.el(), 'vjs-vast-ready');
-
-      player.one('ended', function () {
-        dom.removeClass(player.el(), 'vjs-vast-ready');
-        volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
-      });
     }
 
     if(settings.adsEnabled){
@@ -3809,12 +3804,21 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       cancelAds();
     }
 
+    if(firstPlay){
+      dom.addClass(player.el(), 'vjs-vast-ready');
+      player.one('ended', function () {
+        dom.removeClass(player.el(), 'vjs-vast-ready');
+        volumeSnapshot = saveVolumeSnapshot();
+        player.muted(true);
+      });
+    }
+
     /*** Local functions ***/
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
 
-      if(player.paused()){
+      if(!player.paused()){
         player.pause();
       }
 
@@ -6019,4 +6023,3 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
-//# sourceMappingURL=videojs-vast-vpaid.js.map
