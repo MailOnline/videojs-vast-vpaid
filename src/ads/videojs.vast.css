@@ -76,5 +76,9 @@ div.vast-skip-button {
 }
 
 .vjs-ad-playing .vjs-slider-handle:before{
-  display: none
+  display: none;
+}
+
+.vjs-ad-playing  .vjs-live-controls{
+  display: none;
 }

@@ -79,6 +79,72 @@ describe("videojs.vast plugin", function () {
     vjs.Player.prototype.ads.restore();
   });
 
+  it("must add the BlackPoster component to the player", function(){
+    var player = videojs(document.createElement('video'), {
+      plugins: {
+        'vastClient': {
+          url: 'http://Fake.ads.url'
+        }
+      }
+    });
+    assert.isObject(player.getChild('blackPoster'));
+  });
+
+  it("must mute the player on load", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.volume(1);
+    player.muted(false);
+    player.vastClient({url: 'http://fake.ad.url'});
+    assert.isTrue(player.muted());
+  });
+
+  it("must restore the volume on 'play' event", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.volume(1);
+    player.muted(false);
+    player.vastClient({url: 'http://fake.ad.url'});
+    assert.isTrue(player.muted());
+
+    player.trigger('play');
+    assert.isFalse(player.muted());
+    assert.equal(player.volume(), 1);
+  });
+
+  it("must add the class 'vjs-vast-ready' on 'play' event", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient({url: 'http://fake.ad.url'});
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
+
+    player.trigger('play');
+    assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-ready'));
+  });
+
+  it("must remove the class 'vjs-vast-ready' on 'ended' event", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient({url: 'http://fake.ad.url'});
+    player.trigger('play');
+    player.trigger('ended');
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
+  });
+
+  it("must mute the player on 'ended' event", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient({url: 'http://fake.ad.url'});
+    player.trigger('play');
+    player.trigger('ended');
+    assert.isTrue(player.muted());
+  });
+
+  it("must set the currentTime to 0 on the first play", function(){
+    var player = videojs(document.createElement('video'), {});
+    sinon.stub(player, 'currentTime');
+    sinon.assert.notCalled(player.currentTime);
+
+    player.vastClient({url: 'http://fake.ad.url'});
+    player.trigger('play');
+    sinon.assert.calledWithExactly(player.currentTime, 0);
+  });
+
   describe("player.vast", function () {
     var vastAd;
 
@@ -560,36 +626,6 @@ describe("videojs.vast plugin", function () {
         var adsreadySpy = sinon.spy();
         player.on('adsready', adsreadySpy);
         player.ads.state = 'content-playback';
-        player.trigger('play');
-        sinon.assert.notCalled(adsreadySpy);
-      });
-
-      it("must not init the ad if the video content has started playing more than the setted 'preroll delay' (i.e. adCancelTimeout - prerollTimout)", function(){
-        var adsreadySpy = sinon.spy();
-        player = videojs(document.createElement('video'), {});
-        player.vastClient({url: echoFn('/fake.ad.url'), prerollTimeout: 500, adCancelTimeout:5000});
-        sinon.stub(player, 'currentTime').returns(5000);
-        player.on('adsready', adsreadySpy);
-        player.trigger('play');
-        sinon.assert.notCalled(adsreadySpy);
-      });
-
-      it("must init the ad if the video content has not played for more than the allowed 'preroll delay' (i.e. adCancelTimeout - prerollTimout)", function(){
-        var adsreadySpy = sinon.spy();
-        player = videojs(document.createElement('video'), {});
-        player.vastClient({url: echoFn('/fake.ad.url'), prerollTimeout: 500, adCancelTimeout:5000});
-        sinon.stub(player, 'currentTime').returns(300);
-        player.on('adsready', adsreadySpy);
-        player.trigger('play');
-        sinon.assert.calledOnce(adsreadySpy);
-      });
-
-      it("if adCancelTimeout and prerollTimeout are equal, it must never start playing the ad if the content have started ", function(){
-        var adsreadySpy = sinon.spy();
-        player = videojs(document.createElement('video'), {});
-        player.vastClient({url: echoFn('/fake.ad.url')});
-        sinon.stub(player, 'currentTime').returns(300);
-        player.on('adsready', adsreadySpy);
         player.trigger('play');
         sinon.assert.notCalled(adsreadySpy);
       });

@@ -2,7 +2,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
   var adsCanceled = false;
-
+  var volumeSnapshot;
   var defaultOpts = {
     // maximum amount of time in ms to wait to receive `adsready` from the ad
     // implementation after play has been requested. Ad implementations are
@@ -39,6 +39,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
+  player.addChild('blackPoster');
+  volumeSnapshot = saveVolumeSnapshot();
+  player.muted(true);
+
   player.on('play', playAdHandler);
   player.on('readyforpreroll', playPrerollAd);
 
@@ -71,9 +75,33 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   return player.vast;
 
   /**** Local functions ****/
+  function saveVolumeSnapshot(){
+    return {
+      muted: player.muted(),
+      volume: player.volume()
+    };
+  }
+
+  function restoreVolumeSnapshot(snapshot){
+    player.volume(snapshot.volume);
+    player.muted(snapshot.muted);
+  }
+
   function playAdHandler() {
+    if(!dom.hasClass(player.el(), 'vjs-vast-ready')){
+      player.currentTime(0);
+      restoreVolumeSnapshot(volumeSnapshot);
+      dom.addClass(player.el(), 'vjs-vast-ready');
+
+      player.one('ended', function () {
+        dom.removeClass(player.el(), 'vjs-vast-ready');
+        volumeSnapshot = saveVolumeSnapshot();
+        player.muted(true);
+      });
+    }
+
     if(settings.adsEnabled){
-      if(player.ads.state === 'content-set' && canPlayPrerollAd()){
+      if (player.ads.state === 'content-set') {
         initAds();
       }
     }else{
@@ -81,12 +109,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     /*** Local functions ***/
-    function canPlayPrerollAd(){
-      //TODO: add the preroll delay to the options and remove this substraction
-      var allowedPrerollDelay = settings.adCancelTimeout - settings.prerollTimeout;
-      return player.currentTime() <= allowedPrerollDelay;
-    }
-
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
