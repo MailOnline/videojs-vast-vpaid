@@ -88,16 +88,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAdHandler() {
-    if(!dom.hasClass(player.el(), 'vjs-vast-ready')){
+    var firstPlay = !dom.hasClass(player.el(), 'vjs-vast-ready');
+
+    if(firstPlay){
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
-      dom.addClass(player.el(), 'vjs-vast-ready');
-
-      player.one('ended', function () {
-        dom.removeClass(player.el(), 'vjs-vast-ready');
-        volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
-      });
     }
 
     if(settings.adsEnabled){
@@ -108,12 +103,21 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       cancelAds();
     }
 
+    if(firstPlay){
+      dom.addClass(player.el(), 'vjs-vast-ready');
+      player.one('ended', function () {
+        dom.removeClass(player.el(), 'vjs-vast-ready');
+        volumeSnapshot = saveVolumeSnapshot();
+        player.muted(true);
+      });
+    }
+
     /*** Local functions ***/
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
 
-      if(player.paused()){
+      if(!player.paused()){
         player.pause();
       }
 

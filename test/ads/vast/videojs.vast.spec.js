@@ -115,6 +115,11 @@ describe("videojs.vast plugin", function () {
     player.vastClient({url: 'http://fake.ad.url'});
     assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
 
+    //NOTE: it must only add the class once the ad have been initalized
+    player.on('adsready', function () {
+      assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
+    });
+
     player.trigger('play');
     assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-ready'));
   });
@@ -678,7 +683,7 @@ describe("videojs.vast plugin", function () {
       it("must pause the video if it is not paused", function(){
         player = videojs(document.createElement('video'), {});
         player.vastClient({url: echoFn('/fake.ad.url'), prerollTimeout: 500, adCancelTimeout:5000});
-        sinon.stub(player, 'paused').returns(true);
+        sinon.stub(player, 'paused').returns(false);
         sinon.spy(player, 'pause');
         player.trigger('play');
         sinon.assert.calledOnce(player.pause);
