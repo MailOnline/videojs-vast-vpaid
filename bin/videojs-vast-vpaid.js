@@ -3789,11 +3789,18 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAdHandler() {
-    var firstPlay = !dom.hasClass(player.el(), 'vjs-vast-ready');
-
-    if(firstPlay){
+    if(!dom.hasClass(player.el(), 'vjs-vast-finish')){
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
+      player.on('vast.adstart', markVastAsFinished);
+      player.on('vast.aderror', markVastAsFinished);
+      player.on('adscanceled', markVastAsFinished);
+
+      player.one('ended', function () {
+        dom.removeClass(player.el(), 'vjs-vast-finish');
+        volumeSnapshot = saveVolumeSnapshot();
+        player.muted(true);
+      });
     }
 
     if(settings.adsEnabled){
@@ -3804,16 +3811,15 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       cancelAds();
     }
 
-    if(firstPlay){
-      dom.addClass(player.el(), 'vjs-vast-ready');
-      player.one('ended', function () {
-        dom.removeClass(player.el(), 'vjs-vast-ready');
-        volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
-      });
+    /*** Local functions ***/
+    function markVastAsFinished(){
+      dom.addClass(player.el(), 'vjs-vast-finish');
+
+      player.off('vast.adstart', markVastAsFinished);
+      player.off('vast.aderror', markVastAsFinished);
+      player.off('adscanceled', markVastAsFinished);
     }
 
-    /*** Local functions ***/
     function initAds() {
       var adCancelTimeoutId;
       adsCanceled = false;
@@ -4005,6 +4011,13 @@ vjs.AdsLabel.prototype.createEl = function(){
 ;
 /**
  * The component that shows a black screen until the ads plugin has decided if it can or it can not play the ad.
+ *
+ * Note: In case you wonder why instead of this black poster we don't just show the spinner loader.
+ *       IOS devices do not work well with animations and the browser chrashes from time to time That is why we chose to
+ *       have a secondary black poster.
+ *
+ *       It also makes it much more easier for the users of the plugin since it does not change the default behaviour of the
+ *       spinner and the player works the same way with and without the plugin.
  *
  * @param {vjs.Player|Object} player
  * @param {Object=} options
