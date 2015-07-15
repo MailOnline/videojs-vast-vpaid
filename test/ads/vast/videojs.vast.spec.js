@@ -110,32 +110,61 @@ describe("videojs.vast plugin", function () {
     assert.equal(player.volume(), 1);
   });
 
-  it("must add the class 'vjs-vast-ready' on 'play' event", function(){
+  it("must add the class 'vjs-vast-finish' on 'vast.adstart'", function(){
     var player = videojs(document.createElement('video'), {});
     player.vastClient({url: 'http://fake.ad.url'});
-    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
-
-    //NOTE: it must only add the class once the ad have been initalized
-    player.on('adsready', function () {
-      assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
-    });
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
 
     player.trigger('play');
-    assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-ready'));
+    player.trigger('vast.adstart');
+    assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-finish'));
   });
 
-  it("must remove the class 'vjs-vast-ready' on 'ended' event", function(){
+  it("must add the class 'vjs-vast-finish' on 'vast.aderror'", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient({url: 'http://fake.ad.url'});
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
+
+    player.trigger('play');
+    player.trigger('vast.aderror');
+    assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-finish'));
+  });
+
+  it("must add the class 'vjs-vast-finish' on 'adscanceled'", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient({url: 'http://fake.ad.url'});
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
+
+    player.trigger('play');
+    player.trigger('adscanceled');
+    assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-finish'));
+  });
+
+  it("must remove the class 'vjs-vast-finish' on 'ended' event", function(){
     var player = videojs(document.createElement('video'), {});
     player.vastClient({url: 'http://fake.ad.url'});
     player.trigger('play');
+    player.trigger('vast.adstart');
     player.trigger('ended');
-    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ready'));
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
   });
 
+  it("must only add the class 'vjs-vast-finish' once", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.vastClient({url: 'http://fake.ad.url'});
+    player.trigger('play');
+    player.trigger('vast.adstart');
+    assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-finish'));
+    dom.removeClass(player.el(), 'vjs-vast-finish');
+    player.trigger('adscanceled');
+    player.trigger('vast.aderror');
+    assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
+  });
   it("must mute the player on 'ended' event", function(){
     var player = videojs(document.createElement('video'), {});
     player.vastClient({url: 'http://fake.ad.url'});
     player.trigger('play');
+    player.trigger('vast.adstart');
     player.trigger('ended');
     assert.isTrue(player.muted());
   });
@@ -147,6 +176,7 @@ describe("videojs.vast plugin", function () {
 
     player.vastClient({url: 'http://fake.ad.url'});
     player.trigger('play');
+    player.trigger('vast.adstart');
     sinon.assert.calledWithExactly(player.currentTime, 0);
   });
 
