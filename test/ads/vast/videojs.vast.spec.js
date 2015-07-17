@@ -90,12 +90,34 @@ describe("videojs.vast plugin", function () {
     assert.isObject(player.getChild('blackPoster'));
   });
 
-  it("must mute the player on load", function(){
+  it("must mute the player when you play the video (player's play method)", function(){
     var player = videojs(document.createElement('video'), {});
     player.volume(1);
     player.muted(false);
     player.vastClient({url: 'http://fake.ad.url'});
+    player.play();
     assert.isTrue(player.muted());
+  });
+
+  it("must not mute the video if the ads state is not content-set", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.volume(1);
+    player.muted(false);
+    player.vastClient({url: 'http://fake.ad.url'});
+    player.ads.state = 'ads-ready?';
+    player.play();
+    assert.isFalse(player.muted());
+  });
+
+  it("must not mute the video if the vast plugin if the player has the clas 'vjs-vast-finish'", function(){
+    var player = videojs(document.createElement('video'), {});
+    player.volume(1);
+    player.muted(false);
+    player.ads.state = 'adsready?';
+    player.vastClient({url: 'http://fake.ad.url'});
+    dom.addClass(player.el(), 'vjs-vast-finish');
+    player.play();
+    assert.isFalse(player.muted());
   });
 
   it("must restore the volume on 'play' event", function(){
@@ -103,6 +125,7 @@ describe("videojs.vast plugin", function () {
     player.volume(1);
     player.muted(false);
     player.vastClient({url: 'http://fake.ad.url'});
+    player.play();
     assert.isTrue(player.muted());
 
     player.trigger('play');
@@ -160,23 +183,14 @@ describe("videojs.vast plugin", function () {
     player.trigger('vast.aderror');
     assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
   });
-  it("must mute the player on 'ended' event", function(){
-    var player = videojs(document.createElement('video'), {});
-    player.vastClient({url: 'http://fake.ad.url'});
-    player.trigger('play');
-    player.trigger('vast.adstart');
-    player.trigger('ended');
-    assert.isTrue(player.muted());
-  });
 
   it("must set the currentTime to 0 on the first play", function(){
     var player = videojs(document.createElement('video'), {});
     sinon.stub(player, 'currentTime');
     sinon.assert.notCalled(player.currentTime);
 
-    player.vastClient({url: 'http://fake.ad.url'});
+    player.vastClient({url: 'http://fake.ad.url', adsEnabled: false});
     player.trigger('play');
-    player.trigger('vast.adstart');
     sinon.assert.calledWithExactly(player.currentTime, 0);
   });
 
@@ -261,7 +275,7 @@ describe("videojs.vast plugin", function () {
     player.vastClient(adsOpts);
 
     sinon.assert.calledOnce(adsPlugin);
-    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0}, adsOpts));
+    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, iosPrerollCancelTimeout: 2000}, adsOpts));
 
     //We restore the ads plugin
     vjs.Player.prototype.ads.restore();
@@ -281,7 +295,7 @@ describe("videojs.vast plugin", function () {
     player.vastClient(adsOpts);
 
     sinon.assert.calledOnce(adsPlugin);
-    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, prerollTimeout: 123}, adsOpts));
+    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, prerollTimeout: 123, iosPrerollCancelTimeout: 2000}, adsOpts));
 
     //We restore the ads plugin
     vjs.Player.prototype.ads.restore();
@@ -650,7 +664,6 @@ describe("videojs.vast plugin", function () {
         player.on('adscanceled', adsCanceled);
         player.on('adserror', adsError);
         player.vast.enable();
-
         player.trigger('play');
 
         sinon.assert.notCalled(adsCanceled);
