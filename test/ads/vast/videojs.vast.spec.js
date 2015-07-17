@@ -194,6 +194,19 @@ describe("videojs.vast plugin", function () {
     sinon.assert.calledWithExactly(player.currentTime, 0);
   });
 
+  it("must not set the currentTime to 0 if the ads state is not content-set", function(){
+    var player = videojs(document.createElement('video'), {});
+    sinon.stub(player, 'currentTime');
+    sinon.assert.notCalled(player.currentTime);
+
+    player.vastClient({url: 'http://fake.ad.url', adsEnabled: false});
+    player.ads.state = "ads-ready?";
+    player.currentTime.reset();
+    player.trigger('play');
+    sinon.assert.notCalled(player.currentTime);
+
+  });
+
   describe("player.vast", function () {
     var vastAd;
 

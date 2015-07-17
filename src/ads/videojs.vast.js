@@ -115,7 +115,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function playAdHandler() {
-    if(!dom.hasClass(player.el(), 'vjs-vast-finish')){
+    if(isFirstPlay()){
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
       player.on('vast.adstart', markVastAsFinished);
