@@ -101,7 +101,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   /**** Local functions ****/
   function isFirstPlay(){
-    return !dom.hasClass(player.el(), 'vjs-vast-finish') && player.ads.state === 'content-set';
+    return !dom.hasClass(player.el(), 'vjs-vast-finish') && (player.ads.state === 'content-set' || player.ads.state === 'ads-ready?');
   }
 
   function saveVolumeSnapshot(){
@@ -137,7 +137,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     if(settings.adsEnabled){
-      if (player.ads.state === 'content-set') {
+      if (player.ads.state === 'content-set' || player.ads.state === 'ads-ready?') {
         if(canPlayPrerollAd()){
           initAds();
         }else{

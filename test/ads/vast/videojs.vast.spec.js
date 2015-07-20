@@ -100,12 +100,12 @@ describe("videojs.vast plugin", function () {
     assert.isTrue(player.muted());
   });
 
-  it("must not mute the video if the ads state is not content-set", function(){
+  it("must not mute the video if the ads state is not content-set or ads-ready?", function(){
     var player = videojs(document.createElement('video'), {});
     player.volume(1);
     player.muted(false);
     player.vastClient({url: 'http://fake.ad.url'});
-    player.ads.state = 'ads-ready?';
+    player.ads.state = 'ads-ready';
     player.play();
     assert.isFalse(player.muted());
   });
@@ -195,13 +195,13 @@ describe("videojs.vast plugin", function () {
     sinon.assert.calledWithExactly(player.currentTime, 0);
   });
 
-  it("must not set the currentTime to 0 if the ads state is not content-set", function(){
+  it("must not set the currentTime to 0 if the ads state is not content-set or ads-ready?", function(){
     var player = videojs(document.createElement('video'), {});
     sinon.stub(player, 'currentTime');
     sinon.assert.notCalled(player.currentTime);
 
     player.vastClient({url: 'http://fake.ad.url', adsEnabled: false});
-    player.ads.state = "ads-ready?";
+    player.ads.state = "ads-ready";
     player.currentTime.reset();
     player.trigger('play');
     sinon.assert.notCalled(player.currentTime);
