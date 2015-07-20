@@ -141,7 +141,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         if(canPlayPrerollAd()){
           initAds();
         }else{
-          trackAdError(new VASTError('video content has been playing before preroll ad'))
+          trackAdError(new VASTError('video content has been playing before preroll ad'));
         }
       }
     }else{
