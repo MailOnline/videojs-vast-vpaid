@@ -3699,6 +3699,10 @@ xml.decode = function decodeXML(str) {
     .replace(/&amp;/g, '&');
 };
 ;
+var iPhone = (function (userAgent) {
+  return /(iPhone|iPod)/.test(userAgent);
+})(navigator.userAgent);
+
 vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
@@ -3713,6 +3717,12 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     // for the moment we don't support post roll ads
     postrollTimeout: 0,
+
+    //TODO:finish this IOS FIX
+    //Whenever you play an add on IOS, the native player kicks in and we loose control of it. On very heavy pages the 'play' event
+    // May occur after the video content has already started. This is wrong if you want to play a preroll ad that needs to happen before the user
+    // starts watching the content. To prevent this usec
+    iosPrerollCancelTimeout: 2000,
 
     // maximun amount of time for the ad to actually start playing. If this timeout gets
     // triggered the ads will be cancelled
@@ -3740,9 +3750,24 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
   }
 
+  /*
+   What I am doing below is ugly and horrible and I should think twice before calling myself a good developer. With that said,
+   it is the best solution I could find to mute the video until the 'play' event happens and the plugin can decide whether
+   to play the ad or not.
+
+   If you have a better solution please do tell me.
+   */
+  var origPlay = player.play;
+  player.play = function () {
+    if (isFirstPlay() && !iPhone) {
+      volumeSnapshot = saveVolumeSnapshot();
+      player.muted(true);
+    }
+    return origPlay.apply(this, arguments);
+  };
+
   player.addChild('blackPoster');
-  volumeSnapshot = saveVolumeSnapshot();
-  player.muted(true);
+
 
   player.on('play', playAdHandler);
   player.on('readyforpreroll', playPrerollAd);
@@ -3776,6 +3801,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   return player.vast;
 
   /**** Local functions ****/
+  function isFirstPlay(){
+    return !dom.hasClass(player.el(), 'vjs-vast-finish') && player.ads.state === 'content-set';
+  }
+
   function saveVolumeSnapshot(){
     return {
       muted: player.muted(),
@@ -3784,14 +3813,19 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function restoreVolumeSnapshot(snapshot){
-    player.volume(snapshot.volume);
-    player.muted(snapshot.muted);
+    if(isObject(snapshot)){
+      player.volume(snapshot.volume);
+      player.muted(snapshot.muted);
+    }
   }
 
   function playAdHandler() {
-    if(!dom.hasClass(player.el(), 'vjs-vast-finish')){
-      player.currentTime(0);
-      restoreVolumeSnapshot(volumeSnapshot);
+    if(isFirstPlay()){
+      if(!iPhone){
+        player.currentTime(0);
+        restoreVolumeSnapshot(volumeSnapshot);
+      }
+
       player.on('vast.adstart', markVastAsFinished);
       player.on('vast.aderror', markVastAsFinished);
       player.on('adscanceled', markVastAsFinished);
@@ -3805,7 +3839,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     if(settings.adsEnabled){
       if (player.ads.state === 'content-set') {
-        initAds();
+        if(canPlayPrerollAd()){
+          initAds();
+        }else{
+          trackAdError(new VASTError('video content has been playing before preroll ad'))
+        }
       }
     }else{
       cancelAds();
@@ -3818,6 +3856,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       player.off('vast.adstart', markVastAsFinished);
       player.off('vast.aderror', markVastAsFinished);
       player.off('adscanceled', markVastAsFinished);
+    }
+
+    function canPlayPrerollAd(){
+      return !iPhone || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
     function initAds() {
