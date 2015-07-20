@@ -1,3 +1,7 @@
+var iPhone = (function (userAgent) {
+  return /(iPhone|iPod)/.test(userAgent);
+})(navigator.userAgent);
+
 vjs.plugin('vastClient', function VASTPlugin(options) {
   var player = this;
   var vast = new VASTClient();
@@ -54,7 +58,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
    */
   var origPlay = player.play;
   player.play = function () {
-    if (isFirstPlay()) {
+    if (isFirstPlay() && !iPhone) {
       volumeSnapshot = saveVolumeSnapshot();
       player.muted(true);
     }
@@ -116,8 +120,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   function playAdHandler() {
     if(isFirstPlay()){
-      player.currentTime(0);
-      restoreVolumeSnapshot(volumeSnapshot);
+      if(!iPhone){
+        player.currentTime(0);
+        restoreVolumeSnapshot(volumeSnapshot);
+      }
+
       player.on('vast.adstart', markVastAsFinished);
       player.on('vast.aderror', markVastAsFinished);
       player.on('adscanceled', markVastAsFinished);
@@ -131,7 +138,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     if(settings.adsEnabled){
       if (player.ads.state === 'content-set') {
-        initAds();
+        if(canPlayPrerollAd()){
+          initAds();
+        }else{
+          trackAdError(new VASTError('video content has been playing before preroll ad'))
+        }
       }
     }else{
       cancelAds();
@@ -144,6 +155,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       player.off('vast.adstart', markVastAsFinished);
       player.off('vast.aderror', markVastAsFinished);
       player.off('adscanceled', markVastAsFinished);
+    }
+
+    function canPlayPrerollAd(){
+      return !iPhone || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
     function initAds() {

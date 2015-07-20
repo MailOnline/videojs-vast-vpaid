@@ -42,6 +42,7 @@ describe("videojs.vast plugin", function () {
   }
 
   beforeEach(function () {
+    window.iPhone = false;
     testDiv = document.createElement("div");
     document.body.appendChild(testDiv);
 
@@ -90,7 +91,7 @@ describe("videojs.vast plugin", function () {
     assert.isObject(player.getChild('blackPoster'));
   });
 
-  it("must mute the player when you play the video (player's play method)", function(){
+  it("must mute the player when you first play the video (player's play method)", function(){
     var player = videojs(document.createElement('video'), {});
     player.volume(1);
     player.muted(false);
@@ -204,7 +205,72 @@ describe("videojs.vast plugin", function () {
     player.currentTime.reset();
     player.trigger('play');
     sinon.assert.notCalled(player.currentTime);
+  });
 
+  describe("on iPhone", function(){
+    beforeEach(function(){
+      window.iPhone = true;
+    });
+
+    afterEach(function(){
+      window.iPhone = false;
+    });
+
+    it("must add the class 'vjs-vast-finish' on 'vast.adstart'", function(){
+      var player = videojs(document.createElement('video'), {});
+      player.vastClient({url: 'http://fake.ad.url'});
+      assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-finish'));
+
+      player.trigger('play');
+      player.trigger('vast.adstart');
+      assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-finish'));
+    });
+
+    it("must NOT set the currentTime to 0 on the first play", function(){
+      var player = videojs(document.createElement('video'), {});
+      sinon.stub(player, 'currentTime');
+      sinon.assert.notCalled(player.currentTime);
+
+      player.vastClient({url: 'http://fake.ad.url', adsEnabled: false});
+      player.trigger('play');
+      sinon.assert.neverCalledWith(player.currentTime, 0);
+    });
+
+    it("must not mute the video on first play", function(){
+      var player = videojs(document.createElement('video'), {});
+      player.volume(1);
+      player.muted(false);
+      player.vastClient({url: 'http://fake.ad.url'});
+      player.play();
+      assert.isFalse(player.muted());
+    });
+
+    it("must not play the ad if the video content has played more than what specified on the iosPrerollCancelTimeout and must track the error", function(){
+      var player = videojs(document.createElement('video'), {});
+      var adsreadySpy = sinon.spy();
+      var errorSpy = sinon.spy();
+
+      sinon.stub(player, 'currentTime').returns(2000);
+      player.on('adsready', adsreadySpy);
+      player.on('vast.aderror', errorSpy);
+
+      player.vastClient({url: 'http://fake.ad.url', iosPrerollCancelTimeout: 1000});
+      player.trigger('play');
+
+      sinon.assert.notCalled(adsreadySpy);
+      sinon.assert.calledOnce(errorSpy);
+      assert.equal(firstArg(errorSpy).error.message, 'VAST Error: video content has been playing before preroll ad');
+    });
+
+    it("must play the ad if the video content has played less than what specified on the iosPrerollCancelTimeout", function(){
+      var player = videojs(document.createElement('video'), {});
+      var adsreadySpy = sinon.spy();
+      sinon.stub(player, 'currentTime').returns(500);
+      player.on('adsready', adsreadySpy);
+      player.vastClient({url: 'http://fake.ad.url', iosPrerollCancelTimeout: 1000});
+      player.trigger('play');
+      sinon.assert.calledOnce(adsreadySpy);
+    });
   });
 
   describe("player.vast", function () {
