@@ -118,7 +118,8 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
 };
 
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
-  tech.loadAdUnit(this.containerEl, function (error, adUnit) {
+  var vjsTechEl = this.player.el().querySelector('.vjs-tech');
+  tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
     try {
       next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
     } catch (e) {

@@ -19,7 +19,7 @@ VPAIDFlashTech.supports = function (type) {
   return type === 'application/x-shockwave-flash';
 };
 
-VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, callback) {
+VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {
   var that = this;
   sanityCheck(containerEl, callback);
 

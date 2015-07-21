@@ -209,13 +209,13 @@ describe("VPAIDIntegrator", function () {
       it("must pass the containerEl", function () {
         var testTech = new fakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        sinon.assert.calledWithExactly(testTech.loadAdUnit, vpaidIntegrator.containerEl, sinon.match.func);
+        sinon.assert.calledWithExactly(testTech.loadAdUnit, vpaidIntegrator.containerEl, player.el().querySelector('.vjs-tech'), sinon.match.func);
       });
 
       it("must pass the error , a wrapped adUnit and the vast response to the callback", function () {
         var testTech = new fakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        var techLoadAdUnitCb = secondArg(testTech.loadAdUnit);
+        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
         techLoadAdUnitCb(null, vpaidAdUnit);
         sinon.assert.calledWithExactly(callback, null, sinon.match.instanceOf(VPAIDAdUnitWrapper), vastResponse);
       });
@@ -223,7 +223,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass the error if there is a problem creating the VPAIDAdUnitWrapper", function(){
         var testTech = new fakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        var techLoadAdUnitCb = secondArg(testTech.loadAdUnit);
+        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
         //We make the adUnit invalid
         vpaidAdUnit.initAd = undefined;
 

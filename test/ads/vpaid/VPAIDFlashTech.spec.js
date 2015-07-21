@@ -54,21 +54,21 @@ describe("VPAIDFlashTech", function () {
       it("must throw a VASTError if you don't pass a callback to call once the ad have been loaded", function(){
         [undefined, null, {}, 123].forEach(function (invalidCallback) {
           assert.throws(function () {
-            vpaidFlashTech.loadAdUnit(testDiv, invalidCallback);
+            vpaidFlashTech.loadAdUnit(testDiv, null, invalidCallback);
           }, VASTError, 'on VPAIDFlashTech.loadAdUnit, missing valid callback');
         });
       });
 
       it("must not throw an error if pass valid arguments", function(){
         assert.doesNotThrow(function () {
-          vpaidFlashTech.loadAdUnit(testDiv, noop);
+          vpaidFlashTech.loadAdUnit(testDiv, null, noop);
         });
       });
 
       it("must publish the containerEl and the vpaidFlashToJs into the instance", function(){
         assert.isNull(vpaidFlashTech.containerEl);
         assert.isNull(vpaidFlashTech.vpaidFlashClient);
-        vpaidFlashTech.loadAdUnit(testDiv, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
         assert.equal(vpaidFlashTech.containerEl, testDiv);
         assert.instanceOf(vpaidFlashTech.vpaidFlashClient, VPAIDFLASHClient);
       });
@@ -82,7 +82,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must unload the adUnit", function(){
-        vpaidFlashTech.loadAdUnit(testDiv, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
         var vpaidFlashClient = vpaidFlashTech.vpaidFlashClient;
         vpaidFlashClient.destroy = sinon.spy();
 
@@ -93,7 +93,7 @@ describe("VPAIDFlashTech", function () {
 
       it("must remove the containerEl", function(){
         sinon.stub(dom, 'remove');
-        vpaidFlashTech.loadAdUnit(testDiv, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
         //We mock destroy to prevent exception
         vpaidFlashTech.vpaidFlashClient.destroy = noop;
         vpaidFlashTech.unloadAdUnit();
@@ -104,7 +104,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must set instance properties: containerEl and vpaidFlashClient to null", function(){
-        vpaidFlashTech.loadAdUnit(testDiv, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
         //We mock destroy to prevent exception
         vpaidFlashTech.vpaidFlashClient.destroy = noop;
 
