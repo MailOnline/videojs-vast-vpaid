@@ -4324,7 +4324,7 @@ VPAIDFlashTech.supports = function (type) {
   return type === 'application/x-shockwave-flash';
 };
 
-VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, callback) {
+VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {
   var that = this;
   sanityCheck(containerEl, callback);
 
@@ -4570,7 +4570,8 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
 };
 
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
-  tech.loadAdUnit(this.containerEl, function (error, adUnit) {
+  var vjsTechEl = this.player.el().querySelector('.vjs-tech');
+  tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
     try {
       next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
     } catch (e) {

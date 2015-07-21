@@ -37,6 +37,16 @@ var vjs = function(id, options, ready){
 
     // If a player instance has already been created for this ID return it.
     if (vjs.players[id]) {
+
+      // If options or ready funtion are passed, warn
+      if (options) {
+        vjs.log.warn ('Player "' + id + '" is already initialised. Options will not be applied.');
+      }
+
+      if (ready) {
+        vjs.players[id].ready(ready);
+      }
+
       return vjs.players[id];
 
     // Otherwise get element for ID
@@ -63,8 +73,14 @@ var vjs = function(id, options, ready){
 var videojs = window['videojs'] = vjs;
 
 // CDN Version. Used to target right flash swf.
-vjs.CDN_VERSION = '4.11';
+vjs.CDN_VERSION = '4.12';
 vjs.ACCESS_PROTOCOL = ('https:' == document.location.protocol ? 'https://' : 'http://');
+
+/**
+* Full player version
+* @type {string}
+*/
+vjs['VERSION'] = '4.12.11';
 
 /**
  * Global Player instance options, surfaced from vjs.Player.prototype.options_
@@ -99,11 +115,12 @@ vjs.options = {
   'children': {
     'mediaLoader': {},
     'posterImage': {},
-    'textTrackDisplay': {},
     'loadingSpinner': {},
+    'textTrackDisplay': {},
     'bigPlayButton': {},
     'controlBar': {},
-    'errorDisplay': {}
+    'errorDisplay': {},
+    'textTrackSettings': {}
   },
 
   'language': document.getElementsByTagName('html')[0].getAttribute('lang') || navigator.languages && navigator.languages[0] || navigator.userLanguage || navigator.language || 'en',
@@ -116,7 +133,7 @@ vjs.options = {
 };
 
 // Set CDN Version of swf
-// The added (+) blocks the replace from changing this 4.11 string
+// The added (+) blocks the replace from changing this 4.12 string
 if (vjs.CDN_VERSION !== 'GENERATED'+'_CDN_VSN') {
   videojs.options['flash']['swf'] = vjs.ACCESS_PROTOCOL + 'vjs.zencdn.net/'+vjs.CDN_VERSION+'/video-js.swf';
 }
@@ -154,7 +171,7 @@ vjs.players = {};
  * compiler compatible, so string keys are used.
  */
 if (typeof define === 'function' && define['amd']) {
-  define([], function(){ return videojs; });
+  define('videojs', [], function(){ return videojs; });
 
 // checking that module is an object too because of umdjs/umd#35
 } else if (typeof exports === 'object' && typeof module === 'object') {
@@ -913,6 +930,8 @@ vjs.getData = function(el){
   var id = el[vjs.expando];
   if (!id) {
     id = el[vjs.expando] = vjs.guid++;
+  }
+  if (!vjs.cache[id]) {
     vjs.cache[id] = {};
   }
   return vjs.cache[id];
@@ -1025,6 +1044,13 @@ vjs.removeClass = function(element, classToRemove){
  * @private
  */
 vjs.TEST_VID = vjs.createEl('video');
+(function() {
+  var track = document.createElement('track');
+  track.kind = 'captions';
+  track.srclang = 'en';
+  track.label = 'English';
+  vjs.TEST_VID.appendChild(track);
+})();
 
 /**
  * Useragent for browser testing.
@@ -1078,6 +1104,7 @@ vjs.IS_OLD_ANDROID = vjs.IS_ANDROID && (/webkit/i).test(vjs.USER_AGENT) && vjs.A
 
 vjs.IS_FIREFOX = (/Firefox/i).test(vjs.USER_AGENT);
 vjs.IS_CHROME = (/Chrome/i).test(vjs.USER_AGENT);
+vjs.IS_IE8 = (/MSIE\s8\.0/).test(vjs.USER_AGENT);
 
 vjs.TOUCH_ENABLED = !!(('ontouchstart' in window) || window.DocumentTouch && document instanceof window.DocumentTouch);
 vjs.BACKGROUND_SIZE_SUPPORTED = 'backgroundSize' in vjs.TEST_VID.style;
@@ -1275,6 +1302,18 @@ vjs.round = function(num, dec) {
  * @private
  */
 vjs.createTimeRange = function(start, end){
+  if (start === undefined && end === undefined) {
+    return {
+      length: 0,
+      start: function() {
+        throw new Error('This TimeRanges object is empty');
+      },
+      end: function() {
+        throw new Error('This TimeRanges object is empty');
+      }
+    };
+  }
+
   return {
     length: 1,
     start: function() { return start; },
@@ -1358,6 +1397,15 @@ vjs.parseUrl = function(url) {
   details = {};
   for (var i = 0; i < props.length; i++) {
     details[props[i]] = a[props[i]];
+  }
+
+  // IE9 adds the port to the host property unlike everyone else. If
+  // a port identifier is added for standard ports, strip it.
+  if (details.protocol === 'http:') {
+    details.host = details.host.replace(/:80$/, '');
+  }
+  if (details.protocol === 'https:') {
+    details.host = details.host.replace(/:443$/, '');
   }
 
   if (addToBody) {
@@ -1685,7 +1733,50 @@ vjs.util.mergeOptions = function(obj1, obj2){
     }
   }
   return obj1;
-};/**
+};vjs.EventEmitter = function() {
+};
+
+vjs.EventEmitter.prototype.allowedEvents_ = {
+};
+
+vjs.EventEmitter.prototype.on = function(type, fn) {
+  // Remove the addEventListener alias before calling vjs.on
+  // so we don't get into an infinite type loop
+  var ael = this.addEventListener;
+  this.addEventListener = Function.prototype;
+  vjs.on(this, type, fn);
+  this.addEventListener = ael;
+};
+vjs.EventEmitter.prototype.addEventListener = vjs.EventEmitter.prototype.on;
+
+vjs.EventEmitter.prototype.off = function(type, fn) {
+  vjs.off(this, type, fn);
+};
+vjs.EventEmitter.prototype.removeEventListener = vjs.EventEmitter.prototype.off;
+
+vjs.EventEmitter.prototype.one = function(type, fn) {
+  vjs.one(this, type, fn);
+};
+
+vjs.EventEmitter.prototype.trigger = function(event) {
+  var type = event.type || event;
+
+  if (typeof event === 'string') {
+    event = {
+      type: type
+    };
+  }
+  event = vjs.fixEvent(event);
+
+  if (this.allowedEvents_[type] && this['on' + type]) {
+    this['on' + type](event);
+  }
+
+  vjs.trigger(this, event);
+};
+// The standard DOM EventTarget.dispatchEvent() is aliased to trigger()
+vjs.EventEmitter.prototype.dispatchEvent = vjs.EventEmitter.prototype.trigger;
+/**
  * @fileoverview Player Component - Base class for all UI objects
  *
  */
@@ -2532,7 +2623,7 @@ vjs.Component.prototype.removeClass = function(classToRemove){
  * @return {vjs.Component}
  */
 vjs.Component.prototype.show = function(){
-  this.el_.style.display = 'block';
+  this.removeClass('vjs-hidden');
   return this;
 };
 
@@ -2542,7 +2633,7 @@ vjs.Component.prototype.show = function(){
  * @return {vjs.Component}
  */
 vjs.Component.prototype.hide = function(){
-  this.el_.style.display = 'none';
+  this.addClass('vjs-hidden');
   return this;
 };
 
@@ -2718,19 +2809,23 @@ vjs.Component.prototype.onResize;
  */
 vjs.Component.prototype.emitTapEvents = function(){
   var touchStart, firstTouch, touchTime, couldBeTap, noTap,
-      xdiff, ydiff, touchDistance, tapMovementThreshold;
+      xdiff, ydiff, touchDistance, tapMovementThreshold, touchTimeThreshold;
 
   // Track the start time so we can determine how long the touch lasted
   touchStart = 0;
   firstTouch = null;
 
   // Maximum movement allowed during a touch event to still be considered a tap
-  tapMovementThreshold = 22;
+  // Other popular libs use anywhere from 2 (hammer.js) to 15, so 10 seems like a nice, round number.
+  tapMovementThreshold = 10;
+
+  // The maximum length a touch can be while still being considered a tap
+  touchTimeThreshold = 200;
 
   this.on('touchstart', function(event) {
     // If more than one finger, don't consider treating this as a click
     if (event.touches.length === 1) {
-      firstTouch = event.touches[0];
+      firstTouch = vjs.obj.copy(event.touches[0]);
       // Record start time so we can detect a tap vs. "touch and hold"
       touchStart = new Date().getTime();
       // Reset couldBeTap tracking
@@ -2769,8 +2864,8 @@ vjs.Component.prototype.emitTapEvents = function(){
     if (couldBeTap === true) {
       // Measure how long the touch lasted
       touchTime = new Date().getTime() - touchStart;
-      // The touch needs to be quick in order to consider it a tap
-      if (touchTime < 250) {
+      // Make sure the touch was less than the threshold to be considered a tap
+      if (touchTime < touchTimeThreshold) {
         event.preventDefault(); // Don't let browser turn this into a click
         this.trigger('tap');
         // It may be good to copy the touchend event object and change the
@@ -3083,7 +3178,12 @@ vjs.Slider.prototype.update = function(){
       bar = this.bar;
 
   // Protect against no duration and other division issues
-  if (isNaN(progress)) { progress = 0; }
+  if (typeof progress !== 'number' ||
+      progress !== progress ||
+      progress < 0 ||
+      progress === Infinity) {
+        progress = 0;
+  }
 
   barProgress = progress;
 
@@ -3328,21 +3428,30 @@ vjs.MenuButton = vjs.Button.extend({
   init: function(player, options){
     vjs.Button.call(this, player, options);
 
-    this.menu = this.createMenu();
-
-    // Add list to element
-    this.addChild(this.menu);
-
-    // Automatically hide empty menu buttons
-    if (this.items && this.items.length === 0) {
-      this.hide();
-    }
+    this.update();
 
     this.on('keydown', this.onKeyPress);
     this.el_.setAttribute('aria-haspopup', true);
     this.el_.setAttribute('role', 'button');
   }
 });
+
+vjs.MenuButton.prototype.update = function() {
+  var menu = this.createMenu();
+
+  if (this.menu) {
+    this.removeChild(this.menu);
+  }
+
+  this.menu = menu;
+  this.addChild(menu);
+
+  if (this.items && this.items.length === 0) {
+    this.hide();
+  } else if (this.items && this.items.length > 1) {
+    this.show();
+  }
+};
 
 /**
  * Track the state of the menu button
@@ -3821,29 +3930,6 @@ vjs.Player.prototype.createEl = function(){
   // Remove width/height attrs from tag so CSS can make it 100% width/height
   tag.removeAttribute('width');
   tag.removeAttribute('height');
-  // Empty video tag tracks so the built-in player doesn't use them also.
-  // This may not be fast enough to stop HTML5 browsers from reading the tags
-  // so we'll need to turn off any default tracks if we're manually doing
-  // captions and subtitles. videoElement.textTracks
-  if (tag.hasChildNodes()) {
-    var nodes, nodesLength, i, node, nodeName, removeNodes;
-
-    nodes = tag.childNodes;
-    nodesLength = nodes.length;
-    removeNodes = [];
-
-    while (nodesLength--) {
-      node = nodes[nodesLength];
-      nodeName = node.nodeName.toLowerCase();
-      if (nodeName === 'track') {
-        removeNodes.push(node);
-      }
-    }
-
-    for (i=0; i<removeNodes.length; i++) {
-      tag.removeChild(removeNodes[i]);
-    }
-  }
 
   // Copy over all the attributes from the tag, including ID and class
   // ID will now reference player box, not the video tag
@@ -3983,6 +4069,8 @@ vjs.Player.prototype.unloadTech = function(){
 vjs.Player.prototype.onLoadStart = function() {
   // TODO: Update to use `emptied` event instead. See #1277.
 
+  this.removeClass('vjs-ended');
+
   // reset the error state
   this.error(null);
 
@@ -3994,9 +4082,6 @@ vjs.Player.prototype.onLoadStart = function() {
   } else {
     // reset the hasStarted state
     this.hasStarted(false);
-    this.one('play', function(){
-      this.hasStarted(true);
-    });
   }
 };
 
@@ -4043,8 +4128,13 @@ vjs.Player.prototype.onLoadedAllData;
  * @event play
  */
 vjs.Player.prototype.onPlay = function(){
+  this.removeClass('vjs-ended');
   this.removeClass('vjs-paused');
   this.addClass('vjs-playing');
+
+  // hide the poster when the user hits play
+  // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-media-play
+  this.hasStarted(true);
 };
 
 /**
@@ -4133,6 +4223,7 @@ vjs.Player.prototype.onProgress = function(){
  * @event ended
  */
 vjs.Player.prototype.onEnded = function(){
+  this.addClass('vjs-ended');
   if (this.options_['loop']) {
     this.currentTime(0);
     this.play();
@@ -4181,6 +4272,12 @@ vjs.Player.prototype.onFullscreenChange = function() {
     this.removeClass('vjs-fullscreen');
   }
 };
+
+/**
+ * Fired when an error occurs
+ * @event error
+ */
+vjs.Player.prototype.onError;
 
 // /* Player API
 // ================================================================================ */
@@ -5075,6 +5172,13 @@ vjs.Player.prototype.ended = function(){ return this.techGet('ended'); };
  */
 vjs.Player.prototype.seeking = function(){ return this.techGet('seeking'); };
 
+/**
+ * Returns the TimeRanges of the media that are currently available
+ * for seeking to.
+ * @return {TimeRanges} the seekable intervals of the media timeline
+ */
+vjs.Player.prototype.seekable = function(){ return this.techGet('seekable'); };
+
 // When the player is first initialized, trigger activity so components
 // like the control bar show themselves if needed
 vjs.Player.prototype.userActivity_ = true;
@@ -5247,9 +5351,97 @@ vjs.Player.prototype.isAudio = function(bool) {
   return this.isAudio_;
 };
 
+/**
+ * Returns the current state of network activity for the element, from
+ * the codes in the list below.
+ * - NETWORK_EMPTY (numeric value 0)
+ *   The element has not yet been initialised. All attributes are in
+ *   their initial states.
+ * - NETWORK_IDLE (numeric value 1)
+ *   The element's resource selection algorithm is active and has
+ *   selected a resource, but it is not actually using the network at
+ *   this time.
+ * - NETWORK_LOADING (numeric value 2)
+ *   The user agent is actively trying to download data.
+ * - NETWORK_NO_SOURCE (numeric value 3)
+ *   The element's resource selection algorithm is active, but it has
+ *   not yet found a resource to use.
+ * @return {Number} the current network activity state
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#network-states
+ */
+vjs.Player.prototype.networkState = function(){
+  return this.techGet('networkState');
+};
+
+/**
+ * Returns a value that expresses the current state of the element
+ * with respect to rendering the current playback position, from the
+ * codes in the list below.
+ * - HAVE_NOTHING (numeric value 0)
+ *   No information regarding the media resource is available.
+ * - HAVE_METADATA (numeric value 1)
+ *   Enough of the resource has been obtained that the duration of the
+ *   resource is available.
+ * - HAVE_CURRENT_DATA (numeric value 2)
+ *   Data for the immediate current playback position is available.
+ * - HAVE_FUTURE_DATA (numeric value 3)
+ *   Data for the immediate current playback position is available, as
+ *   well as enough data for the user agent to advance the current
+ *   playback position in the direction of playback.
+ * - HAVE_ENOUGH_DATA (numeric value 4)
+ *   The user agent estimates that enough data is available for
+ *   playback to proceed uninterrupted.
+ * @return {Number} the current playback rendering state
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#dom-media-readystate
+ */
+vjs.Player.prototype.readyState = function(){
+  return this.techGet('readyState');
+};
+
+/**
+ * Text tracks are tracks of timed text events.
+ * Captions - text displayed over the video for the hearing impaired
+ * Subtitles - text displayed over the video for those who don't understand language in the video
+ * Chapters - text displayed in a menu allowing the user to jump to particular points (chapters) in the video
+ * Descriptions (not supported yet) - audio descriptions that are read back to the user by a screen reading device
+ */
+
+/**
+ * Get an array of associated text tracks. captions, subtitles, chapters, descriptions
+ * http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#dom-media-texttracks
+ * @return {Array}           Array of track objects
+ */
+vjs.Player.prototype.textTracks = function(){
+  // cannot use techGet directly because it checks to see whether the tech is ready.
+  // Flash is unlikely to be ready in time but textTracks should still work.
+  return this.tech && this.tech['textTracks']();
+};
+
+vjs.Player.prototype.remoteTextTracks = function() {
+  return this.tech && this.tech['remoteTextTracks']();
+};
+
+/**
+ * Add a text track
+ * In addition to the W3C settings we allow adding additional info through options.
+ * http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#dom-media-addtexttrack
+ * @param {String}  kind        Captions, subtitles, chapters, descriptions, or metadata
+ * @param {String=} label       Optional label
+ * @param {String=} language    Optional language
+ */
+vjs.Player.prototype.addTextTrack = function(kind, label, language) {
+  return this.tech && this.tech['addTextTrack'](kind, label, language);
+};
+
+vjs.Player.prototype.addRemoteTextTrack = function(options) {
+  return this.tech && this.tech['addRemoteTextTrack'](options);
+};
+
+vjs.Player.prototype.removeRemoteTextTrack = function(track) {
+  this.tech && this.tech['removeRemoteTextTrack'](track);
+};
+
 // Methods to add support for
-// networkState: function(){ return this.techCall('networkState'); },
-// readyState: function(){ return this.techCall('readyState'); },
 // initialTime: function(){ return this.techCall('initialTime'); },
 // startOffsetTime: function(){ return this.techCall('startOffsetTime'); },
 // played: function(){ return this.techCall('played'); },
@@ -5290,7 +5482,10 @@ vjs.ControlBar.prototype.options_ = {
     'volumeControl': {},
     'muteToggle': {},
     // 'volumeMenuButton': {},
-    'playbackRateMenuButton': {}
+    'playbackRateMenuButton': {},
+    'subtitlesButton': {},
+    'captionsButton': {},
+    'chaptersButton': {}
   }
 };
 
@@ -5425,6 +5620,7 @@ vjs.DurationDisplay = vjs.Component.extend({
     // Once the order of durationchange and this.player_.duration() being set is figured out,
     // this can be updated.
     this.on(player, 'timeupdate', this.updateContent);
+    this.on(player, 'loadedmetadata', this.updateContent);
   }
 });
 
@@ -5622,6 +5818,7 @@ vjs.SeekBar.prototype.onMouseDown = function(event){
   vjs.Slider.prototype.onMouseDown.call(this, event);
 
   this.player_.scrubbing = true;
+  this.player_.addClass('vjs-scrubbing');
 
   this.videoWasPlaying = !this.player_.paused();
   this.player_.pause();
@@ -5641,6 +5838,7 @@ vjs.SeekBar.prototype.onMouseUp = function(event){
   vjs.Slider.prototype.onMouseUp.call(this, event);
 
   this.player_.scrubbing = false;
+  this.player_.removeClass('vjs-scrubbing');
   if (this.videoWasPlaying) {
     this.player_.play();
   }
@@ -5989,7 +6187,7 @@ vjs.VolumeMenuButton = vjs.MenuButton.extend({
     vjs.MenuButton.call(this, player, options);
 
     // Same listeners as MuteToggle
-    this.on(player, 'volumechange', this.update);
+    this.on(player, 'volumechange', this.volumeUpdate);
 
     // hide mute toggle if the current tech doesn't support volume control
     if (player.tech && player.tech['featuresVolumeControl'] === false) {
@@ -6032,7 +6230,7 @@ vjs.VolumeMenuButton.prototype.createEl = function(){
     innerHTML: '<div><span class="vjs-control-text">' + this.localize('Mute') + '</span></div>'
   });
 };
-vjs.VolumeMenuButton.prototype.update = vjs.MuteToggle.prototype.update;
+vjs.VolumeMenuButton.prototype.volumeUpdate = vjs.MuteToggle.prototype.update;
 /**
  * The component for controlling the playback rate
  *
@@ -6224,10 +6422,7 @@ vjs.PosterImage.prototype.update = function(){
   // If there's no poster source we should display:none on this component
   // so it's not still clickable or right-clickable
   if (url) {
-    // Remove the display style property that hide() adds
-    // as opposed to show() which sets display to block
-    // In the future it might be worth creating an `unhide` component method
-    this.el_.style.display = '';
+    this.show();
   } else {
     this.hide();
   }
@@ -6356,6 +6551,8 @@ vjs.ErrorDisplay.prototype.update = function(){
     this.contentEl_.innerHTML = this.localize(this.player().error().message);
   }
 };
+(function() {
+  var createTrackHelper;
 /**
  * @fileoverview Media Technology Controller - Base class for media playback
  * technology controllers like Flash and HTML5
@@ -6387,6 +6584,12 @@ vjs.MediaTechController = vjs.Component.extend({
     }
 
     this.initControlsListeners();
+
+    if (!this['featuresNativeTextTracks']) {
+      this.emulateTextTracks();
+    }
+
+    this.initTextTrackListeners();
   }
 });
 
@@ -6573,10 +6776,12 @@ vjs.MediaTechController.prototype.manualTimeUpdatesOn = function(){
 };
 
 vjs.MediaTechController.prototype.manualTimeUpdatesOff = function(){
+  var player = this.player_;
+
   this.manualTimeUpdates = false;
   this.stopTrackingCurrentTime();
-  this.off('play', this.trackCurrentTime);
-  this.off('pause', this.stopTrackingCurrentTime);
+  this.off(player, 'play', this.trackCurrentTime);
+  this.off(player, 'pause', this.stopTrackingCurrentTime);
 };
 
 vjs.MediaTechController.prototype.trackCurrentTime = function(){
@@ -6609,6 +6814,141 @@ vjs.MediaTechController.prototype.setCurrentTime = function() {
   if (this.manualTimeUpdates) { this.player().trigger('timeupdate'); }
 };
 
+// TODO: Consider looking at moving this into the text track display directly
+// https://github.com/videojs/video.js/issues/1863
+vjs.MediaTechController.prototype.initTextTrackListeners = function() {
+  var player = this.player_,
+      tracks,
+      textTrackListChanges = function() {
+        var textTrackDisplay = player.getChild('textTrackDisplay'),
+            controlBar;
+
+        if (textTrackDisplay) {
+          textTrackDisplay.updateDisplay();
+        }
+      };
+
+  tracks = this.textTracks();
+
+  if (!tracks) {
+    return;
+  }
+
+  tracks.addEventListener('removetrack', textTrackListChanges);
+  tracks.addEventListener('addtrack', textTrackListChanges);
+
+  this.on('dispose', vjs.bind(this, function() {
+    tracks.removeEventListener('removetrack', textTrackListChanges);
+    tracks.removeEventListener('addtrack', textTrackListChanges);
+  }));
+};
+
+vjs.MediaTechController.prototype.emulateTextTracks = function() {
+  var player = this.player_,
+      textTracksChanges,
+      tracks,
+      script;
+
+  if (!window['WebVTT']) {
+    script = document.createElement('script');
+    script.src = player.options()['vtt.js'] || '../node_modules/vtt.js/dist/vtt.js';
+    player.el().appendChild(script);
+    window['WebVTT'] = true;
+  }
+
+  tracks = this.textTracks();
+  if (!tracks) {
+    return;
+  }
+
+  textTracksChanges = function() {
+    var i, track, textTrackDisplay;
+
+    textTrackDisplay = player.getChild('textTrackDisplay'),
+
+    textTrackDisplay.updateDisplay();
+
+    for (i = 0; i < this.length; i++) {
+      track = this[i];
+      track.removeEventListener('cuechange', vjs.bind(textTrackDisplay, textTrackDisplay.updateDisplay));
+      if (track.mode === 'showing') {
+        track.addEventListener('cuechange', vjs.bind(textTrackDisplay, textTrackDisplay.updateDisplay));
+      }
+    }
+  };
+
+  tracks.addEventListener('change', textTracksChanges);
+
+  this.on('dispose', vjs.bind(this, function() {
+    tracks.removeEventListener('change', textTracksChanges);
+  }));
+};
+
+/**
+ * Provide default methods for text tracks.
+ *
+ * Html5 tech overrides these.
+ */
+
+/**
+ * List of associated text tracks
+ * @type {Array}
+ * @private
+ */
+vjs.MediaTechController.prototype.textTracks_;
+
+vjs.MediaTechController.prototype.textTracks = function() {
+  this.player_.textTracks_ = this.player_.textTracks_ || new vjs.TextTrackList();
+  return this.player_.textTracks_;
+};
+
+vjs.MediaTechController.prototype.remoteTextTracks = function() {
+  this.player_.remoteTextTracks_ = this.player_.remoteTextTracks_ || new vjs.TextTrackList();
+  return this.player_.remoteTextTracks_;
+};
+
+createTrackHelper = function(self, kind, label, language, options) {
+  var tracks = self.textTracks(),
+      track;
+
+  options = options || {};
+
+  options['kind'] = kind;
+  if (label) {
+    options['label'] = label;
+  }
+  if (language) {
+    options['language'] = language;
+  }
+  options['player'] = self.player_;
+
+  track = new vjs.TextTrack(options);
+  tracks.addTrack_(track);
+
+  return track;
+};
+
+vjs.MediaTechController.prototype.addTextTrack = function(kind, label, language) {
+  if (!kind) {
+    throw new Error('TextTrack kind is required but was not provided');
+  }
+
+  return createTrackHelper(this, kind, label, language);
+};
+
+vjs.MediaTechController.prototype.addRemoteTextTrack = function(options) {
+  var track = createTrackHelper(this, options['kind'], options['label'], options['language'], options);
+  this.remoteTextTracks().addTrack_(track);
+  return {
+    track: track
+  };
+};
+
+vjs.MediaTechController.prototype.removeRemoteTextTrack = function(track) {
+  this.textTracks().removeTrack_(track);
+  this.remoteTextTracks().removeTrack_(track);
+};
+
 /**
  * Provide a default setPoster method for techs
  *
@@ -6627,6 +6967,8 @@ vjs.MediaTechController.prototype['featuresPlaybackRate'] = false;
 // currently not triggered by video-js-swf
 vjs.MediaTechController.prototype['featuresProgressEvents'] = false;
 vjs.MediaTechController.prototype['featuresTimeupdateEvents'] = false;
+
+vjs.MediaTechController.prototype['featuresNativeTextTracks'] = false;
 
 /**
  * A functional mixin for techs that want to use the Source Handler pattern.
@@ -6707,6 +7049,16 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
   Tech.prototype.setSource = function(source){
     var sh = Tech.selectSourceHandler(source);
 
+    if (!sh) {
+      // Fall back to a native source hander when unsupported sources are
+      // deliberately set
+      if (Tech.nativeSourceHandler) {
+        sh = Tech.nativeSourceHandler;
+      } else {
+        vjs.log.error('No source hander found for the current source.');
+      }
+    }
+
     // Dispose any existing source handler
     this.disposeSourceHandler();
     this.off('dispose', this.disposeSourceHandler);
@@ -6728,6 +7080,10 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
   };
 
 };
+
+vjs.media = {};
+
+})();
 /**
  * @fileoverview HTML5 Media Controller - Wrapper for HTML5 Media API
  */
@@ -6742,6 +7098,12 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
 vjs.Html5 = vjs.MediaTechController.extend({
   /** @constructor */
   init: function(player, options, ready){
+    var  nodes, nodesLength, i, node, nodeName, removeNodes;
+
+    if (options['nativeCaptions'] === false || options['nativeTextTracks'] === false) {
+      this['featuresNativeTextTracks'] = false;
+    }
+
     vjs.MediaTechController.call(this, player, options, ready);
 
     this.setupTriggers();
@@ -6754,6 +7116,37 @@ vjs.Html5 = vjs.MediaTechController.extend({
     // anyway so the error gets fired.
     if (source && (this.el_.currentSrc !== source.src || (player.tag && player.tag.initNetworkState_ === 3))) {
       this.setSource(source);
+    }
+
+    if (this.el_.hasChildNodes()) {
+
+      nodes = this.el_.childNodes;
+      nodesLength = nodes.length;
+      removeNodes = [];
+
+      while (nodesLength--) {
+        node = nodes[nodesLength];
+        nodeName = node.nodeName.toLowerCase();
+        if (nodeName === 'track') {
+          if (!this['featuresNativeTextTracks']) {
+            // Empty video tag tracks so the built-in player doesn't use them also.
+            // This may not be fast enough to stop HTML5 browsers from reading the tags
+            // so we'll need to turn off any default tracks if we're manually doing
+            // captions and subtitles. videoElement.textTracks
+            removeNodes.push(node);
+          } else {
+            this.remoteTextTracks().addTrack_(node['track']);
+          }
+        }
+      }
+
+      for (i=0; i<removeNodes.length; i++) {
+        this.el_.removeChild(removeNodes[i]);
+      }
+    }
+
+    if (this['featuresNativeTextTracks']) {
+      this.on('loadstart', vjs.bind(this, this.hideCaptions));
     }
 
     // Determine if native controls should be used
@@ -6769,7 +7162,7 @@ vjs.Html5 = vjs.MediaTechController.extend({
     // In Chrome (15), if you have autoplay + a poster + no controls, the video gets hidden (but audio plays)
     // This fixes both issues. Need to wait for API, so it updates displays correctly
     player.ready(function(){
-      if (this.tag && this.options_['autoplay'] && this.paused()) {
+      if (this.src() && this.tag && this.options_['autoplay'] && this.paused()) {
         delete this.tag['poster']; // Chrome Fix. Fixed in Chrome v16.
         this.play();
       }
@@ -6786,6 +7179,9 @@ vjs.Html5.prototype.dispose = function(){
 
 vjs.Html5.prototype.createEl = function(){
   var player = this.player_,
+      track,
+      trackEl,
+      i,
       // If possible, reuse original tag for HTML5 playback technology element
       el = player.tag,
       attributes,
@@ -6822,12 +7218,27 @@ vjs.Html5.prototype.createEl = function(){
     // associate the player with the new tag
     el['player'] = player;
 
+    if (player.options_.tracks) {
+      for (i = 0; i < player.options_.tracks.length; i++) {
+        track = player.options_.tracks[i];
+        trackEl = document.createElement('track');
+        trackEl.kind = track.kind;
+        trackEl.label = track.label;
+        trackEl.srclang = track.srclang;
+        trackEl.src = track.src;
+        if ('default' in track) {
+          trackEl.setAttribute('default', 'default');
+        }
+        el.appendChild(trackEl);
+      }
+    }
+
     vjs.insertFirst(el, player.el());
   }
 
   // Update specific tag settings, in case they were overridden
   var settingsAttrs = ['autoplay','preload','loop','muted'];
-  for (var i = settingsAttrs.length - 1; i >= 0; i--) {
+  for (i = settingsAttrs.length - 1; i >= 0; i--) {
     var attr = settingsAttrs[i];
     var overwriteAttrs = {};
     if (typeof player.options_[attr] !== 'undefined') {
@@ -6838,6 +7249,25 @@ vjs.Html5.prototype.createEl = function(){
 
   return el;
   // jenniisawesome = true;
+};
+
+
+vjs.Html5.prototype.hideCaptions = function() {
+  var tracks = this.el_.querySelectorAll('track'),
+      track,
+      i = tracks.length,
+      kinds = {
+        'captions': 1,
+        'subtitles': 1
+      };
+
+  while (i--) {
+    track = tracks[i].track;
+    if ((track && track['kind'] in kinds) &&
+        (!tracks[i]['default'])) {
+      track.mode = 'disabled';
+    }
+  }
 };
 
 // Make video events trigger player events
@@ -6970,10 +7400,27 @@ vjs.Html5.prototype.exitFullScreen = function(){
   this.el_.webkitExitFullScreen();
 };
 
+// Checks to see if the element's reported URI (either from `el_.src`
+// or `el_.currentSrc`) is a blob-uri and, if so, returns the uri that
+// was passed into the source-handler when it was first invoked instead
+// of the blob-uri
+vjs.Html5.prototype.returnOriginalIfBlobURI_ = function (elementURI, originalURI) {
+  var blobURIRegExp = /^blob\:/i;
+
+  // If originalURI is undefined then we are probably in a non-source-handler-enabled
+  // tech that inherits from the Html5 tech so we should just return the elementURI
+  // regardless of it's blobby-ness
+  if (originalURI && elementURI && blobURIRegExp.test(elementURI)) {
+    return originalURI;
+  }
+  return elementURI;
+};
 
 vjs.Html5.prototype.src = function(src) {
+  var elementSrc = this.el_.src;
+
   if (src === undefined) {
-    return this.el_.src;
+    return this.returnOriginalIfBlobURI_(elementSrc, this.source_);
   } else {
     // Setting src through `src` instead of `setSrc` will be deprecated
     this.setSrc(src);
@@ -6985,7 +7432,15 @@ vjs.Html5.prototype.setSrc = function(src) {
 };
 
 vjs.Html5.prototype.load = function(){ this.el_.load(); };
-vjs.Html5.prototype.currentSrc = function(){ return this.el_.currentSrc; };
+vjs.Html5.prototype.currentSrc = function(){
+  var elementSrc = this.el_.currentSrc;
+
+  if (!this.currentSource_) {
+    return elementSrc;
+  }
+
+  return this.returnOriginalIfBlobURI_(elementSrc, this.currentSource_.src);
+};
 
 vjs.Html5.prototype.poster = function(){ return this.el_.poster; };
 vjs.Html5.prototype.setPoster = function(val){ this.el_.poster = val; };
@@ -7004,6 +7459,7 @@ vjs.Html5.prototype.setLoop = function(val){ this.el_.loop = val; };
 
 vjs.Html5.prototype.error = function(){ return this.el_.error; };
 vjs.Html5.prototype.seeking = function(){ return this.el_.seeking; };
+vjs.Html5.prototype.seekable = function(){ return this.el_.seekable; };
 vjs.Html5.prototype.ended = function(){ return this.el_.ended; };
 vjs.Html5.prototype.defaultMuted = function(){ return this.el_.defaultMuted; };
 
@@ -7011,7 +7467,95 @@ vjs.Html5.prototype.playbackRate = function(){ return this.el_.playbackRate; };
 vjs.Html5.prototype.setPlaybackRate = function(val){ this.el_.playbackRate = val; };
 
 vjs.Html5.prototype.networkState = function(){ return this.el_.networkState; };
+vjs.Html5.prototype.readyState = function(){ return this.el_.readyState; };
 
+vjs.Html5.prototype.textTracks = function() {
+  if (!this['featuresNativeTextTracks']) {
+    return vjs.MediaTechController.prototype.textTracks.call(this);
+  }
+
+  return this.el_.textTracks;
+};
+vjs.Html5.prototype.addTextTrack = function(kind, label, language) {
+  if (!this['featuresNativeTextTracks']) {
+    return vjs.MediaTechController.prototype.addTextTrack.call(this, kind, label, language);
+  }
+
+  return this.el_.addTextTrack(kind, label, language);
+};
+
+vjs.Html5.prototype.addRemoteTextTrack = function(options) {
+  if (!this['featuresNativeTextTracks']) {
+    return vjs.MediaTechController.prototype.addRemoteTextTrack.call(this, options);
+  }
+
+  var track = document.createElement('track');
+  options = options || {};
+
+  if (options['kind']) {
+    track['kind'] = options['kind'];
+  }
+  if (options['label']) {
+    track['label'] = options['label'];
+  }
+  if (options['language'] || options['srclang']) {
+    track['srclang'] = options['language'] || options['srclang'];
+  }
+  if (options['default']) {
+    track['default'] = options['default'];
+  }
+  if (options['id']) {
+    track['id'] = options['id'];
+  }
+  if (options['src']) {
+    track['src'] = options['src'];
+  }
+
+  this.el().appendChild(track);
+
+  if (track.track['kind'] === 'metadata') {
+    track['track']['mode'] = 'hidden';
+  } else {
+    track['track']['mode'] = 'disabled';
+  }
+
+  track['onload'] = function() {
+    var tt = track['track'];
+    if (track.readyState >= 2) {
+      if (tt['kind'] === 'metadata' && tt['mode'] !== 'hidden') {
+        tt['mode'] = 'hidden';
+      } else if (tt['kind'] !== 'metadata' && tt['mode'] !== 'disabled') {
+        tt['mode'] = 'disabled';
+      }
+      track['onload'] = null;
+    }
+  };
+
+  this.remoteTextTracks().addTrack_(track.track);
+
+  return track;
+};
+
+vjs.Html5.prototype.removeRemoteTextTrack = function(track) {
+  if (!this['featuresNativeTextTracks']) {
+    return vjs.MediaTechController.prototype.removeRemoteTextTrack.call(this, track);
+  }
+
+  var tracks, i;
+
+  this.remoteTextTracks().removeTrack_(track);
+
+  tracks = this.el()['querySelectorAll']('track');
+
+  for (i = 0; i < tracks.length; i++) {
+    if (tracks[i] === track || tracks[i]['track'] === track) {
+      tracks[i]['parentNode']['removeChild'](tracks[i]);
+      break;
+    }
+  }
+};
+
+/* HTML5 Support Testing ---------------------------------------------------- */
 
 /**
  * Check if HTML5 video is supported by this browser/device
@@ -7030,6 +7574,28 @@ vjs.Html5.isSupported = function(){
 
 // Add Source Handler pattern functions to this tech
 vjs.MediaTechController.withSourceHandlers(vjs.Html5);
+
+/*
+ * Override the withSourceHandler mixin's methods with our own because
+ * the HTML5 Media Element returns blob urls when utilizing MSE and we
+ * want to still return proper source urls even when in that case
+ */
+(function(){
+  var
+    origSetSource = vjs.Html5.prototype.setSource,
+    origDisposeSourceHandler = vjs.Html5.prototype.disposeSourceHandler;
+
+  vjs.Html5.prototype.setSource = function (source) {
+    var retVal = origSetSource.call(this, source);
+    this.source_ = source.src;
+    return retVal;
+  };
+
+  vjs.Html5.prototype.disposeSourceHandler = function () {
+    this.source_ = undefined;
+    return origDisposeSourceHandler.call(this);
+  };
+})();
 
 /**
  * The default native source handler.
@@ -7114,6 +7680,29 @@ vjs.Html5.canControlPlaybackRate = function(){
 };
 
 /**
+ * Check to see if native text tracks are supported by this browser/device
+ * @return {Boolean}
+ */
+vjs.Html5.supportsNativeTextTracks = function() {
+  var supportsTextTracks;
+
+  // Figure out native text track support
+  // If mode is a number, we cannot change it because it'll disappear from view.
+  // Browsers with numeric modes include IE10 and older (<=2013) samsung android models.
+  // Firefox isn't playing nice either with modifying the mode
+  // TODO: Investigate firefox: https://github.com/videojs/video.js/issues/1862
+  supportsTextTracks = !!vjs.TEST_VID.textTracks;
+  if (supportsTextTracks && vjs.TEST_VID.textTracks.length > 0) {
+    supportsTextTracks = typeof vjs.TEST_VID.textTracks[0]['mode'] !== 'number';
+  }
+  if (supportsTextTracks && vjs.IS_FIREFOX) {
+    supportsTextTracks = false;
+  }
+
+  return supportsTextTracks;
+};
+
+/**
  * Set the tech's volume control support status
  * @type {Boolean}
  */
@@ -7144,6 +7733,12 @@ vjs.Html5.prototype['featuresFullscreenResize'] = true;
  * (this disables the manual progress events of the MediaTechController)
  */
 vjs.Html5.prototype['featuresProgressEvents'] = true;
+
+/**
+ * Sets the tech's status on native text track support
+ * @type {Boolean}
+ */
+vjs.Html5.prototype['featuresNativeTextTracks'] = vjs.Html5.supportsNativeTextTracks();
 
 // HTML5 Feature detection and Device Fixes --------------------------------- //
 (function() {
@@ -7247,12 +7842,6 @@ vjs.Flash = vjs.MediaTechController.extend({
 
     var source = options['source'],
 
-        // Which element to embed in
-        parentEl = options['parentEl'],
-
-        // Create a temporary element to be replaced by swf object
-        placeHolder = this.el_ = vjs.createEl('div', { id: player.id() + '_temp_flash' }),
-
         // Generate ID for swf object
         objId = player.id()+'_flash_api',
 
@@ -7299,7 +7888,7 @@ vjs.Flash = vjs.MediaTechController.extend({
     }
 
     // Add placeholder to player div
-    vjs.insertFirst(placeHolder, parentEl);
+    vjs.insertFirst(this.el_, options['parentEl']);
 
     // Having issues with Flash reloading on certain page actions (hide/resize/fullscreen) in certain browsers
     // This allows resetting the playhead when we catch the reload
@@ -7326,7 +7915,7 @@ vjs.Flash = vjs.MediaTechController.extend({
     // use stageclick events triggered from inside the SWF instead
     player.on('stageclick', player.reportUserActivity);
 
-    this.el_ = vjs.Flash.embed(options['swf'], placeHolder, flashVars, params, attributes);
+    this.el_ = vjs.Flash.embed(options['swf'], this.el_, flashVars, params, attributes);
   }
 });
 
@@ -7398,8 +7987,27 @@ vjs.Flash.prototype['setPoster'] = function(){
   // poster images are not handled by the Flash tech so make this a no-op
 };
 
+vjs.Flash.prototype.seekable = function() {
+  var duration = this.duration();
+  if (duration === 0) {
+    // The SWF reports a duration of zero when the actual duration is unknown
+    return vjs.createTimeRange();
+  }
+  return vjs.createTimeRange(0, this.duration());
+};
+
 vjs.Flash.prototype.buffered = function(){
+  if (!this.el_.vjs_getProperty) {
+    return vjs.createTimeRange();
+  }
   return vjs.createTimeRange(0, this.el_.vjs_getProperty('buffered'));
+};
+
+vjs.Flash.prototype.duration = function(){
+  if (!this.el_.vjs_getProperty) {
+    return 0;
+  }
+  return this.el_.vjs_getProperty('duration');
 };
 
 vjs.Flash.prototype.supportsFullScreen = function(){
@@ -7414,7 +8022,7 @@ vjs.Flash.prototype.enterFullScreen = function(){
   // Create setters and getters for attributes
   var api = vjs.Flash.prototype,
     readWrite = 'rtmpConnection,rtmpStream,preload,defaultPlaybackRate,playbackRate,autoplay,loop,mediaGroup,controller,controls,volume,muted,defaultMuted'.split(','),
-    readOnly = 'error,networkState,readyState,seeking,initialTime,duration,startOffsetTime,paused,played,seekable,ended,videoTracks,audioTracks,videoWidth,videoHeight,textTracks'.split(','),
+    readOnly = 'error,networkState,readyState,seeking,initialTime,startOffsetTime,paused,played,ended,videoTracks,audioTracks,videoWidth,videoHeight'.split(','),
     // Overridden: buffered, currentTime, currentSrc
     i;
 
@@ -7593,6 +8201,7 @@ vjs.Flash.embed = function(swf, placeHolder, flashVars, params, attributes){
   ;
 
   placeHolder.parentNode.replaceChild(obj, placeHolder);
+  obj[vjs.expando] = placeHolder[vjs.expando];
 
   // IE6 seems to have an issue where it won't initialize the swf object after injecting it.
   // This is a dumb fix
@@ -7770,702 +8379,538 @@ vjs.MediaLoader = vjs.Component.extend({
     }
   }
 });
-/**
- * @fileoverview Text Tracks
- * Text tracks are tracks of timed text events.
- * Captions - text displayed over the video for the hearing impaired
- * Subtitles - text displayed over the video for those who don't understand language in the video
- * Chapters - text displayed in a menu allowing the user to jump to particular points (chapters) in the video
- * Descriptions (not supported yet) - audio descriptions that are read back to the user by a screen reading device
+/*
+ * https://html.spec.whatwg.org/multipage/embedded-content.html#texttrackmode
+ *
+ * enum TextTrackMode { "disabled",  "hidden",  "showing" };
  */
-
-// Player Additions - Functions add to the player object for easier access to tracks
-
-/**
- * List of associated text tracks
- * @type {Array}
- * @private
- */
-vjs.Player.prototype.textTracks_;
-
-/**
- * Get an array of associated text tracks. captions, subtitles, chapters, descriptions
- * http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#dom-media-texttracks
- * @return {Array}           Array of track objects
- * @private
- */
-vjs.Player.prototype.textTracks = function(){
-  this.textTracks_ = this.textTracks_ || [];
-  return this.textTracks_;
+vjs.TextTrackMode = {
+  'disabled': 'disabled',
+  'hidden': 'hidden',
+  'showing': 'showing'
 };
 
-/**
- * Add a text track
- * In addition to the W3C settings we allow adding additional info through options.
- * http://www.w3.org/html/wg/drafts/html/master/embedded-content-0.html#dom-media-addtexttrack
- * @param {String}  kind        Captions, subtitles, chapters, descriptions, or metadata
- * @param {String=} label       Optional label
- * @param {String=} language    Optional language
- * @param {Object=} options     Additional track options, like src
- * @private
+/*
+ * https://html.spec.whatwg.org/multipage/embedded-content.html#texttrackkind
+ *
+ * enum TextTrackKind { "subtitles",  "captions",  "descriptions",  "chapters",  "metadata" };
  */
-vjs.Player.prototype.addTextTrack = function(kind, label, language, options){
-  var tracks = this.textTracks_ = this.textTracks_ || [];
+vjs.TextTrackKind = {
+  'subtitles': 'subtitles',
+  'captions': 'captions',
+  'descriptions': 'descriptions',
+  'chapters': 'chapters',
+  'metadata': 'metadata'
+};
+(function() {
+/*
+ * https://html.spec.whatwg.org/multipage/embedded-content.html#texttrack
+ *
+ * interface TextTrack : EventTarget {
+ *   readonly attribute TextTrackKind kind;
+ *   readonly attribute DOMString label;
+ *   readonly attribute DOMString language;
+ *
+ *   readonly attribute DOMString id;
+ *   readonly attribute DOMString inBandMetadataTrackDispatchType;
+ *
+ *   attribute TextTrackMode mode;
+ *
+ *   readonly attribute TextTrackCueList? cues;
+ *   readonly attribute TextTrackCueList? activeCues;
+ *
+ *   void addCue(TextTrackCue cue);
+ *   void removeCue(TextTrackCue cue);
+ *
+ *   attribute EventHandler oncuechange;
+ * };
+ */
+
+vjs.TextTrack = function(options) {
+  var tt, id, mode, kind, label, language, cues, activeCues, timeupdateHandler, changed, prop;
+
   options = options || {};
 
-  options['kind'] = kind;
-  options['label'] = label;
-  options['language'] = language;
+  if (!options['player']) {
+    throw new Error('A player was not provided.');
+  }
 
-  // HTML5 Spec says default to subtitles.
-  // Uppercase first letter to match class names
-  var Kind = vjs.capitalize(kind || 'subtitles');
+  tt = this;
+  if (vjs.IS_IE8) {
+    tt = document.createElement('custom');
 
-  // Create correct texttrack class. CaptionsTrack, etc.
-  var track = new window['videojs'][Kind + 'Track'](this, options);
+    for (prop in vjs.TextTrack.prototype) {
+      tt[prop] = vjs.TextTrack.prototype[prop];
+    }
+  }
 
-  tracks.push(track);
+  tt.player_ = options['player'];
 
-  // If track.dflt() is set, start showing immediately
-  // TODO: Add a process to determine the best track to show for the specific kind
-  // In case there are multiple defaulted tracks of the same kind
-  // Or the user has a set preference of a specific language that should override the default
-  // Note: The setTimeout is a workaround because with the html5 tech, the player is 'ready'
- //  before it's child components (including the textTrackDisplay) have finished loading.
-  if (track.dflt()) {
-    this.ready(function(){
-      this.setTimeout(function(){
-        track.player().showTextTrack(track.id());
-      }, 0);
+  mode = vjs.TextTrackMode[options['mode']] || 'disabled';
+  kind = vjs.TextTrackKind[options['kind']] || 'subtitles';
+  label = options['label'] || '';
+  language = options['language'] || options['srclang'] || '';
+  id = options['id'] || 'vjs_text_track_' + vjs.guid++;
+
+  if (kind === 'metadata' || kind === 'chapters') {
+    mode = 'hidden';
+  }
+
+  tt.cues_ = [];
+  tt.activeCues_ = [];
+
+  cues = new vjs.TextTrackCueList(tt.cues_);
+  activeCues = new vjs.TextTrackCueList(tt.activeCues_);
+
+  changed = false;
+  timeupdateHandler = vjs.bind(tt, function() {
+    this['activeCues'];
+    if (changed) {
+      this['trigger']('cuechange');
+      changed = false;
+    }
+  });
+  if (mode !== 'disabled') {
+    tt.player_.on('timeupdate', timeupdateHandler);
+  }
+
+  Object.defineProperty(tt, 'kind', {
+    get: function() {
+      return kind;
+    },
+    set: Function.prototype
+  });
+
+  Object.defineProperty(tt, 'label', {
+    get: function() {
+      return label;
+    },
+    set: Function.prototype
+  });
+
+  Object.defineProperty(tt, 'language', {
+    get: function() {
+      return language;
+    },
+    set: Function.prototype
+  });
+
+  Object.defineProperty(tt, 'id', {
+    get: function() {
+      return id;
+    },
+    set: Function.prototype
+  });
+
+  Object.defineProperty(tt, 'mode', {
+    get: function() {
+      return mode;
+    },
+    set: function(newMode) {
+      if (!vjs.TextTrackMode[newMode]) {
+        return;
+      }
+      mode = newMode;
+      if (mode === 'showing') {
+        this.player_.on('timeupdate', timeupdateHandler);
+      }
+      this.trigger('modechange');
+    }
+  });
+
+  Object.defineProperty(tt, 'cues', {
+    get: function() {
+      if (!this.loaded_) {
+        return null;
+      }
+
+      return cues;
+    },
+    set: Function.prototype
+  });
+
+  Object.defineProperty(tt, 'activeCues', {
+    get: function() {
+      var i, l, active, ct, cue;
+
+      if (!this.loaded_) {
+        return null;
+      }
+
+      if (this['cues'].length === 0) {
+        return activeCues; // nothing to do
+      }
+
+      ct = this.player_.currentTime();
+      i = 0;
+      l = this['cues'].length;
+      active = [];
+
+      for (; i < l; i++) {
+        cue = this['cues'][i];
+        if (cue['startTime'] <= ct && cue['endTime'] >= ct) {
+          active.push(cue);
+        } else if (cue['startTime'] === cue['endTime'] && cue['startTime'] <= ct && cue['startTime'] + 0.5 >= ct) {
+          active.push(cue);
+        }
+      }
+
+      changed = false;
+
+      if (active.length !== this.activeCues_.length) {
+        changed = true;
+      } else {
+        for (i = 0; i < active.length; i++) {
+          if (indexOf.call(this.activeCues_, active[i]) === -1) {
+            changed = true;
+          }
+        }
+      }
+
+      this.activeCues_ = active;
+      activeCues.setCues_(this.activeCues_);
+
+      return activeCues;
+    },
+    set: Function.prototype
+  });
+
+  if (options.src) {
+    loadTrack(options.src, tt);
+  } else {
+    tt.loaded_ = true;
+  }
+
+  if (vjs.IS_IE8) {
+    return tt;
+  }
+};
+
+vjs.TextTrack.prototype = vjs.obj.create(vjs.EventEmitter.prototype);
+vjs.TextTrack.prototype.constructor = vjs.TextTrack;
+
+/*
+ * cuechange - One or more cues in the track have become active or stopped being active.
+ */
+vjs.TextTrack.prototype.allowedEvents_ = {
+  'cuechange': 'cuechange'
+};
+
+vjs.TextTrack.prototype.addCue = function(cue) {
+  var tracks = this.player_.textTracks(),
+      i = 0;
+
+  if (tracks) {
+    for (; i < tracks.length; i++) {
+      if (tracks[i] !== this) {
+        tracks[i].removeCue(cue);
+      }
+    }
+  }
+
+  this.cues_.push(cue);
+  this['cues'].setCues_(this.cues_);
+};
+
+vjs.TextTrack.prototype.removeCue = function(removeCue) {
+  var i = 0,
+      l = this.cues_.length,
+      cue,
+      removed = false;
+
+  for (; i < l; i++) {
+    cue = this.cues_[i];
+    if (cue === removeCue) {
+      this.cues_.splice(i, 1);
+      removed = true;
+    }
+  }
+
+  if (removed) {
+    this.cues.setCues_(this.cues_);
+  }
+};
+
+/*
+ * Downloading stuff happens below this point
+ */
+var loadTrack, parseCues, indexOf;
+
+loadTrack = function(src, track) {
+  vjs.xhr(src, vjs.bind(this, function(err, response, responseBody){
+    if (err) {
+      return vjs.log.error(err);
+    }
+
+
+    track.loaded_ = true;
+    parseCues(responseBody, track);
+  }));
+};
+
+parseCues = function(srcContent, track) {
+  if (typeof window['WebVTT'] !== 'function') {
+    //try again a bit later
+    return window.setTimeout(function() {
+      parseCues(srcContent, track);
+    }, 25);
+  }
+
+  var parser = new window['WebVTT']['Parser'](window, window['vttjs'], window['WebVTT']['StringDecoder']());
+
+  parser['oncue'] = function(cue) {
+    track.addCue(cue);
+  };
+  parser['onparsingerror'] = function(error) {
+    vjs.log.error(error);
+  };
+
+  parser['parse'](srcContent);
+  parser['flush']();
+};
+
+indexOf = function(searchElement, fromIndex) {
+
+  var k;
+
+  if (this == null) {
+    throw new TypeError('"this" is null or not defined');
+  }
+
+  var O = Object(this);
+
+  var len = O.length >>> 0;
+
+  if (len === 0) {
+    return -1;
+  }
+
+  var n = +fromIndex || 0;
+
+  if (Math.abs(n) === Infinity) {
+    n = 0;
+  }
+
+  if (n >= len) {
+    return -1;
+  }
+
+  k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+  while (k < len) {
+    if (k in O && O[k] === searchElement) {
+      return k;
+    }
+    k++;
+  }
+  return -1;
+};
+
+})();
+/*
+ * https://html.spec.whatwg.org/multipage/embedded-content.html#texttracklist
+ *
+ * interface TextTrackList : EventTarget {
+ *   readonly attribute unsigned long length;
+ *   getter TextTrack (unsigned long index);
+ *   TextTrack? getTrackById(DOMString id);
+ * 
+ *   attribute EventHandler onchange;
+ *   attribute EventHandler onaddtrack;
+ *   attribute EventHandler onremovetrack;
+ * };
+ */
+vjs.TextTrackList = function(tracks) {
+  var list = this,
+      prop,
+      i = 0;
+
+  if (vjs.IS_IE8) {
+    list = document.createElement('custom');
+
+    for (prop in vjs.TextTrackList.prototype) {
+      list[prop] = vjs.TextTrackList.prototype[prop];
+    }
+  }
+
+  tracks = tracks || [];
+  list.tracks_ = [];
+
+  Object.defineProperty(list, 'length', {
+    get: function() {
+      return this.tracks_.length;
+    }
+  });
+
+  for (; i < tracks.length; i++) {
+    list.addTrack_(tracks[i]);
+  }
+
+  if (vjs.IS_IE8) {
+    return list;
+  }
+};
+
+vjs.TextTrackList.prototype = vjs.obj.create(vjs.EventEmitter.prototype);
+vjs.TextTrackList.prototype.constructor = vjs.TextTrackList;
+
+/*
+ * change - One or more tracks in the track list have been enabled or disabled.
+ * addtrack - A track has been added to the track list.
+ * removetrack - A track has been removed from the track list.
+*/
+vjs.TextTrackList.prototype.allowedEvents_ = {
+  'change': 'change',
+  'addtrack': 'addtrack',
+  'removetrack': 'removetrack'
+};
+
+// emulate attribute EventHandler support to allow for feature detection
+(function() {
+  var event;
+
+  for (event in vjs.TextTrackList.prototype.allowedEvents_) {
+    vjs.TextTrackList.prototype['on' + event] = null;
+  }
+})();
+
+vjs.TextTrackList.prototype.addTrack_ = function(track) {
+  var index = this.tracks_.length;
+  if (!(''+index in this)) {
+    Object.defineProperty(this, index, {
+      get: function() {
+        return this.tracks_[index];
+      }
     });
   }
 
-  return track;
-};
+  track.addEventListener('modechange', vjs.bind(this, function() {
+    this.trigger('change');
+  }));
+  this.tracks_.push(track);
 
-/**
- * Add an array of text tracks. captions, subtitles, chapters, descriptions
- * Track objects will be stored in the player.textTracks() array
- * @param {Array} trackList Array of track elements or objects (fake track elements)
- * @private
- */
-vjs.Player.prototype.addTextTracks = function(trackList){
-  var trackObj;
-
-  for (var i = 0; i < trackList.length; i++) {
-    trackObj = trackList[i];
-    this.addTextTrack(trackObj['kind'], trackObj['label'], trackObj['language'], trackObj);
-  }
-
-  return this;
-};
-
-// Show a text track
-// disableSameKind: disable all other tracks of the same kind. Value should be a track kind (captions, etc.)
-vjs.Player.prototype.showTextTrack = function(id, disableSameKind){
-  var tracks = this.textTracks_,
-      i = 0,
-      j = tracks.length,
-      track, showTrack, kind;
-
-  // Find Track with same ID
-  for (;i<j;i++) {
-    track = tracks[i];
-    if (track.id() === id) {
-      track.show();
-      showTrack = track;
-
-    // Disable tracks of the same kind
-    } else if (disableSameKind && track.kind() == disableSameKind && track.mode() > 0) {
-      track.disable();
-    }
-  }
-
-  // Get track kind from shown track or disableSameKind
-  kind = (showTrack) ? showTrack.kind() : ((disableSameKind) ? disableSameKind : false);
-
-  // Trigger trackchange event, captionstrackchange, subtitlestrackchange, etc.
-  if (kind) {
-    this.trigger(kind+'trackchange');
-  }
-
-  return this;
-};
-
-/**
- * The base class for all text tracks
- *
- * Handles the parsing, hiding, and showing of text track cues
- *
- * @param {vjs.Player|Object} player
- * @param {Object=} options
- * @constructor
- */
-vjs.TextTrack = vjs.Component.extend({
-  /** @constructor */
-  init: function(player, options){
-    vjs.Component.call(this, player, options);
-
-    // Apply track info to track object
-    // Options will often be a track element
-
-    // Build ID if one doesn't exist
-    this.id_ = options['id'] || ('vjs_' + options['kind'] + '_' + options['language'] + '_' + vjs.guid++);
-    this.src_ = options['src'];
-    // 'default' is a reserved keyword in js so we use an abbreviated version
-    this.dflt_ = options['default'] || options['dflt'];
-    this.title_ = options['title'];
-    this.language_ = options['srclang'];
-    this.label_ = options['label'];
-    this.cues_ = [];
-    this.activeCues_ = [];
-    this.readyState_ = 0;
-    this.mode_ = 0;
-
-    player.on('dispose', vjs.bind(this, this.deactivate, this.id_));
-  }
-});
-
-/**
- * Track kind value. Captions, subtitles, etc.
- * @private
- */
-vjs.TextTrack.prototype.kind_;
-
-/**
- * Get the track kind value
- * @return {String}
- */
-vjs.TextTrack.prototype.kind = function(){
-  return this.kind_;
-};
-
-/**
- * Track src value
- * @private
- */
-vjs.TextTrack.prototype.src_;
-
-/**
- * Get the track src value
- * @return {String}
- */
-vjs.TextTrack.prototype.src = function(){
-  return this.src_;
-};
-
-/**
- * Track default value
- * If default is used, subtitles/captions to start showing
- * @private
- */
-vjs.TextTrack.prototype.dflt_;
-
-/**
- * Get the track default value. ('default' is a reserved keyword)
- * @return {Boolean}
- */
-vjs.TextTrack.prototype.dflt = function(){
-  return this.dflt_;
-};
-
-/**
- * Track title value
- * @private
- */
-vjs.TextTrack.prototype.title_;
-
-/**
- * Get the track title value
- * @return {String}
- */
-vjs.TextTrack.prototype.title = function(){
-  return this.title_;
-};
-
-/**
- * Language - two letter string to represent track language, e.g. 'en' for English
- * Spec def: readonly attribute DOMString language;
- * @private
- */
-vjs.TextTrack.prototype.language_;
-
-/**
- * Get the track language value
- * @return {String}
- */
-vjs.TextTrack.prototype.language = function(){
-  return this.language_;
-};
-
-/**
- * Track label e.g. 'English'
- * Spec def: readonly attribute DOMString label;
- * @private
- */
-vjs.TextTrack.prototype.label_;
-
-/**
- * Get the track label value
- * @return {String}
- */
-vjs.TextTrack.prototype.label = function(){
-  return this.label_;
-};
-
-/**
- * All cues of the track. Cues have a startTime, endTime, text, and other properties.
- * Spec def: readonly attribute TextTrackCueList cues;
- * @private
- */
-vjs.TextTrack.prototype.cues_;
-
-/**
- * Get the track cues
- * @return {Array}
- */
-vjs.TextTrack.prototype.cues = function(){
-  return this.cues_;
-};
-
-/**
- * ActiveCues is all cues that are currently showing
- * Spec def: readonly attribute TextTrackCueList activeCues;
- * @private
- */
-vjs.TextTrack.prototype.activeCues_;
-
-/**
- * Get the track active cues
- * @return {Array}
- */
-vjs.TextTrack.prototype.activeCues = function(){
-  return this.activeCues_;
-};
-
-/**
- * ReadyState describes if the text file has been loaded
- * const unsigned short NONE = 0;
- * const unsigned short LOADING = 1;
- * const unsigned short LOADED = 2;
- * const unsigned short ERROR = 3;
- * readonly attribute unsigned short readyState;
- * @private
- */
-vjs.TextTrack.prototype.readyState_;
-
-/**
- * Get the track readyState
- * @return {Number}
- */
-vjs.TextTrack.prototype.readyState = function(){
-  return this.readyState_;
-};
-
-/**
- * Mode describes if the track is showing, hidden, or disabled
- * const unsigned short OFF = 0;
- * const unsigned short HIDDEN = 1; (still triggering cuechange events, but not visible)
- * const unsigned short SHOWING = 2;
- * attribute unsigned short mode;
- * @private
- */
-vjs.TextTrack.prototype.mode_;
-
-/**
- * Get the track mode
- * @return {Number}
- */
-vjs.TextTrack.prototype.mode = function(){
-  return this.mode_;
-};
-
-/**
- * Create basic div to hold cue text
- * @return {Element}
- */
-vjs.TextTrack.prototype.createEl = function(){
-  return vjs.Component.prototype.createEl.call(this, 'div', {
-    className: 'vjs-' + this.kind_ + ' vjs-text-track'
+  this.trigger({
+    type: 'addtrack',
+    track: track
   });
 };
 
-/**
- * Show: Mode Showing (2)
- * Indicates that the text track is active. If no attempt has yet been made to obtain the track's cues, the user agent will perform such an attempt momentarily.
- * The user agent is maintaining a list of which cues are active, and events are being fired accordingly.
- * In addition, for text tracks whose kind is subtitles or captions, the cues are being displayed over the video as appropriate;
- * for text tracks whose kind is descriptions, the user agent is making the cues available to the user in a non-visual fashion;
- * and for text tracks whose kind is chapters, the user agent is making available to the user a mechanism by which the user can navigate to any point in the media resource by selecting a cue.
- * The showing by default state is used in conjunction with the default attribute on track elements to indicate that the text track was enabled due to that attribute.
- * This allows the user agent to override the state if a later track is discovered that is more appropriate per the user's preferences.
- */
-vjs.TextTrack.prototype.show = function(){
-  this.activate();
+vjs.TextTrackList.prototype.removeTrack_ = function(rtrack) {
+  var i = 0,
+      l = this.length,
+      result = null,
+      track;
 
-  this.mode_ = 2;
-
-  // Show element.
-  vjs.Component.prototype.show.call(this);
-};
-
-/**
- * Hide: Mode Hidden (1)
- * Indicates that the text track is active, but that the user agent is not actively displaying the cues.
- * If no attempt has yet been made to obtain the track's cues, the user agent will perform such an attempt momentarily.
- * The user agent is maintaining a list of which cues are active, and events are being fired accordingly.
- */
-vjs.TextTrack.prototype.hide = function(){
-  // When hidden, cues are still triggered. Disable to stop triggering.
-  this.activate();
-
-  this.mode_ = 1;
-
-  // Hide element.
-  vjs.Component.prototype.hide.call(this);
-};
-
-/**
- * Disable: Mode Off/Disable (0)
- * Indicates that the text track is not active. Other than for the purposes of exposing the track in the DOM, the user agent is ignoring the text track.
- * No cues are active, no events are fired, and the user agent will not attempt to obtain the track's cues.
- */
-vjs.TextTrack.prototype.disable = function(){
-  // If showing, hide.
-  if (this.mode_ == 2) { this.hide(); }
-
-  // Stop triggering cues
-  this.deactivate();
-
-  // Switch Mode to Off
-  this.mode_ = 0;
-};
-
-/**
- * Turn on cue tracking. Tracks that are showing OR hidden are active.
- */
-vjs.TextTrack.prototype.activate = function(){
-  // Load text file if it hasn't been yet.
-  if (this.readyState_ === 0) { this.load(); }
-
-  // Only activate if not already active.
-  if (this.mode_ === 0) {
-    // Update current cue on timeupdate
-    // Using unique ID for bind function so other tracks don't remove listener
-    this.player_.on('timeupdate', vjs.bind(this, this.update, this.id_));
-
-    // Reset cue time on media end
-    this.player_.on('ended', vjs.bind(this, this.reset, this.id_));
-
-    // Add to display
-    if (this.kind_ === 'captions' || this.kind_ === 'subtitles') {
-      this.player_.getChild('textTrackDisplay').addChild(this);
-    }
-  }
-};
-
-/**
- * Turn off cue tracking.
- */
-vjs.TextTrack.prototype.deactivate = function(){
-  // Using unique ID for bind function so other tracks don't remove listener
-  this.player_.off('timeupdate', vjs.bind(this, this.update, this.id_));
-  this.player_.off('ended', vjs.bind(this, this.reset, this.id_));
-  this.reset(); // Reset
-
-  // Remove from display
-  this.player_.getChild('textTrackDisplay').removeChild(this);
-};
-
-// A readiness state
-// One of the following:
-//
-// Not loaded
-// Indicates that the text track is known to exist (e.g. it has been declared with a track element), but its cues have not been obtained.
-//
-// Loading
-// Indicates that the text track is loading and there have been no fatal errors encountered so far. Further cues might still be added to the track.
-//
-// Loaded
-// Indicates that the text track has been loaded with no fatal errors. No new cues will be added to the track except if the text track corresponds to a MutableTextTrack object.
-//
-// Failed to load
-// Indicates that the text track was enabled, but when the user agent attempted to obtain it, this failed in some way (e.g. URL could not be resolved, network error, unknown text track format). Some or all of the cues are likely missing and will not be obtained.
-vjs.TextTrack.prototype.load = function(){
-
-  // Only load if not loaded yet.
-  if (this.readyState_ === 0) {
-    this.readyState_ = 1;
-    vjs.xhr(this.src_, vjs.bind(this, function(err, response, responseBody){
-      if (err) {
-        return this.onError(err);
-      }
-
-      this.parseCues(responseBody);
-    }));
-  }
-
-};
-
-vjs.TextTrack.prototype.onError = function(err){
-  this.error = err;
-  this.readyState_ = 3;
-  this.trigger('error');
-};
-
-// Parse the WebVTT text format for cue times.
-// TODO: Separate parser into own class so alternative timed text formats can be used. (TTML, DFXP)
-vjs.TextTrack.prototype.parseCues = function(srcContent) {
-  var cue, time, text,
-      lines = srcContent.split('\n'),
-      line = '', id;
-
-  for (var i=1, j=lines.length; i<j; i++) {
-    // Line 0 should be 'WEBVTT', so skipping i=0
-
-    line = vjs.trim(lines[i]); // Trim whitespace and linebreaks
-
-    if (line) { // Loop until a line with content
-
-      // First line could be an optional cue ID
-      // Check if line has the time separator
-      if (line.indexOf('-->') == -1) {
-        id = line;
-        // Advance to next line for timing.
-        line = vjs.trim(lines[++i]);
-      } else {
-        id = this.cues_.length;
-      }
-
-      // First line - Number
-      cue = {
-        id: id, // Cue Number
-        index: this.cues_.length // Position in Array
-      };
-
-      // Timing line
-      time = line.split(/[\t ]+/);
-      cue.startTime = this.parseCueTime(time[0]);
-      cue.endTime = this.parseCueTime(time[2]);
-
-      // Additional lines - Cue Text
-      text = [];
-
-      // Loop until a blank line or end of lines
-      // Assuming trim('') returns false for blank lines
-      while (lines[++i] && (line = vjs.trim(lines[i]))) {
-        text.push(line);
-      }
-
-      cue.text = text.join('<br/>');
-
-      // Add this cue
-      this.cues_.push(cue);
+  for (; i < l; i++) {
+    track = this[i];
+    if (track === rtrack) {
+      this.tracks_.splice(i, 1);
+      break;
     }
   }
 
-  this.readyState_ = 2;
-  this.trigger('loaded');
+  this.trigger({
+    type: 'removetrack',
+    track: rtrack
+  });
 };
 
+vjs.TextTrackList.prototype.getTrackById = function(id) {
+  var i = 0,
+      l = this.length,
+      result = null,
+      track;
 
-vjs.TextTrack.prototype.parseCueTime = function(timeText) {
-  var parts = timeText.split(':'),
-      time = 0,
-      hours, minutes, other, seconds, ms;
-
-  // Check if optional hours place is included
-  // 00:00:00.000 vs. 00:00.000
-  if (parts.length == 3) {
-    hours = parts[0];
-    minutes = parts[1];
-    other = parts[2];
-  } else {
-    hours = 0;
-    minutes = parts[0];
-    other = parts[1];
+  for (; i < l; i++) {
+    track = this[i];
+    if (track.id === id) {
+      result = track;
+      break;
+    }
   }
 
-  // Break other (seconds, milliseconds, and flags) by spaces
-  // TODO: Make additional cue layout settings work with flags
-  other = other.split(/\s+/);
-  // Remove seconds. Seconds is the first part before any spaces.
-  seconds = other.splice(0,1)[0];
-  // Could use either . or , for decimal
-  seconds = seconds.split(/\.|,/);
-  // Get milliseconds
-  ms = parseFloat(seconds[1]);
-  seconds = seconds[0];
+  return result;
+};
+/*
+ * https://html.spec.whatwg.org/multipage/embedded-content.html#texttrackcuelist
+ *
+ * interface TextTrackCueList {
+ *   readonly attribute unsigned long length;
+ *   getter TextTrackCue (unsigned long index);
+ *   TextTrackCue? getCueById(DOMString id);
+ * };
+ */
 
-  // hours => seconds
-  time += parseFloat(hours) * 3600;
-  // minutes => seconds
-  time += parseFloat(minutes) * 60;
-  // Add seconds
-  time += parseFloat(seconds);
-  // Add milliseconds
-  if (ms) { time += ms/1000; }
+vjs.TextTrackCueList = function(cues) {
+  var list = this,
+      prop;
 
-  return time;
+  if (vjs.IS_IE8) {
+    list = document.createElement('custom');
+
+    for (prop in vjs.TextTrackCueList.prototype) {
+      list[prop] = vjs.TextTrackCueList.prototype[prop];
+    }
+  }
+
+  vjs.TextTrackCueList.prototype.setCues_.call(list, cues);
+
+  Object.defineProperty(list, 'length', {
+    get: function() {
+      return this.length_;
+    }
+  });
+
+  if (vjs.IS_IE8) {
+    return list;
+  }
 };
 
-// Update active cues whenever timeupdate events are triggered on the player.
-vjs.TextTrack.prototype.update = function(){
-  if (this.cues_.length > 0) {
+vjs.TextTrackCueList.prototype.setCues_ = function(cues) {
+  var oldLength = this.length || 0,
+      i = 0,
+      l = cues.length,
+      defineProp;
 
-    // Get current player time, adjust for track offset
-    var offset = this.player_.options()['trackTimeOffset'] || 0;
-    var time = this.player_.currentTime() + offset;
+  this.cues_ = cues;
+  this.length_ = cues.length;
 
-    // Check if the new time is outside the time box created by the the last update.
-    if (this.prevChange === undefined || time < this.prevChange || this.nextChange <= time) {
-      var cues = this.cues_,
-
-          // Create a new time box for this state.
-          newNextChange = this.player_.duration(), // Start at beginning of the timeline
-          newPrevChange = 0, // Start at end
-
-          reverse = false, // Set the direction of the loop through the cues. Optimized the cue check.
-          newCues = [], // Store new active cues.
-
-          // Store where in the loop the current active cues are, to provide a smart starting point for the next loop.
-          firstActiveIndex, lastActiveIndex,
-          cue, i; // Loop vars
-
-      // Check if time is going forwards or backwards (scrubbing/rewinding)
-      // If we know the direction we can optimize the starting position and direction of the loop through the cues array.
-      if (time >= this.nextChange || this.nextChange === undefined) { // NextChange should happen
-        // Forwards, so start at the index of the first active cue and loop forward
-        i = (this.firstActiveIndex !== undefined) ? this.firstActiveIndex : 0;
-      } else {
-        // Backwards, so start at the index of the last active cue and loop backward
-        reverse = true;
-        i = (this.lastActiveIndex !== undefined) ? this.lastActiveIndex : cues.length - 1;
-      }
-
-      while (true) { // Loop until broken
-        cue = cues[i];
-
-        // Cue ended at this point
-        if (cue.endTime <= time) {
-          newPrevChange = Math.max(newPrevChange, cue.endTime);
-
-          if (cue.active) {
-            cue.active = false;
-          }
-
-          // No earlier cues should have an active start time.
-          // Nevermind. Assume first cue could have a duration the same as the video.
-          // In that case we need to loop all the way back to the beginning.
-          // if (reverse && cue.startTime) { break; }
-
-        // Cue hasn't started
-        } else if (time < cue.startTime) {
-          newNextChange = Math.min(newNextChange, cue.startTime);
-
-          if (cue.active) {
-            cue.active = false;
-          }
-
-          // No later cues should have an active start time.
-          if (!reverse) { break; }
-
-        // Cue is current
-        } else {
-
-          if (reverse) {
-            // Add cue to front of array to keep in time order
-            newCues.splice(0,0,cue);
-
-            // If in reverse, the first current cue is our lastActiveCue
-            if (lastActiveIndex === undefined) { lastActiveIndex = i; }
-            firstActiveIndex = i;
-          } else {
-            // Add cue to end of array
-            newCues.push(cue);
-
-            // If forward, the first current cue is our firstActiveIndex
-            if (firstActiveIndex === undefined) { firstActiveIndex = i; }
-            lastActiveIndex = i;
-          }
-
-          newNextChange = Math.min(newNextChange, cue.endTime);
-          newPrevChange = Math.max(newPrevChange, cue.startTime);
-
-          cue.active = true;
+  defineProp = function(i) {
+    if (!(''+i in this)) {
+      Object.defineProperty(this, '' + i, {
+        get: function() {
+          return this.cues_[i];
         }
+      });
+    }
+  };
 
-        if (reverse) {
-          // Reverse down the array of cues, break if at first
-          if (i === 0) { break; } else { i--; }
-        } else {
-          // Walk up the array fo cues, break if at last
-          if (i === cues.length - 1) { break; } else { i++; }
-        }
-
-      }
-
-      this.activeCues_ = newCues;
-      this.nextChange = newNextChange;
-      this.prevChange = newPrevChange;
-      this.firstActiveIndex = firstActiveIndex;
-      this.lastActiveIndex = lastActiveIndex;
-
-      this.updateDisplay();
-
-      this.trigger('cuechange');
+  if (oldLength < l) {
+    i = oldLength;
+    for(; i < l; i++) {
+      defineProp.call(this, i);
     }
   }
 };
 
-// Add cue HTML to display
-vjs.TextTrack.prototype.updateDisplay = function(){
-  var cues = this.activeCues_,
-      html = '',
-      i=0,j=cues.length;
+vjs.TextTrackCueList.prototype.getCueById = function(id) {
+  var i = 0,
+      l = this.length,
+      result = null,
+      cue;
 
-  for (;i<j;i++) {
-    html += '<span class="vjs-tt-cue">'+cues[i].text+'</span>';
+  for (; i < l; i++) {
+    cue = this[i];
+    if (cue.id === id) {
+      result = cue;
+      break;
+    }
   }
 
-  this.el_.innerHTML = html;
+  return result;
 };
-
-// Set all loop helper values back
-vjs.TextTrack.prototype.reset = function(){
-  this.nextChange = 0;
-  this.prevChange = this.player_.duration();
-  this.firstActiveIndex = 0;
-  this.lastActiveIndex = 0;
-};
-
-// Create specific track types
-/**
- * The track component for managing the hiding and showing of captions
- *
- * @constructor
- */
-vjs.CaptionsTrack = vjs.TextTrack.extend();
-vjs.CaptionsTrack.prototype.kind_ = 'captions';
-// Exporting here because Track creation requires the track kind
-// to be available on global object. e.g. new window['videojs'][Kind + 'Track']
-
-/**
- * The track component for managing the hiding and showing of subtitles
- *
- * @constructor
- */
-vjs.SubtitlesTrack = vjs.TextTrack.extend();
-vjs.SubtitlesTrack.prototype.kind_ = 'subtitles';
-
-/**
- * The track component for managing the hiding and showing of chapters
- *
- * @constructor
- */
-vjs.ChaptersTrack = vjs.TextTrack.extend();
-vjs.ChaptersTrack.prototype.kind_ = 'chapters';
-
+(function() {
+'use strict';
 
 /* Text Track Display
 ============================================================================= */
@@ -8481,20 +8926,174 @@ vjs.TextTrackDisplay = vjs.Component.extend({
   init: function(player, options, ready){
     vjs.Component.call(this, player, options, ready);
 
+    player.on('loadstart', vjs.bind(this, this.toggleDisplay));
+
     // This used to be called during player init, but was causing an error
     // if a track should show by default and the display hadn't loaded yet.
     // Should probably be moved to an external track loader when we support
     // tracks that don't need a display.
-    if (player.options_['tracks'] && player.options_['tracks'].length > 0) {
-      this.player_.addTextTracks(player.options_['tracks']);
-    }
+    player.ready(vjs.bind(this, function() {
+      if (player.tech && player.tech['featuresNativeTextTracks']) {
+        this.hide();
+        return;
+      }
+
+      var i, tracks, track;
+
+      player.on('fullscreenchange', vjs.bind(this, this.updateDisplay));
+
+      tracks = player.options_['tracks'] || [];
+      for (i = 0; i < tracks.length; i++) {
+        track = tracks[i];
+        this.player_.addRemoteTextTrack(track);
+      }
+    }));
   }
 });
+
+vjs.TextTrackDisplay.prototype.toggleDisplay = function() {
+  if (this.player_.tech && this.player_.tech['featuresNativeTextTracks']) {
+    this.hide();
+  } else {
+    this.show();
+  }
+};
 
 vjs.TextTrackDisplay.prototype.createEl = function(){
   return vjs.Component.prototype.createEl.call(this, 'div', {
     className: 'vjs-text-track-display'
   });
+};
+
+vjs.TextTrackDisplay.prototype.clearDisplay = function() {
+  if (typeof window['WebVTT'] === 'function') {
+    window['WebVTT']['processCues'](window, [], this.el_);
+  }
+};
+
+// Add cue HTML to display
+var constructColor = function(color, opacity) {
+  return 'rgba(' +
+    // color looks like "#f0e"
+    parseInt(color[1] + color[1], 16) + ',' +
+    parseInt(color[2] + color[2], 16) + ',' +
+    parseInt(color[3] + color[3], 16) + ',' +
+    opacity + ')';
+};
+var darkGray = '#222';
+var lightGray = '#ccc';
+var fontMap = {
+  monospace:             'monospace',
+  sansSerif:             'sans-serif',
+  serif:                 'serif',
+  monospaceSansSerif:    '"Andale Mono", "Lucida Console", monospace',
+  monospaceSerif:        '"Courier New", monospace',
+  proportionalSansSerif: 'sans-serif',
+  proportionalSerif:     'serif',
+  casual:                '"Comic Sans MS", Impact, fantasy',
+  script:                '"Monotype Corsiva", cursive',
+  smallcaps:             '"Andale Mono", "Lucida Console", monospace, sans-serif'
+};
+var tryUpdateStyle = function(el, style, rule) {
+  // some style changes will throw an error, particularly in IE8. Those should be noops.
+  try {
+    el.style[style] = rule;
+  } catch (e) {}
+};
+
+vjs.TextTrackDisplay.prototype.updateDisplay = function() {
+  var tracks = this.player_.textTracks(),
+      i = 0,
+      track;
+
+  this.clearDisplay();
+
+  if (!tracks) {
+    return;
+  }
+
+  for (; i < tracks.length; i++) {
+    track = tracks[i];
+    if (track['mode'] === 'showing') {
+      this.updateForTrack(track);
+    }
+  }
+};
+
+vjs.TextTrackDisplay.prototype.updateForTrack = function(track) {
+  if (typeof window['WebVTT'] !== 'function' || !track['activeCues']) {
+    return;
+  }
+
+  var i = 0,
+      property,
+      cueDiv,
+      overrides = this.player_['textTrackSettings'].getValues(),
+      fontSize,
+      cues = [];
+
+  for (; i < track['activeCues'].length; i++) {
+    cues.push(track['activeCues'][i]);
+  }
+
+  window['WebVTT']['processCues'](window, track['activeCues'], this.el_);
+
+  i = cues.length;
+  while (i--) {
+    cueDiv = cues[i].displayState;
+    if (overrides.color) {
+      cueDiv.firstChild.style.color = overrides.color;
+    }
+    if (overrides.textOpacity) {
+      tryUpdateStyle(cueDiv.firstChild,
+                     'color',
+                     constructColor(overrides.color || '#fff',
+                                    overrides.textOpacity));
+    }
+    if (overrides.backgroundColor) {
+      cueDiv.firstChild.style.backgroundColor = overrides.backgroundColor;
+    }
+    if (overrides.backgroundOpacity) {
+      tryUpdateStyle(cueDiv.firstChild,
+                     'backgroundColor',
+                     constructColor(overrides.backgroundColor || '#000',
+                                    overrides.backgroundOpacity));
+    }
+    if (overrides.windowColor) {
+      if (overrides.windowOpacity) {
+        tryUpdateStyle(cueDiv,
+                       'backgroundColor',
+                       constructColor(overrides.windowColor, overrides.windowOpacity));
+      } else {
+        cueDiv.style.backgroundColor = overrides.windowColor;
+      }
+    }
+    if (overrides.edgeStyle) {
+      if (overrides.edgeStyle === 'dropshadow') {
+        cueDiv.firstChild.style.textShadow = '2px 2px 3px ' + darkGray + ', 2px 2px 4px ' + darkGray + ', 2px 2px 5px ' + darkGray;
+      } else if (overrides.edgeStyle === 'raised') {
+        cueDiv.firstChild.style.textShadow = '1px 1px ' + darkGray + ', 2px 2px ' + darkGray + ', 3px 3px ' + darkGray;
+      } else if (overrides.edgeStyle === 'depressed') {
+        cueDiv.firstChild.style.textShadow = '1px 1px ' + lightGray + ', 0 1px ' + lightGray + ', -1px -1px ' + darkGray + ', 0 -1px ' + darkGray;
+      } else if (overrides.edgeStyle === 'uniform') {
+        cueDiv.firstChild.style.textShadow = '0 0 4px ' + darkGray + ', 0 0 4px ' + darkGray + ', 0 0 4px ' + darkGray + ', 0 0 4px ' + darkGray;
+      }
+    }
+    if (overrides.fontPercent && overrides.fontPercent !== 1) {
+      fontSize = window.parseFloat(cueDiv.style.fontSize);
+      cueDiv.style.fontSize = (fontSize * overrides.fontPercent) + 'px';
+      cueDiv.style.height = 'auto';
+      cueDiv.style.top = 'auto';
+      cueDiv.style.bottom = '2px';
+    }
+    if (overrides.fontFamily && overrides.fontFamily !== 'default') {
+      if (overrides.fontFamily === 'small-caps') {
+        cueDiv.firstChild.style.fontVariant = 'small-caps';
+      } else {
+        cueDiv.firstChild.style.fontFamily = fontMap[overrides.fontFamily];
+      }
+    }
+  }
 };
 
 
@@ -8506,24 +9105,98 @@ vjs.TextTrackDisplay.prototype.createEl = function(){
 vjs.TextTrackMenuItem = vjs.MenuItem.extend({
   /** @constructor */
   init: function(player, options){
-    var track = this.track = options['track'];
+    var track = this.track = options['track'],
+        tracks = player.textTracks(),
+        changeHandler,
+        event;
+
+    if (tracks) {
+      changeHandler = vjs.bind(this, function() {
+        var selected = this.track['mode'] === 'showing',
+            track,
+            i,
+            l;
+
+        if (this instanceof vjs.OffTextTrackMenuItem) {
+          selected = true;
+
+          i = 0,
+          l = tracks.length;
+
+          for (; i < l; i++) {
+            track = tracks[i];
+            if (track['kind'] === this.track['kind'] && track['mode'] === 'showing') {
+              selected = false;
+              break;
+            }
+          }
+        }
+
+        this.selected(selected);
+      });
+      tracks.addEventListener('change', changeHandler);
+      player.on('dispose', function() {
+        tracks.removeEventListener('change', changeHandler);
+      });
+    }
 
     // Modify options for parent MenuItem class's init.
-    options['label'] = track.label();
-    options['selected'] = track.dflt();
+    options['label'] = track['label'] || track['language'] || 'Unknown';
+    options['selected'] = track['default'] || track['mode'] === 'showing';
     vjs.MenuItem.call(this, player, options);
 
-    this.on(player, track.kind() + 'trackchange', this.update);
+    // iOS7 doesn't dispatch change events to TextTrackLists when an
+    // associated track's mode changes. Without something like
+    // Object.observe() (also not present on iOS7), it's not
+    // possible to detect changes to the mode attribute and polyfill
+    // the change event. As a poor substitute, we manually dispatch
+    // change events whenever the controls modify the mode.
+    if (tracks && tracks.onchange === undefined) {
+      this.on(['tap', 'click'], function() {
+        if (typeof window.Event !== 'object') {
+          // Android 2.3 throws an Illegal Constructor error for window.Event
+          try {
+            event = new window.Event('change');
+          } catch(err){}
+        }
+
+        if (!event) {
+          event = document.createEvent('Event');
+          event.initEvent('change', true, true);
+        }
+
+        tracks.dispatchEvent(event);
+      });
+    }
   }
 });
 
 vjs.TextTrackMenuItem.prototype.onClick = function(){
-  vjs.MenuItem.prototype.onClick.call(this);
-  this.player_.showTextTrack(this.track.id_, this.track.kind());
-};
+  var kind = this.track['kind'],
+      tracks = this.player_.textTracks(),
+      mode,
+      track,
+      i = 0;
 
-vjs.TextTrackMenuItem.prototype.update = function(){
-  this.selected(this.track.mode() == 2);
+  vjs.MenuItem.prototype.onClick.call(this);
+
+  if (!tracks) {
+    return;
+  }
+
+  for (; i < tracks.length; i++) {
+    track = tracks[i];
+
+    if (track['kind'] !== kind) {
+      continue;
+    }
+
+    if (track === this.track) {
+      track['mode'] = 'showing';
+    } else {
+      track['mode'] = 'disabled';
+    }
+  }
 };
 
 /**
@@ -8537,35 +9210,34 @@ vjs.OffTextTrackMenuItem = vjs.TextTrackMenuItem.extend({
     // Create pseudo track info
     // Requires options['kind']
     options['track'] = {
-      kind: function() { return options['kind']; },
-      player: player,
-      label: function(){ return options['kind'] + ' off'; },
-      dflt: function(){ return false; },
-      mode: function(){ return false; }
+      'kind': options['kind'],
+      'player': player,
+      'label': options['kind'] + ' off',
+      'default': false,
+      'mode': 'disabled'
     };
     vjs.TextTrackMenuItem.call(this, player, options);
     this.selected(true);
   }
 });
 
-vjs.OffTextTrackMenuItem.prototype.onClick = function(){
-  vjs.TextTrackMenuItem.prototype.onClick.call(this);
-  this.player_.showTextTrack(this.track.id_, this.track.kind());
-};
+vjs.CaptionSettingsMenuItem = vjs.TextTrackMenuItem.extend({
+  init: function(player, options) {
+    options['track'] = {
+      'kind': options['kind'],
+      'player': player,
+      'label': options['kind'] + ' settings',
+      'default': false,
+      mode: 'disabled'
+    };
 
-vjs.OffTextTrackMenuItem.prototype.update = function(){
-  var tracks = this.player_.textTracks(),
-      i=0, j=tracks.length, track,
-      off = true;
-
-  for (;i<j;i++) {
-    track = tracks[i];
-    if (track.kind() == this.track.kind() && track.mode() == 2) {
-      off = false;
-    }
+    vjs.TextTrackMenuItem.call(this, player, options);
+    this.addClass('vjs-texttrack-settings');
   }
+});
 
-  this.selected(off);
+vjs.CaptionSettingsMenuItem.prototype.onClick = function() {
+  this.player().getChild('textTrackSettings').show();
 };
 
 /**
@@ -8576,49 +9248,53 @@ vjs.OffTextTrackMenuItem.prototype.update = function(){
 vjs.TextTrackButton = vjs.MenuButton.extend({
   /** @constructor */
   init: function(player, options){
+    var tracks, updateHandler;
+
     vjs.MenuButton.call(this, player, options);
+
+    tracks = this.player_.textTracks();
 
     if (this.items.length <= 1) {
       this.hide();
     }
+
+    if (!tracks) {
+      return;
+    }
+
+    updateHandler = vjs.bind(this, this.update);
+    tracks.addEventListener('removetrack', updateHandler);
+    tracks.addEventListener('addtrack', updateHandler);
+
+    this.player_.on('dispose', function() {
+      tracks.removeEventListener('removetrack', updateHandler);
+      tracks.removeEventListener('addtrack', updateHandler);
+    });
   }
 });
 
-// vjs.TextTrackButton.prototype.buttonPressed = false;
-
-// vjs.TextTrackButton.prototype.createMenu = function(){
-//   var menu = new vjs.Menu(this.player_);
-
-//   // Add a title list item to the top
-//   // menu.el().appendChild(vjs.createEl('li', {
-//   //   className: 'vjs-menu-title',
-//   //   innerHTML: vjs.capitalize(this.kind_),
-//   //   tabindex: -1
-//   // }));
-
-//   this.items = this.createItems();
-
-//   // Add menu items to the menu
-//   for (var i = 0; i < this.items.length; i++) {
-//     menu.addItem(this.items[i]);
-//   }
-
-//   // Add list to element
-//   this.addChild(menu);
-
-//   return menu;
-// };
-
 // Create a menu item for each text track
 vjs.TextTrackButton.prototype.createItems = function(){
-  var items = [], track;
+  var items = [], track, tracks;
+
+  if (this instanceof vjs.CaptionsButton && !(this.player().tech && this.player().tech['featuresNativeTextTracks'])) {
+    items.push(new vjs.CaptionSettingsMenuItem(this.player_, { 'kind': this.kind_ }));
+  }
 
   // Add an OFF menu item to turn all tracks off
   items.push(new vjs.OffTextTrackMenuItem(this.player_, { 'kind': this.kind_ }));
 
-  for (var i = 0; i < this.player_.textTracks().length; i++) {
-    track = this.player_.textTracks()[i];
-    if (track.kind() === this.kind_) {
+  tracks = this.player_.textTracks();
+
+  if (!tracks) {
+    return items;
+  }
+
+  for (var i = 0; i < tracks.length; i++) {
+    track = tracks[i];
+
+    // only add tracks that are of the appropriate kind and have a label
+    if (track['kind'] === this.kind_) {
       items.push(new vjs.TextTrackMenuItem(this.player_, {
         'track': track
       }));
@@ -8643,6 +9319,22 @@ vjs.CaptionsButton = vjs.TextTrackButton.extend({
 vjs.CaptionsButton.prototype.kind_ = 'captions';
 vjs.CaptionsButton.prototype.buttonText = 'Captions';
 vjs.CaptionsButton.prototype.className = 'vjs-captions-button';
+
+vjs.CaptionsButton.prototype.update = function() {
+  var threshold = 2;
+  vjs.TextTrackButton.prototype.update.call(this);
+
+  // if native, then threshold is 1 because no settings button
+  if (this.player().tech && this.player().tech['featuresNativeTextTracks']) {
+    threshold = 1;
+  }
+
+  if (this.items && this.items.length > threshold) {
+    this.show();
+  } else {
+    this.hide();
+  }
+};
 
 /**
  * The button component for toggling and selecting subtitles
@@ -8680,11 +9372,17 @@ vjs.ChaptersButton.prototype.className = 'vjs-chapters-button';
 
 // Create a menu item for each text track
 vjs.ChaptersButton.prototype.createItems = function(){
-  var items = [], track;
+  var items = [], track, tracks;
 
-  for (var i = 0; i < this.player_.textTracks().length; i++) {
-    track = this.player_.textTracks()[i];
-    if (track.kind() === this.kind_) {
+  tracks = this.player_.textTracks();
+
+  if (!tracks) {
+    return items;
+  }
+
+  for (var i = 0; i < tracks.length; i++) {
+    track = tracks[i];
+    if (track['kind'] === this.kind_) {
       items.push(new vjs.TextTrackMenuItem(this.player_, {
         'track': track
       }));
@@ -8695,18 +9393,23 @@ vjs.ChaptersButton.prototype.createItems = function(){
 };
 
 vjs.ChaptersButton.prototype.createMenu = function(){
-  var tracks = this.player_.textTracks(),
+  var tracks = this.player_.textTracks() || [],
       i = 0,
-      j = tracks.length,
+      l = tracks.length,
       track, chaptersTrack,
       items = this.items = [];
 
-  for (;i<j;i++) {
+  for (; i < l; i++) {
     track = tracks[i];
-    if (track.kind() == this.kind_) {
-      if (track.readyState() === 0) {
-        track.load();
-        track.on('loaded', vjs.bind(this, this.createMenu));
+    if (track['kind'] == this.kind_) {
+      if (!track.cues) {
+        track['mode'] = 'hidden';
+        /* jshint loopfunc:true */
+        // TODO see if we can figure out a better way of doing this https://github.com/videojs/video.js/issues/1864
+        window.setTimeout(vjs.bind(this, function() {
+          this.createMenu();
+        }), 100);
+        /* jshint loopfunc:false */
       } else {
         chaptersTrack = track;
         break;
@@ -8725,11 +9428,11 @@ vjs.ChaptersButton.prototype.createMenu = function(){
   }
 
   if (chaptersTrack) {
-    var cues = chaptersTrack.cues_, cue, mi;
+    var cues = chaptersTrack['cues'], cue, mi;
     i = 0;
-    j = cues.length;
+    l = cues.length;
 
-    for (;i<j;i++) {
+    for (; i < l; i++) {
       cue = cues[i];
 
       mi = new vjs.ChaptersTrackMenuItem(this.player_, {
@@ -8764,10 +9467,10 @@ vjs.ChaptersTrackMenuItem = vjs.MenuItem.extend({
 
     // Modify options for parent MenuItem class's init.
     options['label'] = cue.text;
-    options['selected'] = (cue.startTime <= currentTime && currentTime < cue.endTime);
+    options['selected'] = (cue['startTime'] <= currentTime && currentTime < cue['endTime']);
     vjs.MenuItem.call(this, player, options);
 
-    track.on('cuechange', vjs.bind(this, this.update));
+    track.addEventListener('cuechange', vjs.bind(this, this.update));
   }
 });
 
@@ -8782,22 +9485,293 @@ vjs.ChaptersTrackMenuItem.prototype.update = function(){
       currentTime = this.player_.currentTime();
 
   // vjs.log(currentTime, cue.startTime);
-  this.selected(cue.startTime <= currentTime && currentTime < cue.endTime);
+  this.selected(cue['startTime'] <= currentTime && currentTime < cue['endTime']);
 };
+})();
+(function() {
+  'use strict';
 
-// Add Buttons to controlBar
-vjs.obj.merge(vjs.ControlBar.prototype.options_['children'], {
-  'subtitlesButton': {},
-  'captionsButton': {},
-  'chaptersButton': {}
-});
+  vjs.TextTrackSettings = vjs.Component.extend({
+    init: function(player, options) {
+      vjs.Component.call(this, player, options);
+      this.hide();
 
-// vjs.Cue = vjs.Component.extend({
-//   /** @constructor */
-//   init: function(player, options){
-//     vjs.Component.call(this, player, options);
-//   }
-// });
+      vjs.on(this.el().querySelector('.vjs-done-button'), 'click', vjs.bind(this, function() {
+        this.saveSettings();
+        this.hide();
+      }));
+
+      vjs.on(this.el().querySelector('.vjs-default-button'), 'click', vjs.bind(this, function() {
+        this.el().querySelector('.vjs-fg-color > select').selectedIndex = 0;
+        this.el().querySelector('.vjs-bg-color > select').selectedIndex = 0;
+        this.el().querySelector('.window-color > select').selectedIndex = 0;
+        this.el().querySelector('.vjs-text-opacity > select').selectedIndex = 0;
+        this.el().querySelector('.vjs-bg-opacity > select').selectedIndex = 0;
+        this.el().querySelector('.vjs-window-opacity > select').selectedIndex = 0;
+        this.el().querySelector('.vjs-edge-style select').selectedIndex = 0;
+        this.el().querySelector('.vjs-font-family select').selectedIndex = 0;
+        this.el().querySelector('.vjs-font-percent select').selectedIndex = 2;
+        this.updateDisplay();
+      }));
+
+      vjs.on(this.el().querySelector('.vjs-fg-color > select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-bg-color > select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.window-color > select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-text-opacity > select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-bg-opacity > select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-window-opacity > select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-font-percent select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-edge-style select'), 'change', vjs.bind(this, this.updateDisplay));
+      vjs.on(this.el().querySelector('.vjs-font-family select'), 'change', vjs.bind(this, this.updateDisplay));
+
+      if (player.options()['persistTextTrackSettings']) {
+        this.restoreSettings();
+      }
+    }
+  });
+
+  vjs.TextTrackSettings.prototype.createEl = function() {
+    return vjs.Component.prototype.createEl.call(this, 'div', {
+      className: 'vjs-caption-settings vjs-modal-overlay',
+      innerHTML: captionOptionsMenuTemplate()
+    });
+  };
+
+  vjs.TextTrackSettings.prototype.getValues = function() {
+    var el, bgOpacity, textOpacity, windowOpacity, textEdge, fontFamily, fgColor, bgColor, windowColor, result, name, fontPercent;
+
+    el = this.el();
+
+    textEdge = getSelectedOptionValue(el.querySelector('.vjs-edge-style select'));
+    fontFamily = getSelectedOptionValue(el.querySelector('.vjs-font-family select'));
+    fgColor = getSelectedOptionValue(el.querySelector('.vjs-fg-color > select'));
+    textOpacity = getSelectedOptionValue(el.querySelector('.vjs-text-opacity > select'));
+    bgColor = getSelectedOptionValue(el.querySelector('.vjs-bg-color > select'));
+    bgOpacity = getSelectedOptionValue(el.querySelector('.vjs-bg-opacity > select'));
+    windowColor = getSelectedOptionValue(el.querySelector('.window-color > select'));
+    windowOpacity = getSelectedOptionValue(el.querySelector('.vjs-window-opacity > select'));
+    fontPercent = window['parseFloat'](getSelectedOptionValue(el.querySelector('.vjs-font-percent > select')));
+
+    result = {
+      'backgroundOpacity': bgOpacity,
+      'textOpacity': textOpacity,
+      'windowOpacity': windowOpacity,
+      'edgeStyle': textEdge,
+      'fontFamily': fontFamily,
+      'color': fgColor,
+      'backgroundColor': bgColor,
+      'windowColor': windowColor,
+      'fontPercent': fontPercent
+    };
+    for (name in result) {
+      if (result[name] === '' || result[name] === 'none' || (name === 'fontPercent' && result[name] === 1.00)) {
+        delete result[name];
+      }
+    }
+    return result;
+  };
+
+  vjs.TextTrackSettings.prototype.setValues = function(values) {
+    var el = this.el(), fontPercent;
+
+    setSelectedOption(el.querySelector('.vjs-edge-style select'), values.edgeStyle);
+    setSelectedOption(el.querySelector('.vjs-font-family select'), values.fontFamily);
+    setSelectedOption(el.querySelector('.vjs-fg-color > select'), values.color);
+    setSelectedOption(el.querySelector('.vjs-text-opacity > select'), values.textOpacity);
+    setSelectedOption(el.querySelector('.vjs-bg-color > select'), values.backgroundColor);
+    setSelectedOption(el.querySelector('.vjs-bg-opacity > select'), values.backgroundOpacity);
+    setSelectedOption(el.querySelector('.window-color > select'), values.windowColor);
+    setSelectedOption(el.querySelector('.vjs-window-opacity > select'), values.windowOpacity);
+
+    fontPercent = values.fontPercent;
+
+    if (fontPercent) {
+      fontPercent = fontPercent.toFixed(2);
+    }
+
+    setSelectedOption(el.querySelector('.vjs-font-percent > select'), fontPercent);
+  };
+
+  vjs.TextTrackSettings.prototype.restoreSettings = function() {
+    var values;
+    try {
+      values = JSON.parse(window.localStorage.getItem('vjs-text-track-settings'));
+    } catch (e) {}
+
+    if (values) {
+      this.setValues(values);
+    }
+  };
+
+  vjs.TextTrackSettings.prototype.saveSettings = function() {
+    var values;
+
+    if (!this.player_.options()['persistTextTrackSettings']) {
+      return;
+    }
+
+    values = this.getValues();
+    try {
+      if (!vjs.isEmpty(values)) {
+        window.localStorage.setItem('vjs-text-track-settings', JSON.stringify(values));
+      } else {
+        window.localStorage.removeItem('vjs-text-track-settings');
+      }
+    } catch (e) {}
+  };
+
+  vjs.TextTrackSettings.prototype.updateDisplay = function() {
+    var ttDisplay = this.player_.getChild('textTrackDisplay');
+    if (ttDisplay) {
+      ttDisplay.updateDisplay();
+    }
+  };
+
+  function getSelectedOptionValue(target) {
+    var selectedOption;
+    // not all browsers support selectedOptions, so, fallback to options
+    if (target.selectedOptions) {
+      selectedOption = target.selectedOptions[0];
+    } else if (target.options) {
+      selectedOption = target.options[target.options.selectedIndex];
+    }
+
+    return selectedOption.value;
+  }
+
+  function setSelectedOption(target, value) {
+    var i, option;
+
+    if (!value) {
+      return;
+    }
+
+    for (i = 0; i < target.options.length; i++) {
+      option = target.options[i];
+      if (option.value === value) {
+        break;
+      }
+    }
+
+    target.selectedIndex = i;
+  }
+
+  function captionOptionsMenuTemplate() {
+    return '<div class="vjs-tracksettings">' +
+        '<div class="vjs-tracksettings-colors">' +
+          '<div class="vjs-fg-color vjs-tracksetting">' +
+              '<label class="vjs-label">Foreground</label>' +
+              '<select>' +
+                '<option value="">---</option>' +
+                '<option value="#FFF">White</option>' +
+                '<option value="#000">Black</option>' +
+                '<option value="#F00">Red</option>' +
+                '<option value="#0F0">Green</option>' +
+                '<option value="#00F">Blue</option>' +
+                '<option value="#FF0">Yellow</option>' +
+                '<option value="#F0F">Magenta</option>' +
+                '<option value="#0FF">Cyan</option>' +
+              '</select>' +
+              '<span class="vjs-text-opacity vjs-opacity">' +
+                '<select>' +
+                  '<option value="">---</option>' +
+                  '<option value="1">Opaque</option>' +
+                  '<option value="0.5">Semi-Opaque</option>' +
+                '</select>' +
+              '</span>' +
+          '</div>' + // vjs-fg-color
+          '<div class="vjs-bg-color vjs-tracksetting">' +
+              '<label class="vjs-label">Background</label>' +
+              '<select>' +
+                '<option value="">---</option>' +
+                '<option value="#FFF">White</option>' +
+                '<option value="#000">Black</option>' +
+                '<option value="#F00">Red</option>' +
+                '<option value="#0F0">Green</option>' +
+                '<option value="#00F">Blue</option>' +
+                '<option value="#FF0">Yellow</option>' +
+                '<option value="#F0F">Magenta</option>' +
+                '<option value="#0FF">Cyan</option>' +
+              '</select>' +
+              '<span class="vjs-bg-opacity vjs-opacity">' +
+                  '<select>' +
+                    '<option value="">---</option>' +
+                    '<option value="1">Opaque</option>' +
+                    '<option value="0.5">Semi-Transparent</option>' +
+                    '<option value="0">Transparent</option>' +
+                  '</select>' +
+              '</span>' +
+          '</div>' + // vjs-bg-color
+          '<div class="window-color vjs-tracksetting">' +
+              '<label class="vjs-label">Window</label>' +
+              '<select>' +
+                '<option value="">---</option>' +
+                '<option value="#FFF">White</option>' +
+                '<option value="#000">Black</option>' +
+                '<option value="#F00">Red</option>' +
+                '<option value="#0F0">Green</option>' +
+                '<option value="#00F">Blue</option>' +
+                '<option value="#FF0">Yellow</option>' +
+                '<option value="#F0F">Magenta</option>' +
+                '<option value="#0FF">Cyan</option>' +
+              '</select>' +
+              '<span class="vjs-window-opacity vjs-opacity">' +
+                  '<select>' +
+                    '<option value="">---</option>' +
+                    '<option value="1">Opaque</option>' +
+                    '<option value="0.5">Semi-Transparent</option>' +
+                    '<option value="0">Transparent</option>' +
+                  '</select>' +
+              '</span>' +
+          '</div>' + // vjs-window-color
+        '</div>' + // vjs-tracksettings
+        '<div class="vjs-tracksettings-font">' +
+          '<div class="vjs-font-percent vjs-tracksetting">' +
+            '<label class="vjs-label">Font Size</label>' +
+            '<select>' +
+              '<option value="0.50">50%</option>' +
+              '<option value="0.75">75%</option>' +
+              '<option value="1.00" selected>100%</option>' +
+              '<option value="1.25">125%</option>' +
+              '<option value="1.50">150%</option>' +
+              '<option value="1.75">175%</option>' +
+              '<option value="2.00">200%</option>' +
+              '<option value="3.00">300%</option>' +
+              '<option value="4.00">400%</option>' +
+            '</select>' +
+          '</div>' + // vjs-font-percent
+          '<div class="vjs-edge-style vjs-tracksetting">' +
+            '<label class="vjs-label">Text Edge Style</label>' +
+            '<select>' +
+              '<option value="none">None</option>' +
+              '<option value="raised">Raised</option>' +
+              '<option value="depressed">Depressed</option>' +
+              '<option value="uniform">Uniform</option>' +
+              '<option value="dropshadow">Dropshadow</option>' +
+            '</select>' +
+          '</div>' + // vjs-edge-style
+          '<div class="vjs-font-family vjs-tracksetting">' +
+            '<label class="vjs-label">Font Family</label>' +
+            '<select>' +
+              '<option value="">Default</option>' +
+              '<option value="monospaceSerif">Monospace Serif</option>' +
+              '<option value="proportionalSerif">Proportional Serif</option>' +
+              '<option value="monospaceSansSerif">Monospace Sans-Serif</option>' +
+              '<option value="proportionalSansSerif">Proportional Sans-Serif</option>' +
+              '<option value="casual">Casual</option>' +
+              '<option value="script">Script</option>' +
+              '<option value="small-caps">Small Caps</option>' +
+            '</select>' +
+          '</div>' + // vjs-font-family
+        '</div>' +
+      '</div>' +
+      '<div class="vjs-tracksettings-controls">' +
+        '<button class="vjs-default-button">Defaults</button>' +
+        '<button class="vjs-done-button">Done</button>' +
+      '</div>';
+  }
+
+})();
 /**
  * @fileoverview Add JSON support
  * @suppress {undefinedVars}
@@ -8963,3 +9937,1954 @@ vjs.autoSetupTimeout(1);
 vjs.plugin = function(name, init){
   vjs.Player.prototype[name] = init;
 };
+
+/* vtt.js - v0.12.1 (https://github.com/mozilla/vtt.js) built on 08-07-2015 */
+
+(function(root) {
+  var vttjs = root.vttjs = {};
+  var cueShim = vttjs.VTTCue;
+  var regionShim = vttjs.VTTRegion;
+  var oldVTTCue = root.VTTCue;
+  var oldVTTRegion = root.VTTRegion;
+
+  vttjs.shim = function() {
+    vttjs.VTTCue = cueShim;
+    vttjs.VTTRegion = regionShim;
+  };
+
+  vttjs.restore = function() {
+    vttjs.VTTCue = oldVTTCue;
+    vttjs.VTTRegion = oldVTTRegion;
+  };
+}(this));
+
+/**
+ * Copyright 2013 vtt.js Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+(function(root, vttjs) {
+
+  var autoKeyword = "auto";
+  var directionSetting = {
+    "": true,
+    "lr": true,
+    "rl": true
+  };
+  var alignSetting = {
+    "start": true,
+    "middle": true,
+    "end": true,
+    "left": true,
+    "right": true
+  };
+
+  function findDirectionSetting(value) {
+    if (typeof value !== "string") {
+      return false;
+    }
+    var dir = directionSetting[value.toLowerCase()];
+    return dir ? value.toLowerCase() : false;
+  }
+
+  function findAlignSetting(value) {
+    if (typeof value !== "string") {
+      return false;
+    }
+    var align = alignSetting[value.toLowerCase()];
+    return align ? value.toLowerCase() : false;
+  }
+
+  function extend(obj) {
+    var i = 1;
+    for (; i < arguments.length; i++) {
+      var cobj = arguments[i];
+      for (var p in cobj) {
+        obj[p] = cobj[p];
+      }
+    }
+
+    return obj;
+  }
+
+  function VTTCue(startTime, endTime, text) {
+    var cue = this;
+    var isIE8 = (/MSIE\s8\.0/).test(navigator.userAgent);
+    var baseObj = {};
+
+    if (isIE8) {
+      cue = document.createElement('custom');
+    } else {
+      baseObj.enumerable = true;
+    }
+
+    /**
+     * Shim implementation specific properties. These properties are not in
+     * the spec.
+     */
+
+    // Lets us know when the VTTCue's data has changed in such a way that we need
+    // to recompute its display state. This lets us compute its display state
+    // lazily.
+    cue.hasBeenReset = false;
+
+    /**
+     * VTTCue and TextTrackCue properties
+     * http://dev.w3.org/html5/webvtt/#vttcue-interface
+     */
+
+    var _id = "";
+    var _pauseOnExit = false;
+    var _startTime = startTime;
+    var _endTime = endTime;
+    var _text = text;
+    var _region = null;
+    var _vertical = "";
+    var _snapToLines = true;
+    var _line = "auto";
+    var _lineAlign = "start";
+    var _position = 50;
+    var _positionAlign = "middle";
+    var _size = 50;
+    var _align = "middle";
+
+    Object.defineProperty(cue,
+      "id", extend({}, baseObj, {
+        get: function() {
+          return _id;
+        },
+        set: function(value) {
+          _id = "" + value;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "pauseOnExit", extend({}, baseObj, {
+        get: function() {
+          return _pauseOnExit;
+        },
+        set: function(value) {
+          _pauseOnExit = !!value;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "startTime", extend({}, baseObj, {
+        get: function() {
+          return _startTime;
+        },
+        set: function(value) {
+          if (typeof value !== "number") {
+            throw new TypeError("Start time must be set to a number.");
+          }
+          _startTime = value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "endTime", extend({}, baseObj, {
+        get: function() {
+          return _endTime;
+        },
+        set: function(value) {
+          if (typeof value !== "number") {
+            throw new TypeError("End time must be set to a number.");
+          }
+          _endTime = value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "text", extend({}, baseObj, {
+        get: function() {
+          return _text;
+        },
+        set: function(value) {
+          _text = "" + value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "region", extend({}, baseObj, {
+        get: function() {
+          return _region;
+        },
+        set: function(value) {
+          _region = value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "vertical", extend({}, baseObj, {
+        get: function() {
+          return _vertical;
+        },
+        set: function(value) {
+          var setting = findDirectionSetting(value);
+          // Have to check for false because the setting an be an empty string.
+          if (setting === false) {
+            throw new SyntaxError("An invalid or illegal string was specified.");
+          }
+          _vertical = setting;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "snapToLines", extend({}, baseObj, {
+        get: function() {
+          return _snapToLines;
+        },
+        set: function(value) {
+          _snapToLines = !!value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "line", extend({}, baseObj, {
+        get: function() {
+          return _line;
+        },
+        set: function(value) {
+          if (typeof value !== "number" && value !== autoKeyword) {
+            throw new SyntaxError("An invalid number or illegal string was specified.");
+          }
+          _line = value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "lineAlign", extend({}, baseObj, {
+        get: function() {
+          return _lineAlign;
+        },
+        set: function(value) {
+          var setting = findAlignSetting(value);
+          if (!setting) {
+            throw new SyntaxError("An invalid or illegal string was specified.");
+          }
+          _lineAlign = setting;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "position", extend({}, baseObj, {
+        get: function() {
+          return _position;
+        },
+        set: function(value) {
+          if (value < 0 || value > 100) {
+            throw new Error("Position must be between 0 and 100.");
+          }
+          _position = value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "positionAlign", extend({}, baseObj, {
+        get: function() {
+          return _positionAlign;
+        },
+        set: function(value) {
+          var setting = findAlignSetting(value);
+          if (!setting) {
+            throw new SyntaxError("An invalid or illegal string was specified.");
+          }
+          _positionAlign = setting;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "size", extend({}, baseObj, {
+        get: function() {
+          return _size;
+        },
+        set: function(value) {
+          if (value < 0 || value > 100) {
+            throw new Error("Size must be between 0 and 100.");
+          }
+          _size = value;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    Object.defineProperty(cue,
+      "align", extend({}, baseObj, {
+        get: function() {
+          return _align;
+        },
+        set: function(value) {
+          var setting = findAlignSetting(value);
+          if (!setting) {
+            throw new SyntaxError("An invalid or illegal string was specified.");
+          }
+          _align = setting;
+          this.hasBeenReset = true;
+        }
+      }));
+
+    /**
+     * Other <track> spec defined properties
+     */
+
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#text-track-cue-display-state
+    cue.displayState = undefined;
+
+    if (isIE8) {
+      return cue;
+    }
+  }
+
+  /**
+   * VTTCue methods
+   */
+
+  VTTCue.prototype.getCueAsHTML = function() {
+    // Assume WebVTT.convertCueToDOMTree is on the global.
+    return WebVTT.convertCueToDOMTree(window, this.text);
+  };
+
+  root.VTTCue = root.VTTCue || VTTCue;
+  vttjs.VTTCue = VTTCue;
+}(this, (this.vttjs || {})));
+
+/**
+ * Copyright 2013 vtt.js Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+(function(root, vttjs) {
+
+  var scrollSetting = {
+    "": true,
+    "up": true
+  };
+
+  function findScrollSetting(value) {
+    if (typeof value !== "string") {
+      return false;
+    }
+    var scroll = scrollSetting[value.toLowerCase()];
+    return scroll ? value.toLowerCase() : false;
+  }
+
+  function isValidPercentValue(value) {
+    return typeof value === "number" && (value >= 0 && value <= 100);
+  }
+
+  // VTTRegion shim http://dev.w3.org/html5/webvtt/#vttregion-interface
+  function VTTRegion() {
+    var _width = 100;
+    var _lines = 3;
+    var _regionAnchorX = 0;
+    var _regionAnchorY = 100;
+    var _viewportAnchorX = 0;
+    var _viewportAnchorY = 100;
+    var _scroll = "";
+
+    Object.defineProperties(this, {
+      "width": {
+        enumerable: true,
+        get: function() {
+          return _width;
+        },
+        set: function(value) {
+          if (!isValidPercentValue(value)) {
+            throw new Error("Width must be between 0 and 100.");
+          }
+          _width = value;
+        }
+      },
+      "lines": {
+        enumerable: true,
+        get: function() {
+          return _lines;
+        },
+        set: function(value) {
+          if (typeof value !== "number") {
+            throw new TypeError("Lines must be set to a number.");
+          }
+          _lines = value;
+        }
+      },
+      "regionAnchorY": {
+        enumerable: true,
+        get: function() {
+          return _regionAnchorY;
+        },
+        set: function(value) {
+          if (!isValidPercentValue(value)) {
+            throw new Error("RegionAnchorX must be between 0 and 100.");
+          }
+          _regionAnchorY = value;
+        }
+      },
+      "regionAnchorX": {
+        enumerable: true,
+        get: function() {
+          return _regionAnchorX;
+        },
+        set: function(value) {
+          if(!isValidPercentValue(value)) {
+            throw new Error("RegionAnchorY must be between 0 and 100.");
+          }
+          _regionAnchorX = value;
+        }
+      },
+      "viewportAnchorY": {
+        enumerable: true,
+        get: function() {
+          return _viewportAnchorY;
+        },
+        set: function(value) {
+          if (!isValidPercentValue(value)) {
+            throw new Error("ViewportAnchorY must be between 0 and 100.");
+          }
+          _viewportAnchorY = value;
+        }
+      },
+      "viewportAnchorX": {
+        enumerable: true,
+        get: function() {
+          return _viewportAnchorX;
+        },
+        set: function(value) {
+          if (!isValidPercentValue(value)) {
+            throw new Error("ViewportAnchorX must be between 0 and 100.");
+          }
+          _viewportAnchorX = value;
+        }
+      },
+      "scroll": {
+        enumerable: true,
+        get: function() {
+          return _scroll;
+        },
+        set: function(value) {
+          var setting = findScrollSetting(value);
+          // Have to check for false as an empty string is a legal value.
+          if (setting === false) {
+            throw new SyntaxError("An invalid or illegal string was specified.");
+          }
+          _scroll = setting;
+        }
+      }
+    });
+  }
+
+  root.VTTRegion = root.VTTRegion || VTTRegion;
+  vttjs.VTTRegion = VTTRegion;
+}(this, (this.vttjs || {})));
+
+/**
+ * Copyright 2013 vtt.js Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+
+(function(global) {
+
+  var _objCreate = Object.create || (function() {
+    function F() {}
+    return function(o) {
+      if (arguments.length !== 1) {
+        throw new Error('Object.create shim only accepts one parameter.');
+      }
+      F.prototype = o;
+      return new F();
+    };
+  })();
+
+  // Creates a new ParserError object from an errorData object. The errorData
+  // object should have default code and message properties. The default message
+  // property can be overriden by passing in a message parameter.
+  // See ParsingError.Errors below for acceptable errors.
+  function ParsingError(errorData, message) {
+    this.name = "ParsingError";
+    this.code = errorData.code;
+    this.message = message || errorData.message;
+  }
+  ParsingError.prototype = _objCreate(Error.prototype);
+  ParsingError.prototype.constructor = ParsingError;
+
+  // ParsingError metadata for acceptable ParsingErrors.
+  ParsingError.Errors = {
+    BadSignature: {
+      code: 0,
+      message: "Malformed WebVTT signature."
+    },
+    BadTimeStamp: {
+      code: 1,
+      message: "Malformed time stamp."
+    }
+  };
+
+  // Try to parse input as a time stamp.
+  function parseTimeStamp(input) {
+
+    function computeSeconds(h, m, s, f) {
+      return (h | 0) * 3600 + (m | 0) * 60 + (s | 0) + (f | 0) / 1000;
+    }
+
+    var m = input.match(/^(\d+):(\d{2})(:\d{2})?\.(\d{3})/);
+    if (!m) {
+      return null;
+    }
+
+    if (m[3]) {
+      // Timestamp takes the form of [hours]:[minutes]:[seconds].[milliseconds]
+      return computeSeconds(m[1], m[2], m[3].replace(":", ""), m[4]);
+    } else if (m[1] > 59) {
+      // Timestamp takes the form of [hours]:[minutes].[milliseconds]
+      // First position is hours as it's over 59.
+      return computeSeconds(m[1], m[2], 0,  m[4]);
+    } else {
+      // Timestamp takes the form of [minutes]:[seconds].[milliseconds]
+      return computeSeconds(0, m[1], m[2], m[4]);
+    }
+  }
+
+  // A settings object holds key/value pairs and will ignore anything but the first
+  // assignment to a specific key.
+  function Settings() {
+    this.values = _objCreate(null);
+  }
+
+  Settings.prototype = {
+    // Only accept the first assignment to any key.
+    set: function(k, v) {
+      if (!this.get(k) && v !== "") {
+        this.values[k] = v;
+      }
+    },
+    // Return the value for a key, or a default value.
+    // If 'defaultKey' is passed then 'dflt' is assumed to be an object with
+    // a number of possible default values as properties where 'defaultKey' is
+    // the key of the property that will be chosen; otherwise it's assumed to be
+    // a single value.
+    get: function(k, dflt, defaultKey) {
+      if (defaultKey) {
+        return this.has(k) ? this.values[k] : dflt[defaultKey];
+      }
+      return this.has(k) ? this.values[k] : dflt;
+    },
+    // Check whether we have a value for a key.
+    has: function(k) {
+      return k in this.values;
+    },
+    // Accept a setting if its one of the given alternatives.
+    alt: function(k, v, a) {
+      for (var n = 0; n < a.length; ++n) {
+        if (v === a[n]) {
+          this.set(k, v);
+          break;
+        }
+      }
+    },
+    // Accept a setting if its a valid (signed) integer.
+    integer: function(k, v) {
+      if (/^-?\d+$/.test(v)) { // integer
+        this.set(k, parseInt(v, 10));
+      }
+    },
+    // Accept a setting if its a valid percentage.
+    percent: function(k, v) {
+      var m;
+      if ((m = v.match(/^([\d]{1,3})(\.[\d]*)?%$/))) {
+        v = parseFloat(v);
+        if (v >= 0 && v <= 100) {
+          this.set(k, v);
+          return true;
+        }
+      }
+      return false;
+    }
+  };
+
+  // Helper function to parse input into groups separated by 'groupDelim', and
+  // interprete each group as a key/value pair separated by 'keyValueDelim'.
+  function parseOptions(input, callback, keyValueDelim, groupDelim) {
+    var groups = groupDelim ? input.split(groupDelim) : [input];
+    for (var i in groups) {
+      if (typeof groups[i] !== "string") {
+        continue;
+      }
+      var kv = groups[i].split(keyValueDelim);
+      if (kv.length !== 2) {
+        continue;
+      }
+      var k = kv[0];
+      var v = kv[1];
+      callback(k, v);
+    }
+  }
+
+  function parseCue(input, cue, regionList) {
+    // Remember the original input if we need to throw an error.
+    var oInput = input;
+    // 4.1 WebVTT timestamp
+    function consumeTimeStamp() {
+      var ts = parseTimeStamp(input);
+      if (ts === null) {
+        throw new ParsingError(ParsingError.Errors.BadTimeStamp,
+                              "Malformed timestamp: " + oInput);
+      }
+      // Remove time stamp from input.
+      input = input.replace(/^[^\sa-zA-Z-]+/, "");
+      return ts;
+    }
+
+    // 4.4.2 WebVTT cue settings
+    function consumeCueSettings(input, cue) {
+      var settings = new Settings();
+
+      parseOptions(input, function (k, v) {
+        switch (k) {
+        case "region":
+          // Find the last region we parsed with the same region id.
+          for (var i = regionList.length - 1; i >= 0; i--) {
+            if (regionList[i].id === v) {
+              settings.set(k, regionList[i].region);
+              break;
+            }
+          }
+          break;
+        case "vertical":
+          settings.alt(k, v, ["rl", "lr"]);
+          break;
+        case "line":
+          var vals = v.split(","),
+              vals0 = vals[0];
+          settings.integer(k, vals0);
+          settings.percent(k, vals0) ? settings.set("snapToLines", false) : null;
+          settings.alt(k, vals0, ["auto"]);
+          if (vals.length === 2) {
+            settings.alt("lineAlign", vals[1], ["start", "middle", "end"]);
+          }
+          break;
+        case "position":
+          vals = v.split(",");
+          settings.percent(k, vals[0]);
+          if (vals.length === 2) {
+            settings.alt("positionAlign", vals[1], ["start", "middle", "end"]);
+          }
+          break;
+        case "size":
+          settings.percent(k, v);
+          break;
+        case "align":
+          settings.alt(k, v, ["start", "middle", "end", "left", "right"]);
+          break;
+        }
+      }, /:/, /\s/);
+
+      // Apply default values for any missing fields.
+      cue.region = settings.get("region", null);
+      cue.vertical = settings.get("vertical", "");
+      cue.line = settings.get("line", "auto");
+      cue.lineAlign = settings.get("lineAlign", "start");
+      cue.snapToLines = settings.get("snapToLines", true);
+      cue.size = settings.get("size", 100);
+      cue.align = settings.get("align", "middle");
+      cue.position = settings.get("position", {
+        start: 0,
+        left: 0,
+        middle: 50,
+        end: 100,
+        right: 100
+      }, cue.align);
+      cue.positionAlign = settings.get("positionAlign", {
+        start: "start",
+        left: "start",
+        middle: "middle",
+        end: "end",
+        right: "end"
+      }, cue.align);
+    }
+
+    function skipWhitespace() {
+      input = input.replace(/^\s+/, "");
+    }
+
+    // 4.1 WebVTT cue timings.
+    skipWhitespace();
+    cue.startTime = consumeTimeStamp();   // (1) collect cue start time
+    skipWhitespace();
+    if (input.substr(0, 3) !== "-->") {     // (3) next characters must match "-->"
+      throw new ParsingError(ParsingError.Errors.BadTimeStamp,
+                             "Malformed time stamp (time stamps must be separated by '-->'): " +
+                             oInput);
+    }
+    input = input.substr(3);
+    skipWhitespace();
+    cue.endTime = consumeTimeStamp();     // (5) collect cue end time
+
+    // 4.1 WebVTT cue settings list.
+    skipWhitespace();
+    consumeCueSettings(input, cue);
+  }
+
+  var ESCAPE = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&lrm;": "\u200e",
+    "&rlm;": "\u200f",
+    "&nbsp;": "\u00a0"
+  };
+
+  var TAG_NAME = {
+    c: "span",
+    i: "i",
+    b: "b",
+    u: "u",
+    ruby: "ruby",
+    rt: "rt",
+    v: "span",
+    lang: "span"
+  };
+
+  var TAG_ANNOTATION = {
+    v: "title",
+    lang: "lang"
+  };
+
+  var NEEDS_PARENT = {
+    rt: "ruby"
+  };
+
+  // Parse content into a document fragment.
+  function parseContent(window, input) {
+    function nextToken() {
+      // Check for end-of-string.
+      if (!input) {
+        return null;
+      }
+
+      // Consume 'n' characters from the input.
+      function consume(result) {
+        input = input.substr(result.length);
+        return result;
+      }
+
+      var m = input.match(/^([^<]*)(<[^>]+>?)?/);
+      // If there is some text before the next tag, return it, otherwise return
+      // the tag.
+      return consume(m[1] ? m[1] : m[2]);
+    }
+
+    // Unescape a string 's'.
+    function unescape1(e) {
+      return ESCAPE[e];
+    }
+    function unescape(s) {
+      while ((m = s.match(/&(amp|lt|gt|lrm|rlm|nbsp);/))) {
+        s = s.replace(m[0], unescape1);
+      }
+      return s;
+    }
+
+    function shouldAdd(current, element) {
+      return !NEEDS_PARENT[element.localName] ||
+             NEEDS_PARENT[element.localName] === current.localName;
+    }
+
+    // Create an element for this tag.
+    function createElement(type, annotation) {
+      var tagName = TAG_NAME[type];
+      if (!tagName) {
+        return null;
+      }
+      var element = window.document.createElement(tagName);
+      element.localName = tagName;
+      var name = TAG_ANNOTATION[type];
+      if (name && annotation) {
+        element[name] = annotation.trim();
+      }
+      return element;
+    }
+
+    var rootDiv = window.document.createElement("div"),
+        current = rootDiv,
+        t,
+        tagStack = [];
+
+    while ((t = nextToken()) !== null) {
+      if (t[0] === '<') {
+        if (t[1] === "/") {
+          // If the closing tag matches, move back up to the parent node.
+          if (tagStack.length &&
+              tagStack[tagStack.length - 1] === t.substr(2).replace(">", "")) {
+            tagStack.pop();
+            current = current.parentNode;
+          }
+          // Otherwise just ignore the end tag.
+          continue;
+        }
+        var ts = parseTimeStamp(t.substr(1, t.length - 2));
+        var node;
+        if (ts) {
+          // Timestamps are lead nodes as well.
+          node = window.document.createProcessingInstruction("timestamp", ts);
+          current.appendChild(node);
+          continue;
+        }
+        var m = t.match(/^<([^.\s/0-9>]+)(\.[^\s\\>]+)?([^>\\]+)?(\\?)>?$/);
+        // If we can't parse the tag, skip to the next tag.
+        if (!m) {
+          continue;
+        }
+        // Try to construct an element, and ignore the tag if we couldn't.
+        node = createElement(m[1], m[3]);
+        if (!node) {
+          continue;
+        }
+        // Determine if the tag should be added based on the context of where it
+        // is placed in the cuetext.
+        if (!shouldAdd(current, node)) {
+          continue;
+        }
+        // Set the class list (as a list of classes, separated by space).
+        if (m[2]) {
+          node.className = m[2].substr(1).replace('.', ' ');
+        }
+        // Append the node to the current node, and enter the scope of the new
+        // node.
+        tagStack.push(m[1]);
+        current.appendChild(node);
+        current = node;
+        continue;
+      }
+
+      // Text nodes are leaf nodes.
+      current.appendChild(window.document.createTextNode(unescape(t)));
+    }
+
+    return rootDiv;
+  }
+
+  // This is a list of all the Unicode characters that have a strong
+  // right-to-left category. What this means is that these characters are
+  // written right-to-left for sure. It was generated by pulling all the strong
+  // right-to-left characters out of the Unicode data table. That table can
+  // found at: http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+  var strongRTLChars = [0x05BE, 0x05C0, 0x05C3, 0x05C6, 0x05D0, 0x05D1,
+      0x05D2, 0x05D3, 0x05D4, 0x05D5, 0x05D6, 0x05D7, 0x05D8, 0x05D9, 0x05DA,
+      0x05DB, 0x05DC, 0x05DD, 0x05DE, 0x05DF, 0x05E0, 0x05E1, 0x05E2, 0x05E3,
+      0x05E4, 0x05E5, 0x05E6, 0x05E7, 0x05E8, 0x05E9, 0x05EA, 0x05F0, 0x05F1,
+      0x05F2, 0x05F3, 0x05F4, 0x0608, 0x060B, 0x060D, 0x061B, 0x061E, 0x061F,
+      0x0620, 0x0621, 0x0622, 0x0623, 0x0624, 0x0625, 0x0626, 0x0627, 0x0628,
+      0x0629, 0x062A, 0x062B, 0x062C, 0x062D, 0x062E, 0x062F, 0x0630, 0x0631,
+      0x0632, 0x0633, 0x0634, 0x0635, 0x0636, 0x0637, 0x0638, 0x0639, 0x063A,
+      0x063B, 0x063C, 0x063D, 0x063E, 0x063F, 0x0640, 0x0641, 0x0642, 0x0643,
+      0x0644, 0x0645, 0x0646, 0x0647, 0x0648, 0x0649, 0x064A, 0x066D, 0x066E,
+      0x066F, 0x0671, 0x0672, 0x0673, 0x0674, 0x0675, 0x0676, 0x0677, 0x0678,
+      0x0679, 0x067A, 0x067B, 0x067C, 0x067D, 0x067E, 0x067F, 0x0680, 0x0681,
+      0x0682, 0x0683, 0x0684, 0x0685, 0x0686, 0x0687, 0x0688, 0x0689, 0x068A,
+      0x068B, 0x068C, 0x068D, 0x068E, 0x068F, 0x0690, 0x0691, 0x0692, 0x0693,
+      0x0694, 0x0695, 0x0696, 0x0697, 0x0698, 0x0699, 0x069A, 0x069B, 0x069C,
+      0x069D, 0x069E, 0x069F, 0x06A0, 0x06A1, 0x06A2, 0x06A3, 0x06A4, 0x06A5,
+      0x06A6, 0x06A7, 0x06A8, 0x06A9, 0x06AA, 0x06AB, 0x06AC, 0x06AD, 0x06AE,
+      0x06AF, 0x06B0, 0x06B1, 0x06B2, 0x06B3, 0x06B4, 0x06B5, 0x06B6, 0x06B7,
+      0x06B8, 0x06B9, 0x06BA, 0x06BB, 0x06BC, 0x06BD, 0x06BE, 0x06BF, 0x06C0,
+      0x06C1, 0x06C2, 0x06C3, 0x06C4, 0x06C5, 0x06C6, 0x06C7, 0x06C8, 0x06C9,
+      0x06CA, 0x06CB, 0x06CC, 0x06CD, 0x06CE, 0x06CF, 0x06D0, 0x06D1, 0x06D2,
+      0x06D3, 0x06D4, 0x06D5, 0x06E5, 0x06E6, 0x06EE, 0x06EF, 0x06FA, 0x06FB,
+      0x06FC, 0x06FD, 0x06FE, 0x06FF, 0x0700, 0x0701, 0x0702, 0x0703, 0x0704,
+      0x0705, 0x0706, 0x0707, 0x0708, 0x0709, 0x070A, 0x070B, 0x070C, 0x070D,
+      0x070F, 0x0710, 0x0712, 0x0713, 0x0714, 0x0715, 0x0716, 0x0717, 0x0718,
+      0x0719, 0x071A, 0x071B, 0x071C, 0x071D, 0x071E, 0x071F, 0x0720, 0x0721,
+      0x0722, 0x0723, 0x0724, 0x0725, 0x0726, 0x0727, 0x0728, 0x0729, 0x072A,
+      0x072B, 0x072C, 0x072D, 0x072E, 0x072F, 0x074D, 0x074E, 0x074F, 0x0750,
+      0x0751, 0x0752, 0x0753, 0x0754, 0x0755, 0x0756, 0x0757, 0x0758, 0x0759,
+      0x075A, 0x075B, 0x075C, 0x075D, 0x075E, 0x075F, 0x0760, 0x0761, 0x0762,
+      0x0763, 0x0764, 0x0765, 0x0766, 0x0767, 0x0768, 0x0769, 0x076A, 0x076B,
+      0x076C, 0x076D, 0x076E, 0x076F, 0x0770, 0x0771, 0x0772, 0x0773, 0x0774,
+      0x0775, 0x0776, 0x0777, 0x0778, 0x0779, 0x077A, 0x077B, 0x077C, 0x077D,
+      0x077E, 0x077F, 0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0786,
+      0x0787, 0x0788, 0x0789, 0x078A, 0x078B, 0x078C, 0x078D, 0x078E, 0x078F,
+      0x0790, 0x0791, 0x0792, 0x0793, 0x0794, 0x0795, 0x0796, 0x0797, 0x0798,
+      0x0799, 0x079A, 0x079B, 0x079C, 0x079D, 0x079E, 0x079F, 0x07A0, 0x07A1,
+      0x07A2, 0x07A3, 0x07A4, 0x07A5, 0x07B1, 0x07C0, 0x07C1, 0x07C2, 0x07C3,
+      0x07C4, 0x07C5, 0x07C6, 0x07C7, 0x07C8, 0x07C9, 0x07CA, 0x07CB, 0x07CC,
+      0x07CD, 0x07CE, 0x07CF, 0x07D0, 0x07D1, 0x07D2, 0x07D3, 0x07D4, 0x07D5,
+      0x07D6, 0x07D7, 0x07D8, 0x07D9, 0x07DA, 0x07DB, 0x07DC, 0x07DD, 0x07DE,
+      0x07DF, 0x07E0, 0x07E1, 0x07E2, 0x07E3, 0x07E4, 0x07E5, 0x07E6, 0x07E7,
+      0x07E8, 0x07E9, 0x07EA, 0x07F4, 0x07F5, 0x07FA, 0x0800, 0x0801, 0x0802,
+      0x0803, 0x0804, 0x0805, 0x0806, 0x0807, 0x0808, 0x0809, 0x080A, 0x080B,
+      0x080C, 0x080D, 0x080E, 0x080F, 0x0810, 0x0811, 0x0812, 0x0813, 0x0814,
+      0x0815, 0x081A, 0x0824, 0x0828, 0x0830, 0x0831, 0x0832, 0x0833, 0x0834,
+      0x0835, 0x0836, 0x0837, 0x0838, 0x0839, 0x083A, 0x083B, 0x083C, 0x083D,
+      0x083E, 0x0840, 0x0841, 0x0842, 0x0843, 0x0844, 0x0845, 0x0846, 0x0847,
+      0x0848, 0x0849, 0x084A, 0x084B, 0x084C, 0x084D, 0x084E, 0x084F, 0x0850,
+      0x0851, 0x0852, 0x0853, 0x0854, 0x0855, 0x0856, 0x0857, 0x0858, 0x085E,
+      0x08A0, 0x08A2, 0x08A3, 0x08A4, 0x08A5, 0x08A6, 0x08A7, 0x08A8, 0x08A9,
+      0x08AA, 0x08AB, 0x08AC, 0x200F, 0xFB1D, 0xFB1F, 0xFB20, 0xFB21, 0xFB22,
+      0xFB23, 0xFB24, 0xFB25, 0xFB26, 0xFB27, 0xFB28, 0xFB2A, 0xFB2B, 0xFB2C,
+      0xFB2D, 0xFB2E, 0xFB2F, 0xFB30, 0xFB31, 0xFB32, 0xFB33, 0xFB34, 0xFB35,
+      0xFB36, 0xFB38, 0xFB39, 0xFB3A, 0xFB3B, 0xFB3C, 0xFB3E, 0xFB40, 0xFB41,
+      0xFB43, 0xFB44, 0xFB46, 0xFB47, 0xFB48, 0xFB49, 0xFB4A, 0xFB4B, 0xFB4C,
+      0xFB4D, 0xFB4E, 0xFB4F, 0xFB50, 0xFB51, 0xFB52, 0xFB53, 0xFB54, 0xFB55,
+      0xFB56, 0xFB57, 0xFB58, 0xFB59, 0xFB5A, 0xFB5B, 0xFB5C, 0xFB5D, 0xFB5E,
+      0xFB5F, 0xFB60, 0xFB61, 0xFB62, 0xFB63, 0xFB64, 0xFB65, 0xFB66, 0xFB67,
+      0xFB68, 0xFB69, 0xFB6A, 0xFB6B, 0xFB6C, 0xFB6D, 0xFB6E, 0xFB6F, 0xFB70,
+      0xFB71, 0xFB72, 0xFB73, 0xFB74, 0xFB75, 0xFB76, 0xFB77, 0xFB78, 0xFB79,
+      0xFB7A, 0xFB7B, 0xFB7C, 0xFB7D, 0xFB7E, 0xFB7F, 0xFB80, 0xFB81, 0xFB82,
+      0xFB83, 0xFB84, 0xFB85, 0xFB86, 0xFB87, 0xFB88, 0xFB89, 0xFB8A, 0xFB8B,
+      0xFB8C, 0xFB8D, 0xFB8E, 0xFB8F, 0xFB90, 0xFB91, 0xFB92, 0xFB93, 0xFB94,
+      0xFB95, 0xFB96, 0xFB97, 0xFB98, 0xFB99, 0xFB9A, 0xFB9B, 0xFB9C, 0xFB9D,
+      0xFB9E, 0xFB9F, 0xFBA0, 0xFBA1, 0xFBA2, 0xFBA3, 0xFBA4, 0xFBA5, 0xFBA6,
+      0xFBA7, 0xFBA8, 0xFBA9, 0xFBAA, 0xFBAB, 0xFBAC, 0xFBAD, 0xFBAE, 0xFBAF,
+      0xFBB0, 0xFBB1, 0xFBB2, 0xFBB3, 0xFBB4, 0xFBB5, 0xFBB6, 0xFBB7, 0xFBB8,
+      0xFBB9, 0xFBBA, 0xFBBB, 0xFBBC, 0xFBBD, 0xFBBE, 0xFBBF, 0xFBC0, 0xFBC1,
+      0xFBD3, 0xFBD4, 0xFBD5, 0xFBD6, 0xFBD7, 0xFBD8, 0xFBD9, 0xFBDA, 0xFBDB,
+      0xFBDC, 0xFBDD, 0xFBDE, 0xFBDF, 0xFBE0, 0xFBE1, 0xFBE2, 0xFBE3, 0xFBE4,
+      0xFBE5, 0xFBE6, 0xFBE7, 0xFBE8, 0xFBE9, 0xFBEA, 0xFBEB, 0xFBEC, 0xFBED,
+      0xFBEE, 0xFBEF, 0xFBF0, 0xFBF1, 0xFBF2, 0xFBF3, 0xFBF4, 0xFBF5, 0xFBF6,
+      0xFBF7, 0xFBF8, 0xFBF9, 0xFBFA, 0xFBFB, 0xFBFC, 0xFBFD, 0xFBFE, 0xFBFF,
+      0xFC00, 0xFC01, 0xFC02, 0xFC03, 0xFC04, 0xFC05, 0xFC06, 0xFC07, 0xFC08,
+      0xFC09, 0xFC0A, 0xFC0B, 0xFC0C, 0xFC0D, 0xFC0E, 0xFC0F, 0xFC10, 0xFC11,
+      0xFC12, 0xFC13, 0xFC14, 0xFC15, 0xFC16, 0xFC17, 0xFC18, 0xFC19, 0xFC1A,
+      0xFC1B, 0xFC1C, 0xFC1D, 0xFC1E, 0xFC1F, 0xFC20, 0xFC21, 0xFC22, 0xFC23,
+      0xFC24, 0xFC25, 0xFC26, 0xFC27, 0xFC28, 0xFC29, 0xFC2A, 0xFC2B, 0xFC2C,
+      0xFC2D, 0xFC2E, 0xFC2F, 0xFC30, 0xFC31, 0xFC32, 0xFC33, 0xFC34, 0xFC35,
+      0xFC36, 0xFC37, 0xFC38, 0xFC39, 0xFC3A, 0xFC3B, 0xFC3C, 0xFC3D, 0xFC3E,
+      0xFC3F, 0xFC40, 0xFC41, 0xFC42, 0xFC43, 0xFC44, 0xFC45, 0xFC46, 0xFC47,
+      0xFC48, 0xFC49, 0xFC4A, 0xFC4B, 0xFC4C, 0xFC4D, 0xFC4E, 0xFC4F, 0xFC50,
+      0xFC51, 0xFC52, 0xFC53, 0xFC54, 0xFC55, 0xFC56, 0xFC57, 0xFC58, 0xFC59,
+      0xFC5A, 0xFC5B, 0xFC5C, 0xFC5D, 0xFC5E, 0xFC5F, 0xFC60, 0xFC61, 0xFC62,
+      0xFC63, 0xFC64, 0xFC65, 0xFC66, 0xFC67, 0xFC68, 0xFC69, 0xFC6A, 0xFC6B,
+      0xFC6C, 0xFC6D, 0xFC6E, 0xFC6F, 0xFC70, 0xFC71, 0xFC72, 0xFC73, 0xFC74,
+      0xFC75, 0xFC76, 0xFC77, 0xFC78, 0xFC79, 0xFC7A, 0xFC7B, 0xFC7C, 0xFC7D,
+      0xFC7E, 0xFC7F, 0xFC80, 0xFC81, 0xFC82, 0xFC83, 0xFC84, 0xFC85, 0xFC86,
+      0xFC87, 0xFC88, 0xFC89, 0xFC8A, 0xFC8B, 0xFC8C, 0xFC8D, 0xFC8E, 0xFC8F,
+      0xFC90, 0xFC91, 0xFC92, 0xFC93, 0xFC94, 0xFC95, 0xFC96, 0xFC97, 0xFC98,
+      0xFC99, 0xFC9A, 0xFC9B, 0xFC9C, 0xFC9D, 0xFC9E, 0xFC9F, 0xFCA0, 0xFCA1,
+      0xFCA2, 0xFCA3, 0xFCA4, 0xFCA5, 0xFCA6, 0xFCA7, 0xFCA8, 0xFCA9, 0xFCAA,
+      0xFCAB, 0xFCAC, 0xFCAD, 0xFCAE, 0xFCAF, 0xFCB0, 0xFCB1, 0xFCB2, 0xFCB3,
+      0xFCB4, 0xFCB5, 0xFCB6, 0xFCB7, 0xFCB8, 0xFCB9, 0xFCBA, 0xFCBB, 0xFCBC,
+      0xFCBD, 0xFCBE, 0xFCBF, 0xFCC0, 0xFCC1, 0xFCC2, 0xFCC3, 0xFCC4, 0xFCC5,
+      0xFCC6, 0xFCC7, 0xFCC8, 0xFCC9, 0xFCCA, 0xFCCB, 0xFCCC, 0xFCCD, 0xFCCE,
+      0xFCCF, 0xFCD0, 0xFCD1, 0xFCD2, 0xFCD3, 0xFCD4, 0xFCD5, 0xFCD6, 0xFCD7,
+      0xFCD8, 0xFCD9, 0xFCDA, 0xFCDB, 0xFCDC, 0xFCDD, 0xFCDE, 0xFCDF, 0xFCE0,
+      0xFCE1, 0xFCE2, 0xFCE3, 0xFCE4, 0xFCE5, 0xFCE6, 0xFCE7, 0xFCE8, 0xFCE9,
+      0xFCEA, 0xFCEB, 0xFCEC, 0xFCED, 0xFCEE, 0xFCEF, 0xFCF0, 0xFCF1, 0xFCF2,
+      0xFCF3, 0xFCF4, 0xFCF5, 0xFCF6, 0xFCF7, 0xFCF8, 0xFCF9, 0xFCFA, 0xFCFB,
+      0xFCFC, 0xFCFD, 0xFCFE, 0xFCFF, 0xFD00, 0xFD01, 0xFD02, 0xFD03, 0xFD04,
+      0xFD05, 0xFD06, 0xFD07, 0xFD08, 0xFD09, 0xFD0A, 0xFD0B, 0xFD0C, 0xFD0D,
+      0xFD0E, 0xFD0F, 0xFD10, 0xFD11, 0xFD12, 0xFD13, 0xFD14, 0xFD15, 0xFD16,
+      0xFD17, 0xFD18, 0xFD19, 0xFD1A, 0xFD1B, 0xFD1C, 0xFD1D, 0xFD1E, 0xFD1F,
+      0xFD20, 0xFD21, 0xFD22, 0xFD23, 0xFD24, 0xFD25, 0xFD26, 0xFD27, 0xFD28,
+      0xFD29, 0xFD2A, 0xFD2B, 0xFD2C, 0xFD2D, 0xFD2E, 0xFD2F, 0xFD30, 0xFD31,
+      0xFD32, 0xFD33, 0xFD34, 0xFD35, 0xFD36, 0xFD37, 0xFD38, 0xFD39, 0xFD3A,
+      0xFD3B, 0xFD3C, 0xFD3D, 0xFD50, 0xFD51, 0xFD52, 0xFD53, 0xFD54, 0xFD55,
+      0xFD56, 0xFD57, 0xFD58, 0xFD59, 0xFD5A, 0xFD5B, 0xFD5C, 0xFD5D, 0xFD5E,
+      0xFD5F, 0xFD60, 0xFD61, 0xFD62, 0xFD63, 0xFD64, 0xFD65, 0xFD66, 0xFD67,
+      0xFD68, 0xFD69, 0xFD6A, 0xFD6B, 0xFD6C, 0xFD6D, 0xFD6E, 0xFD6F, 0xFD70,
+      0xFD71, 0xFD72, 0xFD73, 0xFD74, 0xFD75, 0xFD76, 0xFD77, 0xFD78, 0xFD79,
+      0xFD7A, 0xFD7B, 0xFD7C, 0xFD7D, 0xFD7E, 0xFD7F, 0xFD80, 0xFD81, 0xFD82,
+      0xFD83, 0xFD84, 0xFD85, 0xFD86, 0xFD87, 0xFD88, 0xFD89, 0xFD8A, 0xFD8B,
+      0xFD8C, 0xFD8D, 0xFD8E, 0xFD8F, 0xFD92, 0xFD93, 0xFD94, 0xFD95, 0xFD96,
+      0xFD97, 0xFD98, 0xFD99, 0xFD9A, 0xFD9B, 0xFD9C, 0xFD9D, 0xFD9E, 0xFD9F,
+      0xFDA0, 0xFDA1, 0xFDA2, 0xFDA3, 0xFDA4, 0xFDA5, 0xFDA6, 0xFDA7, 0xFDA8,
+      0xFDA9, 0xFDAA, 0xFDAB, 0xFDAC, 0xFDAD, 0xFDAE, 0xFDAF, 0xFDB0, 0xFDB1,
+      0xFDB2, 0xFDB3, 0xFDB4, 0xFDB5, 0xFDB6, 0xFDB7, 0xFDB8, 0xFDB9, 0xFDBA,
+      0xFDBB, 0xFDBC, 0xFDBD, 0xFDBE, 0xFDBF, 0xFDC0, 0xFDC1, 0xFDC2, 0xFDC3,
+      0xFDC4, 0xFDC5, 0xFDC6, 0xFDC7, 0xFDF0, 0xFDF1, 0xFDF2, 0xFDF3, 0xFDF4,
+      0xFDF5, 0xFDF6, 0xFDF7, 0xFDF8, 0xFDF9, 0xFDFA, 0xFDFB, 0xFDFC, 0xFE70,
+      0xFE71, 0xFE72, 0xFE73, 0xFE74, 0xFE76, 0xFE77, 0xFE78, 0xFE79, 0xFE7A,
+      0xFE7B, 0xFE7C, 0xFE7D, 0xFE7E, 0xFE7F, 0xFE80, 0xFE81, 0xFE82, 0xFE83,
+      0xFE84, 0xFE85, 0xFE86, 0xFE87, 0xFE88, 0xFE89, 0xFE8A, 0xFE8B, 0xFE8C,
+      0xFE8D, 0xFE8E, 0xFE8F, 0xFE90, 0xFE91, 0xFE92, 0xFE93, 0xFE94, 0xFE95,
+      0xFE96, 0xFE97, 0xFE98, 0xFE99, 0xFE9A, 0xFE9B, 0xFE9C, 0xFE9D, 0xFE9E,
+      0xFE9F, 0xFEA0, 0xFEA1, 0xFEA2, 0xFEA3, 0xFEA4, 0xFEA5, 0xFEA6, 0xFEA7,
+      0xFEA8, 0xFEA9, 0xFEAA, 0xFEAB, 0xFEAC, 0xFEAD, 0xFEAE, 0xFEAF, 0xFEB0,
+      0xFEB1, 0xFEB2, 0xFEB3, 0xFEB4, 0xFEB5, 0xFEB6, 0xFEB7, 0xFEB8, 0xFEB9,
+      0xFEBA, 0xFEBB, 0xFEBC, 0xFEBD, 0xFEBE, 0xFEBF, 0xFEC0, 0xFEC1, 0xFEC2,
+      0xFEC3, 0xFEC4, 0xFEC5, 0xFEC6, 0xFEC7, 0xFEC8, 0xFEC9, 0xFECA, 0xFECB,
+      0xFECC, 0xFECD, 0xFECE, 0xFECF, 0xFED0, 0xFED1, 0xFED2, 0xFED3, 0xFED4,
+      0xFED5, 0xFED6, 0xFED7, 0xFED8, 0xFED9, 0xFEDA, 0xFEDB, 0xFEDC, 0xFEDD,
+      0xFEDE, 0xFEDF, 0xFEE0, 0xFEE1, 0xFEE2, 0xFEE3, 0xFEE4, 0xFEE5, 0xFEE6,
+      0xFEE7, 0xFEE8, 0xFEE9, 0xFEEA, 0xFEEB, 0xFEEC, 0xFEED, 0xFEEE, 0xFEEF,
+      0xFEF0, 0xFEF1, 0xFEF2, 0xFEF3, 0xFEF4, 0xFEF5, 0xFEF6, 0xFEF7, 0xFEF8,
+      0xFEF9, 0xFEFA, 0xFEFB, 0xFEFC, 0x10800, 0x10801, 0x10802, 0x10803,
+      0x10804, 0x10805, 0x10808, 0x1080A, 0x1080B, 0x1080C, 0x1080D, 0x1080E,
+      0x1080F, 0x10810, 0x10811, 0x10812, 0x10813, 0x10814, 0x10815, 0x10816,
+      0x10817, 0x10818, 0x10819, 0x1081A, 0x1081B, 0x1081C, 0x1081D, 0x1081E,
+      0x1081F, 0x10820, 0x10821, 0x10822, 0x10823, 0x10824, 0x10825, 0x10826,
+      0x10827, 0x10828, 0x10829, 0x1082A, 0x1082B, 0x1082C, 0x1082D, 0x1082E,
+      0x1082F, 0x10830, 0x10831, 0x10832, 0x10833, 0x10834, 0x10835, 0x10837,
+      0x10838, 0x1083C, 0x1083F, 0x10840, 0x10841, 0x10842, 0x10843, 0x10844,
+      0x10845, 0x10846, 0x10847, 0x10848, 0x10849, 0x1084A, 0x1084B, 0x1084C,
+      0x1084D, 0x1084E, 0x1084F, 0x10850, 0x10851, 0x10852, 0x10853, 0x10854,
+      0x10855, 0x10857, 0x10858, 0x10859, 0x1085A, 0x1085B, 0x1085C, 0x1085D,
+      0x1085E, 0x1085F, 0x10900, 0x10901, 0x10902, 0x10903, 0x10904, 0x10905,
+      0x10906, 0x10907, 0x10908, 0x10909, 0x1090A, 0x1090B, 0x1090C, 0x1090D,
+      0x1090E, 0x1090F, 0x10910, 0x10911, 0x10912, 0x10913, 0x10914, 0x10915,
+      0x10916, 0x10917, 0x10918, 0x10919, 0x1091A, 0x1091B, 0x10920, 0x10921,
+      0x10922, 0x10923, 0x10924, 0x10925, 0x10926, 0x10927, 0x10928, 0x10929,
+      0x1092A, 0x1092B, 0x1092C, 0x1092D, 0x1092E, 0x1092F, 0x10930, 0x10931,
+      0x10932, 0x10933, 0x10934, 0x10935, 0x10936, 0x10937, 0x10938, 0x10939,
+      0x1093F, 0x10980, 0x10981, 0x10982, 0x10983, 0x10984, 0x10985, 0x10986,
+      0x10987, 0x10988, 0x10989, 0x1098A, 0x1098B, 0x1098C, 0x1098D, 0x1098E,
+      0x1098F, 0x10990, 0x10991, 0x10992, 0x10993, 0x10994, 0x10995, 0x10996,
+      0x10997, 0x10998, 0x10999, 0x1099A, 0x1099B, 0x1099C, 0x1099D, 0x1099E,
+      0x1099F, 0x109A0, 0x109A1, 0x109A2, 0x109A3, 0x109A4, 0x109A5, 0x109A6,
+      0x109A7, 0x109A8, 0x109A9, 0x109AA, 0x109AB, 0x109AC, 0x109AD, 0x109AE,
+      0x109AF, 0x109B0, 0x109B1, 0x109B2, 0x109B3, 0x109B4, 0x109B5, 0x109B6,
+      0x109B7, 0x109BE, 0x109BF, 0x10A00, 0x10A10, 0x10A11, 0x10A12, 0x10A13,
+      0x10A15, 0x10A16, 0x10A17, 0x10A19, 0x10A1A, 0x10A1B, 0x10A1C, 0x10A1D,
+      0x10A1E, 0x10A1F, 0x10A20, 0x10A21, 0x10A22, 0x10A23, 0x10A24, 0x10A25,
+      0x10A26, 0x10A27, 0x10A28, 0x10A29, 0x10A2A, 0x10A2B, 0x10A2C, 0x10A2D,
+      0x10A2E, 0x10A2F, 0x10A30, 0x10A31, 0x10A32, 0x10A33, 0x10A40, 0x10A41,
+      0x10A42, 0x10A43, 0x10A44, 0x10A45, 0x10A46, 0x10A47, 0x10A50, 0x10A51,
+      0x10A52, 0x10A53, 0x10A54, 0x10A55, 0x10A56, 0x10A57, 0x10A58, 0x10A60,
+      0x10A61, 0x10A62, 0x10A63, 0x10A64, 0x10A65, 0x10A66, 0x10A67, 0x10A68,
+      0x10A69, 0x10A6A, 0x10A6B, 0x10A6C, 0x10A6D, 0x10A6E, 0x10A6F, 0x10A70,
+      0x10A71, 0x10A72, 0x10A73, 0x10A74, 0x10A75, 0x10A76, 0x10A77, 0x10A78,
+      0x10A79, 0x10A7A, 0x10A7B, 0x10A7C, 0x10A7D, 0x10A7E, 0x10A7F, 0x10B00,
+      0x10B01, 0x10B02, 0x10B03, 0x10B04, 0x10B05, 0x10B06, 0x10B07, 0x10B08,
+      0x10B09, 0x10B0A, 0x10B0B, 0x10B0C, 0x10B0D, 0x10B0E, 0x10B0F, 0x10B10,
+      0x10B11, 0x10B12, 0x10B13, 0x10B14, 0x10B15, 0x10B16, 0x10B17, 0x10B18,
+      0x10B19, 0x10B1A, 0x10B1B, 0x10B1C, 0x10B1D, 0x10B1E, 0x10B1F, 0x10B20,
+      0x10B21, 0x10B22, 0x10B23, 0x10B24, 0x10B25, 0x10B26, 0x10B27, 0x10B28,
+      0x10B29, 0x10B2A, 0x10B2B, 0x10B2C, 0x10B2D, 0x10B2E, 0x10B2F, 0x10B30,
+      0x10B31, 0x10B32, 0x10B33, 0x10B34, 0x10B35, 0x10B40, 0x10B41, 0x10B42,
+      0x10B43, 0x10B44, 0x10B45, 0x10B46, 0x10B47, 0x10B48, 0x10B49, 0x10B4A,
+      0x10B4B, 0x10B4C, 0x10B4D, 0x10B4E, 0x10B4F, 0x10B50, 0x10B51, 0x10B52,
+      0x10B53, 0x10B54, 0x10B55, 0x10B58, 0x10B59, 0x10B5A, 0x10B5B, 0x10B5C,
+      0x10B5D, 0x10B5E, 0x10B5F, 0x10B60, 0x10B61, 0x10B62, 0x10B63, 0x10B64,
+      0x10B65, 0x10B66, 0x10B67, 0x10B68, 0x10B69, 0x10B6A, 0x10B6B, 0x10B6C,
+      0x10B6D, 0x10B6E, 0x10B6F, 0x10B70, 0x10B71, 0x10B72, 0x10B78, 0x10B79,
+      0x10B7A, 0x10B7B, 0x10B7C, 0x10B7D, 0x10B7E, 0x10B7F, 0x10C00, 0x10C01,
+      0x10C02, 0x10C03, 0x10C04, 0x10C05, 0x10C06, 0x10C07, 0x10C08, 0x10C09,
+      0x10C0A, 0x10C0B, 0x10C0C, 0x10C0D, 0x10C0E, 0x10C0F, 0x10C10, 0x10C11,
+      0x10C12, 0x10C13, 0x10C14, 0x10C15, 0x10C16, 0x10C17, 0x10C18, 0x10C19,
+      0x10C1A, 0x10C1B, 0x10C1C, 0x10C1D, 0x10C1E, 0x10C1F, 0x10C20, 0x10C21,
+      0x10C22, 0x10C23, 0x10C24, 0x10C25, 0x10C26, 0x10C27, 0x10C28, 0x10C29,
+      0x10C2A, 0x10C2B, 0x10C2C, 0x10C2D, 0x10C2E, 0x10C2F, 0x10C30, 0x10C31,
+      0x10C32, 0x10C33, 0x10C34, 0x10C35, 0x10C36, 0x10C37, 0x10C38, 0x10C39,
+      0x10C3A, 0x10C3B, 0x10C3C, 0x10C3D, 0x10C3E, 0x10C3F, 0x10C40, 0x10C41,
+      0x10C42, 0x10C43, 0x10C44, 0x10C45, 0x10C46, 0x10C47, 0x10C48, 0x1EE00,
+      0x1EE01, 0x1EE02, 0x1EE03, 0x1EE05, 0x1EE06, 0x1EE07, 0x1EE08, 0x1EE09,
+      0x1EE0A, 0x1EE0B, 0x1EE0C, 0x1EE0D, 0x1EE0E, 0x1EE0F, 0x1EE10, 0x1EE11,
+      0x1EE12, 0x1EE13, 0x1EE14, 0x1EE15, 0x1EE16, 0x1EE17, 0x1EE18, 0x1EE19,
+      0x1EE1A, 0x1EE1B, 0x1EE1C, 0x1EE1D, 0x1EE1E, 0x1EE1F, 0x1EE21, 0x1EE22,
+      0x1EE24, 0x1EE27, 0x1EE29, 0x1EE2A, 0x1EE2B, 0x1EE2C, 0x1EE2D, 0x1EE2E,
+      0x1EE2F, 0x1EE30, 0x1EE31, 0x1EE32, 0x1EE34, 0x1EE35, 0x1EE36, 0x1EE37,
+      0x1EE39, 0x1EE3B, 0x1EE42, 0x1EE47, 0x1EE49, 0x1EE4B, 0x1EE4D, 0x1EE4E,
+      0x1EE4F, 0x1EE51, 0x1EE52, 0x1EE54, 0x1EE57, 0x1EE59, 0x1EE5B, 0x1EE5D,
+      0x1EE5F, 0x1EE61, 0x1EE62, 0x1EE64, 0x1EE67, 0x1EE68, 0x1EE69, 0x1EE6A,
+      0x1EE6C, 0x1EE6D, 0x1EE6E, 0x1EE6F, 0x1EE70, 0x1EE71, 0x1EE72, 0x1EE74,
+      0x1EE75, 0x1EE76, 0x1EE77, 0x1EE79, 0x1EE7A, 0x1EE7B, 0x1EE7C, 0x1EE7E,
+      0x1EE80, 0x1EE81, 0x1EE82, 0x1EE83, 0x1EE84, 0x1EE85, 0x1EE86, 0x1EE87,
+      0x1EE88, 0x1EE89, 0x1EE8B, 0x1EE8C, 0x1EE8D, 0x1EE8E, 0x1EE8F, 0x1EE90,
+      0x1EE91, 0x1EE92, 0x1EE93, 0x1EE94, 0x1EE95, 0x1EE96, 0x1EE97, 0x1EE98,
+      0x1EE99, 0x1EE9A, 0x1EE9B, 0x1EEA1, 0x1EEA2, 0x1EEA3, 0x1EEA5, 0x1EEA6,
+      0x1EEA7, 0x1EEA8, 0x1EEA9, 0x1EEAB, 0x1EEAC, 0x1EEAD, 0x1EEAE, 0x1EEAF,
+      0x1EEB0, 0x1EEB1, 0x1EEB2, 0x1EEB3, 0x1EEB4, 0x1EEB5, 0x1EEB6, 0x1EEB7,
+      0x1EEB8, 0x1EEB9, 0x1EEBA, 0x1EEBB, 0x10FFFD];
+
+  function determineBidi(cueDiv) {
+    var nodeStack = [],
+        text = "",
+        charCode;
+
+    if (!cueDiv || !cueDiv.childNodes) {
+      return "ltr";
+    }
+
+    function pushNodes(nodeStack, node) {
+      for (var i = node.childNodes.length - 1; i >= 0; i--) {
+        nodeStack.push(node.childNodes[i]);
+      }
+    }
+
+    function nextTextNode(nodeStack) {
+      if (!nodeStack || !nodeStack.length) {
+        return null;
+      }
+
+      var node = nodeStack.pop(),
+          text = node.textContent || node.innerText;
+      if (text) {
+        // TODO: This should match all unicode type B characters (paragraph
+        // separator characters). See issue #115.
+        var m = text.match(/^.*(\n|\r)/);
+        if (m) {
+          nodeStack.length = 0;
+          return m[0];
+        }
+        return text;
+      }
+      if (node.tagName === "ruby") {
+        return nextTextNode(nodeStack);
+      }
+      if (node.childNodes) {
+        pushNodes(nodeStack, node);
+        return nextTextNode(nodeStack);
+      }
+    }
+
+    pushNodes(nodeStack, cueDiv);
+    while ((text = nextTextNode(nodeStack))) {
+      for (var i = 0; i < text.length; i++) {
+        charCode = text.charCodeAt(i);
+        for (var j = 0; j < strongRTLChars.length; j++) {
+          if (strongRTLChars[j] === charCode) {
+            return "rtl";
+          }
+        }
+      }
+    }
+    return "ltr";
+  }
+
+  function computeLinePos(cue) {
+    if (typeof cue.line === "number" &&
+        (cue.snapToLines || (cue.line >= 0 && cue.line <= 100))) {
+      return cue.line;
+    }
+    if (!cue.track || !cue.track.textTrackList ||
+        !cue.track.textTrackList.mediaElement) {
+      return -1;
+    }
+    var track = cue.track,
+        trackList = track.textTrackList,
+        count = 0;
+    for (var i = 0; i < trackList.length && trackList[i] !== track; i++) {
+      if (trackList[i].mode === "showing") {
+        count++;
+      }
+    }
+    return ++count * -1;
+  }
+
+  function StyleBox() {
+  }
+
+  // Apply styles to a div. If there is no div passed then it defaults to the
+  // div on 'this'.
+  StyleBox.prototype.applyStyles = function(styles, div) {
+    div = div || this.div;
+    for (var prop in styles) {
+      if (styles.hasOwnProperty(prop)) {
+        div.style[prop] = styles[prop];
+      }
+    }
+  };
+
+  StyleBox.prototype.formatStyle = function(val, unit) {
+    return val === 0 ? 0 : val + unit;
+  };
+
+  // Constructs the computed display state of the cue (a div). Places the div
+  // into the overlay which should be a block level element (usually a div).
+  function CueStyleBox(window, cue, styleOptions) {
+    var isIE8 = (/MSIE\s8\.0/).test(navigator.userAgent);
+    var color = "rgba(255, 255, 255, 1)";
+    var backgroundColor = "rgba(0, 0, 0, 0.8)";
+
+    if (isIE8) {
+      color = "rgb(255, 255, 255)";
+      backgroundColor = "rgb(0, 0, 0)";
+    }
+
+    StyleBox.call(this);
+    this.cue = cue;
+
+    // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
+    // have inline positioning and will function as the cue background box.
+    this.cueDiv = parseContent(window, cue.text);
+    var styles = {
+      color: color,
+      backgroundColor: backgroundColor,
+      position: "relative",
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      display: "inline"
+    };
+
+    if (!isIE8) {
+      styles.writingMode = cue.vertical === "" ? "horizontal-tb"
+                                               : cue.vertical === "lr" ? "vertical-lr"
+                                                                       : "vertical-rl";
+      styles.unicodeBidi = "plaintext";
+    }
+    this.applyStyles(styles, this.cueDiv);
+
+    // Create an absolutely positioned div that will be used to position the cue
+    // div. Note, all WebVTT cue-setting alignments are equivalent to the CSS
+    // mirrors of them except "middle" which is "center" in CSS.
+    this.div = window.document.createElement("div");
+    styles = {
+      textAlign: cue.align === "middle" ? "center" : cue.align,
+      font: styleOptions.font,
+      whiteSpace: "pre-line",
+      position: "absolute"
+    };
+
+    if (!isIE8) {
+      styles.direction = determineBidi(this.cueDiv);
+      styles.writingMode = cue.vertical === "" ? "horizontal-tb"
+                                               : cue.vertical === "lr" ? "vertical-lr"
+                                                                       : "vertical-rl".
+      stylesunicodeBidi =  "plaintext";
+    }
+
+    this.applyStyles(styles);
+
+    this.div.appendChild(this.cueDiv);
+
+    // Calculate the distance from the reference edge of the viewport to the text
+    // position of the cue box. The reference edge will be resolved later when
+    // the box orientation styles are applied.
+    var textPos = 0;
+    switch (cue.positionAlign) {
+    case "start":
+      textPos = cue.position;
+      break;
+    case "middle":
+      textPos = cue.position - (cue.size / 2);
+      break;
+    case "end":
+      textPos = cue.position - cue.size;
+      break;
+    }
+
+    // Horizontal box orientation; textPos is the distance from the left edge of the
+    // area to the left edge of the box and cue.size is the distance extending to
+    // the right from there.
+    if (cue.vertical === "") {
+      this.applyStyles({
+        left:  this.formatStyle(textPos, "%"),
+        width: this.formatStyle(cue.size, "%")
+      });
+    // Vertical box orientation; textPos is the distance from the top edge of the
+    // area to the top edge of the box and cue.size is the height extending
+    // downwards from there.
+    } else {
+      this.applyStyles({
+        top: this.formatStyle(textPos, "%"),
+        height: this.formatStyle(cue.size, "%")
+      });
+    }
+
+    this.move = function(box) {
+      this.applyStyles({
+        top: this.formatStyle(box.top, "px"),
+        bottom: this.formatStyle(box.bottom, "px"),
+        left: this.formatStyle(box.left, "px"),
+        right: this.formatStyle(box.right, "px"),
+        height: this.formatStyle(box.height, "px"),
+        width: this.formatStyle(box.width, "px")
+      });
+    };
+  }
+  CueStyleBox.prototype = _objCreate(StyleBox.prototype);
+  CueStyleBox.prototype.constructor = CueStyleBox;
+
+  // Represents the co-ordinates of an Element in a way that we can easily
+  // compute things with such as if it overlaps or intersects with another Element.
+  // Can initialize it with either a StyleBox or another BoxPosition.
+  function BoxPosition(obj) {
+    var isIE8 = (/MSIE\s8\.0/).test(navigator.userAgent);
+
+    // Either a BoxPosition was passed in and we need to copy it, or a StyleBox
+    // was passed in and we need to copy the results of 'getBoundingClientRect'
+    // as the object returned is readonly. All co-ordinate values are in reference
+    // to the viewport origin (top left).
+    var lh, height, width, top;
+    if (obj.div) {
+      height = obj.div.offsetHeight;
+      width = obj.div.offsetWidth;
+      top = obj.div.offsetTop;
+
+      var rects = (rects = obj.div.childNodes) && (rects = rects[0]) &&
+                  rects.getClientRects && rects.getClientRects();
+      obj = obj.div.getBoundingClientRect();
+      // In certain cases the outter div will be slightly larger then the sum of
+      // the inner div's lines. This could be due to bold text, etc, on some platforms.
+      // In this case we should get the average line height and use that. This will
+      // result in the desired behaviour.
+      lh = rects ? Math.max((rects[0] && rects[0].height) || 0, obj.height / rects.length)
+                 : 0;
+
+    }
+    this.left = obj.left;
+    this.right = obj.right;
+    this.top = obj.top || top;
+    this.height = obj.height || height;
+    this.bottom = obj.bottom || (top + (obj.height || height));
+    this.width = obj.width || width;
+    this.lineHeight = lh !== undefined ? lh : obj.lineHeight;
+
+    if (isIE8 && !this.lineHeight) {
+      this.lineHeight = 13;
+    }
+  }
+
+  // Move the box along a particular axis. Optionally pass in an amount to move
+  // the box. If no amount is passed then the default is the line height of the
+  // box.
+  BoxPosition.prototype.move = function(axis, toMove) {
+    toMove = toMove !== undefined ? toMove : this.lineHeight;
+    switch (axis) {
+    case "+x":
+      this.left += toMove;
+      this.right += toMove;
+      break;
+    case "-x":
+      this.left -= toMove;
+      this.right -= toMove;
+      break;
+    case "+y":
+      this.top += toMove;
+      this.bottom += toMove;
+      break;
+    case "-y":
+      this.top -= toMove;
+      this.bottom -= toMove;
+      break;
+    }
+  };
+
+  // Check if this box overlaps another box, b2.
+  BoxPosition.prototype.overlaps = function(b2) {
+    return this.left < b2.right &&
+           this.right > b2.left &&
+           this.top < b2.bottom &&
+           this.bottom > b2.top;
+  };
+
+  // Check if this box overlaps any other boxes in boxes.
+  BoxPosition.prototype.overlapsAny = function(boxes) {
+    for (var i = 0; i < boxes.length; i++) {
+      if (this.overlaps(boxes[i])) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Check if this box is within another box.
+  BoxPosition.prototype.within = function(container) {
+    return this.top >= container.top &&
+           this.bottom <= container.bottom &&
+           this.left >= container.left &&
+           this.right <= container.right;
+  };
+
+  // Check if this box is entirely within the container or it is overlapping
+  // on the edge opposite of the axis direction passed. For example, if "+x" is
+  // passed and the box is overlapping on the left edge of the container, then
+  // return true.
+  BoxPosition.prototype.overlapsOppositeAxis = function(container, axis) {
+    switch (axis) {
+    case "+x":
+      return this.left < container.left;
+    case "-x":
+      return this.right > container.right;
+    case "+y":
+      return this.top < container.top;
+    case "-y":
+      return this.bottom > container.bottom;
+    }
+  };
+
+  // Find the percentage of the area that this box is overlapping with another
+  // box.
+  BoxPosition.prototype.intersectPercentage = function(b2) {
+    var x = Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)),
+        y = Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top)),
+        intersectArea = x * y;
+    return intersectArea / (this.height * this.width);
+  };
+
+  // Convert the positions from this box to CSS compatible positions using
+  // the reference container's positions. This has to be done because this
+  // box's positions are in reference to the viewport origin, whereas, CSS
+  // values are in referecne to their respective edges.
+  BoxPosition.prototype.toCSSCompatValues = function(reference) {
+    return {
+      top: this.top - reference.top,
+      bottom: reference.bottom - this.bottom,
+      left: this.left - reference.left,
+      right: reference.right - this.right,
+      height: this.height,
+      width: this.width
+    };
+  };
+
+  // Get an object that represents the box's position without anything extra.
+  // Can pass a StyleBox, HTMLElement, or another BoxPositon.
+  BoxPosition.getSimpleBoxPosition = function(obj) {
+    var height = obj.div ? obj.div.offsetHeight : obj.tagName ? obj.offsetHeight : 0;
+    var width = obj.div ? obj.div.offsetWidth : obj.tagName ? obj.offsetWidth : 0;
+    var top = obj.div ? obj.div.offsetTop : obj.tagName ? obj.offsetTop : 0;
+
+    obj = obj.div ? obj.div.getBoundingClientRect() :
+                  obj.tagName ? obj.getBoundingClientRect() : obj;
+    var ret = {
+      left: obj.left,
+      right: obj.right,
+      top: obj.top || top,
+      height: obj.height || height,
+      bottom: obj.bottom || (top + (obj.height || height)),
+      width: obj.width || width
+    };
+    return ret;
+  };
+
+  // Move a StyleBox to its specified, or next best, position. The containerBox
+  // is the box that contains the StyleBox, such as a div. boxPositions are
+  // a list of other boxes that the styleBox can't overlap with.
+  function moveBoxToLinePosition(window, styleBox, containerBox, boxPositions) {
+
+    // Find the best position for a cue box, b, on the video. The axis parameter
+    // is a list of axis, the order of which, it will move the box along. For example:
+    // Passing ["+x", "-x"] will move the box first along the x axis in the positive
+    // direction. If it doesn't find a good position for it there it will then move
+    // it along the x axis in the negative direction.
+    function findBestPosition(b, axis) {
+      var bestPosition,
+          specifiedPosition = new BoxPosition(b),
+          percentage = 1; // Highest possible so the first thing we get is better.
+
+      for (var i = 0; i < axis.length; i++) {
+        while (b.overlapsOppositeAxis(containerBox, axis[i]) ||
+               (b.within(containerBox) && b.overlapsAny(boxPositions))) {
+          b.move(axis[i]);
+        }
+        // We found a spot where we aren't overlapping anything. This is our
+        // best position.
+        if (b.within(containerBox)) {
+          return b;
+        }
+        var p = b.intersectPercentage(containerBox);
+        // If we're outside the container box less then we were on our last try
+        // then remember this position as the best position.
+        if (percentage > p) {
+          bestPosition = new BoxPosition(b);
+          percentage = p;
+        }
+        // Reset the box position to the specified position.
+        b = new BoxPosition(specifiedPosition);
+      }
+      return bestPosition || specifiedPosition;
+    }
+
+    var boxPosition = new BoxPosition(styleBox),
+        cue = styleBox.cue,
+        linePos = computeLinePos(cue),
+        axis = [];
+
+    // If we have a line number to align the cue to.
+    if (cue.snapToLines) {
+      var size;
+      switch (cue.vertical) {
+      case "":
+        axis = [ "+y", "-y" ];
+        size = "height";
+        break;
+      case "rl":
+        axis = [ "+x", "-x" ];
+        size = "width";
+        break;
+      case "lr":
+        axis = [ "-x", "+x" ];
+        size = "width";
+        break;
+      }
+
+      var step = boxPosition.lineHeight,
+          position = step * Math.round(linePos),
+          maxPosition = containerBox[size] + step,
+          initialAxis = axis[0];
+
+      // If the specified intial position is greater then the max position then
+      // clamp the box to the amount of steps it would take for the box to
+      // reach the max position.
+      if (Math.abs(position) > maxPosition) {
+        position = position < 0 ? -1 : 1;
+        position *= Math.ceil(maxPosition / step) * step;
+      }
+
+      // If computed line position returns negative then line numbers are
+      // relative to the bottom of the video instead of the top. Therefore, we
+      // need to increase our initial position by the length or width of the
+      // video, depending on the writing direction, and reverse our axis directions.
+      if (linePos < 0) {
+        position += cue.vertical === "" ? containerBox.height : containerBox.width;
+        axis = axis.reverse();
+      }
+
+      // Move the box to the specified position. This may not be its best
+      // position.
+      boxPosition.move(initialAxis, position);
+
+    } else {
+      // If we have a percentage line value for the cue.
+      var calculatedPercentage = (boxPosition.lineHeight / containerBox.height) * 100;
+
+      switch (cue.lineAlign) {
+      case "middle":
+        linePos -= (calculatedPercentage / 2);
+        break;
+      case "end":
+        linePos -= calculatedPercentage;
+        break;
+      }
+
+      // Apply initial line position to the cue box.
+      switch (cue.vertical) {
+      case "":
+        styleBox.applyStyles({
+          top: styleBox.formatStyle(linePos, "%")
+        });
+        break;
+      case "rl":
+        styleBox.applyStyles({
+          left: styleBox.formatStyle(linePos, "%")
+        });
+        break;
+      case "lr":
+        styleBox.applyStyles({
+          right: styleBox.formatStyle(linePos, "%")
+        });
+        break;
+      }
+
+      axis = [ "+y", "-x", "+x", "-y" ];
+
+      // Get the box position again after we've applied the specified positioning
+      // to it.
+      boxPosition = new BoxPosition(styleBox);
+    }
+
+    var bestPosition = findBestPosition(boxPosition, axis);
+    styleBox.move(bestPosition.toCSSCompatValues(containerBox));
+  }
+
+  function WebVTT() {
+    // Nothing
+  }
+
+  // Helper to allow strings to be decoded instead of the default binary utf8 data.
+  WebVTT.StringDecoder = function() {
+    return {
+      decode: function(data) {
+        if (!data) {
+          return "";
+        }
+        if (typeof data !== "string") {
+          throw new Error("Error - expected string data.");
+        }
+        return decodeURIComponent(encodeURIComponent(data));
+      }
+    };
+  };
+
+  WebVTT.convertCueToDOMTree = function(window, cuetext) {
+    if (!window || !cuetext) {
+      return null;
+    }
+    return parseContent(window, cuetext);
+  };
+
+  var FONT_SIZE_PERCENT = 0.05;
+  var FONT_STYLE = "sans-serif";
+  var CUE_BACKGROUND_PADDING = "1.5%";
+
+  // Runs the processing model over the cues and regions passed to it.
+  // @param overlay A block level element (usually a div) that the computed cues
+  //                and regions will be placed into.
+  WebVTT.processCues = function(window, cues, overlay) {
+    if (!window || !cues || !overlay) {
+      return null;
+    }
+
+    // Remove all previous children.
+    while (overlay.firstChild) {
+      overlay.removeChild(overlay.firstChild);
+    }
+
+    var paddedOverlay = window.document.createElement("div");
+    paddedOverlay.style.position = "absolute";
+    paddedOverlay.style.left = "0";
+    paddedOverlay.style.right = "0";
+    paddedOverlay.style.top = "0";
+    paddedOverlay.style.bottom = "0";
+    paddedOverlay.style.margin = CUE_BACKGROUND_PADDING;
+    overlay.appendChild(paddedOverlay);
+
+    // Determine if we need to compute the display states of the cues. This could
+    // be the case if a cue's state has been changed since the last computation or
+    // if it has not been computed yet.
+    function shouldCompute(cues) {
+      for (var i = 0; i < cues.length; i++) {
+        if (cues[i].hasBeenReset || !cues[i].displayState) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // We don't need to recompute the cues' display states. Just reuse them.
+    if (!shouldCompute(cues)) {
+      for (var i = 0; i < cues.length; i++) {
+        paddedOverlay.appendChild(cues[i].displayState);
+      }
+      return;
+    }
+
+    var boxPositions = [],
+        containerBox = BoxPosition.getSimpleBoxPosition(paddedOverlay),
+        fontSize = Math.round(containerBox.height * FONT_SIZE_PERCENT * 100) / 100;
+    var styleOptions = {
+      font: fontSize + "px " + FONT_STYLE
+    };
+
+    (function() {
+      var styleBox, cue;
+
+      for (var i = 0; i < cues.length; i++) {
+        cue = cues[i];
+
+        // Compute the intial position and styles of the cue div.
+        styleBox = new CueStyleBox(window, cue, styleOptions);
+        paddedOverlay.appendChild(styleBox.div);
+
+        // Move the cue div to it's correct line position.
+        moveBoxToLinePosition(window, styleBox, containerBox, boxPositions);
+
+        // Remember the computed div so that we don't have to recompute it later
+        // if we don't have too.
+        cue.displayState = styleBox.div;
+
+        boxPositions.push(BoxPosition.getSimpleBoxPosition(styleBox));
+      }
+    })();
+  };
+
+  WebVTT.Parser = function(window, vttjs, decoder) {
+    if (!decoder) {
+      decoder = vttjs;
+      vttjs = {};
+    }
+    if (!vttjs) {
+      vttjs = {};
+    }
+
+    this.window = window;
+    this.vttjs = vttjs;
+    this.state = "INITIAL";
+    this.buffer = "";
+    this.decoder = decoder || new TextDecoder("utf8");
+    this.regionList = [];
+  };
+
+  WebVTT.Parser.prototype = {
+    // If the error is a ParsingError then report it to the consumer if
+    // possible. If it's not a ParsingError then throw it like normal.
+    reportOrThrowError: function(e) {
+      if (e instanceof ParsingError) {
+        this.onparsingerror && this.onparsingerror(e);
+      } else {
+        throw e;
+      }
+    },
+    parse: function (data) {
+      var self = this;
+
+      // If there is no data then we won't decode it, but will just try to parse
+      // whatever is in buffer already. This may occur in circumstances, for
+      // example when flush() is called.
+      if (data) {
+        // Try to decode the data that we received.
+        self.buffer += self.decoder.decode(data, {stream: true});
+      }
+
+      function collectNextLine() {
+        var buffer = self.buffer;
+        var pos = 0;
+        while (pos < buffer.length && buffer[pos] !== '\r' && buffer[pos] !== '\n') {
+          ++pos;
+        }
+        var line = buffer.substr(0, pos);
+        // Advance the buffer early in case we fail below.
+        if (buffer[pos] === '\r') {
+          ++pos;
+        }
+        if (buffer[pos] === '\n') {
+          ++pos;
+        }
+        self.buffer = buffer.substr(pos);
+        return line;
+      }
+
+      // 3.4 WebVTT region and WebVTT region settings syntax
+      function parseRegion(input) {
+        var settings = new Settings();
+
+        parseOptions(input, function (k, v) {
+          switch (k) {
+          case "id":
+            settings.set(k, v);
+            break;
+          case "width":
+            settings.percent(k, v);
+            break;
+          case "lines":
+            settings.integer(k, v);
+            break;
+          case "regionanchor":
+          case "viewportanchor":
+            var xy = v.split(',');
+            if (xy.length !== 2) {
+              break;
+            }
+            // We have to make sure both x and y parse, so use a temporary
+            // settings object here.
+            var anchor = new Settings();
+            anchor.percent("x", xy[0]);
+            anchor.percent("y", xy[1]);
+            if (!anchor.has("x") || !anchor.has("y")) {
+              break;
+            }
+            settings.set(k + "X", anchor.get("x"));
+            settings.set(k + "Y", anchor.get("y"));
+            break;
+          case "scroll":
+            settings.alt(k, v, ["up"]);
+            break;
+          }
+        }, /=/, /\s/);
+
+        // Create the region, using default values for any values that were not
+        // specified.
+        if (settings.has("id")) {
+          var region = new (self.vttjs.VTTRegion || self.window.VTTRegion)();
+          region.width = settings.get("width", 100);
+          region.lines = settings.get("lines", 3);
+          region.regionAnchorX = settings.get("regionanchorX", 0);
+          region.regionAnchorY = settings.get("regionanchorY", 100);
+          region.viewportAnchorX = settings.get("viewportanchorX", 0);
+          region.viewportAnchorY = settings.get("viewportanchorY", 100);
+          region.scroll = settings.get("scroll", "");
+          // Register the region.
+          self.onregion && self.onregion(region);
+          // Remember the VTTRegion for later in case we parse any VTTCues that
+          // reference it.
+          self.regionList.push({
+            id: settings.get("id"),
+            region: region
+          });
+        }
+      }
+
+      // 3.2 WebVTT metadata header syntax
+      function parseHeader(input) {
+        parseOptions(input, function (k, v) {
+          switch (k) {
+          case "Region":
+            // 3.3 WebVTT region metadata header syntax
+            parseRegion(v);
+            break;
+          }
+        }, /:/);
+      }
+
+      // 5.1 WebVTT file parsing.
+      try {
+        var line;
+        if (self.state === "INITIAL") {
+          // We can't start parsing until we have the first line.
+          if (!/\r\n|\n/.test(self.buffer)) {
+            return this;
+          }
+
+          line = collectNextLine();
+
+          var m = line.match(/^WEBVTT([ \t].*)?$/);
+          if (!m || !m[0]) {
+            throw new ParsingError(ParsingError.Errors.BadSignature);
+          }
+
+          self.state = "HEADER";
+        }
+
+        var alreadyCollectedLine = false;
+        while (self.buffer) {
+          // We can't parse a line until we have the full line.
+          if (!/\r\n|\n/.test(self.buffer)) {
+            return this;
+          }
+
+          if (!alreadyCollectedLine) {
+            line = collectNextLine();
+          } else {
+            alreadyCollectedLine = false;
+          }
+
+          switch (self.state) {
+          case "HEADER":
+            // 13-18 - Allow a header (metadata) under the WEBVTT line.
+            if (/:/.test(line)) {
+              parseHeader(line);
+            } else if (!line) {
+              // An empty line terminates the header and starts the body (cues).
+              self.state = "ID";
+            }
+            continue;
+          case "NOTE":
+            // Ignore NOTE blocks.
+            if (!line) {
+              self.state = "ID";
+            }
+            continue;
+          case "ID":
+            // Check for the start of NOTE blocks.
+            if (/^NOTE($|[ \t])/.test(line)) {
+              self.state = "NOTE";
+              break;
+            }
+            // 19-29 - Allow any number of line terminators, then initialize new cue values.
+            if (!line) {
+              continue;
+            }
+            self.cue = new (self.vttjs.VTTCue || self.window.VTTCue)(0, 0, "");
+            self.state = "CUE";
+            // 30-39 - Check if self line contains an optional identifier or timing data.
+            if (line.indexOf("-->") === -1) {
+              self.cue.id = line;
+              continue;
+            }
+            // Process line as start of a cue.
+            /*falls through*/
+          case "CUE":
+            // 40 - Collect cue timings and settings.
+            try {
+              parseCue(line, self.cue, self.regionList);
+            } catch (e) {
+              self.reportOrThrowError(e);
+              // In case of an error ignore rest of the cue.
+              self.cue = null;
+              self.state = "BADCUE";
+              continue;
+            }
+            self.state = "CUETEXT";
+            continue;
+          case "CUETEXT":
+            var hasSubstring = line.indexOf("-->") !== -1;
+            // 34 - If we have an empty line then report the cue.
+            // 35 - If we have the special substring '-->' then report the cue,
+            // but do not collect the line as we need to process the current
+            // one as a new cue.
+            if (!line || hasSubstring && (alreadyCollectedLine = true)) {
+              // We are done parsing self cue.
+              self.oncue && self.oncue(self.cue);
+              self.cue = null;
+              self.state = "ID";
+              continue;
+            }
+            if (self.cue.text) {
+              self.cue.text += "\n";
+            }
+            self.cue.text += line;
+            continue;
+          case "BADCUE": // BADCUE
+            // 54-62 - Collect and discard the remaining cue.
+            if (!line) {
+              self.state = "ID";
+            }
+            continue;
+          }
+        }
+      } catch (e) {
+        self.reportOrThrowError(e);
+
+        // If we are currently parsing a cue, report what we have.
+        if (self.state === "CUETEXT" && self.cue && self.oncue) {
+          self.oncue(self.cue);
+        }
+        self.cue = null;
+        // Enter BADWEBVTT state if header was not parsed correctly otherwise
+        // another exception occurred so enter BADCUE state.
+        self.state = self.state === "INITIAL" ? "BADWEBVTT" : "BADCUE";
+      }
+      return this;
+    },
+    flush: function () {
+      var self = this;
+      try {
+        // Finish decoding the stream.
+        self.buffer += self.decoder.decode();
+        // Synthesize the end of the current cue or region.
+        if (self.cue || self.state === "HEADER") {
+          self.buffer += "\n\n";
+          self.parse();
+        }
+        // If we've flushed, parsed, and we're still on the INITIAL state then
+        // that means we don't have enough of the stream to parse the first
+        // line.
+        if (self.state === "INITIAL") {
+          throw new ParsingError(ParsingError.Errors.BadSignature);
+        }
+      } catch(e) {
+        self.reportOrThrowError(e);
+      }
+      self.onflush && self.onflush();
+      return this;
+    }
+  };
+
+  global.WebVTT = WebVTT;
+
+}(this, (this.vttjs || {})));
