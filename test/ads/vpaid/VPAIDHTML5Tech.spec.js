@@ -119,7 +119,6 @@ describe("VPAIDHTML5Tech", function() {
 
         assert.isNull(vpaidTech.vpaidHTMLClient);
         assert.isNull(vpaidTech.containerEl);
-        assert.isNull(vpaidTech.videoEl);
       });
     });
   });
