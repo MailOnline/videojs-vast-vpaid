@@ -64,11 +64,6 @@ VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
     dom.remove(this.containerEl);
     this.containerEl = null;
   }
-
-  if (this.videoEl) {
-    dom.remove(this.videoEl);
-    this.videoEl = null;
-  }
 };
 
 var PREFIX = 'on VPAIDHTML5Tech';
