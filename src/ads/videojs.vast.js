@@ -132,7 +132,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       player.one('ended', function () {
         dom.removeClass(player.el(), 'vjs-vast-finish');
         volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
       });
     }
 
