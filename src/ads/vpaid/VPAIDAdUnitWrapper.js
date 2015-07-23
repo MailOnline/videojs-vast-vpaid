@@ -4,7 +4,7 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
   }
   sanityCheck(vpaidAdUnit, opts);
   var defaultOpts = {
-    responseTimeout: 2000
+    responseTimeout: 5000
   };
 
   this.options = extend({}, defaultOpts, opts || {});
@@ -140,8 +140,8 @@ VPAIDAdUnitWrapper.prototype.handshakeVersion = function (version, cb) {
 
 /* jshint maxparams:6 */
 VPAIDAdUnitWrapper.prototype.initAd = function (width, height, viewMode, desiredBitrate, adUnitData, cb) {
-  this._adUnit.initAd(width, height, viewMode, desiredBitrate, adUnitData);
   this.waitForEvent('AdLoaded', cb);
+  this._adUnit.initAd(width, height, viewMode, desiredBitrate, adUnitData);
 };
 
 VPAIDAdUnitWrapper.prototype.resizeAd = function (width, height, viewMode, cb) {
@@ -151,38 +151,38 @@ VPAIDAdUnitWrapper.prototype.resizeAd = function (width, height, viewMode, cb) {
 };
 
 VPAIDAdUnitWrapper.prototype.startAd = function (cb) {
-  this._adUnit.startAd();
   this.waitForEvent('AdStarted', cb);
+  this._adUnit.startAd();
 };
 
 VPAIDAdUnitWrapper.prototype.stopAd = function (cb) {
-  this._adUnit.stopAd();
   this.waitForEvent('AdStopped', cb);
+  this._adUnit.stopAd();
 };
 
 VPAIDAdUnitWrapper.prototype.pauseAd = function (cb) {
-  this._adUnit.pauseAd();
   this.waitForEvent('AdPaused', cb);
+  this._adUnit.pauseAd();
 };
 
 VPAIDAdUnitWrapper.prototype.resumeAd = function (cb) {
-  this._adUnit.resumeAd();
   this.waitForEvent('AdPlaying', cb);
+  this._adUnit.resumeAd();
 };
 
 VPAIDAdUnitWrapper.prototype.expandAd = function (cb) {
-  this._adUnit.expandAd();
   this.waitForEvent('AdExpandedChange', cb);
+  this._adUnit.expandAd();
 };
 
 VPAIDAdUnitWrapper.prototype.collapseAd = function (cb) {
-  this._adUnit.collapseAd();
   this.waitForEvent('AdExpandedChange', cb);
+  this._adUnit.collapseAd();
 };
 
 VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
-  this._adUnit.skipAd();
   this.waitForEvent('AdSkipped', cb);
+  this._adUnit.skipAd();
 };
 
 //VPAID property getters
