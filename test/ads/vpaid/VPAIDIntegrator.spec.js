@@ -742,4 +742,24 @@ describe("VPAIDIntegrator", function () {
       });
     });
   });
+
+  describe("must finish destroy adUnit", function() {
+    it("must destroy adUnit when AdStopped", function() {
+      var vpaidIntegrator = new VPAIDIntegrator(player);
+      var adUnit = new FakeAdUnit();
+      var spy = sinon.spy();
+      vpaidIntegrator._finishPlaying(adUnit, new VASTResponse(), spy);
+      adUnit.trigger('AdStopped');
+      assert(spy.calledOnce);
+    });
+
+    it("must destroy adUnit when AdStopped", function() {
+      var vpaidIntegrator = new VPAIDIntegrator(player);
+      var adUnit = new FakeAdUnit();
+      var spy = sinon.spy();
+      vpaidIntegrator._finishPlaying(adUnit, new VASTResponse(), spy);
+      adUnit.trigger('AdError');
+      assert(spy.calledOnce);
+    });
+  });
 });

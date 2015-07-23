@@ -392,7 +392,7 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 };
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
-  adUnit.on('AdVideoComplete', function () {
+  adUnit.on('AdStopped', function () {
     next(null, adUnit, vastResponse);
   });
 
