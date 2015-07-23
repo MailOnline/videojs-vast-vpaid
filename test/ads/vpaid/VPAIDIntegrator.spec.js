@@ -17,7 +17,7 @@ describe("VPAIDIntegrator", function () {
     this.getAdVolume = function(fn) {
       var vol = this.volume;
       window.setTimeout(function() {
-        fn(vol);
+        fn(null, vol);
       }, 0)
 
     };
@@ -33,7 +33,7 @@ describe("VPAIDIntegrator", function () {
     this.getAdSkippableState = function(fn) {
       var skippable = this.isSkippable;
       window.setTimeout(function() {
-        fn(skippable);
+        fn(null, skippable);
       }, 0)
     };
 

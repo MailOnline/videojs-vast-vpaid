@@ -256,7 +256,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
 
   adUnit.on('AdVolumeChange', function () {
     var lastVolume = player.volume();
-    adUnit.getAdVolume(function (currentVolume) {
+    adUnit.getAdVolume(function (error, currentVolume) {
       if (currentVolume === 0 && lastVolume > 0) {
         tracker.trackMute();
       }
@@ -285,7 +285,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   /*** Local function ***/
   function updateSkipButtonState() {
-    adUnit.getAdSkippableState(function (isSkippable) {
+    adUnit.getAdSkippableState(function (error, isSkippable) {
       if (isSkippable) {
         addSkipButton(player);
       } else {
