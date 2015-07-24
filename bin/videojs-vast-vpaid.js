@@ -1375,12 +1375,13 @@ var FILTERED_EVENTS = IVPAIDAdUnit.EVENTS.filter(function (event) {
  * @param {HTMLElement} [el] this will be used in initAd environmentVars.slot if defined
  * @param {HTMLVideoElement} [video] this will be used in initAd environmentVars.videoSlot if defined
  */
-function VPAIDAdUnit(VPAIDCreative, el, video) {
+function VPAIDAdUnit(VPAIDCreative, el, video, iframe) {
     this._isValid = checkVPAIDInterface(VPAIDCreative);
     if (this._isValid) {
         this._creative = VPAIDCreative;
         this._el = el;
         this._videoEl = video;
+        this._iframe = iframe;
         this._subscribers = new Subscriber();
         $addEventsSubscribers.call(this);
     }
@@ -1570,7 +1571,7 @@ module.exports = VPAIDAdUnit;
 var utils = require('./utils');
 var unique = utils.unique('vpaidIframe');
 var VPAIDAdUnit = require('./VPAIDAdUnit');
-var defaultTemplate = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n</head>\n<body>\n    <script type=\"text/javascript\" src=\"{{iframeURL_JS}}\"></script>\n    <script>\n        parent.postMessage('{\"event\": \"ready\", \"id\": \"{{iframeID}}\"}', window.location.origin);\n    </script>\n</body>\n</html>\n";
+var defaultTemplate = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n</head>\n<body>\n    <script type=\"text/javascript\" src=\"{{iframeURL_JS}}\"></script>\n    <script>\n        parent.postMessage('{\"event\": \"ready\", \"id\": \"{{iframeID}}\"}', window.location.origin);\n    </script>\n    <div class=\"ad-element\">\n    </div>\n</body>\n</html>\n";
 
 var AD_STOPPED = 'AdStopped';
 
@@ -1680,7 +1681,7 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
         }
 
         if (!error) {
-            adUnit = new VPAIDAdUnit(createAd(), this._adElContainer, this._videoEl);
+            adUnit = new VPAIDAdUnit(createAd(), this._frame.contentWindow.document.querySelector('.ad-element'), this._videoEl, this._frame);
             adUnit.subscribe(AD_STOPPED, $adDestroyed.bind(this));
             error = utils.validate(adUnit.isValidVPAIDAd(), 'the add is not fully complaint with VPAID specification');
         }
@@ -1916,8 +1917,11 @@ function createIframeWithContent(parent, template, data) {
 function createIframe(parent, url) {
     var nEl = document.createElement('iframe');
     nEl.src = url || 'about:blank';
-    nEl.width = 0;
-    nEl.height = 0;
+    nEl.width = '100%';
+    nEl.height = '100%';
+    nEl.style.position = 'absolute';
+    nEl.style.left = '0';
+    nEl.style.top = '0';
     parent.innerHTML = '';
     parent.appendChild(nEl);
     return nEl;
