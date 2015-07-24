@@ -25,7 +25,6 @@ VPAIDHTML5Tech.supports = function (type) {
 
 VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
   sanityCheck(containerEl, videoEl, callback);
-  //TODO: change default timeout
 
   this.containerEl = containerEl;
   this.videoEl = videoEl;
