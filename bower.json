@@ -25,7 +25,7 @@
   ],
   "dependencies": {
     "VPAIDFLASHClient": "0.1.3",
-    "VPAIDHTML5Client": "0.1.3"
+    "VPAIDHTML5Client": "0.1.4"
   },
   "devDependencies": {
     "video.js": "4.12.11",
