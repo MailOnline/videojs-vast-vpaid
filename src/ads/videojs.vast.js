@@ -32,7 +32,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     playAdAlways: false,
 
     // Flag to enable or disable the ads by default.
-    adsEnabled: true
+    adsEnabled: true,
+
+    // Boolean flag to enable or disable the resize with window.resize or orientationchange
+    autoResize: true
   };
 
   var settings = extend({}, defaultOpts, options || {});
@@ -238,7 +241,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       return;
     }
 
-    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player) : new VASTIntegrator(player);
+    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
     player.ads.startLinearAdMode();
@@ -322,3 +325,4 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return false;
   }
 });
+

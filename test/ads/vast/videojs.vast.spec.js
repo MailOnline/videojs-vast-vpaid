@@ -348,7 +348,8 @@ describe("videojs.vast plugin", function () {
       url: echoFn('http://fake.ad.url'),
       adCancelTimeout: 123,
       playAdAlways: true,
-      adsEnabled: true
+      adsEnabled: true,
+      autoResize: true
     };
     var player = videojs(document.createElement('video'), {});
     player.vastClient(adsOpts);
@@ -368,7 +369,8 @@ describe("videojs.vast plugin", function () {
       url: echoFn('http://fake.ad.url'),
       adCancelTimeout: 123,
       playAdAlways: true,
-      adsEnabled: true
+      adsEnabled: true,
+      autoResize: true
     };
     var player = videojs(document.createElement('video'), {});
     player.vastClient(adsOpts);

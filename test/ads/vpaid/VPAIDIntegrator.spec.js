@@ -9,6 +9,7 @@ describe("VPAIDIntegrator", function () {
     this.volume = 0;
     this.isSkippable = false;
 
+    this.resizeAd = sinon.spy();
     this.skipAd = sinon.spy();
     this.setVolume = function(vol) {
       this.volume = vol;
@@ -107,7 +108,7 @@ describe("VPAIDIntegrator", function () {
 
     beforeEach(function () {
       var mediaFile = createMediaFile('http://fakeMediaFile', 'application/x-fake');
-      vpaidIntegrator = new VPAIDIntegrator(player);
+      vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       callback = sinon.spy();
 
       fakeTech = function () {
@@ -743,9 +744,44 @@ describe("VPAIDIntegrator", function () {
     });
   });
 
+  describe("must support autoResize", function() {
+    it("must handle window resize", function() {
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
+      var adUnit = new FakeAdUnit();
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      window.dispatchEvent(new Event('resize'));
+      assert(adUnit.resizeAd.calledOnce);
+    });
+
+    it("must handle window orientation change", function() {
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
+      var adUnit = new FakeAdUnit();
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      window.dispatchEvent(new Event('orientationchange'));
+      assert(adUnit.resizeAd.calledOnce);
+    });
+
+    it("must handle vast.resize", function() {
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
+      var adUnit = new FakeAdUnit();
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      player.trigger('vast.resize');
+      assert(adUnit.resizeAd.calledOnce);
+    });
+
+    it("must ignore resize and orientation change when the flag is off", function() {
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: false});
+      var adUnit = new FakeAdUnit();
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      window.dispatchEvent(new Event('orientationchange'));
+      window.dispatchEvent(new Event('resize'));
+      assert.equal(adUnit.resizeAd.callCount, 0);
+    });
+  });
+
   describe("must finish destroy adUnit", function() {
     it("must destroy adUnit when AdStopped", function() {
-      var vpaidIntegrator = new VPAIDIntegrator(player);
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
       var spy = sinon.spy();
       vpaidIntegrator._finishPlaying(adUnit, new VASTResponse(), spy);
@@ -754,7 +790,7 @@ describe("VPAIDIntegrator", function () {
     });
 
     it("must destroy adUnit when AdStopped", function() {
-      var vpaidIntegrator = new VPAIDIntegrator(player);
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
       var spy = sinon.spy();
       vpaidIntegrator._finishPlaying(adUnit, new VASTResponse(), spy);
