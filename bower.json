@@ -14,6 +14,16 @@
     "bin/videojs-vast-vpaid.min.css"
   ],
   "license": "MIT",
+  "keywords": [
+    "vpaid",
+    "html5",
+    "flash",
+    "vast",
+    "videojs",
+    "js",
+    "video",
+    "iab"
+  ],
   "ignore": [
     "**/.*",
     "node_modules",
