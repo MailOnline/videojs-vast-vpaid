@@ -108,7 +108,7 @@
  >Flag to disable the ads. Defaults to false.
 
 ## autoResize
- >Flag to enable resize when the event `resize` or `orientationchange` is trigger by the the browser. Defaults to true
+ >Flag to enable resize of the adUnit on window's `resize` and `orientationchange` events. This is useful for responsive players. Defaults to true
 
 ## Returned object
  An invocation to ```player.vastClient({...})``` returns and object that with some helper functions that allow you to dynamically enable or disable the vast plugin, or check if it is enabled.
