@@ -29,7 +29,7 @@
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
-  "license": "",
+  "license": "MIT",
   "devDependencies": {
     "asciify": "^1.3.5",
     "async": "^1.2.1",
