@@ -1597,8 +1597,7 @@ function VPAIDHTML5Client(el, video, templateConfig, vpaidOptions) {
     this._id = unique();
     this._destroyed = false;
 
-    this._el = utils.createElementInEl(el, 'div', this._id);
-    this._frameContainer = utils.createElementInEl(this._el, 'div');
+    this._frameContainer = utils.createElementInEl(el, 'div');
     this._videoEl = video;
     this._vpaidOptions = vpaidOptions || {timeout: 10000};
 
@@ -1640,9 +1639,6 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
     $throwIfDestroyed.call(this);
     $unloadPreviousAdUnit.call(this);
 
-    this._adElContainer = utils.createElementInEl(this._el, 'div');
-    this._adElContainer.className = 'adEl';
-
     var frame = utils.createIframeWithContent(
         this._frameContainer,
         this._templateConfig.template,
@@ -1681,7 +1677,8 @@ VPAIDHTML5Client.prototype.loadAdUnit = function loadAdUnit(adURL, callback) {
         }
 
         if (!error) {
-            adUnit = new VPAIDAdUnit(createAd(), this._frame.contentWindow.document.querySelector('.ad-element'), this._videoEl, this._frame);
+            var adEl = this._frame.contentWindow.document.querySelector('.ad-element');
+            adUnit = new VPAIDAdUnit(createAd(), adEl, this._videoEl, this._frame);
             adUnit.subscribe(AD_STOPPED, $adDestroyed.bind(this));
             error = utils.validate(adUnit.isValidVPAIDAd(), 'the add is not fully complaint with VPAID specification');
         }
@@ -1741,7 +1738,6 @@ function $unloadPreviousAdUnit() {
 }
 
 function $removeAdElements() {
-    $removeEl.call(this, '_adElContainer');
     $removeEl.call(this, '_frame');
     $destroyLoadListener.call(this);
 }
@@ -3757,7 +3753,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     playAdAlways: false,
 
     // Flag to enable or disable the ads by default.
-    adsEnabled: true
+    adsEnabled: true,
+
+    // Boolean flag to enable or disable the resize with window.resize or orientationchange
+    autoResize: true
   };
 
   var settings = extend({}, defaultOpts, options || {});
@@ -3963,7 +3962,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       return;
     }
 
-    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player) : new VASTIntegrator(player);
+    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
     player.ads.startLinearAdMode();
@@ -4047,6 +4046,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return false;
   }
 });
+
 
 ;
 vjs.AdsLabel = vjs.Component.extend({
@@ -4468,7 +4468,7 @@ VPAIDHTML5Tech.MISSING_CALLBACK = PREFIX + ', missing valid callback';
 
 
 ;
-function VPAIDIntegrator(player) {
+function VPAIDIntegrator(player, settings) {
   if (!(this instanceof VPAIDIntegrator)) {
     return new VPAIDIntegrator(player);
   }
@@ -4488,6 +4488,7 @@ function VPAIDIntegrator(player) {
       minor: 0
     }
   };
+  this.settings = settings;
 
   /*** Local functions ***/
 
@@ -4739,6 +4740,16 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     });
   });
 
+  var updateViewSize = resizeAd.bind(this, player, adUnit, this.VIEW_MODE);
+
+  if (this.settings.autoResize) {
+    var updateViewSizeThrottled = throttle(updateViewSize, 100);
+    dom.addEventListener(window, 'resize', updateViewSizeThrottled);
+    dom.addEventListener(window, 'orientationchange', updateViewSizeThrottled);
+  }
+
+  player.on('vast.resize', updateViewSize);
+
   next(null, adUnit, vastResponse);
 };
 
@@ -4829,24 +4840,13 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
   }
 
   function linkFullScreenControl(player, adUnit, VIEW_MODE) {
+    var updateViewSize = resizeAd.bind(this, player, adUnit, VIEW_MODE);
+
     player.on('fullscreenchange', updateViewSize);
 
     player.on('VPAID.adended', function () {
       player.off('fullscreenchange', updateViewSize);
     });
-
-    /*** local functions ***/
-    function updateViewSize() {
-      var dimension = dom.getDimension(player.el());
-      var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
-      adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
-    }
-  }
-
-  function logError(error) {
-    if (error && console && console.log) {
-      console.log('ERROR: ' + error.message, error);
-    }
   }
 };
 
@@ -4874,6 +4874,18 @@ VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next)
 VPAIDIntegrator.prototype._trackError = function trackError(response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: 901});
 };
+
+function resizeAd(player, adUnit, VIEW_MODE) {
+  var dimension = dom.getDimension(player.el());
+  var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
+  adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
+};
+
+function logError(error) {
+  if (error && console && console.log) {
+    console.log('ERROR: ' + error.message, error);
+  }
+}
 
 
 ;
@@ -5583,6 +5595,7 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 VASTIntegrator.prototype._trackError = function trackError(error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
+
 
 ;
 (function (window) {
