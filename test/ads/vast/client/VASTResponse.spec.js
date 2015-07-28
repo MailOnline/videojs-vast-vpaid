@@ -505,7 +505,7 @@ describe("VASTResponse", function () {
       it("must add the adParameters to the response", function(){
         var linearXML = '<?xml version="1.0" encoding="UTF-8"?>' +
           '<Linear>' +
-            '<AdParameters><![CDATA['+xml.encode('<data>Some Data</data>')+']]></AdParameters>' +
+            '<AdParameters xmlEncoded="true"><![CDATA['+xml.encode('<data>Some Data</data>')+']]></AdParameters>' +
           '</Linear>';
         var linear = Linear(xml.toJXONTree(linearXML));
 

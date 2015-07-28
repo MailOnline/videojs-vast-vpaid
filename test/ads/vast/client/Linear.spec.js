@@ -136,7 +136,23 @@ describe("Linear", function(){
 
       var linearXML = '<Linear skipoffset="10%"><AdParameters><![CDATA['+encodedAdParameters+']]></AdParameters></Linear>';
       var linear = Linear(xml.toJXONTree(linearXML));
+      assert.equal(linear.adParameters, encodedAdParameters);
+    });
+
+    it("with xmlEncoded to true, must decode the ad params before adding them to the linear", function(){
+      var encodedAdParameters = xml.encode('<some>data</some>');
+
+      var linearXML = '<Linear skipoffset="10%"><AdParameters xmlEncoded="true"><![CDATA['+encodedAdParameters+']]></AdParameters></Linear>';
+      var linear = Linear(xml.toJXONTree(linearXML));
       assert.equal(linear.adParameters, '<some>data</some>');
+    });
+
+    it("with xmlEncoded to false, must NOT decode the ad params before adding them to the linear", function(){
+      var encodedAdParameters = xml.encode('<some>data</some>');
+
+      var linearXML = '<Linear skipoffset="10%"><AdParameters xmlEncoded="false"><![CDATA['+encodedAdParameters+']]></AdParameters></Linear>';
+      var linear = Linear(xml.toJXONTree(linearXML));
+      assert.equal(linear.adParameters, encodedAdParameters);
     });
   });
 });
