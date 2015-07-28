@@ -31,8 +31,6 @@ module.exports = {
 
     scripts: [
       'bower_components/xhook/dist/xhook.js',
-      'bower_components/swfobject/swfobject/src/swfobject.js',
-      'node_modules/es5-shim/es5-shim.js', //Required for the player to work on old browsers
       'bower_components/video.js/dist/video-js/video.dev.js'
     ]
   },
@@ -44,6 +42,11 @@ module.exports = {
       'bower_components/VPAIDHTML5Client/bin/VPAIDHTML5Client.js',
       //We are adding the ads plugin manually until this PR gets resolved https://github.com/videojs/videojs-contrib-ads/pull/92
       'libs/videojs-contrib-ads/videojs.ads.global.MODIFIED.js'
+    ],
+    //Whatever we add in here will be added to the build as a required resource
+    libraries: [
+      'node_modules/es5-shim/es5-shim.js', //Required for the player to work on old browsers
+      'bower_components/swfobject/swfobject/src/swfobject.js'
     ],
     sourcemaps: [
       'bower_components/VPAIDFLASHClient/bin/VPAIDFLASHClient.js.map'

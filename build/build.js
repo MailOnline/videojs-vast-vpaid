@@ -22,6 +22,7 @@ gulp.task('build', function (callback) {
     [
       'build-scripts',
       'build-styles',
+      'build-libraries',
       'build-assets'
     ]
   ];
@@ -67,6 +68,13 @@ gulp.task('build-assets', function () {
   var assetsPath = path.join(config.DEV, '/');
 
   return gulp.src(config.vendor.assets)
+    .pipe(gulp.dest(assetsPath));
+});
+
+gulp.task('build-libraries', function () {
+  var assetsPath = path.join(config.DEV, '/scripts');
+
+  return gulp.src(config.vendor.libraries)
     .pipe(gulp.dest(assetsPath));
 });
 
