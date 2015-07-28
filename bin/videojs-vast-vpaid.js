@@ -2241,6 +2241,89 @@ function isIDevice() {
   return /iP(hone|ad)/.test(_UA);
 }
 ;
+//Small subset of async
+var async = {};
+
+async.setImmediate = function (fn) {
+  setTimeout(fn, 0);
+};
+
+async.iterator = function (tasks) {
+  var makeCallback = function (index) {
+    var fn = function () {
+      if (tasks.length) {
+        tasks[index].apply(null, arguments);
+      }
+      return fn.next();
+    };
+    fn.next = function () {
+      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
+    };
+    return fn;
+  };
+  return makeCallback(0);
+};
+
+
+async.waterfall = function (tasks, callback) {
+  callback = callback || function () { };
+  if (!isArray(tasks)) {
+    var err = new Error('First argument to waterfall must be an array of functions');
+    return callback(err);
+  }
+  if (!tasks.length) {
+    return callback();
+  }
+  var wrapIterator = function (iterator) {
+    return function (err) {
+      if (err) {
+        callback.apply(null, arguments);
+        callback = function () {
+        };
+      }
+      else {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var next = iterator.next();
+        if (next) {
+          args.push(wrapIterator(next));
+        }
+        else {
+          args.push(callback);
+        }
+        async.setImmediate(function () {
+          iterator.apply(null, args);
+        });
+      }
+    };
+  };
+  wrapIterator(async.iterator(tasks))();
+};
+
+async.when = function (condition, callback) {
+  if (!isFunction(callback)) {
+    throw new Error("async.when error: missing callback argument");
+  }
+
+  var isAllowed = isFunction(condition) ? condition : function () {
+    return !!condition;
+  };
+
+  return function () {
+    var args = arrayLikeObjToArray(arguments);
+    var next = args.pop();
+
+    if (isAllowed.apply(null, args)) {
+      return callback.apply(this, arguments);
+    }
+
+    args.unshift(null);
+    return next.apply(null, args);
+  };
+};
+
+
+
+;
 /*! videojs-contrib-ads - v2.1.0 - 2015-06-11
 * Copyright (c) 2015 Brightcove; Licensed  */
 (function(window, document, vjs, undefined) {
@@ -3023,89 +3106,6 @@ var
   vjs.plugin('ads', adFramework);
 
 })(window, document, videojs);
-
-;
-//Small subset of async
-var async = {};
-
-async.setImmediate = function (fn) {
-  setTimeout(fn, 0);
-};
-
-async.iterator = function (tasks) {
-  var makeCallback = function (index) {
-    var fn = function () {
-      if (tasks.length) {
-        tasks[index].apply(null, arguments);
-      }
-      return fn.next();
-    };
-    fn.next = function () {
-      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
-    };
-    return fn;
-  };
-  return makeCallback(0);
-};
-
-
-async.waterfall = function (tasks, callback) {
-  callback = callback || function () { };
-  if (!isArray(tasks)) {
-    var err = new Error('First argument to waterfall must be an array of functions');
-    return callback(err);
-  }
-  if (!tasks.length) {
-    return callback();
-  }
-  var wrapIterator = function (iterator) {
-    return function (err) {
-      if (err) {
-        callback.apply(null, arguments);
-        callback = function () {
-        };
-      }
-      else {
-        var args = Array.prototype.slice.call(arguments, 1);
-        var next = iterator.next();
-        if (next) {
-          args.push(wrapIterator(next));
-        }
-        else {
-          args.push(callback);
-        }
-        async.setImmediate(function () {
-          iterator.apply(null, args);
-        });
-      }
-    };
-  };
-  wrapIterator(async.iterator(tasks))();
-};
-
-async.when = function (condition, callback) {
-  if (!isFunction(callback)) {
-    throw new Error("async.when error: missing callback argument");
-  }
-
-  var isAllowed = isFunction(condition) ? condition : function () {
-    return !!condition;
-  };
-
-  return function () {
-    var args = arrayLikeObjToArray(arguments);
-    var next = args.pop();
-
-    if (isAllowed.apply(null, args)) {
-      return callback.apply(this, arguments);
-    }
-
-    args.unshift(null);
-    return next.apply(null, args);
-  };
-};
-
-
 
 ;
 "use strict";
@@ -4879,7 +4879,7 @@ function resizeAd(player, adUnit, VIEW_MODE) {
   var dimension = dom.getDimension(player.el());
   var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
   adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
-};
+}
 
 function logError(error) {
   if (error && console && console.log) {
@@ -4977,7 +4977,11 @@ function Linear(linearJTree) {
   }
   
   if(linearJTree.adParameters) {
-    this.adParameters = xml.decode(xml.keyValue(linearJTree.adParameters));
+    this.adParameters = xml.keyValue(linearJTree.adParameters);
+
+    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')){
+      this.adParameters = xml.decode(this.adParameters);
+    }
   }
 
   /*** Local functions ***/
