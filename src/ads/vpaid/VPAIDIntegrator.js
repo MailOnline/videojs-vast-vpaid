@@ -409,7 +409,7 @@ function resizeAd(player, adUnit, VIEW_MODE) {
   var dimension = dom.getDimension(player.el());
   var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
   adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
-};
+}
 
 function logError(error) {
   if (error && console && console.log) {
