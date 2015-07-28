@@ -16,7 +16,11 @@ function Linear(linearJTree) {
   }
   
   if(linearJTree.adParameters) {
-    this.adParameters = xml.decode(xml.keyValue(linearJTree.adParameters));
+    this.adParameters = xml.keyValue(linearJTree.adParameters);
+
+    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')){
+      this.adParameters = xml.decode(this.adParameters);
+    }
   }
 
   /*** Local functions ***/
