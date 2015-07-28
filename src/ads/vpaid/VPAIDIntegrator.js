@@ -1,4 +1,4 @@
-function VPAIDIntegrator(player) {
+function VPAIDIntegrator(player, settings) {
   if (!(this instanceof VPAIDIntegrator)) {
     return new VPAIDIntegrator(player);
   }
@@ -18,6 +18,7 @@ function VPAIDIntegrator(player) {
       minor: 0
     }
   };
+  this.settings = settings;
 
   /*** Local functions ***/
 
@@ -269,6 +270,16 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     });
   });
 
+  var updateViewSize = resizeAd.bind(this, player, adUnit, this.VIEW_MODE);
+
+  if (this.settings.autoResize) {
+    var updateViewSizeThrottled = throttle(updateViewSize, 100);
+    dom.addEventListener(window, 'resize', updateViewSizeThrottled);
+    dom.addEventListener(window, 'orientationchange', updateViewSizeThrottled);
+  }
+
+  player.on('vast.resize', updateViewSize);
+
   next(null, adUnit, vastResponse);
 };
 
@@ -359,24 +370,13 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
   }
 
   function linkFullScreenControl(player, adUnit, VIEW_MODE) {
+    var updateViewSize = resizeAd.bind(this, player, adUnit, VIEW_MODE);
+
     player.on('fullscreenchange', updateViewSize);
 
     player.on('VPAID.adended', function () {
       player.off('fullscreenchange', updateViewSize);
     });
-
-    /*** local functions ***/
-    function updateViewSize() {
-      var dimension = dom.getDimension(player.el());
-      var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
-      adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
-    }
-  }
-
-  function logError(error) {
-    if (error && console && console.log) {
-      console.log('ERROR: ' + error.message, error);
-    }
   }
 };
 
@@ -404,4 +404,16 @@ VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next)
 VPAIDIntegrator.prototype._trackError = function trackError(response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: 901});
 };
+
+function resizeAd(player, adUnit, VIEW_MODE) {
+  var dimension = dom.getDimension(player.el());
+  var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
+  adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
+};
+
+function logError(error) {
+  if (error && console && console.log) {
+    console.log('ERROR: ' + error.message, error);
+  }
+}
 
