@@ -749,7 +749,7 @@ describe("VPAIDIntegrator", function () {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
       vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
-      window.dispatchEvent(new Event('resize'));
+      dom.dispatchEvent(window, new Event('resize'));
       assert(adUnit.resizeAd.calledOnce);
     });
 
@@ -757,7 +757,7 @@ describe("VPAIDIntegrator", function () {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
       vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
-      window.dispatchEvent(new Event('orientationchange'));
+      dom.dispatchEvent(window, new Event('orientationchange'));
       assert(adUnit.resizeAd.calledOnce);
     });
 
@@ -773,8 +773,8 @@ describe("VPAIDIntegrator", function () {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: false});
       var adUnit = new FakeAdUnit();
       vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
-      window.dispatchEvent(new Event('orientationchange'));
-      window.dispatchEvent(new Event('resize'));
+      dom.dispatchEvent(window, new Event('orientationchange'));
+      dom.dispatchEvent(window, new Event('resize'));
       assert.equal(adUnit.resizeAd.callCount, 0);
     });
   });
