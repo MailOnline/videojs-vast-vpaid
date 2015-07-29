@@ -30,16 +30,23 @@ describe("VPAIDFlashTech", function () {
   });
 
   describe("instance", function () {
-    var vpaidFlashTech, testDiv;
+    var vpaidFlashTech, testDiv, settings;
 
     beforeEach(function () {
-      vpaidFlashTech = new VPAIDFlashTech({src:'http://fake.mediaFile.url'});
+      settings = {
+        vpaidFlashLoaderPath: '/VPAIDFlash.swf'
+      };
+      vpaidFlashTech = new VPAIDFlashTech({src:'http://fake.mediaFile.url'}, settings);
       testDiv = document.createElement("div");
       document.body.appendChild(testDiv);
     });
 
     afterEach(function () {
       dom.remove(testDiv);
+    });
+
+    it("must publish the settings", function(){
+      assert.equal(vpaidFlashTech.settings, settings);
     });
 
     describe("loadAdUnit", function () {
@@ -71,6 +78,15 @@ describe("VPAIDFlashTech", function () {
         vpaidFlashTech.loadAdUnit(testDiv, null, noop);
         assert.equal(vpaidFlashTech.containerEl, testDiv);
         assert.instanceOf(vpaidFlashTech.vpaidFlashClient, VPAIDFLASHClient);
+      });
+
+      it("must pass the vpaidFlashLoaderPath to the VPAIDFLASHClient constructor", function(){
+        sinon.stub(window, 'VPAIDFLASHClient');
+        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
+        sinon.assert.calledWith(VPAIDFLASHClient, testDiv, sinon.match.func, {
+          data: settings.vpaidFlashLoaderPath
+        });
+        window.VPAIDFLASHClient.restore();
       });
     });
 

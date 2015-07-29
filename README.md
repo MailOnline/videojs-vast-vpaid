@@ -120,6 +120,9 @@
 ## autoResize
  >Flag to enable resize of the adUnit on window's `resize` and `orientationchange` events. This is useful for responsive players. Defaults to true
 
+## vpaidFlashLoaderPath
+ >Path to the vpaidFlashloader swf file. It defaults to '/VPAIDFlash.swf'
+
 ## Returned object
  An invocation to ```player.vastClient({...})``` returns and object that with some helper functions that allow you to dynamically enable or disable the vast plugin, or check if it is enabled.
   ```javascript

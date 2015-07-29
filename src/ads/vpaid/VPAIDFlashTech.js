@@ -1,4 +1,4 @@
-function VPAIDFlashTech(mediaFile) {
+function VPAIDFlashTech(mediaFile, settings) {
   if (!(this instanceof VPAIDFlashTech)) {
     return new VPAIDFlashTech(mediaFile);
   }
@@ -6,6 +6,7 @@ function VPAIDFlashTech(mediaFile) {
   this.mediaFile = mediaFile;
   this.containerEl = null;
   this.vpaidFlashClient = null;
+  this.settings = settings;
 
   /*** local functions ***/
   function sanityCheck(mediaFile) {
@@ -21,6 +22,7 @@ VPAIDFlashTech.supports = function (type) {
 
 VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {
   var that = this;
+  var flashClientOpts = this.settings && this.settings.vpaidFlashLoaderPath ? {data: this.settings.vpaidFlashLoaderPath} : undefined;
   sanityCheck(containerEl, callback);
 
   this.containerEl = containerEl;
@@ -30,7 +32,7 @@ VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, ob
     }
 
     that.vpaidFlashClient.loadAdUnit(that.mediaFile.src, callback);
-  });
+  }, flashClientOpts);
 
   /*** Local Functions ***/
   function sanityCheck(container, cb) {

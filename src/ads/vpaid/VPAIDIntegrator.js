@@ -51,7 +51,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     removeAdUnit();
   });
 
-  tech = this._findSupportedTech(vastResponse);
+  tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
   if (tech) {
@@ -84,7 +84,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   }
 };
 
-VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
+VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings) {
   if (!(vastResponse instanceof VASTResponse)) {
     return null;
   }
@@ -96,7 +96,7 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse) {
     mediaFile = vpaidMediaFiles[i];
     VPAIDTech = findSupportedTech(mediaFile);
     if (VPAIDTech) {
-      return new VPAIDTech(mediaFile);
+      return new VPAIDTech(mediaFile, settings);
     }
   }
 

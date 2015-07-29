@@ -355,7 +355,7 @@ describe("videojs.vast plugin", function () {
     player.vastClient(adsOpts);
 
     sinon.assert.calledOnce(adsPlugin);
-    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, iosPrerollCancelTimeout: 2000}, adsOpts));
+    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, iosPrerollCancelTimeout: 2000, vpaidFlashLoaderPath: '/VPAIDFlash.swf'}, adsOpts));
 
     //We restore the ads plugin
     vjs.Player.prototype.ads.restore();
@@ -376,7 +376,7 @@ describe("videojs.vast plugin", function () {
     player.vastClient(adsOpts);
 
     sinon.assert.calledOnce(adsPlugin);
-    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, prerollTimeout: 123, iosPrerollCancelTimeout: 2000}, adsOpts));
+    assert.deepEqual(firstArg(adsPlugin), extend({postrollTimeout: 0, prerollTimeout: 123, iosPrerollCancelTimeout: 2000, vpaidFlashLoaderPath: '/VPAIDFlash.swf'}, adsOpts));
 
     //We restore the ads plugin
     vjs.Player.prototype.ads.restore();

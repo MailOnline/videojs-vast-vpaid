@@ -35,7 +35,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     adsEnabled: true,
 
     // Boolean flag to enable or disable the resize with window.resize or orientationchange
-    autoResize: true
+    autoResize: true,
+
+    // Path to the VPAID flash ad's loader
+    vpaidFlashLoaderPath: '/VPAIDFlash.swf'
   };
 
   var settings = extend({}, defaultOpts, options || {});

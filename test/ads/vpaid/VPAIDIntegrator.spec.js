@@ -633,6 +633,14 @@ describe("VPAIDIntegrator", function () {
 
         assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse), VPAIDFlashTech);
       });
+
+      it("must pass the settings to the to the created tech", function(){
+        var settings = {vpaidFlashLoaderPath: '/VPAIDFlash.swf'};
+        var vastResponse = new VASTResponse();
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', 'application/x-shockwave-flash')]);
+        var flashTech = vpaidIntegrator._findSupportedTech(vastResponse, settings);
+        assert.deepEqual(flashTech.settings, settings);
+      });
     });
 
     describe("linkPlayerControls", function () {
