@@ -14,18 +14,28 @@
 
 ## Integration with video.js
   To integrate the plugin with videoJs you need to:
+  
+  1.- Add [all files from bin](https://github.com/MailOnline/videojs-vast-vpaid/tree/master/bin) to some path in your server
 
-  1.- Add the videoJs to your page script and stylesheed to your page after you have added video js
+  2.- If don't have videoJs, add their scripts and stylesheet to your page
   ```
   <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
   <script src="http://vjs.zencdn.net/4.12/video.js"></script>
   ```
-  2.- Add the plugin to your page
+
+  3.- After videoJs add the plugin script stylesheet and swfobject (if you want to support flashvpaid) to your page
   ```
+  <script src="/path/to/swfobject.js"></script>
   <link href="/path/to/videojs-vast-plugin.css" rel="stylesheet">
   <script src="/path/to/videojs-vast-plugin.min.js"></script>
   ```
-  3.- Create you own ads plugin to pass an add media tag to the plugin
+  
+  if you need to support older browsers add this to your page before the plugin script
+  ```
+  <script src="/path/to/es5-shim.js"></script>
+  ```
+  
+  4.- Create you own ads plugin to pass an add media tag to the plugin
 
   Below you have a simple ads-setup-plugin
 
