@@ -158,7 +158,65 @@
          }
      });
   ```
+## Running the plugin
+  If you want to run the plugin you need to clone the repo into your local environment 
+  ```
+  git clone git@github.com:MailOnline/videojs-vast-vpaid.git
+  ```
+  and install the dependencies
+  
+  ```
+  $ cd videojs-vast-vpaid
+  $ npm install
+  $ bower install
+  ```
+  
+  after installing the dependencies you are ready to go. If you want to see the available build tasks, run
+  ```
+$ gulp
+[12:27:22] Using gulpfile ~/dev/mailOnline/videojs-vast-vpaid/gulpfile.js
+[12:27:22] Starting 'default'...
+Welcome to MailOnline's new
+____   ____.__     .___                     __          ____   ____                  __    ____   ____                .__     .___
+\   \ /   /|__|  __| _/  ____    ____      |__|  ______ \   \ /   /_____     _______/  |_  \   \ /   /______  _____   |__|  __| _/
+ \   Y   / |  | / __ | _/ __ \  /  _ \     |  | /  ___/  \   Y   / \__  \   /  ___/\   __\  \   Y   / \____ \ \__  \  |  | / __ | 
+  \     /  |  |/ /_/ | \  ___/ (  <_> )    |  | \___ \    \     /   / __ \_ \___ \  |  |     \     /  |  |_> > / __ \_|  |/ /_/ | 
+   \___/   |__|\____ |  \___  > \____/ /\__|  |/____  >    \___/   (____  //____  > |__|      \___/   |   __/ (____  /|__|\____ | 
+                    \/      \/         \______|     \/                  \/      \/                    |__|         \/          \/ 
 
+###### Below, you have the list of all the available build tasks ########
+╔═════════════════════════╤════════════════════════════════════════════════════════════════════════════════╗
+║ Name                    │ Description                                                                    ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ start-dev               │ Starts dev server and watch task.                                              ║
+║                         │ If you use "--env production" everything will be minified                      ║
+║                         │ and the dist folder will be updated accordingly.                               ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ release                 │ Creates a new version of the player and releases it.                           ║
+║                         │ Increasing version, creating new tag and so on (--bump [patch(default)/minor/… ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ watch                   │ watches for changes on the plugin files and executes the appropriate tasks     ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ build                   │ This task builds the plugin                                                    ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ build-demo              │ Builds the demo                                                                ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ ci-test                 │ Starts karma test and generates test code coverage, to be used by CI Server    ║
+╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
+║ test                    │ Starts karma on 'autowatch' mode with all the libs,                            ║
+║                         │ sources and tests of the player                                                ║
+╚═════════════════════════╧════════════════════════════════════════════════════════════════════════════════╝
+   
+[12:27:22] Finished 'default' after 8.12 ms
+  ```
+  Wich will show you a table with the main build tasks. If you want start the demo locally just run:
+  
+  ```
+  $ gulp start-dev
+  ```
+  and open the following link into your browser
+  http://localhost:8085
+  
 ## License
 videojs-vast-plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
 
