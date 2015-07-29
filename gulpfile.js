@@ -28,7 +28,7 @@ gulp.task('default', function (finishTask) {
     }
 
     function pringBanner(done) {
-        asciify('HTML5  Video Player', function (err, res) {
+        asciify('Videojs Vast Vpaid', function (err, res) {
             console.log(res.help);
             done(null);
         });
