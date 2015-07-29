@@ -209,7 +209,7 @@ ____   ____.__     .___                     __          ____   ____             
    
 [12:27:22] Finished 'default' after 8.12 ms
   ```
-  Wich will show you a table with the main build tasks. If you want start the demo locally just run:
+  Which will show you a table with the main build tasks. If you want start the demo locally just run:
   
   ```
   $ gulp start-dev
