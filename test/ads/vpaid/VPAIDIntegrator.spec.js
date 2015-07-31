@@ -213,6 +213,16 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledWithExactly(testTech.loadAdUnit, vpaidIntegrator.containerEl, player.el().querySelector('.vjs-tech'), sinon.match.func);
       });
 
+      it("must pass the error if there is an error loading the ad unit", function(){
+        var testTech = new fakeTech();
+        vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
+        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
+        var fakeTechNativeError = new Error('error loading the ad unit.');
+        techLoadAdUnitCb(fakeTechNativeError, undefined);
+        sinon.assert.calledWithExactly(callback, fakeTechNativeError, undefined, vastResponse);
+
+      });
+
       it("must pass the error , a wrapped adUnit and the vast response to the callback", function () {
         var testTech = new fakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
