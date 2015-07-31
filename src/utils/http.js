@@ -110,7 +110,12 @@ HttpRequest.prototype.get = function (url, callback, options) {
 };
 
 function createXhr() {
-  return new window.XMLHttpRequest();
+  var xhr = new XMLHttpRequest();
+  if (!("withCredentials" in xhr)) {
+    // XDomainRequest for IE.
+    xhr = new XDomainRequest();
+  }
+  return xhr;
 }
 
 var http = new HttpRequest(createXhr);

@@ -134,6 +134,8 @@ VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
         return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
       }
       callback(null, response);
+    }, {
+      withCredentials: true
     });
   }catch(e){
     callback(e);
