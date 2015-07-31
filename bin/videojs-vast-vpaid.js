@@ -4601,6 +4601,10 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
   var vjsTechEl = this.player.el().querySelector('.vjs-tech');
   tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
+    if(error) {
+      return next(error, adUnit, vastResponse);
+    }
+
     try {
       next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
     } catch (e) {
