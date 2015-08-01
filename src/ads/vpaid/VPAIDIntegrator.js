@@ -47,7 +47,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  player.one('adserror', function () {
+  player.one('error', function () {
     removeAdUnit();
   });
 
@@ -75,12 +75,12 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   function removeAdUnit(error) {
     if (error) {
       that._trackError(vastResponse);
-      player.trigger('vast.aderror');
+      player.trigger('vast.adError');
     }
 
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
-    player.trigger('VPAID.adended');
+    player.trigger('VPAID.adEnd');
   }
 };
 
@@ -293,8 +293,8 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   adUnit.on('AdSkippableStateChange', updateSkipButtonState);
 
-  player.one('vast.adend', removeSkipButton);
-  player.one('vast.aderror', removeSkipButton);
+  player.one('vast.adEnd', removeSkipButton);
+  player.one('vast.adError', removeSkipButton);
 
   next(null, adUnit, vastResponse);
 
@@ -348,11 +348,11 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
   /*** Local functions ***/
   function linkVolumeControl(player, adUnit) {
-    player.on('advolumechange', updateAdUnitVolume);
+    player.on('volumechange', updateAdUnitVolume);
     adUnit.on('AdVolumeChange', updatePlayerVolume);
 
-    player.on('VPAID.adended', function () {
-      player.off('advolumechange', updateAdUnitVolume);
+    player.on('VPAID.adEnd', function () {
+      player.off('volumechange', updateAdUnitVolume);
     });
 
 
@@ -378,7 +378,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     player.on('fullscreenchange', updateViewSize);
 
-    player.on('VPAID.adended', function () {
+    player.on('VPAID.adEnd', function () {
       player.off('fullscreenchange', updateViewSize);
     });
   }
@@ -389,7 +389,7 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 
   adUnit.startAd(function (error) {
     if (!error) {
-      player.trigger('vast.adstart');
+      player.trigger('vast.adStart');
     }
     next(error, adUnit, vastResponse);
   });

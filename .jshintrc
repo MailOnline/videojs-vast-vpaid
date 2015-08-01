@@ -63,6 +63,7 @@
     /* VAST Classes */
     "VASTError":true,
     "vastUtil":true,
+    "playerUtils":true,
     "VideoClicks":true,
     "MediaFile":true,
     "Ad":true,
@@ -83,6 +84,7 @@
     "VPAIDAdUnitWrapper":true,
     /* Video.js */
     "vjs":true,
+    "videojs":true,
     /* MOCHA */
     "describe": true,
     "it": true,
