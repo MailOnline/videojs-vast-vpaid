@@ -171,6 +171,27 @@
          }
      });
   ```
+## Plugin events
+  The plugin does trigger some events that can be used for tracking or debugging.
+  
+### 'vast.firstPlay' event
+  Fired when the user first plays a video or if the playAdAlways option is set to true every time the user replays the same video
+
+### 'vast.adStart' event
+  Fired when the ad starts playing
+ 
+### 'vast.adError' event
+  Fired whenever there is an error with the ad. The error itself gets added to the event object in the property 'error'.
+ 
+### 'vast.adsCancel' event
+  Fired whenever the ads are canceled due to an error or because the plugin is not enabled.
+
+### 'vast.contentStart' event
+  Triggered whenever the video content starts playing
+ 
+### 'vast.contentEnded' event
+  Triggered when the video content ends.
+  
 ## Running the plugin
   If you want to run the plugin you need to clone the repo into your local environment 
   ```
