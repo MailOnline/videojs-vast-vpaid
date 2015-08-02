@@ -118,7 +118,7 @@ div.vast-skip-button {
   background-color: #000;
 }
 
-.vjs-has-started.vjs-vast-finish .vjs-black-poster {
+.vjs-has-started .vjs-black-poster.vjs-hidden {
   display: none;
 }
 
