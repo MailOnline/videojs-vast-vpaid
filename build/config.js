@@ -39,9 +39,7 @@ module.exports = {
   vendor: {
     scripts: [
       'bower_components/VPAIDFLASHClient/bin/VPAIDFLASHClient.js',
-      'bower_components/VPAIDHTML5Client/bin/VPAIDHTML5Client.js',
-      //We are adding the ads plugin manually until this PR gets resolved https://github.com/videojs/videojs-contrib-ads/pull/92
-      'libs/videojs-contrib-ads/videojs.ads.global.MODIFIED.js'
+      'bower_components/VPAIDHTML5Client/bin/VPAIDHTML5Client.js'
     ],
     //Whatever we add in here will be added to the build as a required resource
     libraries: [
