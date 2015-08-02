@@ -187,10 +187,10 @@
   Fired whenever the ads are canceled due to an error or because the plugin is not enabled.
 
 ### 'vast.contentStart' event
-  Triggered whenever the video content starts playing
+  Fired whenever the video content starts playing
  
 ### 'vast.contentEnded' event
-  Triggered when the video content ends.
+  Fired when the video content ends.
   
 ## Running the plugin
   If you want to run the plugin you need to clone the repo into your local environment 
