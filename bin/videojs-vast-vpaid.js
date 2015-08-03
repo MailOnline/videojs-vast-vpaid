@@ -2948,6 +2948,19 @@ playerUtils.prepareForAds = function (player) {
   }
 };
 
+/**
+ * Remove the poster attribute from the video element tech, if present. When
+ * reusing a video element for multiple videos, the poster image will briefly
+ * reappear while the new source loads. Removing the attribute ahead of time
+ * prevents the poster from showing up between videos.
+ * @param {object} player The videojs player object
+ */
+playerUtils.removeNativePoster = function(player) {
+  var tech = player.el().querySelector('.vjs-tech');
+  if (tech) {
+    tech.removeAttribute('poster');
+  }
+};
 ;
 'use strict';
 
@@ -3305,6 +3318,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   /**** Local functions ****/
   function tryToPlayPrerollAd() {
+    //We remove the poster to prevent flickering whenever the content starts playing
+    playerUtils.removeNativePoster(player);
+
     if (settings.adsEnabled) {
       if (canPlayPrerollAd()) {
         snapshot = playerUtils.getPlayerSnapshot(player);
@@ -3344,7 +3360,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
           player.off('vast.adStart', clearAdCancelTimeout);
           player.off('vast.adError', clearAdCancelTimeout);
           player.off('vast.adsCancel', clearAdCancelTimeout);
-
         }
       }
     }
@@ -3406,6 +3421,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adFinished = false;
 
     adIntegrator.playAd(vastResponse, callback);
+
     player.one('vast.adStart', adAdsLabel);
     player.one('vast.adEnd', removeAdsLabel);
     player.one('vast.adsCancel', removeAdsLabel);
