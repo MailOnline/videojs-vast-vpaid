@@ -203,7 +203,7 @@ describe("playerUtils", function () {
         player.load.restore();
       });
 
-      describe("on 'contentcanplay' event", function(){
+      describe("on 'canplay' event", function(){
         beforeEach(function(){
           sinon.stub(player, 'play');
           sinon.stub(playerUtils, 'isReadyToResume');
@@ -223,7 +223,7 @@ describe("playerUtils", function () {
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
           sinon.assert.notCalled(player.play);
-          player.trigger('contentcanplay');
+          player.trigger('canplay');
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
           sinon.assert.called(player.play);
@@ -236,7 +236,7 @@ describe("playerUtils", function () {
           playerUtils.isReadyToResume.returns(false);
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
-          player.trigger('contentcanplay');
+          player.trigger('canplay');
           sinon.assert.notCalled(player.play);
           sinon.assert.notCalled(player.currentTime);
           clock.tick(1000);
@@ -256,7 +256,7 @@ describe("playerUtils", function () {
           playerUtils.isReadyToResume.returns(false);
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
-          player.trigger('contentcanplay');
+          player.trigger('canplay');
           sinon.assert.notCalled(player.play);
           sinon.assert.notCalled(player.currentTime);
           clock.tick(2000);
@@ -275,7 +275,7 @@ describe("playerUtils", function () {
           playerUtils.isReadyToResume.returns(false);
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
-          player.trigger('contentcanplay');
+          player.trigger('canplay');
           sinon.assert.notCalled(player.play);
           sinon.assert.notCalled(player.currentTime);
           player.play.throws();
