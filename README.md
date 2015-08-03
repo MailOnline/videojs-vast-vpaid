@@ -180,6 +180,9 @@
 ### 'vast.adStart' event
   Fired when the ad starts playing
  
+### 'vast.adEnd' event
+  Fired when the ad end playing
+ 
 ### 'vast.adError' event
   Fired whenever there is an error with the ad. The error itself gets added to the event object in the property 'error'.
  
