@@ -82,7 +82,11 @@ describe("VPAIDIntegrator", function () {
     dom.remove(testDiv);
   });
 
-  it("must return an instance of itself", function () {
+  it("must be a function", function () {
+    assert.isFunction(VPAIDIntegrator);
+  });
+
+  it("must return an instance of itSelf", function () {
     assert.instanceOf(VPAIDIntegrator(player), VPAIDIntegrator);
   });
 
@@ -166,16 +170,16 @@ describe("VPAIDIntegrator", function () {
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
       });
 
-      it("must remove 'vjs-vpaid-ad' class if there is  an 'error' event", function () {
+      it("must remove 'vjs-vpaid-ad' class if there is  an adserror", function () {
         vpaidIntegrator.playAd(vastResponse, callback);
-        player.trigger('error');
+        player.trigger('adserror');
         this.clock.tick(1);
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
       });
 
-      it("must unload the adUnit if there is an 'error' event", function () {
+      it("must unload the adUnit if there is an adserror", function () {
         vpaidIntegrator.playAd(vastResponse, callback);
-        player.trigger('error');
+        player.trigger('adserror');
         this.clock.tick(1);
         sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
       });
@@ -189,8 +193,8 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
       });
 
-      it("must trigger 'VPAID.adEnd'", function () {
-        player.on('VPAID.adEnd', callback);
+      it("must trigger 'VPAID.adended'", function () {
+        player.on('VPAID.adended', callback);
         vpaidIntegrator.playAd(vastResponse, noop);
         this.clock.tick(1);
         loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
@@ -595,22 +599,22 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledOnce(adUnit.skipAd);
         });
 
-        it("must remove the adUnit on 'vast.adEnd' event", function(){
+        it("must remove the adUnit on 'vast.adend' event", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
           this.clock.tick(1);
           adUnit.isSkippable = false;
-          player.trigger('vast.adEnd');
+          player.trigger('vast.adend');
           this.clock.tick(1);
           assert.isNull(player.el().querySelector('.vast-skip-button'));
         });
 
-        it("must remove the adUnit on 'vast.adError' event", function(){
+        it("must remove the adUnit on 'vast.aderror' event", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
           this.clock.tick(1);
           adUnit.isSkippable = false;
-          player.trigger('vast.adError');
+          player.trigger('vast.aderror');
           this.clock.tick(1);
           assert.isNull(player.el().querySelector('.vast-skip-button'));
         });
@@ -663,16 +667,16 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWithExactly(callback, null, adUnitWrapper, vastResponse);
         });
 
-        it("must update the adUnit volume on 'volumechange'", function () {
+        it("must update the adUnit volume on 'advolumechange'", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('volumechange');
+          player.trigger('advolumechange');
           sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0.5);
         });
 
         it("must update the adUnit volume to 0 if the player is muted", function(){
           sinon.stub(player, 'muted').returns(true);
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('volumechange');
+          player.trigger('advolumechange');
           sinon.assert.calledWith(adUnitWrapper.setAdVolume, 0);
         });
 
@@ -685,10 +689,10 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWith(player.volume, 0.1);
         });
 
-        it("must unsubscribe on 'VPAID.adEnd' events", function () {
+        it("must unsubscribe on 'VPAID.adended' events", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('VPAID.adEnd');
-          player.trigger('volumechange');
+          player.trigger('VPAID.adended');
+          player.trigger('advolumechange');
           sinon.assert.notCalled(adUnitWrapper.setAdVolume);
         });
       });
@@ -712,7 +716,7 @@ describe("VPAIDIntegrator", function () {
         it("must unsubscribe on 'VPAID-adfinsished'", function () {
           sinon.stub(player, 'isFullscreen');
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('VPAID.adEnd');
+          player.trigger('VPAID.adended');
           player.trigger('fullscreenchange');
           sinon.assert.notCalled(adUnitWrapper.resizeAd);
         });
@@ -732,24 +736,24 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledWithExactly(callback, null, adUnitWrapper, vastResponse);
       });
 
-      it("must trigger 'vast.adStart'", function () {
+      it("must trigger 'vast.adstart'", function () {
         sinon.stub(adUnitWrapper, 'startAd');
         vpaidIntegrator._startAd(adUnitWrapper, vastResponse, noop);
         sinon.assert.calledOnce(adUnitWrapper.startAd);
 
-        player.on('vast.adStart', callback);
+        player.on('vast.adstart', callback);
         var startAdCb = lastArg(adUnitWrapper.startAd);
         startAdCb(null);
 
         sinon.assert.calledOnce(callback);
       });
 
-      it("must not trigger 'vast.adStart' if there is an error on startAd", function () {
+      it("must not trigger 'vast.adstart' if there is an error on startAd", function () {
         sinon.stub(adUnitWrapper, 'startAd');
         vpaidIntegrator._startAd(adUnitWrapper, vastResponse, noop);
         sinon.assert.calledOnce(adUnitWrapper.startAd);
 
-        player.on('vast.adStart', callback);
+        player.on('vast.adstart', callback);
         var startAdCb = lastArg(adUnitWrapper.startAd);
         startAdCb(new Error());
 

@@ -71,14 +71,14 @@ VASTIntegrator.prototype._createVASTTracker = function createVASTTracker(adMedia
 VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracker, response, callback) {
   var previouslyMuted;
   var player = this.player;
-  player.on('fullscreenchange', trackFullscreenChange);
-  player.on('vast.adStart', trackImpressions);
-  player.on('pause', trackPause);
-  player.on('timeupdate', trackProgress);
-  player.on('volumechange', trackVolumeChange);
+  player.on('adfullscreenchange', trackFullscreenChange);
+  player.on('vast.adstart', trackImpressions);
+  player.on('adpause', trackPause);
+  player.on('adtimeupdate', trackProgress);
+  player.on('advolumechange', trackVolumeChange);
 
-  player.one('vast.adEnd', unbindEvents);
-  player.one('vast.adsCancel', unbindEvents);
+  player.one('vast.adend', unbindEvents);
+  player.one('vast.aderror', unbindEvents);
 
   //NOTE: Pending tracking events skip, close, closeLinear, expand, collapse and creativeView. See VAST implementation
 
@@ -87,11 +87,11 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   /*** Local Functions ***/
   function unbindEvents() {
     tracker.trackComplete();
-    player.off('fullscreenchange', trackFullscreenChange);
-    player.off('vast.adStart', trackImpressions);
-    player.off('pause', trackPause);
-    player.off('timeupdate', trackProgress);
-    player.off('volumechange', trackVolumeChange);
+    player.off('adfullscreenchange', trackFullscreenChange);
+    player.off('vast.adstart', trackImpressions);
+    player.off('adpause', trackPause);
+    player.off('adtimeupdate', trackProgress);
+    player.off('advolumechange', trackVolumeChange);
   }
 
   function trackFullscreenChange() {
@@ -144,13 +144,13 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     var updateSkipButton = updateSkipButtonState.bind(this, skipButton, skipOffset, player);
 
     player.el().appendChild(skipButton);
-    player.on('timeupdate', updateSkipButton);
+    player.on('adtimeupdate', updateSkipButton);
 
-    player.one('ended', removeSkipButton);
-    player.one('error', removeSkipButton);
+    player.one('vast.adend', removeSkipButton);
+    player.one('vast.aderror', removeSkipButton);
 
     function removeSkipButton() {
-      player.off('timeupdate', updateSkipButton);
+      player.off('adtimeupdate', updateSkipButton);
       dom.remove(skipButton);
     }
   }
@@ -162,7 +162,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     skipButton.onclick = function (e) {
       if (dom.hasClass(skipButton, 'enabled')) {
         tracker.trackSkip();
-        player.trigger('ended');//We trigger the end of the ad playing
+        player.trigger('adended');//We trigger the end of the ad playing
       }
 
       //We prevent event propagation to avoid problems with the clickThrough and so on
@@ -195,9 +195,9 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
   var updateBlocker = updateBlockerURL.bind(this, blocker, response, player);
 
   player.el().insertBefore(blocker, player.controlBar.el());
-  player.on('timeupdate', updateBlocker);
-  player.one('ended', removeBlocker);
-  player.one('error', removeBlocker);
+  player.on('adtimeupdate', updateBlocker);
+  player.one('vast.adend', removeBlocker);
+  player.one('vast.aderror', removeBlocker);
 
   return callback(null, mediaFile, tracker, response);
 
@@ -246,7 +246,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
   }
 
   function removeBlocker() {
-    player.off('timeupdate', updateBlocker);
+    player.off('adtimeupdate', updateBlocker);
     dom.remove(blocker);
   }
 };
@@ -256,26 +256,26 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   player.src(source);
 
-  player.one('durationchange', playAd);
-  player.one('ended', finishPlayingAd);
+  player.one('addurationchange', playAd);
+  player.one('adended', finishPlayingAd);
   player.one('error', handlePlayerError);
 
   /**** local functions ******/
   function playAd() {
-    player.play();
-    player.one('playing', function () {
-      player.trigger('vast.adStart');
+    player.one('adplaying', function () {
+      player.trigger('vast.adstart');
     });
   }
 
   function finishPlayingAd() {
     player.off('error', handlePlayerError);
+    player.trigger('vast.adend');
     callback(null, response);
   }
 
   function handlePlayerError() {
-    player.off('durationchange', playAd);
-    player.off('ended', finishPlayingAd);
+    player.off('addurationchange', playAd);
+    player.off('contentended', finishPlayingAd);
     callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
   }
 };
