@@ -114,7 +114,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
           player.off('vast.adStart', clearAdCancelTimeout);
           player.off('vast.adError', clearAdCancelTimeout);
           player.off('vast.adsCancel', clearAdCancelTimeout);
-
         }
       }
     }
@@ -176,6 +175,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adFinished = false;
 
     adIntegrator.playAd(vastResponse, callback);
+
+    //We remove the poster to prevent flickering whenever the content starts playing
+    player.one('vast.adStart', removeNativePoster);
     player.one('vast.adStart', adAdsLabel);
     player.one('vast.adEnd', removeAdsLabel);
     player.one('vast.adsCancel', removeAdsLabel);
@@ -185,6 +187,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     /*** Local functions ****/
+    function removeNativePoster() {
+      playerUtils.removeNativePoster(player);
+    }
+
     function adAdsLabel() {
       if (adFinished) {
         return;

@@ -284,3 +284,17 @@ playerUtils.prepareForAds = function (player) {
     dom.removeClass(player.el(), 'vjs-ad-playing');
   }
 };
+
+/**
+ * Remove the poster attribute from the video element tech, if present. When
+ * reusing a video element for multiple videos, the poster image will briefly
+ * reappear while the new source loads. Removing the attribute ahead of time
+ * prevents the poster from showing up between videos.
+ * @param {object} player The videojs player object
+ */
+playerUtils.removeNativePoster = function(player) {
+  var tech = player.el().querySelector('.vjs-tech');
+  if (tech) {
+    tech.removeAttribute('poster');
+  }
+};

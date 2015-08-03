@@ -388,6 +388,18 @@ describe("videojs.vast plugin", function () {
       sinon.assert.notCalled(setCurrentTime);
     });
 
+    it("must remove the native poster on ad's start", function(){
+      var tech = player.el().querySelector('.vjs-tech');
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('vast.adStart');
+      assert.isNull(tech.getAttribute('poster'));
+    });
+
     it("must add the adsLabel component once we know the ad is going to start. (i.e. vast.adstart)", function () {
       var response = new VASTResponse();
       response._addMediaFiles([

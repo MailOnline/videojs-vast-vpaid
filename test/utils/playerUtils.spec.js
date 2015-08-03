@@ -534,3 +534,31 @@ describe("playerUtils.prepareForAds", function() {
     });
   });
 });
+
+describe("playerUtils.removeNativePoster", function(){  var testDiv, player, tech;
+
+  beforeEach(function () {
+    testDiv = document.createElement("div");
+    testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
+      'controls preload="none" style="border:none"' +
+      'poster="http://video-js.zencoder.com/oceans-clip.png" >' +
+      '<source src="http://video-js.zencoder.com/oceans-clip.mp4" type="video/mp4"/>' +
+      '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
+      '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
+      '</p>' +
+      '</video>';
+    document.body.appendChild(testDiv);
+    player = videojs("#playerVideoTestEl", {});
+    tech = player.el().querySelector('.vjs-tech');
+  });
+
+  afterEach(function () {
+    dom.remove(testDiv);
+  });
+
+  it("must remove the poster of the passed player", function(){
+    var tech = player.el().querySelector('.vjs-tech');
+    playerUtils.removeNativePoster(player);
+    assert.isNull(tech.getAttribute('poster'));
+  });
+});
