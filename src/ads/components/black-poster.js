@@ -34,6 +34,6 @@ vjs.BlackPoster = vjs.Component.extend({
  */
 vjs.BlackPoster.prototype.createEl = function(){
   return vjs.createEl('div', {
-    className: 'vjs-black-poster'
+    className: 'vjs-black-poster',
   });
 };
