@@ -2742,7 +2742,7 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
     player.load();
 
     // and then resume from the snapshots time once the original src has loaded
-    player.one('contentcanplay', tryToResume);
+    player.one('canplay', tryToResume);
 
   } else {
     restoreTracks();
