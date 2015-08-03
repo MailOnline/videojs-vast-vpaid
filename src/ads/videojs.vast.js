@@ -75,6 +75,9 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   /**** Local functions ****/
   function tryToPlayPrerollAd() {
+    //We remove the poster to prevent flickering whenever the content starts playing
+    playerUtils.removeNativePoster(player);
+
     if (settings.adsEnabled) {
       if (canPlayPrerollAd()) {
         snapshot = playerUtils.getPlayerSnapshot(player);
@@ -176,8 +179,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     adIntegrator.playAd(vastResponse, callback);
 
-    //We remove the poster to prevent flickering whenever the content starts playing
-    player.one('vast.adStart', removeNativePoster);
     player.one('vast.adStart', adAdsLabel);
     player.one('vast.adEnd', removeAdsLabel);
     player.one('vast.adsCancel', removeAdsLabel);
@@ -187,10 +188,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     /*** Local functions ****/
-    function removeNativePoster() {
-      playerUtils.removeNativePoster(player);
-    }
-
     function adAdsLabel() {
       if (adFinished) {
         return;
