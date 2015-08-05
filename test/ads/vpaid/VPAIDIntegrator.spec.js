@@ -111,6 +111,7 @@ describe("VPAIDIntegrator", function () {
 
       };
 
+      fakeTech.prototype.name = 'vpaid-fake';
       fakeTech.prototype.loadAdUnit = sinon.spy();
       fakeTech.prototype.unloadAdUnit = sinon.spy();
       fakeTech.prototype.mediaFile = mediaFile;
@@ -189,8 +190,8 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
       });
 
-      it("must trigger 'VPAID.adEnd'", function () {
-        player.on('VPAID.adEnd', callback);
+      it("must trigger 'vpaid.adEnd'", function () {
+        player.on('vpaid.adEnd', callback);
         vpaidIntegrator.playAd(vastResponse, noop);
         this.clock.tick(1);
         loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
@@ -199,7 +200,6 @@ describe("VPAIDIntegrator", function () {
 
         sinon.assert.calledOnce(callback);
       });
-
     });
 
     describe("loadAdUnit", function () {
@@ -216,10 +216,9 @@ describe("VPAIDIntegrator", function () {
         var fakeTechNativeError = new Error('error loading the ad unit.');
         techLoadAdUnitCb(fakeTechNativeError, undefined);
         sinon.assert.calledWithExactly(callback, fakeTechNativeError, undefined, vastResponse);
-
       });
 
-      it("must pass the error , a wrapped adUnit and the vast response to the callback", function () {
+      it("must pass the error, a wrapped adUnit and the vast response to the callback", function () {
         var testTech = new fakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
         var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
@@ -238,6 +237,23 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledWithExactly(callback, sinon.match.instanceOf(VASTError), vpaidAdUnit, vastResponse);
         var error = firstArg(callback);
         assert.equal(error.message, 'VAST Error: on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface')
+      });
+
+      it("must add the tech class to the player and remove it on 'vpaid.adEnd' event",function(){
+        var testTech = new fakeTech();
+        var fakeAdUnit = {};
+        sinon.stub(window, 'VPAIDAdUnitWrapper').returns(fakeAdUnit);
+        vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
+        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
+        //We make the adUnit invalid
+        vpaidAdUnit.initAd = undefined;
+
+        techLoadAdUnitCb(null, vpaidAdUnit);
+        sinon.assert.calledWithExactly(callback, null, fakeAdUnit, vastResponse);
+        assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-fake-ad'));
+        player.trigger('vpaid.adEnd');
+        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-fake-ad'));
+        VPAIDAdUnitWrapper.restore();
       });
     });
 
@@ -695,9 +711,9 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWith(player.volume, 0.1);
         });
 
-        it("must unsubscribe on 'VPAID.adEnd' events", function () {
+        it("must unsubscribe on 'vpaid.adEnd' events", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('VPAID.adEnd');
+          player.trigger('vpaid.adEnd');
           player.trigger('volumechange');
           sinon.assert.notCalled(adUnitWrapper.setAdVolume);
         });
@@ -722,7 +738,7 @@ describe("VPAIDIntegrator", function () {
         it("must unsubscribe on 'VPAID-adfinsished'", function () {
           sinon.stub(player, 'isFullscreen');
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          player.trigger('VPAID.adEnd');
+          player.trigger('vpaid.adEnd');
           player.trigger('fullscreenchange');
           sinon.assert.notCalled(adUnitWrapper.resizeAd);
         });

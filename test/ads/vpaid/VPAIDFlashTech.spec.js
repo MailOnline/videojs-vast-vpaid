@@ -1,8 +1,4 @@
 describe("VPAIDFlashTech", function () {
-  it("must be a function", function () {
-    assert.isFunction(VPAIDFlashTech);
-  });
-
   it("must return an instance of itself", function () {
     assert.instanceOf(VPAIDFlashTech({src:'fakeSource'}), VPAIDFlashTech);
   });
@@ -49,6 +45,10 @@ describe("VPAIDFlashTech", function () {
       assert.equal(vpaidFlashTech.settings, settings);
     });
 
+    it("must publish the name of the tech", function(){
+      assert.equal(vpaidFlashTech.name, 'vpaid-flash');
+    });
+
     describe("loadAdUnit", function () {
       it("must throw a VASTError if you don't pass a valid dom Element to contain the ad", function(){
         [undefined, null, {}, 123].forEach(function (invalidDomElement) {
@@ -86,6 +86,33 @@ describe("VPAIDFlashTech", function () {
         sinon.assert.calledWith(VPAIDFLASHClient, testDiv, sinon.match.func, {
           data: settings.vpaidFlashLoaderPath
         });
+        window.VPAIDFLASHClient.restore();
+      });
+
+      it("must pass an error to the callback if there is an error instantiating the VPAIDFLASHClient", function(){
+        var fakeVpaidClient = {
+          loadAdUnit: sinon.spy()
+        };
+        var callback = sinon.spy();
+        sinon.stub(window, 'VPAIDFLASHClient').returns(fakeVpaidClient);
+        vpaidFlashTech.loadAdUnit(testDiv, null, callback);
+        var flushVPAIDClient = secondArg(VPAIDFLASHClient);
+        var fakeError = new Error('There was an error');
+        flushVPAIDClient(fakeError);
+        sinon.assert.calledWith(callback, fakeError);
+        window.VPAIDFLASHClient.restore();
+      });
+
+      it("must call the loadAdUnit function of the VPAIDFLAHSClient and the callback", function(){
+        var fakeVpaidClient = {
+          loadAdUnit: sinon.spy()
+        };
+        var callback = sinon.spy();
+        sinon.stub(window, 'VPAIDFLASHClient').returns(fakeVpaidClient);
+        vpaidFlashTech.loadAdUnit(testDiv, null, callback);
+        var flushVPAIDClient = secondArg(VPAIDFLASHClient);
+        flushVPAIDClient(null);
+        sinon.assert.calledWith(fakeVpaidClient.loadAdUnit, vpaidFlashTech.mediaFile.src, callback);
         window.VPAIDFLASHClient.restore();
       });
     });

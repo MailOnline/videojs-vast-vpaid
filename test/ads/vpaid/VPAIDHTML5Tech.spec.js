@@ -1,14 +1,9 @@
 var VAST_ERROR_PREFIX = 'VAST Error: ';
 
 describe("VPAIDHTML5Tech", function() {
-  it("must be a function", function () {
-    assert.isFunction(VPAIDHTML5Tech);
-  });
-
   it("must return an instance of itself", function() {
     assert.instanceOf(VPAIDHTML5Tech({src: 'fakeSource'}), VPAIDHTML5Tech);
   });
-
 
   it("must implement supports", function () {
     assert.isFunction(VPAIDHTML5Tech.supports);
@@ -37,6 +32,11 @@ describe("VPAIDHTML5Tech", function() {
     afterEach(function () {
       dom.remove(testDiv);
       dom.remove(testVideo);
+    });
+
+
+    it("must publish the name of the tech", function(){
+      assert.equal(vpaidTech.name, 'vpaid-html5');
     });
 
     describe("loadAdUnit", function() {

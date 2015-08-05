@@ -80,7 +80,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
-    player.trigger('VPAID.adEnd');
+    player.trigger('vpaid.adEnd');
   }
 };
 
@@ -103,7 +103,6 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
   return null;
 
   /*** Local functions ***/
-
   function findSupportedTech(mediafile) {
     var type = mediafile.type;
     var i, len, VPAIDTech;
@@ -119,14 +118,21 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 };
 
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
-  var vjsTechEl = this.player.el().querySelector('.vjs-tech');
+  var player = this.player;
+  var vjsTechEl = player.el().querySelector('.vjs-tech');
   tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
-    if(error) {
+    if (error) {
       return next(error, adUnit, vastResponse);
     }
 
     try {
-      next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
+      var adUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var techClass = 'vjs-' + tech.name + '-ad';
+      dom.addClass(player.el(), techClass);
+      player.one('vpaid.adEnd', function() {
+        dom.removeClass(player.el(),techClass);
+      });
+      next(null, adUnit, vastResponse);
     } catch (e) {
       next(e, adUnit, vastResponse);
     }
@@ -213,7 +219,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdClickThru', function (data) {
-    var url= data.url;
+    var url = data.url;
     var playerHandles = data.playerHandles;
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
 
@@ -294,8 +300,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   adUnit.on('AdSkippableStateChange', updateSkipButtonState);
 
-  player.one('vast.adEnd', removeSkipButton);
-  player.one('vast.adError', removeSkipButton);
+  playerUtils.only(player, ['vast.adEnd', 'vast.adError'], removeSkipButton);
 
   next(null, adUnit, vastResponse);
 
@@ -352,7 +357,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
     player.on('volumechange', updateAdUnitVolume);
     adUnit.on('AdVolumeChange', updatePlayerVolume);
 
-    player.on('VPAID.adEnd', function () {
+    player.on('vpaid.adEnd', function () {
       player.off('volumechange', updateAdUnitVolume);
     });
 
@@ -379,7 +384,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     player.on('fullscreenchange', updateViewSize);
 
-    player.on('VPAID.adEnd', function () {
+    player.on('vpaid.adEnd', function () {
       player.off('fullscreenchange', updateViewSize);
     });
   }

@@ -6,6 +6,7 @@ function VPAIDHTML5Tech(mediaFile) {
 
   sanityCheck(mediaFile);
 
+  this.name = 'vpaid-html5';
   this.containerEl = null;
   this.videoEl = null;
   this.vpaidHTMLClient = null;

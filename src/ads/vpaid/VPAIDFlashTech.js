@@ -3,6 +3,7 @@ function VPAIDFlashTech(mediaFile, settings) {
     return new VPAIDFlashTech(mediaFile);
   }
   sanityCheck(mediaFile);
+  this.name = 'vpaid-flash';
   this.mediaFile = mediaFile;
   this.containerEl = null;
   this.vpaidFlashClient = null;
