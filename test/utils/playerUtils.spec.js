@@ -349,6 +349,11 @@ describe("playerUtils.prepareForAds", function() {
       blackPoster.show.restore();
     });
 
+    it("must hide the BlackPoster on 'error' event", function(){
+      player.trigger('error');
+      sinon.assert.calledOnce(blackPoster.hide);
+    });
+
     it("must hide the BlackPoster on 'vast.adStart' event", function(){
       player.trigger('vast.adStart');
       sinon.assert.calledOnce(blackPoster.hide);

@@ -213,6 +213,7 @@ playerUtils.prepareForAds = function (player) {
   player.on('loadStart', resetFirstPlay);//Every time we change the sources we reset the first play.
   player.on('vast.reset', resetFirstPlay);//Every time we change the sources we reset the first play.
   player.on('vast.firstPlay', restorePlayerToFirstPlay);
+  player.on('error', hideBlackPoster);//If there is an error in the player we remove the blackposter to show the err msg
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
   player.on('vast.adStart', addStyles);
