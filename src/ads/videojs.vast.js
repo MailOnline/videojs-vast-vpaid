@@ -77,22 +77,55 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   function tryToPlayPrerollAd() {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
+    async.waterfall([
+      checkAdsEnabled,
+      preparePlayerForAd,
+      playPrerollAd
+    ], function (error, response) {
+      if (error) {
+        trackAdError(error, response);
+      } else {
+        player.trigger('vast.adEnd');
+      }
 
-    if (settings.adsEnabled) {
+      triggerContentEvents();
+
+      if(snapshot) {
+        playerUtils.restorePlayerSnapshot(player, snapshot);
+        snapshot = null;
+      }
+    });
+
+    /*** Local functions ***/
+    function checkAdsEnabled(next) {
+      if(settings.adsEnabled) {
+       return next(null);
+      }
+      next(new VASTError('Ads are not enabled'));
+    }
+
+    function preparePlayerForAd(next) {
       if (canPlayPrerollAd()) {
         snapshot = playerUtils.getPlayerSnapshot(player);
         player.pause();
         addSpinnerIcon();
         startAdCancelTimeout();
-        playPrerollAd();
+        next(null);
       } else {
-        trackAdError(new VASTError('video content has been playing before preroll ad'));
+        next(new VASTError('video content has been playing before preroll ad'));
       }
-    } else {
-      cancelAds();
     }
 
-    /*** Local functions ***/
+    function triggerContentEvents() {
+      player.one('playing', function () {
+        player.trigger('vast.contentStart');
+
+        player.one('ended', function () {
+          player.trigger('vast.contentEnd');
+        });
+      });
+    }
+
     function canPlayPrerollAd() {
       return !playerUtils.isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
@@ -148,19 +181,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     adsCanceled = true;
   }
 
-  function playPrerollAd() {
+  function playPrerollAd(callback) {
     async.waterfall([
       getVastResponse,
       playAd
-    ], function (error, response) {
-      if (error) {
-        trackAdError(error, response);
-      } else {
-        player.trigger('vast.adEnd');
-      }
-
-      playerUtils.restorePlayerSnapshot(player, snapshot);
-    });
+    ], callback);
   }
 
   function getVastResponse(callback) {

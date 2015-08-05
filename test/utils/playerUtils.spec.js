@@ -499,40 +499,6 @@ describe("playerUtils.prepareForAds", function() {
       sinon.assert.calledTwice(firstPlaySpy);
     });
   });
-  
-  describe("vast.contentStart && vast.contentEnd", function(){
-    it("must be triggered when the content starts after the ad ends", function(){
-      var contentStartSpy = sinon.spy();
-      var contentEndedSpy = sinon.spy();
-      var player = videojs(document.createElement('video'), {});
-      playerUtils.prepareForAds(player);
-      player.on('vast.contentStart', contentStartSpy);
-      player.on('vast.contentEnd', contentEndedSpy);
-      player.trigger('vast.adEnd');
-      player.trigger('play');
-      sinon.assert.calledOnce(contentStartSpy);
-      sinon.assert.notCalled(contentEndedSpy);
-      player.trigger('ended');
-      sinon.assert.calledOnce(contentStartSpy);
-      sinon.assert.calledOnce(contentEndedSpy);
-    });
-
-    it("must be triggered when the content starts after the ad cancel", function(){
-      var contentStartSpy = sinon.spy();
-      var contentEndedSpy = sinon.spy();
-      var player = videojs(document.createElement('video'), {});
-      playerUtils.prepareForAds(player);
-      player.on('vast.contentStart', contentStartSpy);
-      player.on('vast.contentEnd', contentEndedSpy);
-      player.trigger('vast.adsCancel');
-      player.trigger('play');
-      sinon.assert.calledOnce(contentStartSpy);
-      sinon.assert.notCalled(contentEndedSpy);
-      player.trigger('ended');
-      sinon.assert.calledOnce(contentStartSpy);
-      sinon.assert.calledOnce(contentEndedSpy);
-    });
-  });
 });
 
 describe("playerUtils.removeNativePoster", function(){  var testDiv, player, tech;
@@ -560,5 +526,18 @@ describe("playerUtils.removeNativePoster", function(){  var testDiv, player, tec
     var tech = player.el().querySelector('.vjs-tech');
     playerUtils.removeNativePoster(player);
     assert.isNull(tech.getAttribute('poster'));
+  });
+});
+
+describe("playerUtils.only", function(){
+  it("must execute the passed handler once and only once no matter how many events we register to it.", function(){
+    var spy = sinon.spy();
+    var player = videojs(document.createElement('video'), {});
+    playerUtils.only(player, ['play', 'playing', 'pause'], spy);
+    player.trigger('play');
+    player.trigger('playing');
+    player.trigger('play');
+    player.trigger('pause');
+    sinon.assert.calledOnce(spy);
   });
 });

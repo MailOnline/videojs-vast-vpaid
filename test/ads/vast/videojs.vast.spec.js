@@ -168,12 +168,14 @@ describe("videojs.vast plugin", function () {
       player.on('vast.adsCancel', adsCanceled);
       player.vast.disable();
       player.trigger('vast.firstPlay');
+      clock.tick(1);
       sinon.assert.calledOnce(adsCanceled);
     });
 
     it("must remove the native poster to prevent flickering when video content starts", function(){
       var tech = player.el().querySelector('.vjs-tech');
       player.trigger('vast.firstPlay');
+      clock.tick(1);
       assert.isNull(tech.getAttribute('poster'));
     });
 
@@ -183,39 +185,38 @@ describe("videojs.vast plugin", function () {
         player.on('vast.adsCancel', adsCanceled);
         player.vast.enable();
         player.trigger('vast.firstPlay');
+        clock.tick(1);
 
         sinon.assert.notCalled(adsCanceled);
       });
 
       describe("loading spinner", function(){
         beforeEach(function(){
-          this.clock = sinon.useFakeTimers();
           player = videojs(document.createElement('video'), {});
           player.vastClient({url: echoFn('/fake.ad.url')});
         });
 
-        afterEach(function(){
-          this.clock.restore();
-        });
-
         it("must be added while we retrieve the ad", function(){
           player.trigger('vast.firstPlay');
+          clock.tick(1);
           assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-ad-loading'));
         });
 
         it("must be removed on vast ad start", function(){
           player.trigger('vast.firstPlay');
+          clock.tick(1);
           assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-ad-loading'));
           player.trigger('vast.adStart');
-          this.clock.tick(100);
+          clock.tick(100);
           assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ad-loading'));
         });
 
         it("must be removed if ads are canceled while trying to play the ad", function(){
           player.trigger('vast.firstPlay');
+          clock.tick(1);
           assert.isTrue(dom.hasClass(player.el(), 'vjs-vast-ad-loading'));
           player.trigger('vast.adsCancel');
-          this.clock.tick(100);
+          clock.tick(100);
           assert.isFalse(dom.hasClass(player.el(), 'vjs-vast-ad-loading'));
         });
       });
@@ -225,6 +226,7 @@ describe("videojs.vast plugin", function () {
         player.vastClient({url: echoFn('/fake.ad.url'), adCancelTimeout:5000});
         sinon.spy(player, 'pause');
         player.trigger('vast.firstPlay');
+        clock.tick(1);
         sinon.assert.calledOnce(player.pause);
       });
 
@@ -234,7 +236,7 @@ describe("videojs.vast plugin", function () {
 
         assertTriggersTrackError(function () {
           player.trigger('vast.firstPlay');
-          clock.tick(3000);
+          clock.tick(3001);
         }, 'timeout while waiting for the video to start playing', 402);
       });
 
@@ -244,9 +246,29 @@ describe("videojs.vast plugin", function () {
         player.vastClient({url: echoFn('/fake.ad.url'), adCancelTimeout: 3000});
         player.on('vast.adsCancel', adsCancelSpy);
         player.trigger('vast.firstPlay');
+        clock.tick(1);
         player.trigger('vast.adStart');
         clock.tick(3000);
         sinon.assert.notCalled(adsCancelSpy);
+      });
+    });
+
+    describe("vast.contentStart && vast.contentEnd", function(){
+      it("must be triggered on content playing and content end", function(){
+        var contentStartSpy = sinon.spy();
+        var contentEndedSpy = sinon.spy();
+        player.vast.disable();
+        player.trigger('vast.firstPlay');
+        clock.tick(1);
+        player.on('vast.contentStart', contentStartSpy);
+        player.on('vast.contentEnd', contentEndedSpy);
+        player.trigger('vast.adsCancel');
+        player.trigger('playing');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+        player.trigger('ended');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.calledOnce(contentEndedSpy);
       });
     });
   });
@@ -495,11 +517,13 @@ describe("videojs.vast plugin", function () {
 
   describe("on iPhone", function(){
     beforeEach(function(){
+      this.clock = sinon.useFakeTimers();
       sinon.stub(playerUtils, 'isIPhone').returns(true);
     });
 
     afterEach(function(){
       playerUtils.isIPhone.restore();
+      this.clock.restore();
     });
 
     it("must not play the ad if the video content has played more than what specified on the iosPrerollCancelTimeout and must track the error", function(){
@@ -511,7 +535,7 @@ describe("videojs.vast plugin", function () {
 
       player.vastClient({url: 'http://fake.ad.url', iosPrerollCancelTimeout: 1000});
       player.trigger('vast.firstPlay');
-
+      this.clock.tick(1);
       sinon.assert.calledOnce(errorSpy);
       assert.equal(firstArg(errorSpy).error.message, 'VAST Error: video content has been playing before preroll ad');
     });
@@ -523,7 +547,10 @@ describe("videojs.vast plugin", function () {
       player.on('vast.adError', errorSpy);
       player.vastClient({url: 'http://fake.ad.url', iosPrerollCancelTimeout: 1000});
       player.trigger('vast.firstPlay');
+      this.clock.tick(1);
       sinon.assert.notCalled(errorSpy);
     });
   });
 });
+
+
