@@ -337,6 +337,16 @@ describe("VPAIDIntegrator", function () {
       beforeEach(function () {
         response = new VASTResponse();
         sinon.spy(adUnitWrapper, 'initAd');
+        sinon.stub(dom, 'getDimension').returns(
+          {
+            width: 720,
+            height: 480
+          }
+        );
+      });
+
+      afterEach(function(){
+        dom.getDimension.restore();
       });
 
       it("must be a function", function () {

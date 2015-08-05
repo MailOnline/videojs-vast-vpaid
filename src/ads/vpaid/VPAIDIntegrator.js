@@ -172,7 +172,8 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 };
 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
-  var dimension = dom.getDimension(this.player.el());
+  var tech = this.player.el().querySelector('.vjs-tech');
+  var dimension = dom.getDimension(tech);
   adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
     next(error, adUnit, vastResponse);
   });
