@@ -2878,8 +2878,6 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.firstPlay', restorePlayerToFirstPlay);
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
-  player.on('vast.adEnd', triggerContentEvents);
-  player.on('vast.adsCancel', triggerContentEvents);
   player.on('vast.adStart', addStyles);
   player.on('vast.adEnd', removeStyles);
   player.on('vast.adsCancel', removeStyles);
@@ -2909,8 +2907,8 @@ playerUtils.prepareForAds = function (player) {
     };
   }
 
-  function restorePlayerToFirstPlay(){
-    if(!playerUtils.isIPhone()){
+  function restorePlayerToFirstPlay() {
+    if (!playerUtils.isIPhone()) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
     }
@@ -2923,27 +2921,17 @@ playerUtils.prepareForAds = function (player) {
     }
   }
 
-  function hideBlackPoster(){
-    if(!dom.hasClass(blackPoster.el(), 'vjs-hidden')){
+  function hideBlackPoster() {
+    if (!dom.hasClass(blackPoster.el(), 'vjs-hidden')) {
       blackPoster.hide();
     }
   }
 
-  function triggerContentEvents(){
-    player.one('play', function(){
-      player.trigger('vast.contentStart');
-
-      player.one('ended', function() {
-        player.trigger('vast.contentEnd');
-      });
-    });
-  }
-
-  function addStyles(){
+  function addStyles() {
     dom.addClass(player.el(), 'vjs-ad-playing');
   }
 
-  function removeStyles(){
+  function removeStyles() {
     dom.removeClass(player.el(), 'vjs-ad-playing');
   }
 };
@@ -2955,11 +2943,33 @@ playerUtils.prepareForAds = function (player) {
  * prevents the poster from showing up between videos.
  * @param {object} player The videojs player object
  */
-playerUtils.removeNativePoster = function(player) {
+playerUtils.removeNativePoster = function (player) {
   var tech = player.el().querySelector('.vjs-tech');
   if (tech) {
     tech.removeAttribute('poster');
   }
+};
+
+/**
+ * Helper function to listen to many events until one of them gets fired, then we
+ * execute the handler and unsubscribe all the event listeners;
+ *
+ * @param player specific player from where to listen for the events
+ * @param events array of events
+ * @param handler function to execute once one of the events fires
+ */
+playerUtils.only = function only(player, events, handler) {
+  function listener() {
+    handler.apply(null, arguments);
+
+    events.forEach(function (event) {
+      player.off(event, listener);
+    });
+  }
+
+  events.forEach(function (event) {
+    player.on(event, listener);
+  });
 };
 ;
 'use strict';
@@ -3320,22 +3330,55 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   function tryToPlayPrerollAd() {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
+    async.waterfall([
+      checkAdsEnabled,
+      preparePlayerForAd,
+      playPrerollAd
+    ], function (error, response) {
+      if (error) {
+        trackAdError(error, response);
+      } else {
+        player.trigger('vast.adEnd');
+      }
 
-    if (settings.adsEnabled) {
+      triggerContentEvents();
+
+      if(snapshot) {
+        playerUtils.restorePlayerSnapshot(player, snapshot);
+        snapshot = null;
+      }
+    });
+
+    /*** Local functions ***/
+    function checkAdsEnabled(next) {
+      if(settings.adsEnabled) {
+       return next(null);
+      }
+      next(new VASTError('Ads are not enabled'));
+    }
+
+    function preparePlayerForAd(next) {
       if (canPlayPrerollAd()) {
         snapshot = playerUtils.getPlayerSnapshot(player);
         player.pause();
         addSpinnerIcon();
         startAdCancelTimeout();
-        playPrerollAd();
+        next(null);
       } else {
-        trackAdError(new VASTError('video content has been playing before preroll ad'));
+        next(new VASTError('video content has been playing before preroll ad'));
       }
-    } else {
-      cancelAds();
     }
 
-    /*** Local functions ***/
+    function triggerContentEvents() {
+      player.one('playing', function () {
+        player.trigger('vast.contentStart');
+
+        player.one('ended', function () {
+          player.trigger('vast.contentEnd');
+        });
+      });
+    }
+
     function canPlayPrerollAd() {
       return !playerUtils.isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
@@ -3391,19 +3434,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     adsCanceled = true;
   }
 
-  function playPrerollAd() {
+  function playPrerollAd(callback) {
     async.waterfall([
       getVastResponse,
       playAd
-    ], function (error, response) {
-      if (error) {
-        trackAdError(error, response);
-      } else {
-        player.trigger('vast.adEnd');
-      }
-
-      playerUtils.restorePlayerSnapshot(player, snapshot);
-    });
+    ], callback);
   }
 
   function getVastResponse(callback) {
