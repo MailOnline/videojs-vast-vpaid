@@ -138,28 +138,20 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
       }, settings.adCancelTimeout);
 
-      player.on('vast.adStart', clearAdCancelTimeout);
-      player.on('vast.adError', clearAdCancelTimeout);
-      player.on('vast.adsCancel', clearAdCancelTimeout);
+      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], clearAdCancelTimeout);
 
       /*** local functions ***/
       function clearAdCancelTimeout() {
         if (adCancelTimeoutId) {
           clearTimeout(adCancelTimeoutId);
           adCancelTimeoutId = null;
-          player.off('vast.adStart', clearAdCancelTimeout);
-          player.off('vast.adError', clearAdCancelTimeout);
-          player.off('vast.adsCancel', clearAdCancelTimeout);
         }
       }
     }
 
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
-
-      player.on('vast.adStart', removeSpinnerIcon);
-      player.on('vast.adError', removeSpinnerIcon);
-      player.on('vast.adsCancel', removeSpinnerIcon);
+      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], removeSpinnerIcon);
     }
 
     function removeSpinnerIcon() {
@@ -167,10 +159,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       // If we remove it synchronously we see a flash of the content video before the ad starts playing.
       setTimeout(function () {
         dom.removeClass(player.el(), 'vjs-vast-ad-loading');
-        
-        player.off('vast.adStart', removeSpinnerIcon);
-        player.off('vast.adError', removeSpinnerIcon);
-        player.off('vast.adsCancel', removeSpinnerIcon);
       }, 100);
     }
 
@@ -205,8 +193,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     adIntegrator.playAd(vastResponse, callback);
 
     player.one('vast.adStart', adAdsLabel);
-    player.one('vast.adEnd', removeAdsLabel);
-    player.one('vast.adsCancel', removeAdsLabel);
+    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
 
     if (isIDevice()) {
       preventManualProgress();
@@ -221,9 +208,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function removeAdsLabel() {
-      if (adFinished) {
-        return;
-      }
       player.controlBar.removeChild('AdsLabel');
       adFinished = true;
     }
@@ -235,8 +219,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       var skipad_attempts = 0;
 
       player.on('timeupdate', adTimeupdateHandler);
-      player.on('vast.adEnd', stopPreventManualProgress);
-      player.on('vast.adsCancel', stopPreventManualProgress);
+      playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
 
       /*** Local functions ***/
       function adTimeupdateHandler() {
@@ -256,8 +239,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
       function stopPreventManualProgress() {
         player.off('timeupdate', adTimeupdateHandler);
-        player.off('vast.adEnd', stopPreventManualProgress);
-        player.off('vast.adsCancel', stopPreventManualProgress);
       }
     }
   }
