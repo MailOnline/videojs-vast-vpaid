@@ -315,8 +315,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
 
   /*** Local Functions ***/
   function pauseAdUnit() {
-    console.log('PAUSINGGGGGGG');
-    
     adUnit.pauseAd(noop);
   }
 

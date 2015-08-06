@@ -57,6 +57,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
 
+  player.on('vast.reset', cancelAds);
+
   player.vast = {
     isEnabled: function () {
       return settings.adsEnabled;
