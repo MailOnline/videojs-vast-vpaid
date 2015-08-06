@@ -138,13 +138,13 @@ VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
     }
 
     try {
-      var adUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
       var techClass = 'vjs-' + tech.name + '-ad';
       dom.addClass(player.el(), techClass);
       player.one('vpaid.adEnd', function() {
         dom.removeClass(player.el(),techClass);
       });
-      next(null, adUnit, vastResponse);
+      next(null, WrappedAdUnit, vastResponse);
     } catch (e) {
       next(e, adUnit, vastResponse);
     }
