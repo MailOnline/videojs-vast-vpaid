@@ -44,6 +44,7 @@ module.exports = {
     //Whatever we add in here will be added to the build as a required resource
     libraries: [
       'node_modules/es5-shim/es5-shim.js', //Required for the player to work on old browsers
+      'lib/ie8fix.js', //Required for make the ad's work in ie8
       'bower_components/swfobject/swfobject/src/swfobject.js'
     ],
     sourcemaps: [
