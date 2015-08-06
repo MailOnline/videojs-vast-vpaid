@@ -49,6 +49,9 @@ describe("VPAIDIntegrator", function () {
         });
       }
     };
+
+    this.pauseAd = sinon.spy();
+    this.resumeAd = sinon.spy();
   }
 
   beforeEach(function () {
@@ -199,6 +202,29 @@ describe("VPAIDIntegrator", function () {
         finishPlaying.flush(null, vpaidAdUnit, vastResponse);
 
         sinon.assert.calledOnce(callback);
+      });
+
+      describe("return obj", function(){
+        it("must have the type VPAID", function(){
+          var adUnit =vpaidIntegrator.playAd(vastResponse, noop);
+          assert.equal(adUnit.type, 'VPAID')
+        });
+
+        it("must trigger the vpaid.pauseAd evt", function(){
+          var adUnit =vpaidIntegrator.playAd(vastResponse, noop);
+          var spy = sinon.spy();
+          player.on('vpaid.pauseAd', spy);
+          adUnit.pauseAd();
+          sinon.assert.calledOnce(spy);
+        });
+
+        it("must trigger the vpaid.resumeAd evt", function(){
+          var adUnit =vpaidIntegrator.playAd(vastResponse, noop);
+          var spy = sinon.spy();
+          player.on('vpaid.resumeAd', spy);
+          adUnit.resumeAd();
+          sinon.assert.calledOnce(spy);
+        });
       });
     });
 
@@ -408,7 +434,6 @@ describe("VPAIDIntegrator", function () {
         VASTTracker.restore();
       });
 
-
       it("must call next with no error and the passed adUnit and vastResponse", function(){
         sinon.assert.calledWithExactly(next, null, adUnit, vastResponse);
       });
@@ -570,6 +595,23 @@ describe("VPAIDIntegrator", function () {
         });
       });
 
+      it("must pause the ad unit on 'vpaid.pauseAd' evt", function(){
+        player.trigger('vpaid.pauseAd');
+        sinon.assert.calledOnce(adUnit.pauseAd);
+      });
+
+      it("must pause the ad unit on 'vpaid.resumeAd' evt", function(){
+        player.trigger('vpaid.resumeAd');
+        sinon.assert.calledOnce(adUnit.resumeAd);
+      });
+
+      it("must not pause or resume the adUnit after 'vaid.adEnd' event", function(){
+        player.trigger('vpaid.adEnd');
+        player.trigger('vpaid.resumeAd');
+        player.trigger('vpaid.pauseAd');
+        sinon.assert.notCalled(adUnit.resumeAd);
+        sinon.assert.notCalled(adUnit.pauseAd);
+      });
     });
 
     describe("addSkipButton", function(){
@@ -735,7 +777,7 @@ describe("VPAIDIntegrator", function () {
           sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480, vpaidIntegrator.VIEW_MODE.FULLSCREEN);
         });
 
-        it("must unsubscribe on 'VPAID-adfinsished'", function () {
+        it("must unsubscribe on 'vpaid.adEnd' event", function () {
           sinon.stub(player, 'isFullscreen');
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           player.trigger('vpaid.adEnd');
@@ -816,6 +858,15 @@ describe("VPAIDIntegrator", function () {
       dom.dispatchEvent(window, new Event('orientationchange'));
       dom.dispatchEvent(window, new Event('resize'));
       assert.equal(adUnit.resizeAd.callCount, 0);
+    });
+
+    it("must not handle vast.resize after 'vpaid.adEnd' events", function(){
+      var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
+      var adUnit = new FakeAdUnit();
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      player.trigger('vpaid.adEnd');
+      player.trigger('vast.resize');
+      assert(adUnit.resizeAd.notCalled);
     });
   });
 

@@ -271,6 +271,16 @@ describe("videojs.vast plugin", function () {
         sinon.assert.calledOnce(contentEndedSpy);
       });
     });
+
+    it("must set the player.vast.adUnit to null once we finish playing", function(){
+      player.vast.adUnit = {
+        type: 'FAKE'
+      };
+      player.vast.disable();
+      player.trigger('vast.firstPlay');
+      clock.tick(1);
+      assert.isNull(player.vast.adUnit);
+    });
   });
 
   describe("playPrerollAd", function () {
@@ -512,6 +522,17 @@ describe("videojs.vast plugin", function () {
 
       sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
       playerUtils.restorePlayerSnapshot.restore();
+    });
+
+    it("must publish the adUnit on the player.vast obj on 'vast.adStart' evt", function(){
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('vast.adStart');
+      assert.equal(player.vast.adUnit.type, 'VAST');
     });
   });
 

@@ -38,6 +38,17 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
     }
     callback(error, response);
   });
+
+  return {
+    type: 'VAST',
+    pauseAd: function() {
+      that.player.pause();
+    },
+
+    resumeAd: function() {
+      that.player.play();
+    }
+  };
 };
 
 VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, callback) {

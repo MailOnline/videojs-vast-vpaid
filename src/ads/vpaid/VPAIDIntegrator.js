@@ -68,9 +68,21 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
       callback(error, vastResponse);
     });
-  } else {
-    callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
+
+    return {
+      type: 'VPAID',
+      pauseAd: function() {
+        player.trigger('vpaid.pauseAd');
+      },
+      resumeAd: function() {
+        player.trigger('vpaid.resumeAd');
+      }
+    };
   }
+
+  callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
+
+  return null;
   /*** Local functions ***/
   function removeAdUnit(error) {
     if (error) {
@@ -290,8 +302,27 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   }
 
   player.on('vast.resize', updateViewSize);
+  player.on('vpaid.pauseAd', pauseAdUnit);
+  player.on('vpaid.resumeAd', resumeAdUnit);
+
+  player.one('vpaid.adEnd', function () {
+    player.off('vast.resize', updateViewSize);
+    player.off('vpaid.pauseAd', pauseAdUnit);
+    player.off('vpaid.resumeAd', resumeAdUnit);
+  });
 
   next(null, adUnit, vastResponse);
+
+  /*** Local Functions ***/
+  function pauseAdUnit() {
+    console.log('PAUSINGGGGGGG');
+    
+    adUnit.pauseAd(noop);
+  }
+
+  function resumeAdUnit() {
+    adUnit.resumeAd(noop);
+  }
 };
 
 VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next) {

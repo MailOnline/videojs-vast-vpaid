@@ -106,6 +106,27 @@ describe("VASTIntegrator", function () {
         this.clock.tick(1);
         assertVASTTrackRequest(['http://fake.error.url'],{ ERRORCODE: 400});
       });
+
+      describe("return obj", function(){
+        it("must contain the type 'VAST", function(){
+          var adUnit = vastIntegrator.playAd(new VASTResponse(), noop);
+          assert.equal(adUnit.type, 'VAST');
+        });
+
+        it("must be able to pause the adUnit", function(){
+          var adUnit = vastIntegrator.playAd(new VASTResponse(), noop);
+          sinon.spy(player, 'pause');
+          adUnit.pauseAd();
+          sinon.assert.calledOnce(player.pause);
+        });
+
+        it("must be able to resume the adUnit", function(){
+          var adUnit = vastIntegrator.playAd(new VASTResponse(), noop);
+          sinon.spy(player, 'play');
+          adUnit.resumeAd();
+          sinon.assert.calledOnce(player.play);
+        });
+      });
     });
 
     describe("_selectAdSource", function () {
