@@ -3448,13 +3448,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
-    var adUnit = adIntegrator.playAd(vastResponse, callback);
-
-    if(adUnit) {
-      player.one('vast.adStart', function() {
-        player.vast.adUnit = adUnit;
-      });
-    }
+    player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     player.one('vast.adStart', adAdsLabel);
     playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
@@ -4092,13 +4086,13 @@ VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
     }
 
     try {
-      var adUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
       var techClass = 'vjs-' + tech.name + '-ad';
       dom.addClass(player.el(), techClass);
       player.one('vpaid.adEnd', function() {
         dom.removeClass(player.el(),techClass);
       });
-      next(null, adUnit, vastResponse);
+      next(null, WrappedAdUnit, vastResponse);
     } catch (e) {
       next(e, adUnit, vastResponse);
     }
