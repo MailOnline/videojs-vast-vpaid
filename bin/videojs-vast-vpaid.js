@@ -4003,12 +4003,10 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  player.one('error', function () {
-    removeAdUnit();
-  });
-
   tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
+
+  playerUtils.only(player, ['error', 'vpaid.adEnd', 'vast.adsCancel'], removeAdUnit);
 
   if (tech) {
     async.waterfall([
@@ -4020,8 +4018,10 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       this._finishPlaying.bind(this)
 
     ], function (error, adUnit, vastResponse) {
-      removeAdUnit(error);
-
+      if (error) {
+        that._trackError(vastResponse);
+      }
+      player.trigger('vpaid.adEnd');
       callback(error, vastResponse);
     });
 
@@ -4040,15 +4040,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
   return null;
   /*** Local functions ***/
-  function removeAdUnit(error) {
-    if (error) {
-      that._trackError(vastResponse);
-      player.trigger('vast.adError');
-    }
-
+  function removeAdUnit() {
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
-    player.trigger('vpaid.adEnd');
   }
 };
 
