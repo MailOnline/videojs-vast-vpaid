@@ -19,7 +19,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
   var timeout, timeoutId;
   var xhr = this.createXhr();
   options = options || {};
-  timeout = isNumber(options.timeout)? options.timeout : 0;
+  timeout = isNumber(options.timeout) ? options.timeout : 0;
 
   xhr.open(method, urlParts(url).href, true);
 
@@ -42,19 +42,17 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
      *
      * For mor info go to: https://msdn.microsoft.com/en-us/library/cc288060(v=vs.85).aspx
      */
-    if(xhr instanceof XDomainRequest) {
-      if(!xhr.getAllResponseHeaders) {
-        xhr.getAllResponseHeaders = function(){
-          return null;
-        }
-      }
-
-      if(!xhr.status) {
-        xhr.status = 200;
+    if (!xhr.getAllResponseHeaders) {
+      xhr.getAllResponseHeaders = function () {
+        return null;
       }
     }
 
-    if(isDefined(timeoutId)){
+    if (!xhr.status) {
+      xhr.status = 200;
+    }
+
+    if (isDefined(timeoutId)) {
       clearTimeout(timeoutId);
       timeoutId = undefined;
     }
@@ -80,7 +78,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
 
   xhr.send();
 
-  if(timeout > 0){
+  if (timeout > 0) {
     timeoutId = setTimeout(function () {
       xhr && xhr.abort();
     }, timeout);
