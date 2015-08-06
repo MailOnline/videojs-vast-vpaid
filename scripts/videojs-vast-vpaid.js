@@ -1544,7 +1544,7 @@ function $addEventsSubscribers() {
 }
 
 function $clickThruHook(url, id, playerHandles) {
-    this._subscribers.triggerSync(AD_CLICK, {url: url, id: id, playerHandles: playerHandles});
+    this._subscribers.trigger(AD_CLICK, {url: url, id: id, playerHandles: playerHandles});
 }
 
 function $trigger(event) {
@@ -1802,12 +1802,6 @@ Subscriber.prototype.trigger = function(eventName, data) {
         setTimeout(function () {
             subscriber.handler.call(subscriber.context, data);
         }, 0);
-    });
-};
-
-Subscriber.prototype.triggerSync = function(eventName, data) {
-    this.get(eventName).forEach(function (subscriber) {
-        subscriber.handler.call(subscriber.context, data);
     });
 };
 
@@ -3354,6 +3348,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
       }
+
+      if(player.vast && player.vast.adUnit) {
+        player.vast.adUnit = null; //We remove the adUnit
+      }
     });
 
     /*** Local functions ***/
@@ -3398,28 +3396,20 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
       }, settings.adCancelTimeout);
 
-      player.on('vast.adStart', clearAdCancelTimeout);
-      player.on('vast.adError', clearAdCancelTimeout);
-      player.on('vast.adsCancel', clearAdCancelTimeout);
+      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], clearAdCancelTimeout);
 
       /*** local functions ***/
       function clearAdCancelTimeout() {
         if (adCancelTimeoutId) {
           clearTimeout(adCancelTimeoutId);
           adCancelTimeoutId = null;
-          player.off('vast.adStart', clearAdCancelTimeout);
-          player.off('vast.adError', clearAdCancelTimeout);
-          player.off('vast.adsCancel', clearAdCancelTimeout);
         }
       }
     }
 
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
-
-      player.on('vast.adStart', removeSpinnerIcon);
-      player.on('vast.adError', removeSpinnerIcon);
-      player.on('vast.adsCancel', removeSpinnerIcon);
+      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], removeSpinnerIcon);
     }
 
     function removeSpinnerIcon() {
@@ -3427,10 +3417,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       // If we remove it synchronously we see a flash of the content video before the ad starts playing.
       setTimeout(function () {
         dom.removeClass(player.el(), 'vjs-vast-ad-loading');
-        
-        player.off('vast.adStart', removeSpinnerIcon);
-        player.off('vast.adError', removeSpinnerIcon);
-        player.off('vast.adsCancel', removeSpinnerIcon);
       }, 100);
     }
 
@@ -3462,11 +3448,16 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
-    adIntegrator.playAd(vastResponse, callback);
+    var adUnit = adIntegrator.playAd(vastResponse, callback);
+
+    if(adUnit) {
+      player.one('vast.adStart', function() {
+        player.vast.adUnit = adUnit;
+      });
+    }
 
     player.one('vast.adStart', adAdsLabel);
-    player.one('vast.adEnd', removeAdsLabel);
-    player.one('vast.adsCancel', removeAdsLabel);
+    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
 
     if (isIDevice()) {
       preventManualProgress();
@@ -3481,9 +3472,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function removeAdsLabel() {
-      if (adFinished) {
-        return;
-      }
       player.controlBar.removeChild('AdsLabel');
       adFinished = true;
     }
@@ -3495,8 +3483,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       var skipad_attempts = 0;
 
       player.on('timeupdate', adTimeupdateHandler);
-      player.on('vast.adEnd', stopPreventManualProgress);
-      player.on('vast.adsCancel', stopPreventManualProgress);
+      playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
 
       /*** Local functions ***/
       function adTimeupdateHandler() {
@@ -3516,8 +3503,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
       function stopPreventManualProgress() {
         player.off('timeupdate', adTimeupdateHandler);
-        player.off('vast.adEnd', stopPreventManualProgress);
-        player.off('vast.adsCancel', stopPreventManualProgress);
       }
     }
   }
@@ -3827,6 +3812,7 @@ function VPAIDFlashTech(mediaFile, settings) {
     return new VPAIDFlashTech(mediaFile);
   }
   sanityCheck(mediaFile);
+  this.name = 'vpaid-flash';
   this.mediaFile = mediaFile;
   this.containerEl = null;
   this.vpaidFlashClient = null;
@@ -3898,6 +3884,7 @@ function VPAIDHTML5Tech(mediaFile) {
 
   sanityCheck(mediaFile);
 
+  this.name = 'vpaid-html5';
   this.containerEl = null;
   this.videoEl = null;
   this.vpaidHTMLClient = null;
@@ -4035,9 +4022,21 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
       callback(error, vastResponse);
     });
-  } else {
-    callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
+
+    return {
+      type: 'VPAID',
+      pauseAd: function() {
+        player.trigger('vpaid.pauseAd');
+      },
+      resumeAd: function() {
+        player.trigger('vpaid.resumeAd');
+      }
+    };
   }
+
+  callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
+
+  return null;
   /*** Local functions ***/
   function removeAdUnit(error) {
     if (error) {
@@ -4047,7 +4046,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
-    player.trigger('VPAID.adEnd');
+    player.trigger('vpaid.adEnd');
   }
 };
 
@@ -4070,7 +4069,6 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
   return null;
 
   /*** Local functions ***/
-
   function findSupportedTech(mediafile) {
     var type = mediafile.type;
     var i, len, VPAIDTech;
@@ -4086,14 +4084,21 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 };
 
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
-  var vjsTechEl = this.player.el().querySelector('.vjs-tech');
+  var player = this.player;
+  var vjsTechEl = player.el().querySelector('.vjs-tech');
   tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
-    if(error) {
+    if (error) {
       return next(error, adUnit, vastResponse);
     }
 
     try {
-      next(error, new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src}), vastResponse);
+      var adUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var techClass = 'vjs-' + tech.name + '-ad';
+      dom.addClass(player.el(), techClass);
+      player.one('vpaid.adEnd', function() {
+        dom.removeClass(player.el(),techClass);
+      });
+      next(null, adUnit, vastResponse);
     } catch (e) {
       next(e, adUnit, vastResponse);
     }
@@ -4139,7 +4144,8 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 };
 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
-  var dimension = dom.getDimension(this.player.el());
+  var tech = this.player.el().querySelector('.vjs-tech');
+  var dimension = dom.getDimension(tech);
   adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
     next(error, adUnit, vastResponse);
   });
@@ -4179,7 +4185,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdClickThru', function (data) {
-    var url= data.url;
+    var url = data.url;
     var playerHandles = data.playerHandles;
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
 
@@ -4250,8 +4256,27 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   }
 
   player.on('vast.resize', updateViewSize);
+  player.on('vpaid.pauseAd', pauseAdUnit);
+  player.on('vpaid.resumeAd', resumeAdUnit);
+
+  player.one('vpaid.adEnd', function () {
+    player.off('vast.resize', updateViewSize);
+    player.off('vpaid.pauseAd', pauseAdUnit);
+    player.off('vpaid.resumeAd', resumeAdUnit);
+  });
 
   next(null, adUnit, vastResponse);
+
+  /*** Local Functions ***/
+  function pauseAdUnit() {
+    console.log('PAUSINGGGGGGG');
+    
+    adUnit.pauseAd(noop);
+  }
+
+  function resumeAdUnit() {
+    adUnit.resumeAd(noop);
+  }
 };
 
 VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next) {
@@ -4260,8 +4285,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   adUnit.on('AdSkippableStateChange', updateSkipButtonState);
 
-  player.one('vast.adEnd', removeSkipButton);
-  player.one('vast.adError', removeSkipButton);
+  playerUtils.only(player, ['vast.adEnd', 'vast.adError'], removeSkipButton);
 
   next(null, adUnit, vastResponse);
 
@@ -4318,7 +4342,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
     player.on('volumechange', updateAdUnitVolume);
     adUnit.on('AdVolumeChange', updatePlayerVolume);
 
-    player.on('VPAID.adEnd', function () {
+    player.on('vpaid.adEnd', function () {
       player.off('volumechange', updateAdUnitVolume);
     });
 
@@ -4345,7 +4369,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     player.on('fullscreenchange', updateViewSize);
 
-    player.on('VPAID.adEnd', function () {
+    player.on('vpaid.adEnd', function () {
       player.off('fullscreenchange', updateViewSize);
     });
   }
@@ -4857,6 +4881,17 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
     }
     callback(error, response);
   });
+
+  return {
+    type: 'VAST',
+    pauseAd: function() {
+      that.player.pause();
+    },
+
+    resumeAd: function() {
+      that.player.play();
+    }
+  };
 };
 
 VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, callback) {
