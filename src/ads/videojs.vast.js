@@ -194,13 +194,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
-    var adUnit = adIntegrator.playAd(vastResponse, callback);
-
-    if(adUnit) {
-      player.one('vast.adStart', function() {
-        player.vast.adUnit = adUnit;
-      });
-    }
+    player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     player.one('vast.adStart', adAdsLabel);
     playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
