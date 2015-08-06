@@ -151,6 +151,17 @@
 
 ### disable
   >Disables the plugin
+  
+### adUnit
+  >Null if there is no ad playing
+  >If there is an ad playing (after the vast.adStart event) it will contain an obj like the one below:
+  ```
+  player.vast.adUnit= {
+     type: {string} <== The possible types are 'VAST' or 'VPAID'
+     pauseAd: {function} <== Pauses the ad unit
+     resumeAd: {function} <== Resumes the ad unit
+  }
+  ```
 
 ## player.vast
   The returned object described above it is also published as a player property so that you can use it anywhere as long as you have access to the player instance.
