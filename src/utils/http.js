@@ -45,7 +45,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
     if (!xhr.getAllResponseHeaders) {
       xhr.getAllResponseHeaders = function () {
         return null;
-      }
+      };
     }
 
     if (!xhr.status) {
