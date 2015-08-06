@@ -2,7 +2,7 @@ var xml = {};
 
 xml.strToXMLDoc = function strToXMLDoc(stringContainingXMLSource){
   //IE 8
-  if(!DOMParser){
+  if(typeof window.DOMParser === 'undefined'){
     var xmlDocument = new ActiveXObject('Microsoft.XMLDOM');
     xmlDocument.async = false;
     xmlDocument.loadXML(stringContainingXMLSource);
@@ -83,7 +83,9 @@ xml.JXONTree = function JXONTree (oXMLParent) {
     if (sCollectedTxt) { this.keyValue = parseText(sCollectedTxt); }
   }
 
-  if (oXMLParent.hasAttributes()) {
+  //IE8 Stupid fix
+  var hasAttr = typeof oXMLParent.hasAttributes === 'undefined'? oXMLParent.attributes.length > 0: oXMLParent.hasAttributes();
+  if (hasAttr) {
     var oAttrib;
     for (var nAttrib = 0; nAttrib < oXMLParent.attributes.length; nAttrib++) {
       oAttrib = oXMLParent.attributes.item(nAttrib);
