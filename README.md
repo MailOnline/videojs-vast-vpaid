@@ -210,7 +210,10 @@
 
 ### 'vast.contentEnded' event
   Fired when the video content ends.
-
+  
+### 'vast.reset' event
+  Trigger the 'vast.reset' event whenever you want to reset the plugin. Beware that if an ad is playing it will be canceled.
+  
 ## Running the plugin
   If you want to run the plugin you need to clone the repo into your local environment
   ```

@@ -76,6 +76,15 @@ describe("videojs.vast plugin", function () {
     sinon.assert.notCalled(vastErrorSpy);
   });
 
+  it("must cancel the ads on 'vast.reset' evt", function(){
+    var spy = sinon.spy();
+    var player = videojs(document.createElement('video'), {});
+    player.on('vast.adsCancel', spy);
+    player.vastClient({url: 'http://fake.ad.url'});
+    player.trigger('vast.reset');
+    sinon.assert.calledOnce(spy);
+  });
+
   describe("playAdAlways option", function () {
     var resetSpy;
 
@@ -280,6 +289,19 @@ describe("videojs.vast plugin", function () {
       player.trigger('vast.firstPlay');
       clock.tick(1);
       assert.isNull(player.vast.adUnit);
+    });
+
+    it("must restore the video content on 'vast.adsCancel' evt", function(){
+      sinon.stub(playerUtils, 'restorePlayerSnapshot');
+      player.vast.adUnit = {
+        type: 'FAKE'
+      };
+      player.trigger('vast.firstPlay');
+      clock.tick(1);
+      player.trigger('vast.adsCancel');
+      assert.isNull(player.vast.adUnit);
+      sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
+      playerUtils.restorePlayerSnapshot.restore();
     });
   });
 

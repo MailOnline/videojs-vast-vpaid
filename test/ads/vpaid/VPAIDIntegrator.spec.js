@@ -170,18 +170,20 @@ describe("VPAIDIntegrator", function () {
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
       });
 
-      it("must remove 'vjs-vpaid-ad' class if there is  an 'error' event", function () {
-        vpaidIntegrator.playAd(vastResponse, callback);
-        player.trigger('error');
-        this.clock.tick(1);
-        assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
-      });
+      ['error', 'vast.adsCancel', 'vpaid.adEnd'].forEach(function (evt) {
+        it("must remove 'vjs-vpaid-ad' class if there is  an '"+evt+"' event", function () {
+          vpaidIntegrator.playAd(vastResponse, callback);
+          player.trigger(evt);
+          this.clock.tick(1);
+          assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
+        });
 
-      it("must unload the adUnit if there is an 'error' event", function () {
-        vpaidIntegrator.playAd(vastResponse, callback);
-        player.trigger('error');
-        this.clock.tick(1);
-        sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
+        it("must unload the adUnit if there is an '"+evt+"' event", function () {
+          vpaidIntegrator.playAd(vastResponse, callback);
+          player.trigger(evt);
+          this.clock.tick(1);
+          sinon.assert.calledOnce(fakeTech.prototype.unloadAdUnit);
+        });
       });
 
       it("must unload the adUnit if the ad finishes playing", function () {
