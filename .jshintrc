@@ -51,6 +51,7 @@
     "treeSearch":true,
     "echoFn":true,
     "isISO8601":true,
+    "isOldIE":true,
     /* Utils */
     "dom":true,
     "xml":true,

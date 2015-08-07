@@ -439,7 +439,8 @@ VPAIDIntegrator.prototype._trackError = function trackError(response) {
 };
 
 function resizeAd(player, adUnit, VIEW_MODE) {
-  var dimension = dom.getDimension(player.el());
+  var tech = player.el().querySelector('.vjs-tech');
+  var dimension = dom.getDimension(tech);
   var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
   adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
 }
