@@ -290,6 +290,19 @@ describe("videojs.vast plugin", function () {
       clock.tick(1);
       assert.isNull(player.vast.adUnit);
     });
+
+    it("must restore the video content on 'vast.adsCancel' evt", function(){
+      sinon.stub(playerUtils, 'restorePlayerSnapshot');
+      player.vast.adUnit = {
+        type: 'FAKE'
+      };
+      player.trigger('vast.firstPlay');
+      clock.tick(1);
+      player.trigger('vast.adsCancel');
+      assert.isNull(player.vast.adUnit);
+      sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
+      playerUtils.restorePlayerSnapshot.restore();
+    });
   });
 
   describe("playPrerollAd", function () {

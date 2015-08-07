@@ -79,6 +79,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   function tryToPlayPrerollAd() {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
+    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd'], restoreVideoContent);
+
     async.waterfall([
       checkAdsEnabled,
       preparePlayerForAd,
@@ -91,7 +93,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       }
 
       triggerContentEvents();
+    });
 
+    /*** Local functions ***/
+    function restoreVideoContent(){
       if(snapshot) {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
@@ -100,9 +105,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       if(player.vast && player.vast.adUnit) {
         player.vast.adUnit = null; //We remove the adUnit
       }
-    });
+    }
 
-    /*** Local functions ***/
     function checkAdsEnabled(next) {
       if(settings.adsEnabled) {
        return next(null);
