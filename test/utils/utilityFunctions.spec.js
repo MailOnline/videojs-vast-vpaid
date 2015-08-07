@@ -755,3 +755,64 @@ describe("isIDevice", function(){
     assert.isFalse(isIDevice());
   });
 });
+
+describe("getInternetExplorerVersion", function(){
+  var navigators = {
+    nonIe: {
+      appName: 'Netscape',
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.130 Safari/537.36"
+    },
+    ie8: {
+      appName: 'Microsoft Internet Explorer',
+      userAgent: "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)"
+
+    },
+    ie9: {
+      appName: 'Microsoft Internet Explorer',
+      userAgent: "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; Zune 4.0; InfoPath.3; MS-RTC LM 8; .NET4.0C; .NET4.0E)"
+    },
+    ie10: {
+      appName: 'Microsoft Internet Explorer',
+      userAgent: "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/5.0)"
+    },
+    ie106: {
+      appName: 'Microsoft Internet Explorer',
+      userAgent: "Mozilla/5.0 (compatible; MSIE 10.6; Windows NT 6.1; Trident/5.0; InfoPath.2; SLCC1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 2.0.50727) 3gpp-gba UNTRUSTED/1.0"
+    },
+    ie11: {
+      appName: 'Microsoft Internet Explorer',
+      userAgent: "Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+    }
+  };
+
+  it("must return -1 for nonIe browsers", function(){
+    assert.strictEqual(getInternetExplorerVersion(navigators.nonIe), -1);
+  });
+
+  it("must return the appropiate IE versions", function(){
+    assert.strictEqual(getInternetExplorerVersion(navigators.ie8), 8);
+    assert.strictEqual(getInternetExplorerVersion(navigators.ie9), 9);
+    assert.strictEqual(getInternetExplorerVersion(navigators.ie10), 10);
+    assert.strictEqual(getInternetExplorerVersion(navigators.ie106), 10.6);
+    assert.strictEqual(getInternetExplorerVersion(navigators.ie11), 11);
+  });
+});
+
+describe("isOldIE", function(){
+  it("must return true if the browser is IE and older thatn 10", function(){
+    sinon.stub(window, 'getInternetExplorerVersion');
+    window.getInternetExplorerVersion.returns(-1);
+    assert.isFalse(isOldIE());
+    window.getInternetExplorerVersion.returns(7);
+    assert.isTrue(isOldIE());
+    window.getInternetExplorerVersion.returns(8);
+    assert.isTrue(isOldIE());
+    window.getInternetExplorerVersion.returns(9);
+    assert.isTrue(isOldIE());
+    window.getInternetExplorerVersion.returns(10.6);
+    assert.isFalse(isOldIE());
+    window.getInternetExplorerVersion.returns(11);
+    assert.isFalse(isOldIE());
+    window.getInternetExplorerVersion.restore();
+  });
+});

@@ -6,9 +6,16 @@ describe("VPAIDHTML5Tech", function() {
   });
 
   it("must implement supports", function () {
+    sinon.stub(window, 'isOldIE').returns(false);
     assert.isFunction(VPAIDHTML5Tech.supports);
     assert(!VPAIDHTML5Tech.supports('application/x-shockwave-flash'));
     assert(VPAIDHTML5Tech.supports('application/javascript'));
+
+    //Must return false for old IE (IE9 and below)
+    window.isOldIE.returns(9);
+    assert(!VPAIDHTML5Tech.supports('application/javascript'));
+
+    window.isOldIE.restore();
   });
 
   it("must complain if you don't pass a valid media file", function () {

@@ -239,3 +239,36 @@ var _UA = navigator.userAgent;
 function isIDevice() {
   return /iP(hone|ad)/.test(_UA);
 }
+
+/**
+ * Checks if the Browser is IE9 and below
+ * @returns {boolean}
+ */
+function isOldIE() {
+  var version = getInternetExplorerVersion(navigator);
+  if (version === -1) {
+    return false;
+  }
+
+  return version < 10;
+}
+
+/**
+ * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
+ * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
+ * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
+ */
+function getInternetExplorerVersion(navigator) {
+  var rv = -1;
+
+  if (navigator.appName == 'Microsoft Internet Explorer') {
+    var ua = navigator.userAgent;
+    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    var res = re.exec(ua);
+    if (res !== null) {
+      rv = parseFloat(res[1]);
+    }
+  }
+
+  return rv;
+}
