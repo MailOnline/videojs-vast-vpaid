@@ -51,7 +51,7 @@ dom.onReady(function() {
       updateDemo();
       messages.success("Demo updated!!!");
     });
-    var pauseClicked = false;
+
     if (pauseBtn) {
       dom.addEventListener(pauseBtn, 'click', function() {
         pauseAd();
@@ -113,7 +113,12 @@ dom.onReady(function() {
             }
           }
         });
-        
+
+        //We hide the pause btn every time we update
+        if(pauseBtn){
+          pauseBtn.style.display = 'none';
+        }
+
         player.on('vast.adStart', function() {
           pauseBtn.style.display = 'inline-block';
         });
