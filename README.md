@@ -14,7 +14,7 @@
 
 ## Integration with video.js
   To integrate the plugin with videoJs you need to:
-  
+
   1.- Add [all files from bin](https://github.com/MailOnline/videojs-vast-vpaid/tree/master/bin) to some path in your server
 
   2.- If don't have videoJs, add their scripts and stylesheet to your page
@@ -29,12 +29,16 @@
   <link href="/path/to/videojs-vast-plugin.css" rel="stylesheet">
   <script src="/path/to/videojs-vast-plugin.min.js"></script>
   ```
-  
-  if you need to support older browsers add this to your page before the plugin script
+
+  if you need to support older browsers that don't support ES5 add this to your page before the plugin script
   ```
   <script src="/path/to/es5-shim.js"></script>
   ```
-  
+  if you need to support ie8 add this after the es5-shim.js script
+  ```
+  <script src="/path/to/ie8fix.js"></script>
+  ```
+
   4.- Create you own ads plugin to pass an add media tag to the plugin
 
   Below you have a simple ads-setup-plugin
@@ -151,7 +155,7 @@
 
 ### disable
   >Disables the plugin
-  
+
 ### adUnit
   >If there is an ad playing (after the vast.adStart event) it will contain an obj like the one below:
   ```
@@ -162,7 +166,7 @@
   }
   ```
   >Otherwise it will be null or undefined
-  
+
 ## player.vast
   The returned object described above it is also published as a player property so that you can use it anywhere as long as you have access to the player instance.
   ```javascript
@@ -184,25 +188,25 @@
   ```
 ## Plugin events
   The plugin does trigger some events that can be used for tracking or debugging.
-  
+
 ### 'vast.firstPlay' event
   Fired when the user first plays a video or if the playAdAlways option is set to true every time the user replays the same video
 
 ### 'vast.adStart' event
   Fired when the ad starts playing
- 
+
 ### 'vast.adEnd' event
   Fired when the ad end playing
- 
+
 ### 'vast.adError' event
   Fired whenever there is an error with the ad. The error itself gets added to the event object in the property 'error'.
- 
+
 ### 'vast.adsCancel' event
   Fired whenever the ads are canceled due to an error or because the plugin is not enabled.
 
 ### 'vast.contentStart' event
   Fired whenever the video content starts playing
- 
+
 ### 'vast.contentEnded' event
   Fired when the video content ends.
   
@@ -210,18 +214,18 @@
   Trigger the 'vast.reset' event whenever you want to reset the plugin. Beware that if an ad is playing it will be canceled.
   
 ## Running the plugin
-  If you want to run the plugin you need to clone the repo into your local environment 
+  If you want to run the plugin you need to clone the repo into your local environment
   ```
   git clone git@github.com:MailOnline/videojs-vast-vpaid.git
   ```
   and install the dependencies
-  
+
   ```
   $ cd videojs-vast-vpaid
   $ npm install
   $ bower install
   ```
-  
+
   after installing the dependencies you are ready to go. If you want to see the available build tasks, run
   ```
 $ gulp
@@ -230,10 +234,10 @@ $ gulp
 Welcome to MailOnline's new
 ____   ____.__     .___                     __          ____   ____                  __    ____   ____                .__     .___
 \   \ /   /|__|  __| _/  ____    ____      |__|  ______ \   \ /   /_____     _______/  |_  \   \ /   /______  _____   |__|  __| _/
- \   Y   / |  | / __ | _/ __ \  /  _ \     |  | /  ___/  \   Y   / \__  \   /  ___/\   __\  \   Y   / \____ \ \__  \  |  | / __ | 
-  \     /  |  |/ /_/ | \  ___/ (  <_> )    |  | \___ \    \     /   / __ \_ \___ \  |  |     \     /  |  |_> > / __ \_|  |/ /_/ | 
-   \___/   |__|\____ |  \___  > \____/ /\__|  |/____  >    \___/   (____  //____  > |__|      \___/   |   __/ (____  /|__|\____ | 
-                    \/      \/         \______|     \/                  \/      \/                    |__|         \/          \/ 
+ \   Y   / |  | / __ | _/ __ \  /  _ \     |  | /  ___/  \   Y   / \__  \   /  ___/\   __\  \   Y   / \____ \ \__  \  |  | / __ |
+  \     /  |  |/ /_/ | \  ___/ (  <_> )    |  | \___ \    \     /   / __ \_ \___ \  |  |     \     /  |  |_> > / __ \_|  |/ /_/ |
+   \___/   |__|\____ |  \___  > \____/ /\__|  |/____  >    \___/   (____  //____  > |__|      \___/   |   __/ (____  /|__|\____ |
+                    \/      \/         \______|     \/                  \/      \/                    |__|         \/          \/
 
 ###### Below, you have the list of all the available build tasks ########
 ╔═════════════════════════╤════════════════════════════════════════════════════════════════════════════════╗
@@ -257,17 +261,17 @@ ____   ____.__     .___                     __          ____   ____             
 ║ test                    │ Starts karma on 'autowatch' mode with all the libs,                            ║
 ║                         │ sources and tests of the player                                                ║
 ╚═════════════════════════╧════════════════════════════════════════════════════════════════════════════════╝
-   
+
 [12:27:22] Finished 'default' after 8.12 ms
   ```
   Which will show you a table with the main build tasks. If you want start the demo locally just run:
-  
+
   ```
   $ gulp start-dev
   ```
   and open the following link into your browser
   http://localhost:8085
-  
+
 ## License
 videojs-vast-plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
 

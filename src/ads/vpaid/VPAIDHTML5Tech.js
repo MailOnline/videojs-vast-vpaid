@@ -21,7 +21,7 @@ function VPAIDHTML5Tech(mediaFile) {
 }
 
 VPAIDHTML5Tech.supports = function (type) {
-  return type === 'application/javascript';
+  return !isOldIE() && type === 'application/javascript';
 };
 
 VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {

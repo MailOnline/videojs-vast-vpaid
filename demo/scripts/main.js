@@ -106,8 +106,8 @@ dom.onReady(function() {
 
         player = videojs(videoEl, {
           "plugins": {
-            "ads-setup": {
-              "adCancelTimeout": 10000, // Wait for ten seconds before canceling the ad.
+            "ads-setup":{
+              "adCancelTimeout":20000,// Wait for ten seconds before canceling the ad.
               "adsEnabled": true,
               "adsTag": adsTag
             }

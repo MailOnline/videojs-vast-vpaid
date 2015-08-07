@@ -772,11 +772,11 @@ describe("VPAIDIntegrator", function () {
           sinon.stub(player, 'isFullscreen');
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
           player.trigger('fullscreenchange');
-          sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480, vpaidIntegrator.VIEW_MODE.NORMAL);
+          sinon.assert.calledWith(adUnitWrapper.resizeAd, 300, 150, vpaidIntegrator.VIEW_MODE.NORMAL);
 
           player.isFullscreen.returns(true);
           player.trigger('fullscreenchange');
-          sinon.assert.calledWith(adUnitWrapper.resizeAd, 720, 480, vpaidIntegrator.VIEW_MODE.FULLSCREEN);
+          sinon.assert.calledWith(adUnitWrapper.resizeAd, 300, 150, vpaidIntegrator.VIEW_MODE.FULLSCREEN);
         });
 
         it("must unsubscribe on 'vpaid.adEnd' event", function () {
