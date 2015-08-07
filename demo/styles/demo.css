@@ -100,3 +100,10 @@ form.CUSTOM .xml-type {
 form.CUSTOM .custom-type {
   display: block;
 }
+
+.lt-ie9 .vjs-video-container,
+.lt-ie9 .video-js{
+  width: 400px !important;
+  height: 250px !important;
+}
+
