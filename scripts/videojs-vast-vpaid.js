@@ -1299,6 +1299,39 @@ var _UA = navigator.userAgent;
 function isIDevice() {
   return /iP(hone|ad)/.test(_UA);
 }
+
+/**
+ * Checks if the Browser is IE9 and below
+ * @returns {boolean}
+ */
+function isOldIE() {
+  var version = getInternetExplorerVersion(navigator);
+  if (version === -1) {
+    return false;
+  }
+
+  return version < 10;
+}
+
+/**
+ * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
+ * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
+ * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
+ */
+function getInternetExplorerVersion(navigator) {
+  var rv = -1;
+
+  if (navigator.appName == 'Microsoft Internet Explorer') {
+    var ua = navigator.userAgent;
+    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    var res = re.exec(ua);
+    if (res !== null) {
+      rv = parseFloat(res[1]);
+    }
+  }
+
+  return rv;
+}
 ;
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
@@ -2523,13 +2556,12 @@ dom.once = function(el, type, handler) {
   dom.addEventListener(el, type, handlerWrap);
 };
 
-
-
 //Note: there is no getBoundingClientRect on iPad so we need a fallback
 dom.getDimension = function getDimension(element) {
   var rect;
 
-  if(element.getBoundingClientRect) {
+  //On IE9 and below getBoundingClientRect does not work consistently
+  if(!isOldIE() && element.getBoundingClientRect) {
     rect = element.getBoundingClientRect();
     return {
       width: rect.width,
@@ -2565,7 +2597,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
   var timeout, timeoutId;
   var xhr = this.createXhr();
   options = options || {};
-  timeout = isNumber(options.timeout)? options.timeout : 0;
+  timeout = isNumber(options.timeout) ? options.timeout : 0;
 
   xhr.open(method, urlParts(url).href, true);
 
@@ -2580,7 +2612,25 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
   xhr.onload = function () {
     var statusText, response, status;
 
-    if(isDefined(timeoutId)){
+    /**
+     * The only way to do a secure request on IE8 and IE9 is with the XDomainRequest object. Unfortunately, microsoft is
+     * so nice that decided that the status property and the 'getAllResponseHeaders' method where not needed so we have to
+     * fake them. If the request gets done with an XDomainRequest instance, we will assume that there are no headers and
+     * the status will always be 200. If you don't like it, DO NOT USE ANCIENT BROWSERS!!!
+     *
+     * For mor info go to: https://msdn.microsoft.com/en-us/library/cc288060(v=vs.85).aspx
+     */
+    if (!xhr.getAllResponseHeaders) {
+      xhr.getAllResponseHeaders = function () {
+        return null;
+      };
+    }
+
+    if (!xhr.status) {
+      xhr.status = 200;
+    }
+
+    if (isDefined(timeoutId)) {
       clearTimeout(timeoutId);
       timeoutId = undefined;
     }
@@ -2606,7 +2656,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
 
   xhr.send();
 
-  if(timeout > 0){
+  if (timeout > 0) {
     timeoutId = setTimeout(function () {
       xhr && xhr.abort();
     }, timeout);
@@ -3123,7 +3173,7 @@ var xml = {};
 
 xml.strToXMLDoc = function strToXMLDoc(stringContainingXMLSource){
   //IE 8
-  if(!DOMParser){
+  if(typeof window.DOMParser === 'undefined'){
     var xmlDocument = new ActiveXObject('Microsoft.XMLDOM');
     xmlDocument.async = false;
     xmlDocument.loadXML(stringContainingXMLSource);
@@ -3204,7 +3254,9 @@ xml.JXONTree = function JXONTree (oXMLParent) {
     if (sCollectedTxt) { this.keyValue = parseText(sCollectedTxt); }
   }
 
-  if (oXMLParent.hasAttributes()) {
+  //IE8 Stupid fix
+  var hasAttr = typeof oXMLParent.hasAttributes === 'undefined'? oXMLParent.attributes.length > 0: oXMLParent.hasAttributes();
+  if (hasAttr) {
     var oAttrib;
     for (var nAttrib = 0; nAttrib < oXMLParent.attributes.length; nAttrib++) {
       oAttrib = oXMLParent.attributes.item(nAttrib);
@@ -3905,7 +3957,7 @@ function VPAIDHTML5Tech(mediaFile) {
 }
 
 VPAIDHTML5Tech.supports = function (type) {
-  return type === 'application/javascript';
+  return !isOldIE() && type === 'application/javascript';
 };
 
 VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
@@ -4399,7 +4451,8 @@ VPAIDIntegrator.prototype._trackError = function trackError(response) {
 };
 
 function resizeAd(player, adUnit, VIEW_MODE) {
-  var dimension = dom.getDimension(player.el());
+  var tech = player.el().querySelector('.vjs-tech');
+  var dimension = dom.getDimension(tech);
   var MODE = player.isFullscreen() ? VIEW_MODE.FULLSCREEN : VIEW_MODE.NORMAL;
   adUnit.resizeAd(dimension.width, dimension.height, MODE, logError);
 }
@@ -5650,4 +5703,3 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
-//# sourceMappingURL=videojs-vast-vpaid.js.map
