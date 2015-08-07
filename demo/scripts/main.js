@@ -78,16 +78,16 @@ dom.onReady(function() {
     function pauseAd() {
       if (player) {
         player.vast.adUnit.pauseAd();
-        document.querySelector('.pause').style.display = 'none';
-        document.querySelector('.resume').style.display = 'inline-block';
+        pauseBtn.style.display = 'none';
+        resumeBtn.style.display = 'inline-block';
       }
     }
 
     function resumeAd() {
       if (player) {
         player.vast.adUnit.resumeAd();
-        document.querySelector('.pause').style.display = 'inline-block';
-        document.querySelector('.resume').style.display = 'none';
+        pauseBtn.style.display = 'inline-block';
+        resumeBtn.style.display = 'none';
       }
     }
 
@@ -113,8 +113,13 @@ dom.onReady(function() {
             }
           }
         });
-        player.on('play', function() {
-          document.querySelector('.pause').style.display = 'inline-block';
+        
+        player.on('vast.adStart', function() {
+          pauseBtn.style.display = 'inline-block';
+        });
+
+        player.on('vast.adEnd', function() {
+          pauseBtn.style.display = 'none';
         });
       });
     }
