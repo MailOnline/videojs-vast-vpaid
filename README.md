@@ -30,12 +30,11 @@
   <script src="/path/to/videojs-vast-plugin.min.js"></script>
   ```
 
-  if you need to support older browsers add this to your page before the plugin script
+  if you need to support older browsers that don't support ES5 add this to your page before the plugin script
   ```
   <script src="/path/to/es5-shim.js"></script>
   ```
-
-  if you need to support ie8 add this after es5-shim.js
+  if you need to support ie8 add this after the es5-shim.js script
   ```
   <script src="/path/to/ie8fix.js"></script>
   ```
