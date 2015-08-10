@@ -181,94 +181,8 @@ playerUtils.prepareForAds = function (player) {
   var _firstPlay = true;
   var volumeSnapshot;
 
-  /*
-   What I am doing below is ugly and horrible and I should think twice before calling myself a good developer. With that said,
-   it is the best solution I could find to mute the video until the 'play' event happens and the plugin can decide whether
-   to play the ad or not.
 
-   We also need this monkeypatch to be able to pause and resume an ad using the player's API
-
-   If you have a better solution please do tell me.
-   */
-
-
-  /**
-   * Needed monkey patch to handle firstPlay and resume of playing ad.
-   *
-   * @param callOrigPlay necessary flag to prevent infinite loop when you are restoring a VAST ad.
-   * @returns {player}
-   */
-  var origPlay = player.play;
-  player.play = function (callOrigPlay) {
-    if (isFirstPlay()) {
-      firstPlay.call(this);
-    } else {
-      resume.call(this, callOrigPlay);
-    }
-
-    var playerEl = player.el();
-    if(!dom.hasClass(playerEl, 'vjs-has-started')){
-      dom.addClass(playerEl, 'vjs-has-started');
-    }
-
-    return this;
-
-    /*** local functions ***/
-    function firstPlay(){
-      if (isMobile()) {
-        if (!isIPhone()) {
-          volumeSnapshot = saveVolumeSnapshot();
-          player.muted(true);
-        }
-
-        //On mobile we need to trigger the play to ensure the video starts playing.
-        origPlay.apply(this, arguments);
-      } else {
-        //Instead of muting the video, on Desktop we don't play the video
-        tryToTriggerFirstPlay();
-      }
-    }
-
-    function resume(callOrigPlay){
-      if (isAdPlaying() && !callOrigPlay) {
-        player.vast.adUnit.resumeAd();
-      } else {
-        origPlay.apply(this, arguments);
-      }
-    }
-  };
-
-
-  /**
-   * Needed monkey patch to handle pause of playing ad.
-   *
-   * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
-   * @returns {player}
-   */
-  var origPause = player.pause;
-  player.pause = function (callOrigPause) {
-    if (isAdPlaying() && !callOrigPause) {
-      player.vast.adUnit.pauseAd();
-    } else{
-      origPause.apply(this, arguments);
-    }
-    return this;
-  };
-
-
-  /**
-   * Needed monkey patch to handle paused state of the player when ads are playing.
-   *
-   * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
-   * @returns {player}
-   */
-  var origPaused = player.paused;
-  player.paused = function (callOrigPaused) {
-    if (false && isAdPlaying() && !callOrigPaused) {
-      return player.vast.adUnit.isPaused();
-    }
-    return origPaused.apply(this, arguments);
-  };
+  monkeyPatchPlayerApi();
 
   player.on('play', tryToTriggerFirstPlay);
   player.on('loadStart', resetFirstPlay);//Every time we change the sources we reset the first play.
@@ -282,6 +196,93 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.adsCancel', removeStyles);
 
   /*** Local Functions ***/
+
+  /**
+   What this function does is ugly and horrible and I should think twice before calling myself a good developer. With that said,
+   it is the best solution I could find to mute the video until the 'play' event happens (on mobile devices) and the plugin can decide whether
+   to play the ad or not.
+
+   We also need this monkeypatch to be able to pause and resume an ad using the player's API
+
+   If you have a better solution please do tell me.
+   */
+  function monkeyPatchPlayerApi() {
+
+    /**
+     * Monkey patch needed to handle firstPlay and resume of playing ad.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are restoring a VAST ad.
+     * @returns {player}
+     */
+    var origPlay = player.play;
+    player.play = function (callOrigPlay) {
+      if (isFirstPlay()) {
+        firstPlay.call(this);
+      } else {
+        resume.call(this, callOrigPlay);
+      }
+
+      return this;
+
+      /*** local functions ***/
+      function firstPlay(){
+        if (isMobile()) {
+          if (!isIPhone()) {
+            volumeSnapshot = saveVolumeSnapshot();
+            player.muted(true);
+          }
+
+          //On mobile we need to trigger the play to ensure the video starts playing.
+          origPlay.apply(this, arguments);
+        } else {
+          //Instead of muting the video, on Desktop we don't play the video
+          tryToTriggerFirstPlay();
+        }
+      }
+
+      function resume(callOrigPlay){
+        if (isAdPlaying() && !callOrigPlay) {
+          player.vast.adUnit.resumeAd();
+        } else {
+          origPlay.apply(this, arguments);
+        }
+      }
+    };
+
+
+    /**
+     * Needed monkey patch to handle pause of playing ad.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+     * @returns {player}
+     */
+    var origPause = player.pause;
+    player.pause = function (callOrigPause) {
+      if (isAdPlaying() && !callOrigPause) {
+
+        player.vast.adUnit.pauseAd();
+      } else{
+        origPause.apply(this, arguments);
+      }
+      return this;
+    };
+
+
+    /**
+     * Needed monkey patch to handle paused state of the player when ads are playing.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+     * @returns {player}
+     */
+    var origPaused = player.paused;
+    player.paused = function (callOrigPaused) {
+      if (isAdPlaying() && !callOrigPaused) {
+        return player.vast.adUnit.isPaused();
+      }
+      return origPaused.apply(this, arguments);
+    };
+  }
+
   function isAdPlaying() {
     return player.vast && player.vast.adUnit;
   }

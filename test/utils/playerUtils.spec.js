@@ -323,7 +323,7 @@ describe("playerUtils.prepareForAds", function() {
     window.isIPhone.restore();
   });
 
-  it("must add the BlackPoster component to the player", function(){
+  it("must add the blackPoster component to the player", function(){
     var player = videojs(document.createElement('video'), {});
     playerUtils.prepareForAds(player);
     assert.isObject(player.getChild('blackPoster'));
@@ -373,161 +373,174 @@ describe("playerUtils.prepareForAds", function() {
     });
   });
 
-  describe("on first play", function(){
-    describe("on mobile devices", function(){
-      var player;
+  describe("monkeyPatched", function(){
+    describe("player.play", function(){
+      describe("on first play", function(){
+        describe("on mobile devices", function(){
+          var player;
 
-      beforeEach(function(){
-        player = videojs(document.createElement('video'), {});
-        sinon.stub(window, 'isMobile').returns(true);
-      });
+          beforeEach(function(){
+            player = videojs(document.createElement('video'), {});
+            sinon.stub(window, 'isMobile').returns(true);
+          });
 
-      afterEach(function(){
-        window.isMobile.restore();
-      });
+          afterEach(function(){
+            window.isMobile.restore();
+          });
 
-      it("must mute the player when you first play the video (player's play method)", function(){
-        playerUtils.prepareForAds(player);
-        player.volume(1);
-        player.muted(false);
-        player.play();
-        assert.isTrue(player.muted());
-      });
+          it("must mute the player when you first play the video (player's play method)", function(){
+            playerUtils.prepareForAds(player);
+            player.volume(1);
+            player.muted(false);
+            player.play();
+            assert.isTrue(player.muted());
+          });
 
-      it("must restore the muted volume on  'vast.firstPlay' evt", function(){
-        playerUtils.prepareForAds(player);
-        player.volume(1);
-        player.muted(false);
-        player.play();
-        assert.isTrue(player.muted());
+          it("must restore the muted volume on  'vast.firstPlay' evt", function(){
+            playerUtils.prepareForAds(player);
+            player.volume(1);
+            player.muted(false);
+            player.play();
+            assert.isTrue(player.muted());
 
-        player.trigger('vast.firstPlay');
-        assert.isFalse(player.muted());
-        assert.equal(player.volume(), 1);
-      });
+            player.trigger('vast.firstPlay');
+            assert.isFalse(player.muted());
+            assert.equal(player.volume(), 1);
+          });
 
-      it("must set the currentTime to 0 on 'vast.firstPlay' evt", function(){
-        var player = videojs(document.createElement('video'), {});
-        sinon.stub(player, 'currentTime');
-        sinon.assert.notCalled(player.currentTime);
+          it("must set the currentTime to 0 on 'vast.firstPlay' evt", function(){
+            var player = videojs(document.createElement('video'), {});
+            sinon.stub(player, 'currentTime');
+            sinon.assert.notCalled(player.currentTime);
 
-        playerUtils.prepareForAds(player);
-        player.play();
-        player.trigger('vast.firstPlay');
-        sinon.assert.calledWithExactly(player.currentTime, 0);
-      });
+            playerUtils.prepareForAds(player);
+            player.play();
+            player.trigger('vast.firstPlay');
+            sinon.assert.calledWithExactly(player.currentTime, 0);
+          });
 
-      describe("on iPhone", function(){
-        it("must NOT set the currentTime to 0 on the first play", function(){
-          window.isIPhone.returns(true);
-          var player = videojs(document.createElement('video'), {});
-          sinon.stub(player, 'currentTime');
-          sinon.assert.notCalled(player.currentTime);
+          it("must call player's play method", function(){
+            var player = videojs(document.createElement('video'), {});
+            var playStub = sinon.stub(player, 'play');
+            playerUtils.prepareForAds(player);
+            player.play();
 
-          playerUtils.prepareForAds(player);
-          player.trigger('vast.firstPlay');
-          sinon.assert.neverCalledWith(player.currentTime, 0);
+            assert(playStub.calledOnce);
+          });
+
+          describe("on iPhone", function(){
+            it("must NOT set the currentTime to 0 on the first play", function(){
+              window.isIPhone.returns(true);
+              var player = videojs(document.createElement('video'), {});
+              sinon.stub(player, 'currentTime');
+              sinon.assert.notCalled(player.currentTime);
+
+              playerUtils.prepareForAds(player);
+              player.trigger('vast.firstPlay');
+              sinon.assert.neverCalledWith(player.currentTime, 0);
+            });
+
+            it("must NOT restore the muted volume on  'vast.firstPlay' evt", function(){
+              window.isIPhone.returns(true);
+              playerUtils.prepareForAds(player);
+              player.volume(1);
+              player.muted(false);
+              player.play();
+              assert.isFalse(player.muted());
+
+              player.trigger('vast.firstPlay');
+              assert.isFalse(player.muted());
+              assert.equal(player.volume(), 1);
+            });
+
+
+          });
         });
 
-        it("must NOT restore the muted volume on  'vast.firstPlay' evt", function(){
-          window.isIPhone.returns(true);
+        describe("on desktop devices", function(){
+          var player, playSpy;
+
+          beforeEach(function(){
+            player = videojs(document.createElement('video'), {});
+            sinon.stub(window, 'isMobile').returns(false);
+            playSpy = sinon.spy(player, 'play');
+          });
+
+          afterEach(function(){
+            window.isMobile.restore();
+            playSpy.restore();
+          });
+
+          it("must trigger 'vast.firstPlay' evt", function(){
+            var spy = sinon.spy();
+            playerUtils.prepareForAds(player);
+            player.on('vast.firstPlay', spy);
+            player.play();
+            sinon.assert.calledOnce(spy);
+          });
+
+          it("must not call the play fn", function(){
+            playerUtils.prepareForAds(player);
+            player.play();
+            sinon.assert.notCalled(playSpy);
+          });
+        });
+      });
+
+      describe("on Resume", function(){
+        var player, playSpy;
+
+        beforeEach(function(){
+          player = videojs(document.createElement('video'), {});
+          sinon.stub(window, 'isMobile').returns(false);
+          playSpy = sinon.spy(player, 'play');
+        });
+
+        afterEach(function(){
+          window.isMobile.restore();
+        });
+
+        it("must resume the video content", function(){
           playerUtils.prepareForAds(player);
-          player.volume(1);
-          player.muted(false);
           player.play();
-          assert.isFalse(player.muted());
+          sinon.assert.notCalled(playSpy);
+          player.play();
+          sinon.assert.calledOnce(playSpy);
 
-          player.trigger('vast.firstPlay');
-          assert.isFalse(player.muted());
-          assert.equal(player.volume(), 1);
         });
 
+        it("with an ad playing it must resume the ad and not resume the video content", function(){
+          var fakeAdUnit = {
+            resumeAd: sinon.spy()
+          };
 
+          playerUtils.prepareForAds(player);
+          player.play();
+
+          //We fake that an ad is playing
+          player.vast = {adUnit: fakeAdUnit};
+          sinon.assert.notCalled(playSpy);
+          player.play();
+          sinon.assert.notCalled(playSpy);
+          sinon.assert.calledOnce(fakeAdUnit.resumeAd);
+        });
+
+        it("with an ad playing called with the callOrig flag to true, must call the orig play", function(){
+          var fakeAdUnit = {
+            resumeAd: sinon.spy()
+          };
+
+          playerUtils.prepareForAds(player);
+          player.play();
+
+          //We fake that an ad is playing
+          player.vast = {adUnit: fakeAdUnit};
+          sinon.assert.notCalled(playSpy);
+
+          player.play(true);
+          sinon.assert.called(playSpy);
+        });
       });
-    });
-
-    describe("on desktop devices", function(){
-      var player, playSpy;
-
-      beforeEach(function(){
-        player = videojs(document.createElement('video'), {});
-        sinon.stub(window, 'isMobile').returns(false);
-        playSpy = sinon.spy(player, 'play');
-      });
-
-      afterEach(function(){
-        window.isMobile.restore();
-        playSpy.restore();
-      });
-
-      it("must trigger 'vast.firstPlay' evt", function(){
-        var spy = sinon.spy();
-        playerUtils.prepareForAds(player);
-        player.on('vast.firstPlay', spy);
-        player.play();
-        sinon.assert.calledOnce(spy);
-      });
-
-      it("must not call the play fn", function(){
-        playerUtils.prepareForAds(player);
-        player.play();
-        sinon.assert.notCalled(playSpy);
-      });
-    });
-  });
-
-  describe("on Resume", function(){
-    var player, playSpy;
-
-    beforeEach(function(){
-      player = videojs(document.createElement('video'), {});
-      sinon.stub(window, 'isMobile').returns(false);
-      playSpy = sinon.spy(player, 'play');
-    });
-
-    afterEach(function(){
-      window.isMobile.restore();
-    });
-
-    it("must resume the video content", function(){
-      playerUtils.prepareForAds(player);
-      player.play();
-      sinon.assert.notCalled(playSpy);
-      player.play();
-      sinon.assert.calledOnce(playSpy);
-
-    });
-
-    it("with an ad playing it must resume the ad and not resume the video content", function(){
-      var fakeAdUnit = {
-        resumeAd: sinon.spy()
-      };
-
-      playerUtils.prepareForAds(player);
-      player.play();
-
-      //We fake that an ad is playing
-      player.vast = {adUnit: fakeAdUnit};
-      sinon.assert.notCalled(playSpy);
-      player.play();
-      sinon.assert.notCalled(playSpy);
-      sinon.assert.calledOnce(fakeAdUnit.resumeAd);
-    });
-
-    it("with an ad playing called with the callOrig flag to true, must call the orig pause", function(){
-      var fakeAdUnit = {
-        resumeAd: sinon.spy()
-      };
-
-      playerUtils.prepareForAds(player);
-      player.play();
-
-      //We fake that an ad is playing
-      player.vast = {adUnit: fakeAdUnit};
-      sinon.assert.notCalled(playSpy);
-
-      player.play(true);
-      sinon.assert.called(playSpy);
     });
   });
 
