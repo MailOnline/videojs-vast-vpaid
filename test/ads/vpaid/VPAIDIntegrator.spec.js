@@ -227,6 +227,13 @@ describe("VPAIDIntegrator", function () {
           adUnit.resumeAd();
           sinon.assert.calledOnce(spy);
         });
+
+        it("must know if it is paused", function(){
+          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
+          assert(adUnit.isPaused());
+          adUnit._paused = false;
+          assert(!adUnit.isPaused());
+        });
       });
     });
 
@@ -454,9 +461,15 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(tracker.trackImpressions);
       });
 
-      it("on 'AdVideoStart' event, must track start", function(){
+      it("on 'AdVideoStart' event, must track start, resume the adUnit and trigger 'play' evt", function(){
+        var playSpy = sinon.spy();
+        player.on('play', playSpy);
+        vpaidIntegrator._adUnit = {};
         adUnit.trigger('AdVideoStart');
         sinon.assert.calledOnce(tracker.trackStart);
+
+        assert.isFalse(vpaidIntegrator._adUnit._paused);
+        assert(playSpy.calledOnce);
       });
 
       it("on 'AdVideoFirstQuartile' event, must track first quartile", function(){
@@ -527,9 +540,15 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledOnce(tracker.trackCloseLinear);
       });
 
-      it("on 'AdPaused' event, must track pause", function(){
+      it("on 'AdPaused' event, must track pause, pause the adUnit and trigger 'pause' evt", function(){
+        var pauseSpy = sinon.spy();
+        player.on('pause', pauseSpy);
+        vpaidIntegrator._adUnit = {};
         adUnit.trigger('AdPaused');
         sinon.assert.calledOnce(tracker.trackPause);
+
+        assert(vpaidIntegrator._adUnit._paused);
+        assert(pauseSpy.calledOnce);
       });
 
       it("on 'AdUserMinimize' event, must track collapse", function(){
@@ -542,9 +561,15 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledWithExactly(tracker.trackErrorWithCode, 901);
       });
 
-      it("on 'AdPlaying' event, must track resume", function(){
-        adUnit.trigger('AdPlaying');
-        sinon.assert.calledOnce(tracker.trackResume);
+      it("on 'AdPlaying' event, must track resume, resume the adUnit and trigger 'play' evt", function(){
+          var playSpy = sinon.spy();
+          player.on('play', playSpy);
+          vpaidIntegrator._adUnit = {};
+          adUnit.trigger('AdPlaying');
+          sinon.assert.calledOnce(tracker.trackResume);
+
+          assert.isFalse(vpaidIntegrator._adUnit._paused);
+          assert(playSpy.calledOnce);
       });
 
       describe("on 'AdVolumeChange' evt,", function(){

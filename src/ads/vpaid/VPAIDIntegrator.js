@@ -69,7 +69,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       callback(error, vastResponse);
     });
 
-    this.adUnit = {
+    this._adUnit = {
       _paused: true,
       type: 'VPAID',
       pauseAd: function() {
@@ -83,7 +83,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       }
     };
 
-    return this.adUnit;
+    return this._adUnit;
   }
 
   callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
@@ -213,16 +213,16 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
 
   adUnit.on('AdVideoStart', function () {
     tracker.trackStart();
-    if(that.adUnit){
-      that.adUnit._paused = false;
+    if(that._adUnit){
+      that._adUnit._paused = false;
     }
     player.trigger('play');
   });
 
   adUnit.on('AdPaused', function () {
     tracker.trackPause();
-    if(that.adUnit){
-      that.adUnit._paused = true;
+    if(that._adUnit){
+      that._adUnit._paused = true;
     }
     player.trigger('pause');
   });
@@ -231,8 +231,8 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     //NOTE: we track errors code 901, as noted in VAST 3.0
     tracker.trackResume();
 
-    if(that.adUnit){
-      that.adUnit._paused = false;
+    if(that._adUnit){
+      that._adUnit._paused = false;
     }
     player.trigger('play');
   });
