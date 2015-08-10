@@ -446,7 +446,7 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
   adUnit.on('AdStopped', function () {
-   finishPlayingAd(null)
+   finishPlayingAd(null);
   });
 
   adUnit.on('AdError', function (error) {

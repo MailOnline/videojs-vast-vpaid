@@ -126,6 +126,14 @@ describe("VASTIntegrator", function () {
           adUnit.resumeAd();
           sinon.assert.calledOnce(player.play);
         });
+
+        it("must be able to tell if the adUnit is paused", function(){
+          var adUnit = vastIntegrator.playAd(new VASTResponse(), noop);
+          sinon.stub(player, 'paused').returns(true);
+          assert.isTrue(adUnit.isPaused());
+          player.paused.returns(false);
+          assert.isFalse(adUnit.isPaused());
+        });
       });
     });
 

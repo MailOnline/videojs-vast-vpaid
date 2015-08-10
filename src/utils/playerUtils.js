@@ -178,7 +178,7 @@ playerUtils.isReadyToResume = function (tech) {
  */
 playerUtils.prepareForAds = function (player) {
   var blackPoster = player.addChild('blackPoster');
-  var firstPlay = true;
+  var _firstPlay = true;
   var volumeSnapshot;
 
   /*
@@ -288,18 +288,18 @@ playerUtils.prepareForAds = function (player) {
 
   function tryToTriggerFirstPlay() {
     if (isFirstPlay()) {
-      firstPlay = false;
+      _firstPlay = false;
       player.trigger('vast.firstPlay');
     }
   }
 
   function resetFirstPlay() {
-    firstPlay = true;
+    _firstPlay = true;
     blackPoster.show();
   }
 
   function isFirstPlay() {
-    return firstPlay;
+    return _firstPlay;
   }
 
   function saveVolumeSnapshot() {

@@ -52,6 +52,8 @@
     "echoFn":true,
     "isISO8601":true,
     "isOldIE":true,
+    "isMobile": true,
+    "isIPhone": true,
     /* Utils */
     "dom":true,
     "xml":true,
