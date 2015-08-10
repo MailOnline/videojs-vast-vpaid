@@ -728,34 +728,6 @@ describe("isISO8601", function(){
   });
 });
 
-describe("isIDevice", function(){
-  var old_UA;
-
-  beforeEach(function(){
-    old_UA = _UA;
-  });
-
-  afterEach(function(){
-    _UA = old_UA;
-  });
-
-
-  it("must return true if the userAgent contains iPhone", function(){
-    _UA = "browser iPhone";
-    assert.isTrue(isIDevice());
-  });
-  
-  it("must return true it the userAgent contains iPad", function(){
-    _UA = "browser iPad";
-    assert.isTrue(isIDevice());
-  });
-
-  it("must return false it the userAgent does not contains iPad or iPhone", function(){
-    _UA = "browser android";
-    assert.isFalse(isIDevice());
-  });
-});
-
 describe("getInternetExplorerVersion", function(){
   var navigators = {
     nonIe: {
@@ -814,5 +786,117 @@ describe("isOldIE", function(){
     window.getInternetExplorerVersion.returns(11);
     assert.isFalse(isOldIE());
     window.getInternetExplorerVersion.restore();
+  });
+});
+
+describe("isIDevice", function(){
+  var old_UA;
+
+  beforeEach(function(){
+    old_UA = _UA;
+  });
+
+  afterEach(function(){
+    _UA = old_UA;
+  });
+
+
+  it("must return true if the userAgent contains iPhone", function(){
+    _UA = "browser iPhone";
+    assert.isTrue(isIDevice());
+  });
+
+  it("must return true it the userAgent contains iPad", function(){
+    _UA = "browser iPad";
+    assert.isTrue(isIDevice());
+  });
+
+  it("must return false it the userAgent does not contains iPad or iPhone", function(){
+    _UA = "browser android";
+    assert.isFalse(isIDevice());
+  });
+});
+
+describe("isMobile", function(){
+  var old_UA;
+
+  beforeEach(function(){
+    old_UA = window._UA;
+  });
+
+  afterEach(function(){
+    window._UA = old_UA;
+  });
+
+  it("must return true if the userAgent contains iPhone or iPad or iPod or android or windows phone", function(){
+    window._UA = "browser iPhone";
+    assert.isTrue(isMobile());
+    window._UA = "browser iPad";
+    assert.isTrue(isMobile());
+    window._UA = "browser iPod";
+    assert.isTrue(isMobile());
+    window._UA = "Android";
+    assert.isTrue(isMobile());
+    window._UA = "Windows Phone";
+    assert.isTrue(isMobile());
+  });
+
+  it("must return false it the userAgent is not from mobile", function(){
+    window._UA = "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)";
+    assert.isFalse(isMobile());
+  });
+});
+
+describe("isIPhone", function(){
+  var old_UA;
+
+  beforeEach(function(){
+    old_UA = window._UA;
+  });
+
+  afterEach(function(){
+    window._UA = old_UA;
+  });
+
+  it("must return true if the userAgent contains iPhone or iPod and false otherwise", function(){
+    window._UA = "browser iPhone";
+    assert.isTrue(isIPhone());
+    window._UA = "browser iPad";
+    assert.isFalse(isIPhone());
+    window._UA = "browser iPod";
+    assert.isTrue(isIPhone());
+    window._UA = "Android";
+    assert.isFalse(isIPhone());
+    window._UA = "Windows Phone";
+    assert.isFalse(isIPhone());
+    window._UA = "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)";
+    assert.isFalse(isIPhone());
+  });
+});
+
+describe("isAndroid", function(){
+  var old_UA;
+
+  beforeEach(function(){
+    old_UA = window._UA;
+  });
+
+  afterEach(function(){
+    window._UA = old_UA;
+  });
+
+  it("must return true if the userAgent contains iPhone or iPod and false otherwise", function(){
+    window._UA = "browser iPhone";
+    assert.isFalse(isAndroid());
+    window._UA = "browser iPad";
+    assert.isFalse(isAndroid());
+    window._UA = "browser iPod";
+    assert.isFalse(isAndroid());
+    window._UA = "Android";
+    assert.isTrue(isAndroid());
+    window._UA = "Windows Phone";
+    assert.isFalse(isAndroid());
+    window._UA = "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)";
+    assert.isFalse(isAndroid());
   });
 });

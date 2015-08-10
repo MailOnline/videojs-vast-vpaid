@@ -235,11 +235,6 @@ function isISO8601(value) {
   return iso8086Regex.test(value.trim());
 }
 
-var _UA = navigator.userAgent;
-function isIDevice() {
-  return /iP(hone|ad)/.test(_UA);
-}
-
 /**
  * Checks if the Browser is IE9 and below
  * @returns {boolean}
@@ -271,4 +266,22 @@ function getInternetExplorerVersion(navigator) {
   }
 
   return rv;
+}
+
+/*** Mobile Utility functions ***/
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
+
+function isMobile() {
+  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
+}
+
+function isIPhone() {
+  return /iP(hone|od)/.test(_UA);
+}
+
+function isAndroid() {
+  return /Android/.test(_UA);
 }

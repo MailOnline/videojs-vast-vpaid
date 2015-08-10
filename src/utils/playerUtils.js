@@ -169,15 +169,6 @@ playerUtils.isReadyToResume = function (tech) {
   return false;
 };
 
-//TODO: SHOULDN'T WE USE isIDevice utility function??
-/**
- * Returns true if the player is in an iphone
- */
-playerUtils.isIPhone = (function () {
-  var iPhone = /(iPhone|iPod)/.test(navigator.userAgent);
-  return echoFn(iPhone);
-})();
-
 /**
  * This function prepares the player to display ads.
  * Adding convenience events like the 'vast.firsPlay' that gets fired when the video is first played
@@ -200,7 +191,7 @@ playerUtils.prepareForAds = function (player) {
   var origPlay = player.play;
   player.play = function () {
     if (isFirstPlay()) {
-      if (!playerUtils.isIPhone()) {
+      if (!isIPhone()) {
         volumeSnapshot = saveVolumeSnapshot();
         player.muted(true);
       }
@@ -246,7 +237,7 @@ playerUtils.prepareForAds = function (player) {
   }
 
   function restorePlayerToFirstPlay() {
-    if (!playerUtils.isIPhone()) {
+    if (!isIPhone()) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
     }

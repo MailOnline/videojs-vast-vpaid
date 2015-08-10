@@ -561,11 +561,11 @@ describe("videojs.vast plugin", function () {
   describe("on iPhone", function(){
     beforeEach(function(){
       this.clock = sinon.useFakeTimers();
-      sinon.stub(playerUtils, 'isIPhone').returns(true);
+      sinon.stub(window, 'isIPhone').returns(true);
     });
 
     afterEach(function(){
-      playerUtils.isIPhone.restore();
+      window.isIPhone.restore();
       this.clock.restore();
     });
 

@@ -320,11 +320,11 @@ describe("playerUtils", function () {
 
 describe("playerUtils.prepareForAds", function() {
   beforeEach(function(){
-    sinon.stub(playerUtils, 'isIPhone').returns(false);
+    sinon.stub(window, 'isIPhone').returns(false);
   });
 
   afterEach(function(){
-    playerUtils.isIPhone.restore();
+    window.isIPhone.restore();
   });
 
   it("must add the BlackPoster component to the player", function(){
@@ -398,7 +398,7 @@ describe("playerUtils.prepareForAds", function() {
   });
 
   it("must not mute the video if it is on an iphone device", function(){
-    playerUtils.isIPhone.returns(true);
+    window.isIPhone.returns(true);
     var player = videojs(document.createElement('video'), {});
     playerUtils.prepareForAds(player);
     player.play();// First Play
@@ -453,7 +453,7 @@ describe("playerUtils.prepareForAds", function() {
   });
 
   it("on Iphone, must NOT set the currentTime to 0 on the first play", function(){
-    playerUtils.isIPhone.returns(true);
+    window.isIPhone.returns(true);
     var player = videojs(document.createElement('video'), {});
     sinon.stub(player, 'currentTime');
     sinon.assert.notCalled(player.currentTime);

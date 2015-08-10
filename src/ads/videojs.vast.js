@@ -137,7 +137,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function canPlayPrerollAd() {
-      return !playerUtils.isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
+      return !isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
     function startAdCancelTimeout() {
