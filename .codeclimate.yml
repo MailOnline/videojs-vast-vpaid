@@ -7,5 +7,5 @@ exclude_paths:
 - "demo/*"
 - "bin/*"
 - "build/*"
-- "libs/*"
+- "lib/*"
 - "src/utils/pollyfill.js"
