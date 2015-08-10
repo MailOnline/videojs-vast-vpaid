@@ -450,7 +450,8 @@ VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next)
   });
 
   adUnit.on('AdError', function (error) {
-    finishPlayingAd(new VASTError(error.message || 'on VPAIDIntegrator, error while waiting for the adUnit to finish playing'));
+    var errMsg = error? error.message : 'on VPAIDIntegrator, error while waiting for the adUnit to finish playing';
+    finishPlayingAd(new VASTError(errMsg));
   });
 
   /*** local functions ***/
