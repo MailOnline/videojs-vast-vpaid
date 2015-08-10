@@ -69,15 +69,21 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       callback(error, vastResponse);
     });
 
-    return {
+    this.adUnit = {
+      _paused: true,
       type: 'VPAID',
       pauseAd: function() {
-        player.trigger('vpaid.pauseAd');
+          player.trigger('vpaid.pauseAd');
       },
       resumeAd: function() {
-        player.trigger('vpaid.resumeAd');
+          player.trigger('vpaid.resumeAd');
+      },
+      isPaused: function() {
+        return this._paused;
       }
     };
+
+    return this.adUnit;
   }
 
   callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
@@ -195,6 +201,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   var adUnitSrc = adUnit.options.src;
   var tracker = new VASTTracker(adUnitSrc, vastResponse);
   var player = this.player;
+  var that = this;
 
   adUnit.on('AdSkipped', function () {
     tracker.trackSkip();
@@ -206,6 +213,28 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
 
   adUnit.on('AdVideoStart', function () {
     tracker.trackStart();
+    if(that.adUnit){
+      that.adUnit._paused = false;
+    }
+    player.trigger('play');
+  });
+
+  adUnit.on('AdPaused', function () {
+    tracker.trackPause();
+    if(that.adUnit){
+      that.adUnit._paused = true;
+    }
+    player.trigger('pause');
+  });
+
+  adUnit.on('AdPlaying', function () {
+    //NOTE: we track errors code 901, as noted in VAST 3.0
+    tracker.trackResume();
+
+    if(that.adUnit){
+      that.adUnit._paused = false;
+    }
+    player.trigger('play');
   });
 
   adUnit.on('AdVideoFirstQuartile', function () {
@@ -254,10 +283,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackCloseLinear();
   });
 
-  adUnit.on('AdPaused', function () {
-    tracker.trackPause();
-  });
-
   adUnit.on('AdUserMinimize', function () {
     tracker.trackCollapse();
   });
@@ -265,11 +290,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdError', function () {
     //NOTE: we track errors code 901, as noted in VAST 3.0
     tracker.trackErrorWithCode(901);
-  });
-
-  adUnit.on('AdPlaying', function () {
-    //NOTE: we track errors code 901, as noted in VAST 3.0
-    tracker.trackResume();
   });
 
   adUnit.on('AdVolumeChange', function () {
@@ -426,12 +446,17 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
   adUnit.on('AdStopped', function () {
-    next(null, adUnit, vastResponse);
+   finishPlayingAd(null)
   });
 
-  adUnit.on('AdError', function () {
-    next(new VASTError('on VPAIDIntegrator, error while waiting for the adUnit to finish playing'), adUnit, vastResponse);
+  adUnit.on('AdError', function (error) {
+    finishPlayingAd(new VASTError(error.message || 'on VPAIDIntegrator, error while waiting for the adUnit to finish playing'));
   });
+
+  /*** local functions ***/
+  function finishPlayingAd(error) {
+    next(error, adUnit, vastResponse);
+  }
 };
 
 VPAIDIntegrator.prototype._trackError = function trackError(response) {

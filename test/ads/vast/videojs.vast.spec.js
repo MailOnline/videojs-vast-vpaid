@@ -176,7 +176,7 @@ describe("videojs.vast plugin", function () {
       var adsCanceled = sinon.spy();
       player.on('vast.adsCancel', adsCanceled);
       player.vast.disable();
-      player.trigger('vast.firstPlay');
+      player.play();
       clock.tick(1);
       sinon.assert.calledOnce(adsCanceled);
     });
@@ -267,7 +267,7 @@ describe("videojs.vast plugin", function () {
         var contentStartSpy = sinon.spy();
         var contentEndedSpy = sinon.spy();
         player.vast.disable();
-        player.trigger('vast.firstPlay');
+        player.play();
         clock.tick(1);
         player.on('vast.contentStart', contentStartSpy);
         player.on('vast.contentEnd', contentEndedSpy);
@@ -304,7 +304,8 @@ describe("videojs.vast plugin", function () {
         player.vast.adUnit = {
           type: 'FAKE',
           pauseAd: noop,
-          resumeAd: noop
+          resumeAd: noop,
+          isPaused: noop
         };
         player.trigger('vast.firstPlay');
         clock.tick(1);
@@ -588,7 +589,7 @@ describe("videojs.vast plugin", function () {
       player.on('vast.adError', errorSpy);
 
       player.vastClient({url: 'http://fake.ad.url', iosPrerollCancelTimeout: 1000});
-      player.trigger('vast.firstPlay');
+      player.play();
       this.clock.tick(1);
       sinon.assert.calledOnce(errorSpy);
       assert.equal(firstArg(errorSpy).error.message, 'VAST Error: video content has been playing before preroll ad');
@@ -600,7 +601,7 @@ describe("videojs.vast plugin", function () {
       sinon.stub(player, 'currentTime').returns(500);
       player.on('vast.adError', errorSpy);
       player.vastClient({url: 'http://fake.ad.url', iosPrerollCancelTimeout: 1000});
-      player.trigger('vast.firstPlay');
+      player.play();
       this.clock.tick(1);
       sinon.assert.notCalled(errorSpy);
     });

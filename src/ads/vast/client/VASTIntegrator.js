@@ -47,6 +47,10 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
 
     resumeAd: function() {
       that.player.play(true);
+    },
+
+    isPaused: function() {
+      return that.player.paused(true);
     }
   };
 };

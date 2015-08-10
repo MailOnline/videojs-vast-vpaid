@@ -98,7 +98,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     /*** Local functions ***/
     function restoreVideoContent(){
       if(snapshot) {
-        snapshot.playing = true; //We ensure the video content will play when we restore the preroll snapshot
+        snapshot.playing = false;
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
       }
@@ -106,6 +106,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       if(player.vast && player.vast.adUnit) {
         player.vast.adUnit = null; //We remove the adUnit
       }
+
+      player.play();
     }
 
     function checkAdsEnabled(next) {

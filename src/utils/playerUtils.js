@@ -206,6 +206,11 @@ playerUtils.prepareForAds = function (player) {
       resume.call(this, callOrigPlay);
     }
 
+    var playerEl = player.el();
+    if(!dom.hasClass(playerEl, 'vjs-has-started')){
+      dom.addClass(playerEl, 'vjs-has-started');
+    }
+
     return this;
 
     /*** local functions ***/
@@ -243,11 +248,27 @@ playerUtils.prepareForAds = function (player) {
   var origPause = player.pause;
   player.pause = function (callOrigPause) {
     if (isAdPlaying() && !callOrigPause) {
-      return player.vast.adUnit.pauseAd();
+      player.vast.adUnit.pauseAd();
+    } else{
+      origPause.apply(this, arguments);
     }
-    return origPause.apply(this, arguments);
+    return this;
   };
 
+
+  /**
+   * Needed monkey patch to handle paused state of the player when ads are playing.
+   *
+   * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+   * @returns {player}
+   */
+  var origPaused = player.paused;
+  player.paused = function (callOrigPaused) {
+    if (false && isAdPlaying() && !callOrigPaused) {
+      return player.vast.adUnit.isPaused();
+    }
+    return origPaused.apply(this, arguments);
+  };
 
   player.on('play', tryToTriggerFirstPlay);
   player.on('loadStart', resetFirstPlay);//Every time we change the sources we reset the first play.
