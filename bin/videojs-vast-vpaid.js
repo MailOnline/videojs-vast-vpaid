@@ -2242,11 +2242,6 @@ function isISO8601(value) {
   return iso8086Regex.test(value.trim());
 }
 
-var _UA = navigator.userAgent;
-function isIDevice() {
-  return /iP(hone|ad)/.test(_UA);
-}
-
 /**
  * Checks if the Browser is IE9 and below
  * @returns {boolean}
@@ -2279,6 +2274,25 @@ function getInternetExplorerVersion(navigator) {
 
   return rv;
 }
+
+/*** Mobile Utility functions ***/
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
+
+function isMobile() {
+  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
+}
+
+function isIPhone() {
+  return /iP(hone|od)/.test(_UA);
+}
+
+function isAndroid() {
+  return /Android/.test(_UA);
+}
+
 ;
 //Small subset of async
 var async = {};
@@ -2888,15 +2902,6 @@ playerUtils.isReadyToResume = function (tech) {
   return false;
 };
 
-//TODO: SHOULDN'T WE USE isIDevice utility function??
-/**
- * Returns true if the player is in an iphone
- */
-playerUtils.isIPhone = (function () {
-  var iPhone = /(iPhone|iPod)/.test(navigator.userAgent);
-  return echoFn(iPhone);
-})();
-
 /**
  * This function prepares the player to display ads.
  * Adding convenience events like the 'vast.firsPlay' that gets fired when the video is first played
@@ -2906,27 +2911,11 @@ playerUtils.isIPhone = (function () {
  */
 playerUtils.prepareForAds = function (player) {
   var blackPoster = player.addChild('blackPoster');
-  var firstPlay = true;
+  var _firstPlay = true;
   var volumeSnapshot;
 
-  /*
-   What I am doing below is ugly and horrible and I should think twice before calling myself a good developer. With that said,
-   it is the best solution I could find to mute the video until the 'play' event happens and the plugin can decide whether
-   to play the ad or not.
 
-   If you have a better solution please do tell me.
-   */
-  var origPlay = player.play;
-  player.play = function () {
-    if (isFirstPlay()) {
-      if (!playerUtils.isIPhone()) {
-        volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
-      }
-    }
-    return origPlay.apply(this, arguments);
-  };
-
+  monkeyPatchPlayerApi();
 
   player.on('play', tryToTriggerFirstPlay);
   player.on('loadStart', resetFirstPlay);//Every time we change the sources we reset the first play.
@@ -2940,21 +2929,110 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.adsCancel', removeStyles);
 
   /*** Local Functions ***/
+
+  /**
+   What this function does is ugly and horrible and I should think twice before calling myself a good developer. With that said,
+   it is the best solution I could find to mute the video until the 'play' event happens (on mobile devices) and the plugin can decide whether
+   to play the ad or not.
+
+   We also need this monkeypatch to be able to pause and resume an ad using the player's API
+
+   If you have a better solution please do tell me.
+   */
+  function monkeyPatchPlayerApi() {
+
+    /**
+     * Monkey patch needed to handle firstPlay and resume of playing ad.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are restoring a VAST ad.
+     * @returns {player}
+     */
+    var origPlay = player.play;
+    player.play = function (callOrigPlay) {
+      if (isFirstPlay()) {
+        firstPlay.call(this);
+      } else {
+        resume.call(this, callOrigPlay);
+      }
+
+      return this;
+
+      /*** local functions ***/
+      function firstPlay(){
+        if (isMobile()) {
+          if (!isIPhone()) {
+            volumeSnapshot = saveVolumeSnapshot();
+            player.muted(true);
+          }
+
+          //On mobile we need to trigger the play to ensure the video starts playing.
+          origPlay.apply(this, arguments);
+        } else {
+          //Instead of muting the video, on Desktop we don't play the video
+          tryToTriggerFirstPlay();
+        }
+      }
+
+      function resume(callOrigPlay){
+        if (isAdPlaying() && !callOrigPlay) {
+          player.vast.adUnit.resumeAd();
+        } else {
+          origPlay.apply(this, arguments);
+        }
+      }
+    };
+
+
+    /**
+     * Needed monkey patch to handle pause of playing ad.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+     * @returns {player}
+     */
+    var origPause = player.pause;
+    player.pause = function (callOrigPause) {
+      if (isAdPlaying() && !callOrigPause) {
+        player.vast.adUnit.pauseAd();
+      } else{
+        origPause.apply(this, arguments);
+      }
+      return this;
+    };
+
+
+    /**
+     * Needed monkey patch to handle paused state of the player when ads are playing.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+     * @returns {player}
+     */
+    var origPaused = player.paused;
+    player.paused = function (callOrigPaused) {
+      if (isAdPlaying() && !callOrigPaused) {
+        return player.vast.adUnit.isPaused();
+      }
+      return origPaused.apply(this, arguments);
+    };
+  }
+
+  function isAdPlaying() {
+    return player.vast && player.vast.adUnit;
+  }
+
   function tryToTriggerFirstPlay() {
     if (isFirstPlay()) {
-      firstPlay = false;
+      _firstPlay = false;
       player.trigger('vast.firstPlay');
-
     }
   }
 
   function resetFirstPlay() {
-    firstPlay = true;
+    _firstPlay = true;
     blackPoster.show();
   }
 
   function isFirstPlay() {
-    return firstPlay;
+    return _firstPlay;
   }
 
   function saveVolumeSnapshot() {
@@ -2965,7 +3043,7 @@ playerUtils.prepareForAds = function (player) {
   }
 
   function restorePlayerToFirstPlay() {
-    if (!playerUtils.isIPhone()) {
+    if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
     }
@@ -3410,6 +3488,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     /*** Local functions ***/
     function restoreVideoContent(){
       if(snapshot) {
+        snapshot.playing = false;
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
       }
@@ -3417,6 +3496,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       if(player.vast && player.vast.adUnit) {
         player.vast.adUnit = null; //We remove the adUnit
       }
+
+      player.play();
     }
 
     function checkAdsEnabled(next) {
@@ -3449,7 +3530,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function canPlayPrerollAd() {
-      return !playerUtils.isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
+      return !isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
     function startAdCancelTimeout() {
@@ -4081,15 +4162,21 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       callback(error, vastResponse);
     });
 
-    return {
+    this._adUnit = {
+      _paused: true,
       type: 'VPAID',
       pauseAd: function() {
-        player.trigger('vpaid.pauseAd');
+          player.trigger('vpaid.pauseAd');
       },
       resumeAd: function() {
-        player.trigger('vpaid.resumeAd');
+          player.trigger('vpaid.resumeAd');
+      },
+      isPaused: function() {
+        return this._paused;
       }
     };
+
+    return this._adUnit;
   }
 
   callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
@@ -4207,6 +4294,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   var adUnitSrc = adUnit.options.src;
   var tracker = new VASTTracker(adUnitSrc, vastResponse);
   var player = this.player;
+  var that = this;
 
   adUnit.on('AdSkipped', function () {
     tracker.trackSkip();
@@ -4216,9 +4304,40 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackImpressions();
   });
 
+  adUnit.on('AdStarted', function () {
+    notifyPlayToPlayer();
+  });
+
   adUnit.on('AdVideoStart', function () {
     tracker.trackStart();
+    notifyPlayToPlayer();
   });
+
+  adUnit.on('AdPlaying', function () {
+    tracker.trackResume();
+    notifyPlayToPlayer();
+  });
+
+  adUnit.on('AdPaused', function () {
+    tracker.trackPause();
+    notifyPauseToPlayer();
+  });
+
+
+  function notifyPlayToPlayer(){
+    if(that._adUnit && that._adUnit.isPaused()){
+      that._adUnit._paused = false;
+    }
+    player.trigger('play');
+
+  }
+
+  function notifyPauseToPlayer() {
+    if(that._adUnit){
+      that._adUnit._paused = true;
+    }
+    player.trigger('pause');
+  }
 
   adUnit.on('AdVideoFirstQuartile', function () {
     tracker.trackFirstQuartile();
@@ -4266,10 +4385,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackCloseLinear();
   });
 
-  adUnit.on('AdPaused', function () {
-    tracker.trackPause();
-  });
-
   adUnit.on('AdUserMinimize', function () {
     tracker.trackCollapse();
   });
@@ -4277,11 +4392,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdError', function () {
     //NOTE: we track errors code 901, as noted in VAST 3.0
     tracker.trackErrorWithCode(901);
-  });
-
-  adUnit.on('AdPlaying', function () {
-    //NOTE: we track errors code 901, as noted in VAST 3.0
-    tracker.trackResume();
   });
 
   adUnit.on('AdVolumeChange', function () {
@@ -4438,12 +4548,18 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
   adUnit.on('AdStopped', function () {
-    next(null, adUnit, vastResponse);
+   finishPlayingAd(null);
   });
 
-  adUnit.on('AdError', function () {
-    next(new VASTError('on VPAIDIntegrator, error while waiting for the adUnit to finish playing'), adUnit, vastResponse);
+  adUnit.on('AdError', function (error) {
+    var errMsg = error? error.message : 'on VPAIDIntegrator, error while waiting for the adUnit to finish playing';
+    finishPlayingAd(new VASTError(errMsg));
   });
+
+  /*** local functions ***/
+  function finishPlayingAd(error) {
+    next(error, adUnit, vastResponse);
+  }
 };
 
 VPAIDIntegrator.prototype._trackError = function trackError(response) {
@@ -4936,11 +5052,15 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
   return {
     type: 'VAST',
     pauseAd: function() {
-      that.player.pause();
+      that.player.pause(true);
     },
 
     resumeAd: function() {
-      that.player.play();
+      that.player.play(true);
+    },
+
+    isPaused: function() {
+      return that.player.paused(true);
     }
   };
 };
