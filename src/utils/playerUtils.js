@@ -259,7 +259,6 @@ playerUtils.prepareForAds = function (player) {
     var origPause = player.pause;
     player.pause = function (callOrigPause) {
       if (isAdPlaying() && !callOrigPause) {
-
         player.vast.adUnit.pauseAd();
       } else{
         origPause.apply(this, arguments);
