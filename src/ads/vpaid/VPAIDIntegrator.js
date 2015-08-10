@@ -211,31 +211,40 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackImpressions();
   });
 
+  adUnit.on('AdStarted', function () {
+    notifyPlayToPlayer();
+  });
+
   adUnit.on('AdVideoStart', function () {
     tracker.trackStart();
-    if(that._adUnit){
-      that._adUnit._paused = false;
-    }
-    player.trigger('play');
+    notifyPlayToPlayer();
+  });
+
+  adUnit.on('AdPlaying', function () {
+    tracker.trackResume();
+    notifyPlayToPlayer();
   });
 
   adUnit.on('AdPaused', function () {
     tracker.trackPause();
+    notifyPauseToPlayer();
+  });
+
+
+  function notifyPlayToPlayer(){
+    if(that._adUnit && that._adUnit.isPaused()){
+      that._adUnit._paused = false;
+    }
+    player.trigger('play');
+
+  }
+
+  function notifyPauseToPlayer() {
     if(that._adUnit){
       that._adUnit._paused = true;
     }
     player.trigger('pause');
-  });
-
-  adUnit.on('AdPlaying', function () {
-    //NOTE: we track errors code 901, as noted in VAST 3.0
-    tracker.trackResume();
-
-    if(that._adUnit){
-      that._adUnit._paused = false;
-    }
-    player.trigger('play');
-  });
+  }
 
   adUnit.on('AdVideoFirstQuartile', function () {
     tracker.trackFirstQuartile();
