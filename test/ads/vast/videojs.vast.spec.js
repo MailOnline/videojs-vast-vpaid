@@ -291,17 +291,27 @@ describe("videojs.vast plugin", function () {
       assert.isNull(player.vast.adUnit);
     });
 
-    it("must restore the video content on 'vast.adsCancel' evt", function(){
-      sinon.stub(playerUtils, 'restorePlayerSnapshot');
-      player.vast.adUnit = {
-        type: 'FAKE'
-      };
-      player.trigger('vast.firstPlay');
-      clock.tick(1);
-      player.trigger('vast.adsCancel');
-      assert.isNull(player.vast.adUnit);
-      sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
-      playerUtils.restorePlayerSnapshot.restore();
+    describe("", function(){
+      beforeEach(function(){
+        sinon.stub(playerUtils, 'restorePlayerSnapshot');
+      });
+
+      afterEach(function(){
+        playerUtils.restorePlayerSnapshot.restore();
+      });
+
+      it("must restore the video content on 'vast.adsCancel' evt", function(){
+        player.vast.adUnit = {
+          type: 'FAKE',
+          pauseAd: noop,
+          resumeAd: noop
+        };
+        player.trigger('vast.firstPlay');
+        clock.tick(1);
+        player.trigger('vast.adsCancel');
+        assert.isNull(player.vast.adUnit);
+        sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
+      });
     });
   });
 
@@ -404,10 +414,11 @@ describe("videojs.vast plugin", function () {
       player.currentTime.returns(10);
       player.trigger('timeupdate');
       this.clock.tick(1);
-      sinon.assert.calledOnce(player.pause);
+      sinon.assert.called(player.pause);
+      player.pause.reset();
       player.trigger('timeupdate');
       this.clock.tick(1);
-      sinon.assert.calledTwice(player.pause);
+      sinon.assert.called(player.pause);
     });
 
     it("must not prevent the manual progress after the ad has ended", function(){

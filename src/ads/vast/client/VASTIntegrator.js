@@ -42,11 +42,11 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
   return {
     type: 'VAST',
     pauseAd: function() {
-      that.player.pause();
+      that.player.pause(true);
     },
 
     resumeAd: function() {
-      that.player.play();
+      that.player.play(true);
     }
   };
 };

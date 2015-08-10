@@ -186,17 +186,66 @@ playerUtils.prepareForAds = function (player) {
    it is the best solution I could find to mute the video until the 'play' event happens and the plugin can decide whether
    to play the ad or not.
 
+   We also need this monkeypatch to be able to pause and resume an ad using the player's API
+
    If you have a better solution please do tell me.
    */
+
+
+  /**
+   * Needed monkey patch to handle firstPlay and resume of playing ad.
+   *
+   * @param callOrigPlay necessary flag to prevent infinite loop when you are restoring a VAST ad.
+   * @returns {player}
+   */
   var origPlay = player.play;
-  player.play = function () {
+  player.play = function (callOrigPlay) {
     if (isFirstPlay()) {
-      if (!isIPhone()) {
-        volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
+      firstPlay.call(this);
+    } else {
+      resume.call(this, callOrigPlay);
+    }
+
+    return this;
+
+    /*** local functions ***/
+    function firstPlay(){
+      if (isMobile()) {
+        if (!isIPhone()) {
+          volumeSnapshot = saveVolumeSnapshot();
+          player.muted(true);
+        }
+
+        //On mobile we need to trigger the play to ensure the video starts playing.
+        origPlay.apply(this, arguments);
+      } else {
+        //Instead of muting the video, on Desktop we don't play the video
+        tryToTriggerFirstPlay();
       }
     }
-    return origPlay.apply(this, arguments);
+
+    function resume(callOrigPlay){
+      if (isAdPlaying() && !callOrigPlay) {
+        player.vast.adUnit.resumeAd();
+      } else {
+        origPlay.apply(this, arguments);
+      }
+    }
+  };
+
+
+  /**
+   * Needed monkey patch to handle pause of playing ad.
+   *
+   * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+   * @returns {player}
+   */
+  var origPause = player.pause;
+  player.pause = function (callOrigPause) {
+    if (isAdPlaying() && !callOrigPause) {
+      return player.vast.adUnit.pauseAd();
+    }
+    return origPause.apply(this, arguments);
   };
 
 
@@ -212,11 +261,14 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.adsCancel', removeStyles);
 
   /*** Local Functions ***/
+  function isAdPlaying() {
+    return player.vast && player.vast.adUnit;
+  }
+
   function tryToTriggerFirstPlay() {
     if (isFirstPlay()) {
       firstPlay = false;
       player.trigger('vast.firstPlay');
-
     }
   }
 
@@ -237,7 +289,7 @@ playerUtils.prepareForAds = function (player) {
   }
 
   function restorePlayerToFirstPlay() {
-    if (!isIPhone()) {
+    if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
     }

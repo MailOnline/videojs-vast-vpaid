@@ -98,6 +98,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     /*** Local functions ***/
     function restoreVideoContent(){
       if(snapshot) {
+        snapshot.playing = true; //We ensure the video content will play when we restore the preroll snapshot
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
       }
