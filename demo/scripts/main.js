@@ -52,17 +52,17 @@ dom.onReady(function() {
       messages.success("Demo updated!!!");
     });
 
-    if (pauseBtn) {
+    if (pauseBtn && resumeBtn) {
       dom.addEventListener(pauseBtn, 'click', function() {
         pauseAd();
         messages.success("ad paused");
       });
-    }
-    if (resumeBtn) {
+
       dom.addEventListener(resumeBtn, 'click', function() {
         resumeAd();
         messages.success("ad resumed");
       });
+
     }
 
     updateDemo();
@@ -78,17 +78,25 @@ dom.onReady(function() {
     function pauseAd() {
       if (player) {
         player.vast.adUnit.pauseAd();
-        pauseBtn.style.display = 'none';
-        resumeBtn.style.display = 'inline-block';
+        showResumeBtn();
       }
     }
 
     function resumeAd() {
       if (player) {
         player.vast.adUnit.resumeAd();
-        pauseBtn.style.display = 'inline-block';
-        resumeBtn.style.display = 'none';
+        showPauseBtn();
       }
+    }
+
+    function showResumeBtn(){
+      pauseBtn.style.display = 'none';
+      resumeBtn.style.display = 'inline-block';
+    }
+
+    function showPauseBtn(){
+      pauseBtn.style.display = 'inline-block';
+      resumeBtn.style.display = 'none';
     }
 
     function updateDemo() {
@@ -114,18 +122,27 @@ dom.onReady(function() {
           }
         });
 
-        //We hide the pause btn every time we update
-        if(pauseBtn){
+        //We hide the pause and resume btns every time we update
+        if (pauseBtn) {
           pauseBtn.style.display = 'none';
+          resumeBtn.style.display = 'none';
         }
 
-        player.on('vast.adStart', function() {
-          pauseBtn.style.display = 'inline-block';
-        });
 
-        player.on('vast.adEnd', function() {
-          pauseBtn.style.display = 'none';
-        });
+        if(player) {
+          player.on('vast.adStart', function() {
+            showPauseBtn();
+            player.on('play', showPauseBtn);
+            player.on('pause', showResumeBtn);
+            player.one('vast.adEnd', function() {
+              pauseBtn.style.display = 'none';
+              resumeBtn.style.display = 'none';
+
+              player.off('play', showPauseBtn);
+              player.off('pause', showResumeBtn);
+            });
+          });
+        }
       });
     }
 
