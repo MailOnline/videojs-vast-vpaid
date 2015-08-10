@@ -1058,6 +1058,295 @@ function stringEndsWith(string, search) {
  }
 })();
 ;
+/*jshint unused:false */
+"use strict";
+
+var NODE_TYPE_ELEMENT = 1;
+
+function noop(){ }
+
+function isNull(o) {
+  return o === null;
+}
+
+function isDefined(o){
+  return o !== undefined;
+}
+
+function isUndefined(o){
+  return o === undefined;
+}
+
+function isObject(obj) {
+  return typeof obj === 'object';
+}
+
+function isFunction(str){
+  return typeof str === 'function';
+}
+
+function isNumber(num){
+  return typeof num === 'number';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isArray(array){
+  return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isArrayLike(obj) {
+  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
+    return false;
+  }
+
+  var length = obj.length;
+
+  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
+    return true;
+  }
+
+  return isString(obj) || isArray(obj) || length === 0 ||
+    typeof length === 'number' && length > 0 && (length - 1) in obj;
+}
+
+function isString(str){
+  return typeof str === 'string';
+}
+
+function isEmptyString(str) {
+  return isString(str) && str.length === 0;
+}
+
+function isNotEmptyString(str) {
+  return isString(str) && str.length !== 0;
+}
+
+function arrayLikeObjToArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function forEach(obj, iterator, context) {
+  var key, length;
+  if (obj) {
+    if (isFunction(obj)) {
+      for (key in obj) {
+        // Need to check if hasOwnProperty exists,
+        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (isArray(obj)) {
+      var isPrimitive = typeof obj !== 'object';
+      for (key = 0, length = obj.length; key < length; key++) {
+        if (isPrimitive || key in obj) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (obj.forEach && obj.forEach !== forEach) {
+      obj.forEach(iterator, context, obj);
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+var SNAKE_CASE_REGEXP = /[A-Z]/g;
+function snake_case(name, separator) {
+  separator = separator || '_';
+  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return (pos ? separator : '') + letter.toLowerCase();
+  });
+}
+
+function isValidEmail(email){
+  if(!isString(email)){
+    return false;
+  }
+  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+  return EMAIL_REGEXP.test(email.trim());
+}
+
+function extend (obj) {
+  var arg, i, k;
+  for (i = 1; i < arguments.length; i++) {
+    arg = arguments[i];
+    for (k in arg) {
+      if (arg.hasOwnProperty(k)) {
+        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
+          obj[k] = extend({}, obj[k], arg[k]);
+        }else {
+          obj[k] = arg[k];
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function decapitalize(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * This method works the same way array.prototype.map works but if the transformer returns undefine, then
+ * it won't be added to the transformed Array.
+ */
+function transformArray(array, transformer) {
+  var transformedArray = [];
+
+  array.forEach(function(item, index){
+    var transformedItem = transformer(item, index);
+    if(isDefined(transformedItem)) {
+      transformedArray.push(transformedItem);
+    }
+  });
+
+  return transformedArray;
+}
+
+function toFixedDigits(num, digits) {
+  var formattedNum = num + '';
+  digits = isNumber(digits) ? digits : 0;
+  num = isNumber(num) ? num : parseInt(num);
+  if(isNumber(num) && !isNaN(num)){
+    formattedNum = num + '';
+    while(formattedNum.length < digits) {
+      formattedNum = '0' + formattedNum;
+    }
+    return formattedNum;
+  }
+  return NaN + '';
+}
+
+function throttle(callback, delay) {
+  var previousCall = new Date().getTime() - (delay + 1);
+  return function() {
+    var time = new Date().getTime();
+    if ((time - previousCall) >= delay) {
+      previousCall = time;
+      callback.apply(this, arguments);
+    }
+  };
+}
+
+function debounce (callback, wait) {
+  var timeoutId;
+
+  return function (){
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(function(){
+      callback.apply(this, arguments);
+      timeoutId = undefined;
+    }, wait);
+  };
+}
+
+// a function designed to blow up the stack in a naive way
+// but it is ok for videoJs children components
+function treeSearch(root, getChildren, found){
+  var children = getChildren(root);
+  for (var i = 0; i < children.length; i++){
+    if (found(children[i])) {
+      return children[i];
+    }
+    else {
+      var el = treeSearch(children[i], getChildren, found);
+      if (el){
+        return el;
+      }
+    }
+  }
+}
+
+function echoFn(val) {
+  return function () {
+    return val;
+  };
+}
+
+//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
+// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+function isISO8601(value) {
+  if(isNumber(value)){
+    value = value + '';  //we make sure that we are working with strings
+  }
+
+  if(!isString(value)){
+    return false;
+  }
+
+  /*jslint maxlen: 500 */
+  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
+  return iso8086Regex.test(value.trim());
+}
+
+/**
+ * Checks if the Browser is IE9 and below
+ * @returns {boolean}
+ */
+function isOldIE() {
+  var version = getInternetExplorerVersion(navigator);
+  if (version === -1) {
+    return false;
+  }
+
+  return version < 10;
+}
+
+/**
+ * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
+ * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
+ * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
+ */
+function getInternetExplorerVersion(navigator) {
+  var rv = -1;
+
+  if (navigator.appName == 'Microsoft Internet Explorer') {
+    var ua = navigator.userAgent;
+    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    var res = re.exec(ua);
+    if (res !== null) {
+      rv = parseFloat(res[1]);
+    }
+  }
+
+  return rv;
+}
+
+/*** Mobile Utility functions ***/
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
+
+function isMobile() {
+  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
+}
+
+function isIPhone() {
+  return /iP(hone|od)/.test(_UA);
+}
+
+function isAndroid() {
+  return /Android/.test(_UA);
+}
+
+;
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
@@ -2005,281 +2294,6 @@ module.exports = {
 
 //# sourceMappingURL=VPAIDHTML5Client.js.map
 ;
-/*jshint unused:false */
-"use strict";
-
-var NODE_TYPE_ELEMENT = 1;
-
-function noop(){ }
-
-function isNull(o) {
-  return o === null;
-}
-
-function isDefined(o){
-  return o !== undefined;
-}
-
-function isUndefined(o){
-  return o === undefined;
-}
-
-function isObject(obj) {
-  return typeof obj === 'object';
-}
-
-function isFunction(str){
-  return typeof str === 'function';
-}
-
-function isNumber(num){
-  return typeof num === 'number';
-}
-
-function isWindow(obj) {
-  return isObject(obj) && obj.window === obj;
-}
-
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]';
-}
-
-function isArrayLike(obj) {
-  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
-    return false;
-  }
-
-  var length = obj.length;
-
-  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
-    return true;
-  }
-
-  return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
-}
-
-function isString(str){
-  return typeof str === 'string';
-}
-
-function isEmptyString(str) {
-  return isString(str) && str.length === 0;
-}
-
-function isNotEmptyString(str) {
-  return isString(str) && str.length !== 0;
-}
-
-function arrayLikeObjToArray(args) {
-  return Array.prototype.slice.call(args);
-}
-
-function forEach(obj, iterator, context) {
-  var key, length;
-  if (obj) {
-    if (isFunction(obj)) {
-      for (key in obj) {
-        // Need to check if hasOwnProperty exists,
-        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
-      for (key = 0, length = obj.length; key < length; key++) {
-        if (isPrimitive || key in obj) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (obj.forEach && obj.forEach !== forEach) {
-      obj.forEach(iterator, context, obj);
-    } else {
-      for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-var SNAKE_CASE_REGEXP = /[A-Z]/g;
-function snake_case(name, separator) {
-  separator = separator || '_';
-  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-    return (pos ? separator : '') + letter.toLowerCase();
-  });
-}
-
-function isValidEmail(email){
-  if(!isString(email)){
-    return false;
-  }
-  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
-  return EMAIL_REGEXP.test(email.trim());
-}
-
-function extend (obj) {
-  var arg, i, k;
-  for (i = 1; i < arguments.length; i++) {
-    arg = arguments[i];
-    for (k in arg) {
-      if (arg.hasOwnProperty(k)) {
-        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
-          obj[k] = extend({}, obj[k], arg[k]);
-        }else {
-          obj[k] = arg[k];
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-function capitalize(s){
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function decapitalize(s) {
-  return s.charAt(0).toLowerCase() + s.slice(1);
-}
-
-/**
- * This method works the same way array.prototype.map works but if the transformer returns undefine, then
- * it won't be added to the transformed Array.
- */
-function transformArray(array, transformer) {
-  var transformedArray = [];
-
-  array.forEach(function(item, index){
-    var transformedItem = transformer(item, index);
-    if(isDefined(transformedItem)) {
-      transformedArray.push(transformedItem);
-    }
-  });
-
-  return transformedArray;
-}
-
-function toFixedDigits(num, digits) {
-  var formattedNum = num + '';
-  digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
-  if(isNumber(num) && !isNaN(num)){
-    formattedNum = num + '';
-    while(formattedNum.length < digits) {
-      formattedNum = '0' + formattedNum;
-    }
-    return formattedNum;
-  }
-  return NaN + '';
-}
-
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime() - (delay + 1);
-  return function() {
-    var time = new Date().getTime();
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(this, arguments);
-    }
-  };
-}
-
-function debounce (callback, wait) {
-  var timeoutId;
-
-  return function (){
-    if(timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(function(){
-      callback.apply(this, arguments);
-      timeoutId = undefined;
-    }, wait);
-  };
-}
-
-// a function designed to blow up the stack in a naive way
-// but it is ok for videoJs children components
-function treeSearch(root, getChildren, found){
-  var children = getChildren(root);
-  for (var i = 0; i < children.length; i++){
-    if (found(children[i])) {
-      return children[i];
-    }
-    else {
-      var el = treeSearch(children[i], getChildren, found);
-      if (el){
-        return el;
-      }
-    }
-  }
-}
-
-function echoFn(val) {
-  return function () {
-    return val;
-  };
-}
-
-//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
-// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-function isISO8601(value) {
-  if(isNumber(value)){
-    value = value + '';  //we make sure that we are working with strings
-  }
-
-  if(!isString(value)){
-    return false;
-  }
-
-  /*jslint maxlen: 500 */
-  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-  return iso8086Regex.test(value.trim());
-}
-
-var _UA = navigator.userAgent;
-function isIDevice() {
-  return /iP(hone|ad)/.test(_UA);
-}
-
-/**
- * Checks if the Browser is IE9 and below
- * @returns {boolean}
- */
-function isOldIE() {
-  var version = getInternetExplorerVersion(navigator);
-  if (version === -1) {
-    return false;
-  }
-
-  return version < 10;
-}
-
-/**
- * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
- * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
- * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
- */
-function getInternetExplorerVersion(navigator) {
-  var rv = -1;
-
-  if (navigator.appName == 'Microsoft Internet Explorer') {
-    var ua = navigator.userAgent;
-    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
-    var res = re.exec(ua);
-    if (res !== null) {
-      rv = parseFloat(res[1]);
-    }
-  }
-
-  return rv;
-}
-;
 //Small subset of async
 var async = {};
 
@@ -2888,15 +2902,6 @@ playerUtils.isReadyToResume = function (tech) {
   return false;
 };
 
-//TODO: SHOULDN'T WE USE isIDevice utility function??
-/**
- * Returns true if the player is in an iphone
- */
-playerUtils.isIPhone = (function () {
-  var iPhone = /(iPhone|iPod)/.test(navigator.userAgent);
-  return echoFn(iPhone);
-})();
-
 /**
  * This function prepares the player to display ads.
  * Adding convenience events like the 'vast.firsPlay' that gets fired when the video is first played
@@ -2906,27 +2911,11 @@ playerUtils.isIPhone = (function () {
  */
 playerUtils.prepareForAds = function (player) {
   var blackPoster = player.addChild('blackPoster');
-  var firstPlay = true;
+  var _firstPlay = true;
   var volumeSnapshot;
 
-  /*
-   What I am doing below is ugly and horrible and I should think twice before calling myself a good developer. With that said,
-   it is the best solution I could find to mute the video until the 'play' event happens and the plugin can decide whether
-   to play the ad or not.
 
-   If you have a better solution please do tell me.
-   */
-  var origPlay = player.play;
-  player.play = function () {
-    if (isFirstPlay()) {
-      if (!playerUtils.isIPhone()) {
-        volumeSnapshot = saveVolumeSnapshot();
-        player.muted(true);
-      }
-    }
-    return origPlay.apply(this, arguments);
-  };
-
+  monkeyPatchPlayerApi();
 
   player.on('play', tryToTriggerFirstPlay);
   player.on('loadStart', resetFirstPlay);//Every time we change the sources we reset the first play.
@@ -2940,21 +2929,110 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.adsCancel', removeStyles);
 
   /*** Local Functions ***/
+
+  /**
+   What this function does is ugly and horrible and I should think twice before calling myself a good developer. With that said,
+   it is the best solution I could find to mute the video until the 'play' event happens (on mobile devices) and the plugin can decide whether
+   to play the ad or not.
+
+   We also need this monkeypatch to be able to pause and resume an ad using the player's API
+
+   If you have a better solution please do tell me.
+   */
+  function monkeyPatchPlayerApi() {
+
+    /**
+     * Monkey patch needed to handle firstPlay and resume of playing ad.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are restoring a VAST ad.
+     * @returns {player}
+     */
+    var origPlay = player.play;
+    player.play = function (callOrigPlay) {
+      if (isFirstPlay()) {
+        firstPlay.call(this);
+      } else {
+        resume.call(this, callOrigPlay);
+      }
+
+      return this;
+
+      /*** local functions ***/
+      function firstPlay(){
+        if (isMobile()) {
+          if (!isIPhone()) {
+            volumeSnapshot = saveVolumeSnapshot();
+            player.muted(true);
+          }
+
+          //On mobile we need to trigger the play to ensure the video starts playing.
+          origPlay.apply(this, arguments);
+        } else {
+          //Instead of muting the video, on Desktop we don't play the video
+          tryToTriggerFirstPlay();
+        }
+      }
+
+      function resume(callOrigPlay){
+        if (isAdPlaying() && !callOrigPlay) {
+          player.vast.adUnit.resumeAd();
+        } else {
+          origPlay.apply(this, arguments);
+        }
+      }
+    };
+
+
+    /**
+     * Needed monkey patch to handle pause of playing ad.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+     * @returns {player}
+     */
+    var origPause = player.pause;
+    player.pause = function (callOrigPause) {
+      if (isAdPlaying() && !callOrigPause) {
+        player.vast.adUnit.pauseAd();
+      } else{
+        origPause.apply(this, arguments);
+      }
+      return this;
+    };
+
+
+    /**
+     * Needed monkey patch to handle paused state of the player when ads are playing.
+     *
+     * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
+     * @returns {player}
+     */
+    var origPaused = player.paused;
+    player.paused = function (callOrigPaused) {
+      if (isAdPlaying() && !callOrigPaused) {
+        return player.vast.adUnit.isPaused();
+      }
+      return origPaused.apply(this, arguments);
+    };
+  }
+
+  function isAdPlaying() {
+    return player.vast && player.vast.adUnit;
+  }
+
   function tryToTriggerFirstPlay() {
     if (isFirstPlay()) {
-      firstPlay = false;
+      _firstPlay = false;
       player.trigger('vast.firstPlay');
-
     }
   }
 
   function resetFirstPlay() {
-    firstPlay = true;
+    _firstPlay = true;
     blackPoster.show();
   }
 
   function isFirstPlay() {
-    return firstPlay;
+    return _firstPlay;
   }
 
   function saveVolumeSnapshot() {
@@ -2965,7 +3043,7 @@ playerUtils.prepareForAds = function (player) {
   }
 
   function restorePlayerToFirstPlay() {
-    if (!playerUtils.isIPhone()) {
+    if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
     }
@@ -3410,6 +3488,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     /*** Local functions ***/
     function restoreVideoContent(){
       if(snapshot) {
+        snapshot.playing = false;
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
       }
@@ -3417,6 +3496,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       if(player.vast && player.vast.adUnit) {
         player.vast.adUnit = null; //We remove the adUnit
       }
+
+      player.play();
     }
 
     function checkAdsEnabled(next) {
@@ -3449,7 +3530,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function canPlayPrerollAd() {
-      return !playerUtils.isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
+      return !isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
     function startAdCancelTimeout() {
@@ -4081,15 +4162,21 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       callback(error, vastResponse);
     });
 
-    return {
+    this._adUnit = {
+      _paused: true,
       type: 'VPAID',
       pauseAd: function() {
-        player.trigger('vpaid.pauseAd');
+          player.trigger('vpaid.pauseAd');
       },
       resumeAd: function() {
-        player.trigger('vpaid.resumeAd');
+          player.trigger('vpaid.resumeAd');
+      },
+      isPaused: function() {
+        return this._paused;
       }
     };
+
+    return this._adUnit;
   }
 
   callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
@@ -4207,6 +4294,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   var adUnitSrc = adUnit.options.src;
   var tracker = new VASTTracker(adUnitSrc, vastResponse);
   var player = this.player;
+  var that = this;
 
   adUnit.on('AdSkipped', function () {
     tracker.trackSkip();
@@ -4216,9 +4304,40 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackImpressions();
   });
 
+  adUnit.on('AdStarted', function () {
+    notifyPlayToPlayer();
+  });
+
   adUnit.on('AdVideoStart', function () {
     tracker.trackStart();
+    notifyPlayToPlayer();
   });
+
+  adUnit.on('AdPlaying', function () {
+    tracker.trackResume();
+    notifyPlayToPlayer();
+  });
+
+  adUnit.on('AdPaused', function () {
+    tracker.trackPause();
+    notifyPauseToPlayer();
+  });
+
+
+  function notifyPlayToPlayer(){
+    if(that._adUnit && that._adUnit.isPaused()){
+      that._adUnit._paused = false;
+    }
+    player.trigger('play');
+
+  }
+
+  function notifyPauseToPlayer() {
+    if(that._adUnit){
+      that._adUnit._paused = true;
+    }
+    player.trigger('pause');
+  }
 
   adUnit.on('AdVideoFirstQuartile', function () {
     tracker.trackFirstQuartile();
@@ -4266,10 +4385,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     tracker.trackCloseLinear();
   });
 
-  adUnit.on('AdPaused', function () {
-    tracker.trackPause();
-  });
-
   adUnit.on('AdUserMinimize', function () {
     tracker.trackCollapse();
   });
@@ -4277,11 +4392,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   adUnit.on('AdError', function () {
     //NOTE: we track errors code 901, as noted in VAST 3.0
     tracker.trackErrorWithCode(901);
-  });
-
-  adUnit.on('AdPlaying', function () {
-    //NOTE: we track errors code 901, as noted in VAST 3.0
-    tracker.trackResume();
   });
 
   adUnit.on('AdVolumeChange', function () {
@@ -4438,12 +4548,18 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
   adUnit.on('AdStopped', function () {
-    next(null, adUnit, vastResponse);
+   finishPlayingAd(null);
   });
 
-  adUnit.on('AdError', function () {
-    next(new VASTError('on VPAIDIntegrator, error while waiting for the adUnit to finish playing'), adUnit, vastResponse);
+  adUnit.on('AdError', function (error) {
+    var errMsg = error? error.message : 'on VPAIDIntegrator, error while waiting for the adUnit to finish playing';
+    finishPlayingAd(new VASTError(errMsg));
   });
+
+  /*** local functions ***/
+  function finishPlayingAd(error) {
+    next(error, adUnit, vastResponse);
+  }
 };
 
 VPAIDIntegrator.prototype._trackError = function trackError(response) {
@@ -4936,11 +5052,15 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
   return {
     type: 'VAST',
     pauseAd: function() {
-      that.player.pause();
+      that.player.pause(true);
     },
 
     resumeAd: function() {
-      that.player.play();
+      that.player.play(true);
+    },
+
+    isPaused: function() {
+      return that.player.paused(true);
     }
   };
 };
@@ -5703,4 +5823,3 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
-//# sourceMappingURL=videojs-vast-vpaid.js.map
