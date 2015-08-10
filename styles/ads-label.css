@@ -1,0 +1,18 @@
+.vjs-label-hidden {
+  display: none!important;
+}
+
+.vjs-default-skin div.vjs-ads-label {
+  font-size: 13px;
+  line-height: 30px;
+  font-weight: normal;
+  text-align: center;
+  color: white;
+  display: none;
+  width: auto;
+  padding-left: 10px;
+}
+
+.vjs-ad-playing .vjs-control.vjs-ads-label {
+  display: block;
+}
