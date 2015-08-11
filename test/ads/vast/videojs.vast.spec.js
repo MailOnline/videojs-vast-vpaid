@@ -313,6 +313,20 @@ describe("videojs.vast plugin", function () {
         assert.isNull(player.vast.adUnit);
         sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
       });
+
+      it("must restore the video content on 'error' evt", function(){
+        player.vast.adUnit = {
+          type: 'FAKE',
+          pauseAd: noop,
+          resumeAd: noop,
+          isPaused: noop
+        };
+        player.trigger('vast.firstPlay');
+        clock.tick(1);
+        player.trigger('error');
+        assert.isNull(player.vast.adUnit);
+        sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
+      });
     });
   });
 
