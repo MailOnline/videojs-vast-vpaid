@@ -589,8 +589,6 @@ var JSFlashBridge = (function () {
     }, {
         key: 'callFlashMethod',
         value: function callFlashMethod(methodName) {
-            var _this = this;
-
             var args = arguments[1] === undefined ? [] : arguments[1];
             var callback = arguments[2] === undefined ? undefined : arguments[2];
 
@@ -607,12 +605,7 @@ var JSFlashBridge = (function () {
                 this._el[methodName]([callbackID].concat(args));
             } catch (e) {
                 if (callback) {
-                    setTimeout(function () {
-                        if (_this._callbacks.get(callbackID)) {
-                            _this._callbacks.remove(callbackID);
-                            callback(e);
-                        }
-                    }, 0);
+                    $asyncCallback.call(this, callbackID, e);
                 } else {
 
                     //if there isn't any callback to return error use error event handler
@@ -628,12 +621,12 @@ var JSFlashBridge = (function () {
     }, {
         key: 'removeCallbackByMethodName',
         value: function removeCallbackByMethodName(suffix) {
-            var _this2 = this;
+            var _this = this;
 
             this._callbacks.filterKeys(function (key) {
                 return stringEndsWith(key, suffix);
             }).forEach(function (key) {
-                _this2._callbacks.remove(key);
+                _this._callbacks.remove(key);
             });
         }
     }, {
@@ -644,7 +637,7 @@ var JSFlashBridge = (function () {
     }, {
         key: '_trigger',
         value: function _trigger(eventName, event) {
-            var _this3 = this;
+            var _this2 = this;
 
             this._handlers.get(eventName).forEach(function (callback) {
                 //clickThru has to be sync, if not will be block by the popupblocker
@@ -652,7 +645,7 @@ var JSFlashBridge = (function () {
                     callback(event);
                 } else {
                     setTimeout(function () {
-                        if (_this3._handlers.get(eventName)) {
+                        if (_this2._handlers.get(eventName).length > 0) {
                             callback(event);
                         }
                     }, 0);
@@ -662,7 +655,6 @@ var JSFlashBridge = (function () {
     }, {
         key: '_callCallback',
         value: function _callCallback(methodName, callbackID, err, result) {
-            var _this4 = this;
 
             var callback = this._callbacks.get(callbackID);
 
@@ -675,12 +667,7 @@ var JSFlashBridge = (function () {
                 return;
             }
 
-            setTimeout(function () {
-                if (_this4._callbacks.get(callbackID)) {
-                    _this4._callbacks.remove(callbackID);
-                    callback(err, result);
-                }
-            }, 0);
+            $asyncCallback.call(this, callbackID, err, result);
         }
     }, {
         key: '_handShake',
@@ -757,6 +744,18 @@ var JSFlashBridge = (function () {
 })();
 
 exports.JSFlashBridge = JSFlashBridge;
+
+function $asyncCallback(callbackID, err, result) {
+    var _this3 = this;
+
+    setTimeout(function () {
+        var callback = _this3._callbacks.get(callbackID);
+        if (callback) {
+            _this3._callbacks.remove(callbackID);
+            callback(err, result);
+        }
+    }, 0);
+}
 
 Object.defineProperty(JSFlashBridge, 'VPAID_FLASH_HANDLER', {
     writable: false,
@@ -1067,295 +1066,6 @@ function stringEndsWith(string, search) {
   };
  }
 })();
-;
-/*jshint unused:false */
-"use strict";
-
-var NODE_TYPE_ELEMENT = 1;
-
-function noop(){ }
-
-function isNull(o) {
-  return o === null;
-}
-
-function isDefined(o){
-  return o !== undefined;
-}
-
-function isUndefined(o){
-  return o === undefined;
-}
-
-function isObject(obj) {
-  return typeof obj === 'object';
-}
-
-function isFunction(str){
-  return typeof str === 'function';
-}
-
-function isNumber(num){
-  return typeof num === 'number';
-}
-
-function isWindow(obj) {
-  return isObject(obj) && obj.window === obj;
-}
-
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]';
-}
-
-function isArrayLike(obj) {
-  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
-    return false;
-  }
-
-  var length = obj.length;
-
-  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
-    return true;
-  }
-
-  return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
-}
-
-function isString(str){
-  return typeof str === 'string';
-}
-
-function isEmptyString(str) {
-  return isString(str) && str.length === 0;
-}
-
-function isNotEmptyString(str) {
-  return isString(str) && str.length !== 0;
-}
-
-function arrayLikeObjToArray(args) {
-  return Array.prototype.slice.call(args);
-}
-
-function forEach(obj, iterator, context) {
-  var key, length;
-  if (obj) {
-    if (isFunction(obj)) {
-      for (key in obj) {
-        // Need to check if hasOwnProperty exists,
-        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
-      for (key = 0, length = obj.length; key < length; key++) {
-        if (isPrimitive || key in obj) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (obj.forEach && obj.forEach !== forEach) {
-      obj.forEach(iterator, context, obj);
-    } else {
-      for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-var SNAKE_CASE_REGEXP = /[A-Z]/g;
-function snake_case(name, separator) {
-  separator = separator || '_';
-  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-    return (pos ? separator : '') + letter.toLowerCase();
-  });
-}
-
-function isValidEmail(email){
-  if(!isString(email)){
-    return false;
-  }
-  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
-  return EMAIL_REGEXP.test(email.trim());
-}
-
-function extend (obj) {
-  var arg, i, k;
-  for (i = 1; i < arguments.length; i++) {
-    arg = arguments[i];
-    for (k in arg) {
-      if (arg.hasOwnProperty(k)) {
-        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
-          obj[k] = extend({}, obj[k], arg[k]);
-        }else {
-          obj[k] = arg[k];
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-function capitalize(s){
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function decapitalize(s) {
-  return s.charAt(0).toLowerCase() + s.slice(1);
-}
-
-/**
- * This method works the same way array.prototype.map works but if the transformer returns undefine, then
- * it won't be added to the transformed Array.
- */
-function transformArray(array, transformer) {
-  var transformedArray = [];
-
-  array.forEach(function(item, index){
-    var transformedItem = transformer(item, index);
-    if(isDefined(transformedItem)) {
-      transformedArray.push(transformedItem);
-    }
-  });
-
-  return transformedArray;
-}
-
-function toFixedDigits(num, digits) {
-  var formattedNum = num + '';
-  digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
-  if(isNumber(num) && !isNaN(num)){
-    formattedNum = num + '';
-    while(formattedNum.length < digits) {
-      formattedNum = '0' + formattedNum;
-    }
-    return formattedNum;
-  }
-  return NaN + '';
-}
-
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime() - (delay + 1);
-  return function() {
-    var time = new Date().getTime();
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(this, arguments);
-    }
-  };
-}
-
-function debounce (callback, wait) {
-  var timeoutId;
-
-  return function (){
-    if(timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(function(){
-      callback.apply(this, arguments);
-      timeoutId = undefined;
-    }, wait);
-  };
-}
-
-// a function designed to blow up the stack in a naive way
-// but it is ok for videoJs children components
-function treeSearch(root, getChildren, found){
-  var children = getChildren(root);
-  for (var i = 0; i < children.length; i++){
-    if (found(children[i])) {
-      return children[i];
-    }
-    else {
-      var el = treeSearch(children[i], getChildren, found);
-      if (el){
-        return el;
-      }
-    }
-  }
-}
-
-function echoFn(val) {
-  return function () {
-    return val;
-  };
-}
-
-//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
-// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-function isISO8601(value) {
-  if(isNumber(value)){
-    value = value + '';  //we make sure that we are working with strings
-  }
-
-  if(!isString(value)){
-    return false;
-  }
-
-  /*jslint maxlen: 500 */
-  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-  return iso8086Regex.test(value.trim());
-}
-
-/**
- * Checks if the Browser is IE9 and below
- * @returns {boolean}
- */
-function isOldIE() {
-  var version = getInternetExplorerVersion(navigator);
-  if (version === -1) {
-    return false;
-  }
-
-  return version < 10;
-}
-
-/**
- * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
- * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
- * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
- */
-function getInternetExplorerVersion(navigator) {
-  var rv = -1;
-
-  if (navigator.appName == 'Microsoft Internet Explorer') {
-    var ua = navigator.userAgent;
-    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
-    var res = re.exec(ua);
-    if (res !== null) {
-      rv = parseFloat(res[1]);
-    }
-  }
-
-  return rv;
-}
-
-/*** Mobile Utility functions ***/
-var _UA = navigator.userAgent;
-function isIDevice() {
-  return /iP(hone|ad)/.test(_UA);
-}
-
-function isMobile() {
-  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
-}
-
-function isIPhone() {
-  return /iP(hone|od)/.test(_UA);
-}
-
-function isAndroid() {
-  return /Android/.test(_UA);
-}
-
 ;
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
@@ -2306,6 +2016,295 @@ module.exports = {
 
 
 //# sourceMappingURL=VPAIDHTML5Client.js.map
+;
+/*jshint unused:false */
+"use strict";
+
+var NODE_TYPE_ELEMENT = 1;
+
+function noop(){ }
+
+function isNull(o) {
+  return o === null;
+}
+
+function isDefined(o){
+  return o !== undefined;
+}
+
+function isUndefined(o){
+  return o === undefined;
+}
+
+function isObject(obj) {
+  return typeof obj === 'object';
+}
+
+function isFunction(str){
+  return typeof str === 'function';
+}
+
+function isNumber(num){
+  return typeof num === 'number';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isArray(array){
+  return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isArrayLike(obj) {
+  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
+    return false;
+  }
+
+  var length = obj.length;
+
+  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
+    return true;
+  }
+
+  return isString(obj) || isArray(obj) || length === 0 ||
+    typeof length === 'number' && length > 0 && (length - 1) in obj;
+}
+
+function isString(str){
+  return typeof str === 'string';
+}
+
+function isEmptyString(str) {
+  return isString(str) && str.length === 0;
+}
+
+function isNotEmptyString(str) {
+  return isString(str) && str.length !== 0;
+}
+
+function arrayLikeObjToArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function forEach(obj, iterator, context) {
+  var key, length;
+  if (obj) {
+    if (isFunction(obj)) {
+      for (key in obj) {
+        // Need to check if hasOwnProperty exists,
+        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (isArray(obj)) {
+      var isPrimitive = typeof obj !== 'object';
+      for (key = 0, length = obj.length; key < length; key++) {
+        if (isPrimitive || key in obj) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (obj.forEach && obj.forEach !== forEach) {
+      obj.forEach(iterator, context, obj);
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+var SNAKE_CASE_REGEXP = /[A-Z]/g;
+function snake_case(name, separator) {
+  separator = separator || '_';
+  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return (pos ? separator : '') + letter.toLowerCase();
+  });
+}
+
+function isValidEmail(email){
+  if(!isString(email)){
+    return false;
+  }
+  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+  return EMAIL_REGEXP.test(email.trim());
+}
+
+function extend (obj) {
+  var arg, i, k;
+  for (i = 1; i < arguments.length; i++) {
+    arg = arguments[i];
+    for (k in arg) {
+      if (arg.hasOwnProperty(k)) {
+        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
+          obj[k] = extend({}, obj[k], arg[k]);
+        }else {
+          obj[k] = arg[k];
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function decapitalize(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * This method works the same way array.prototype.map works but if the transformer returns undefine, then
+ * it won't be added to the transformed Array.
+ */
+function transformArray(array, transformer) {
+  var transformedArray = [];
+
+  array.forEach(function(item, index){
+    var transformedItem = transformer(item, index);
+    if(isDefined(transformedItem)) {
+      transformedArray.push(transformedItem);
+    }
+  });
+
+  return transformedArray;
+}
+
+function toFixedDigits(num, digits) {
+  var formattedNum = num + '';
+  digits = isNumber(digits) ? digits : 0;
+  num = isNumber(num) ? num : parseInt(num);
+  if(isNumber(num) && !isNaN(num)){
+    formattedNum = num + '';
+    while(formattedNum.length < digits) {
+      formattedNum = '0' + formattedNum;
+    }
+    return formattedNum;
+  }
+  return NaN + '';
+}
+
+function throttle(callback, delay) {
+  var previousCall = new Date().getTime() - (delay + 1);
+  return function() {
+    var time = new Date().getTime();
+    if ((time - previousCall) >= delay) {
+      previousCall = time;
+      callback.apply(this, arguments);
+    }
+  };
+}
+
+function debounce (callback, wait) {
+  var timeoutId;
+
+  return function (){
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(function(){
+      callback.apply(this, arguments);
+      timeoutId = undefined;
+    }, wait);
+  };
+}
+
+// a function designed to blow up the stack in a naive way
+// but it is ok for videoJs children components
+function treeSearch(root, getChildren, found){
+  var children = getChildren(root);
+  for (var i = 0; i < children.length; i++){
+    if (found(children[i])) {
+      return children[i];
+    }
+    else {
+      var el = treeSearch(children[i], getChildren, found);
+      if (el){
+        return el;
+      }
+    }
+  }
+}
+
+function echoFn(val) {
+  return function () {
+    return val;
+  };
+}
+
+//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
+// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+function isISO8601(value) {
+  if(isNumber(value)){
+    value = value + '';  //we make sure that we are working with strings
+  }
+
+  if(!isString(value)){
+    return false;
+  }
+
+  /*jslint maxlen: 500 */
+  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
+  return iso8086Regex.test(value.trim());
+}
+
+/**
+ * Checks if the Browser is IE9 and below
+ * @returns {boolean}
+ */
+function isOldIE() {
+  var version = getInternetExplorerVersion(navigator);
+  if (version === -1) {
+    return false;
+  }
+
+  return version < 10;
+}
+
+/**
+ * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
+ * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
+ * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
+ */
+function getInternetExplorerVersion(navigator) {
+  var rv = -1;
+
+  if (navigator.appName == 'Microsoft Internet Explorer') {
+    var ua = navigator.userAgent;
+    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    var res = re.exec(ua);
+    if (res !== null) {
+      rv = parseFloat(res[1]);
+    }
+  }
+
+  return rv;
+}
+
+/*** Mobile Utility functions ***/
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
+
+function isMobile() {
+  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
+}
+
+function isIPhone() {
+  return /iP(hone|od)/.test(_UA);
+}
+
+function isAndroid() {
+  return /Android/.test(_UA);
+}
+
 ;
 //Small subset of async
 var async = {};
