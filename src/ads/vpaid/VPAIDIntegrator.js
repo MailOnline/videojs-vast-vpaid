@@ -332,7 +332,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   player.on('vpaid.pauseAd', pauseAdUnit);
   player.on('vpaid.resumeAd', resumeAdUnit);
 
-  player.one('vpaid.adEnd', function () {
+  playerUtils.only(player, ['vpaid.adEnd', 'error'], function () {
     player.off('vast.resize', updateViewSize);
     player.off('vpaid.pauseAd', pauseAdUnit);
     player.off('vpaid.resumeAd', resumeAdUnit);
