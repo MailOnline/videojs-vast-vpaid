@@ -134,6 +134,16 @@ describe("VASTIntegrator", function () {
           player.paused.returns(false);
           assert.isFalse(adUnit.isPaused());
         });
+
+        it("must be able to return the src of the ad playing", function(){
+          var response = new VASTResponse();
+          var mediaFile = createMediaFile('http://foo.video.url.mp4', 'video/mp4');
+          response._addMediaFiles([mediaFile]);
+          var adUnit = vastIntegrator.playAd(response, noop);
+          assert.isNull(adUnit.getSrc());//Must return null until a src have been selected
+          this.clock.tick(1);
+          assert.equal(adUnit.getSrc(), mediaFile);
+        });
       });
     });
 

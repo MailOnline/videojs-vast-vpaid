@@ -163,6 +163,7 @@
      type: {string} <== The possible types are 'VAST' or 'VPAID'
      pauseAd: {function} <== Pauses the ad unit
      resumeAd: {function} <== Resumes the ad unit
+     getSrc: {function} <== Returns the MediaFile instance used to play the ad
   }
   ```
   >Otherwise it will be null or undefined

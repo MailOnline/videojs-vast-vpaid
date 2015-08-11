@@ -80,6 +80,10 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       },
       isPaused: function() {
         return this._paused;
+      },
+
+      getSrc: function() {
+        return tech.mediaFile;
       }
     };
 

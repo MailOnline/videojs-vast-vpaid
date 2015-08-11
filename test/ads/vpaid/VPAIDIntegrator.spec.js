@@ -208,7 +208,7 @@ describe("VPAIDIntegrator", function () {
 
       describe("return obj", function(){
         it("must have the type VPAID", function(){
-          var adUnit =vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
           assert.equal(adUnit.type, 'VPAID')
         });
 
@@ -233,6 +233,11 @@ describe("VPAIDIntegrator", function () {
           assert(adUnit.isPaused());
           adUnit._paused = false;
           assert(!adUnit.isPaused());
+        });
+
+        it("must be able to return the source of the ad", function(){
+          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
+          assert.equal(adUnit.getSrc(), fakeTech.prototype.mediaFile);
         });
       });
     });
