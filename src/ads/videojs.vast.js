@@ -79,7 +79,12 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   function tryToPlayPrerollAd() {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
-    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd', 'error'], restoreVideoContent);
+
+    player.on('error', cancelAds);
+    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd'], function() {
+      player.off('error', cancelAds);
+      restoreVideoContent();
+    });
 
     async.waterfall([
       checkAdsEnabled,
