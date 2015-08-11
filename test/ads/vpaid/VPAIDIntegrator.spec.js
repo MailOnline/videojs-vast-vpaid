@@ -153,6 +153,31 @@ describe("VPAIDIntegrator", function () {
         assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse')
       });
 
+      it("must trigger a vpaid.adEnd evt on error evt", function(){
+        var spy = sinon.spy();
+        player.on('vpaid.adEnd', spy);
+        vpaidIntegrator.playAd(vastResponse, callback);
+        player.trigger('error');
+        assert.isTrue(spy.calledOnce);
+      });
+
+      it("must trigger a vpaid.adEnd evt on vast.adsCancel evt", function(){
+        var spy = sinon.spy();
+        player.on('vpaid.adEnd', spy);
+        vpaidIntegrator.playAd(vastResponse, callback);
+        player.trigger('vast.adsCancel');
+        assert.isTrue(spy.calledOnce);
+      });
+
+      it("must trigger a vpaid.adEnd evt twice", function(){
+        var spy = sinon.spy();
+        player.on('vpaid.adEnd', spy);
+        vpaidIntegrator.playAd(vastResponse, callback);
+        player.trigger('error');
+        player.trigger('vast.adsCancel');
+        assert.isTrue(spy.calledOnce);
+      });
+
       it("must add 'vjs-vpaid-ad' class to the player element", function () {
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
         vpaidIntegrator.playAd(vastResponse, callback);

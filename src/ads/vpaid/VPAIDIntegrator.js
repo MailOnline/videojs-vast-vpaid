@@ -50,7 +50,13 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
-  playerUtils.only(player, ['error', 'vpaid.adEnd', 'vast.adsCancel'], removeAdUnit);
+  player.on('error', triggerVpaidAdEnd);
+  player.on('vast.adsCancel', triggerVpaidAdEnd);
+  player.one('vpaid.adEnd', function(){
+    player.off('error', triggerVpaidAdEnd);
+    player.off('vast.adsCancel', triggerVpaidAdEnd);
+    removeAdUnit();
+  });
 
   if (tech) {
     async.waterfall([
@@ -81,7 +87,6 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       isPaused: function() {
         return this._paused;
       },
-
       getSrc: function() {
         return tech.mediaFile;
       }
@@ -94,6 +99,10 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
   return null;
   /*** Local functions ***/
+  function triggerVpaidAdEnd(){
+    player.trigger('vpaid.adEnd');
+  }
+
   function removeAdUnit() {
     tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
@@ -234,7 +243,6 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     notifyPauseToPlayer();
   });
 
-
   function notifyPlayToPlayer(){
     if(that._adUnit && that._adUnit.isPaused()){
       that._adUnit._paused = false;
@@ -332,7 +340,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   player.on('vpaid.pauseAd', pauseAdUnit);
   player.on('vpaid.resumeAd', resumeAdUnit);
 
-  playerUtils.only(player, ['vpaid.adEnd', 'error'], function () {
+  player.one('vpaid.adEnd', function () {
     player.off('vast.resize', updateViewSize);
     player.off('vpaid.pauseAd', pauseAdUnit);
     player.off('vpaid.resumeAd', resumeAdUnit);
@@ -413,7 +421,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
     player.on('volumechange', updateAdUnitVolume);
     adUnit.on('AdVolumeChange', updatePlayerVolume);
 
-    player.on('vpaid.adEnd', function () {
+    player.one('vpaid.adEnd', function () {
       player.off('volumechange', updateAdUnitVolume);
     });
 
@@ -440,7 +448,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     player.on('fullscreenchange', updateViewSize);
 
-    player.on('vpaid.adEnd', function () {
+    player.one('vpaid.adEnd', function () {
       player.off('fullscreenchange', updateViewSize);
     });
   }
