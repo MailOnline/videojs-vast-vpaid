@@ -329,9 +329,10 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   var updateViewSize = resizeAd.bind(this, player, adUnit, this.VIEW_MODE);
+  var updateViewSizeThrottled = throttle(updateViewSize, 100);
+  var autoResize = this.settings.autoResize;
 
-  if (this.settings.autoResize) {
-    var updateViewSizeThrottled = throttle(updateViewSize, 100);
+  if (autoResize) {
     dom.addEventListener(window, 'resize', updateViewSizeThrottled);
     dom.addEventListener(window, 'orientationchange', updateViewSizeThrottled);
   }
@@ -344,6 +345,11 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     player.off('vast.resize', updateViewSize);
     player.off('vpaid.pauseAd', pauseAdUnit);
     player.off('vpaid.resumeAd', resumeAdUnit);
+
+    if (autoResize) {
+      dom.removeEventListener(window, 'resize', updateViewSizeThrottled);
+      dom.removeEventListener(window, 'orientationchange', updateViewSizeThrottled);
+    }
   });
 
   next(null, adUnit, vastResponse);
