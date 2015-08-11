@@ -376,7 +376,6 @@ describe("playerUtils.prepareForAds", function () {
   describe("monkeyPatched", function () {
     describe("player.play", function () {
       describe("on first play", function () {
-        describe("on mobile devices", function () {
           var player;
 
           beforeEach(function () {
@@ -455,36 +454,6 @@ describe("playerUtils.prepareForAds", function () {
 
 
           });
-        });
-
-        describe("on desktop devices", function () {
-          var player, playSpy;
-
-          beforeEach(function () {
-            player = videojs(document.createElement('video'), {});
-            sinon.stub(window, 'isMobile').returns(false);
-            playSpy = sinon.spy(player, 'play');
-          });
-
-          afterEach(function () {
-            window.isMobile.restore();
-            playSpy.restore();
-          });
-
-          it("must trigger 'vast.firstPlay' evt", function () {
-            var spy = sinon.spy();
-            playerUtils.prepareForAds(player);
-            player.on('vast.firstPlay', spy);
-            player.play();
-            sinon.assert.calledOnce(spy);
-          });
-
-          it("must not call the play fn", function () {
-            playerUtils.prepareForAds(player);
-            player.play();
-            sinon.assert.notCalled(playSpy);
-          });
-        });
       });
 
       describe("on Resume", function () {
@@ -492,21 +461,15 @@ describe("playerUtils.prepareForAds", function () {
 
         beforeEach(function () {
           player = videojs(document.createElement('video'), {});
-          sinon.stub(window, 'isMobile').returns(false);
           playSpy = sinon.spy(player, 'play');
-        });
-
-        afterEach(function () {
-          window.isMobile.restore();
         });
 
         it("must resume the video content", function () {
           playerUtils.prepareForAds(player);
-          player.play();
+          player.trigger('play');
           sinon.assert.notCalled(playSpy);
           player.play();
           sinon.assert.calledOnce(playSpy);
-
         });
 
         it("with an ad playing it must resume the ad and not resume the video content", function () {
@@ -515,13 +478,12 @@ describe("playerUtils.prepareForAds", function () {
           };
 
           playerUtils.prepareForAds(player);
-          player.play();
+          player.trigger('play');
 
           //We fake that an ad is playing
           player.vast = {adUnit: fakeAdUnit};
-          sinon.assert.notCalled(playSpy);
           player.play();
-          sinon.assert.notCalled(playSpy);
+          assert.isTrue(playSpy.notCalled);
           sinon.assert.calledOnce(fakeAdUnit.resumeAd);
         });
 
@@ -535,10 +497,10 @@ describe("playerUtils.prepareForAds", function () {
 
           //We fake that an ad is playing
           player.vast = {adUnit: fakeAdUnit};
-          sinon.assert.notCalled(playSpy);
+          sinon.assert.calledOnce(playSpy);
 
           player.play(true);
-          sinon.assert.called(playSpy);
+          sinon.assert.calledTwice(playSpy);
         });
       });
 

@@ -225,22 +225,16 @@ playerUtils.prepareForAds = function (player) {
       return this;
 
       /*** local functions ***/
-      function firstPlay(){
-        if (isMobile()) {
-          if (!isIPhone()) {
-            volumeSnapshot = saveVolumeSnapshot();
-            player.muted(true);
-          }
-
-          //On mobile we need to trigger the play to ensure the video starts playing.
-          origPlay.apply(this, arguments);
-        } else {
-          //Instead of muting the video, on Desktop we don't play the video
-          tryToTriggerFirstPlay();
+      function firstPlay() {
+        if (!isIPhone()) {
+          volumeSnapshot = saveVolumeSnapshot();
+          player.muted(true);
         }
+
+        origPlay.apply(this, arguments);
       }
 
-      function resume(callOrigPlay){
+      function resume(callOrigPlay) {
         if (isAdPlaying() && !callOrigPlay) {
           player.vast.adUnit.resumeAd();
         } else {
@@ -260,7 +254,7 @@ playerUtils.prepareForAds = function (player) {
     player.pause = function (callOrigPause) {
       if (isAdPlaying() && !callOrigPause) {
         player.vast.adUnit.pauseAd();
-      } else{
+      } else {
         origPause.apply(this, arguments);
       }
       return this;
