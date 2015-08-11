@@ -206,7 +206,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     player.one('vast.adStart', adAdsLabel);
-    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
+
+    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], removeAdsLabel);
 
     if (isIDevice()) {
       preventManualProgress();
@@ -214,7 +215,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     /*** Local functions ****/
     function adAdsLabel() {
-      if (adFinished) {
+      if (adFinished || player.controlBar.getChild('AdsLabel')) {
         return;
       }
       player.controlBar.addChild('AdsLabel');

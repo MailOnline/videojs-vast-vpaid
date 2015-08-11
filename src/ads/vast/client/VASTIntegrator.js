@@ -102,11 +102,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('timeupdate', trackProgress);
   player.on('volumechange', trackVolumeChange);
 
-  player.one('vast.adEnd', unbindEvents);
-  player.one('vast.adsCancel', unbindEvents);
-
-  //NOTE: Pending tracking events skip, close, closeLinear, expand, collapse and creativeView. See VAST implementation
-
+  playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], unbindEvents);
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
@@ -171,8 +167,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     player.el().appendChild(skipButton);
     player.on('timeupdate', updateSkipButton);
 
-    player.one('ended', removeSkipButton);
-    player.one('error', removeSkipButton);
+    playerUtils.only(player, ['ended', 'error'], removeSkipButton);
 
     function removeSkipButton() {
       player.off('timeupdate', updateSkipButton);
@@ -221,8 +216,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
   player.el().insertBefore(blocker, player.controlBar.el());
   player.on('timeupdate', updateBlocker);
-  player.one('ended', removeBlocker);
-  player.one('error', removeBlocker);
+  playerUtils.only(player, ['ended', 'error'], removeBlocker);
 
   return callback(null, mediaFile, tracker, response);
 
@@ -281,9 +275,16 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   player.src(source);
 
-  player.one('durationchange', playAd);
-  player.one('ended', finishPlayingAd);
-  player.one('error', handlePlayerError);
+  player.on('durationchange', playAd);
+
+  playerUtils.only(player, ['ended', 'error'], function (evt) {
+    if(evt.type === 'ended'){
+      callback(null, response);
+    } else {
+      callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
+    }
+    player.off('durationchange', playAd);
+  });
 
   /**** local functions ******/
   function playAd() {
@@ -291,17 +292,7 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
     player.one('playing', function () {
       player.trigger('vast.adStart');
     });
-  }
-
-  function finishPlayingAd() {
-    player.off('error', handlePlayerError);
-    callback(null, response);
-  }
-
-  function handlePlayerError() {
     player.off('durationchange', playAd);
-    player.off('ended', finishPlayingAd);
-    callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
   }
 };
 
