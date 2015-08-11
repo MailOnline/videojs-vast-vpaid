@@ -4173,6 +4173,10 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       },
       isPaused: function() {
         return this._paused;
+      },
+
+      getSrc: function() {
+        return tech.mediaFile;
       }
     };
 
@@ -5049,7 +5053,8 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
     callback(error, response);
   });
 
-  return {
+  this._adUnit = {
+    _src: null,
     type: 'VAST',
     pauseAd: function() {
       that.player.pause(true);
@@ -5061,8 +5066,14 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
 
     isPaused: function() {
       return that.player.paused(true);
+    },
+
+    getSrc: function() {
+      return this._src;
     }
   };
+
+  return this._adUnit;
 };
 
 VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, callback) {
@@ -5078,6 +5089,9 @@ VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, cal
   source = this.player.selectSource(response.mediaFiles).source;
 
   if (source) {
+    if(this._adUnit) {
+      this._adUnit._src = source;
+    }
     return callback(null, source, response);
   }
 
