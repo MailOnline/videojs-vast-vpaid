@@ -555,7 +555,7 @@ describe("videojs.vast plugin", function () {
       sinon.assert.notCalled(adstartSpy);
     });
 
-    it("must restore the video content after the ad has finished playing", function(){
+    it("must remove the adUnit and restore the video content after the ad has finished playing", function(){
       sinon.stub(playerUtils, 'restorePlayerSnapshot');
       var response = new VASTResponse();
       response._addMediaFiles([
@@ -565,8 +565,30 @@ describe("videojs.vast plugin", function () {
       this.clock.tick(1);
       player.trigger('vast.adStart');
       var playAdCallback = secondArg(VASTIntegrator.prototype.playAd);
+      assert.isNotNull(player.vast.adUnit);
+
       playAdCallback(null, response);
       this.clock.tick(1);
+      assert.isNull(player.vast.adUnit);
+
+      sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
+      playerUtils.restorePlayerSnapshot.restore();
+    });
+
+    it("must remove the adUnit and restore the video content on adsCancel", function(){
+      sinon.stub(playerUtils, 'restorePlayerSnapshot');
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('vast.adStart');
+      assert.isNotNull(player.vast.adUnit);
+
+      player.trigger('vast.adsCancel');
+      assert.isNull(player.vast.adUnit);
 
       sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
       playerUtils.restorePlayerSnapshot.restore();

@@ -101,18 +101,23 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     /*** Local functions ***/
-    function restoreVideoContent(){
-      if(snapshot) {
-        snapshot.playing = false;
-        playerUtils.restorePlayerSnapshot(player, snapshot);
-        snapshot = null;
+    function restoreVideoContent() {
+      removeAdUnit();
+      restoreSnapshot();
+
+      /*** Local functions ***/
+      function removeAdUnit() {
+        if (player.vast && player.vast.adUnit) {
+          player.vast.adUnit = null; //We remove the adUnit
+        }
       }
 
-      if(player.vast && player.vast.adUnit) {
-        player.vast.adUnit = null; //We remove the adUnit
+      function restoreSnapshot() {
+        if (snapshot) {
+          playerUtils.restorePlayerSnapshot(player, snapshot);
+          snapshot = null;
+        }
       }
-
-      player.play();
     }
 
     function checkAdsEnabled(next) {
