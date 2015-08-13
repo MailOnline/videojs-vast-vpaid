@@ -263,21 +263,51 @@ describe("videojs.vast plugin", function () {
     });
 
     describe("vast.contentStart && vast.contentEnd", function(){
-      it("must be triggered on content playing and content end", function(){
-        var contentStartSpy = sinon.spy();
-        var contentEndedSpy = sinon.spy();
+      var contentStartSpy, contentEndedSpy;
+
+      beforeEach(function(){
+        contentStartSpy = sinon.spy();
+        contentEndedSpy = sinon.spy();
         player.vast.disable();
         player.trigger('vast.firstPlay');
         clock.tick(1);
         player.on('vast.contentStart', contentStartSpy);
         player.on('vast.contentEnd', contentEndedSpy);
         player.trigger('vast.adsCancel');
+      });
+
+      it("must be triggered on content playing and content end", function(){
         player.trigger('playing');
         sinon.assert.calledOnce(contentStartSpy);
         sinon.assert.notCalled(contentEndedSpy);
         player.trigger('ended');
         sinon.assert.calledOnce(contentStartSpy);
         sinon.assert.calledOnce(contentEndedSpy);
+      });
+
+      it("must not be triggered if there is an vast.reset after restoring the content", function(){
+        player.trigger('vast.reset');
+        player.trigger('ended');
+        sinon.assert.notCalled(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
+      it("must not trigger vast.contentEnd if there is an error while playing the content", function(){
+        player.trigger('playing');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+        player.trigger('error');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
+      it("must not trigger vast.contentEnd if there is a vast.reset while playing the content", function(){
+        player.trigger('playing');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+        player.trigger('vast.reset');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
       });
     });
 
