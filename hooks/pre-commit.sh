@@ -1,7 +1,7 @@
 #!/bin/sh
 
-files=$(git diff --cached --name-only --diff-filter=ACM | grep ".js$")
-if [ "$files" = "" ]; then 
+files=$(git diff --name-only --diff-filter=ACM | grep "^src/.*js$")
+if [ "$files" = "" ]; then
     exit 0 
 fi
 
@@ -10,7 +10,9 @@ pass=true
 echo "\nValidating JavaScript:\n"
 
 for file in ${files}; do
-    result=$(jshint ${file} | grep "${file} is OK")
+    report=$(jshint ${file} )
+    result=$(${report} | grep "${file} is OK")
+    echo "${report}"
     if [ "$result" != "" ]; then
         echo "\t\033[32mJSLint Passed: ${file}\033[0m"
     else
