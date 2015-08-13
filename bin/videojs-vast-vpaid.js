@@ -3507,14 +3507,14 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       }
 
       function setupContentEvents() {
-        playerUtils.only(player, ['playing', 'error', 'vast.reset'], function (evt) {
+        playerUtils.only(player, ['playing', 'error', 'vast.reset', 'vast.firstPlay'], function (evt) {
           if(evt.type !== 'playing'){
             return;
           }
 
           player.trigger('vast.contentStart');
 
-          playerUtils.only(player, ['ended', 'vast.reset', 'error'], function (evt) {
+          playerUtils.only(player, ['ended', 'vast.reset', 'error', 'vast.firstPlay'], function (evt) {
             if(evt.type === 'ended') {
               player.trigger('vast.contentEnd');
             }
