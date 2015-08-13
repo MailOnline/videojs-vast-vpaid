@@ -287,8 +287,25 @@ describe("videojs.vast plugin", function () {
 
       it("must not be triggered if there is an vast.reset after restoring the content", function(){
         player.trigger('vast.reset');
+        player.trigger('playing');
         player.trigger('ended');
         sinon.assert.notCalled(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
+      it("must not be triggered if there is a vast.firstPlay after restoring the content", function(){
+        player.trigger('vast.firstPlay');
+        player.trigger('playing');
+        player.trigger('ended');
+        sinon.assert.notCalled(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
+      it("must not trigger vast.contentEnd if there is a vast.firstPlay after restoring the content", function(){
+        player.trigger('playing');
+        player.trigger('vast.firstPlay');
+        player.trigger('ended');
+        sinon.assert.calledOnce(contentStartSpy);
         sinon.assert.notCalled(contentEndedSpy);
       });
 
