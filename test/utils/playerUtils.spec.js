@@ -366,11 +366,6 @@ describe("playerUtils.prepareForAds", function () {
       player.trigger('vast.adsCancel');
       sinon.assert.notCalled(blackPoster.hide);
     });
-
-    it("must show the blackPoster on 'loadStart' event", function () {
-      player.trigger('loadStart');
-      sinon.assert.calledOnce(blackPoster.show);
-    });
   });
 
   describe("monkeyPatched", function () {
@@ -670,14 +665,6 @@ describe("playerUtils.prepareForAds", function () {
       player.trigger('play');
       player.trigger('play');
       sinon.assert.calledOnce(firstPlaySpy);
-    });
-
-    it("must be reset on 'loadStart' event", function () {
-      player.on('vast.firstPlay', firstPlaySpy);
-      player.trigger('play');
-      player.trigger('loadStart');
-      player.trigger('play');
-      sinon.assert.calledTwice(firstPlaySpy);
     });
 
     it("must be reset on 'vast.reset' event", function () {
