@@ -96,13 +96,12 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       } else {
         player.trigger('vast.adEnd');
       }
-
-      triggerContentEvents();
     });
 
     /*** Local functions ***/
     function restoreVideoContent() {
       removeAdUnit();
+      setupContentEvents();
       restoreSnapshot();
 
       /*** Local functions ***/
@@ -110,6 +109,22 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         if (player.vast && player.vast.adUnit) {
           player.vast.adUnit = null; //We remove the adUnit
         }
+      }
+
+      function setupContentEvents() {
+        playerUtils.only(player, ['playing', 'error', 'vast.reset'], function (evt) {
+          if(evt.type !== 'playing'){
+            return;
+          }
+
+          player.trigger('vast.contentStart');
+
+          playerUtils.only(player, ['ended', 'vast.reset', 'error'], function (evt) {
+            if(evt.type === 'ended') {
+              player.trigger('vast.contentEnd');
+            }
+          });
+        });
       }
 
       function restoreSnapshot() {
@@ -137,16 +152,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       } else {
         next(new VASTError('video content has been playing before preroll ad'));
       }
-    }
-
-    function triggerContentEvents() {
-      player.one('playing', function () {
-        player.trigger('vast.contentStart');
-
-        player.one('ended', function () {
-          player.trigger('vast.contentEnd');
-        });
-      });
     }
 
     function canPlayPrerollAd() {
