@@ -1067,6 +1067,295 @@ function stringEndsWith(string, search) {
  }
 })();
 ;
+/*jshint unused:false */
+"use strict";
+
+var NODE_TYPE_ELEMENT = 1;
+
+function noop(){ }
+
+function isNull(o) {
+  return o === null;
+}
+
+function isDefined(o){
+  return o !== undefined;
+}
+
+function isUndefined(o){
+  return o === undefined;
+}
+
+function isObject(obj) {
+  return typeof obj === 'object';
+}
+
+function isFunction(str){
+  return typeof str === 'function';
+}
+
+function isNumber(num){
+  return typeof num === 'number';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isArray(array){
+  return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isArrayLike(obj) {
+  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
+    return false;
+  }
+
+  var length = obj.length;
+
+  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
+    return true;
+  }
+
+  return isString(obj) || isArray(obj) || length === 0 ||
+    typeof length === 'number' && length > 0 && (length - 1) in obj;
+}
+
+function isString(str){
+  return typeof str === 'string';
+}
+
+function isEmptyString(str) {
+  return isString(str) && str.length === 0;
+}
+
+function isNotEmptyString(str) {
+  return isString(str) && str.length !== 0;
+}
+
+function arrayLikeObjToArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function forEach(obj, iterator, context) {
+  var key, length;
+  if (obj) {
+    if (isFunction(obj)) {
+      for (key in obj) {
+        // Need to check if hasOwnProperty exists,
+        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (isArray(obj)) {
+      var isPrimitive = typeof obj !== 'object';
+      for (key = 0, length = obj.length; key < length; key++) {
+        if (isPrimitive || key in obj) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (obj.forEach && obj.forEach !== forEach) {
+      obj.forEach(iterator, context, obj);
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+var SNAKE_CASE_REGEXP = /[A-Z]/g;
+function snake_case(name, separator) {
+  separator = separator || '_';
+  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return (pos ? separator : '') + letter.toLowerCase();
+  });
+}
+
+function isValidEmail(email){
+  if(!isString(email)){
+    return false;
+  }
+  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+  return EMAIL_REGEXP.test(email.trim());
+}
+
+function extend (obj) {
+  var arg, i, k;
+  for (i = 1; i < arguments.length; i++) {
+    arg = arguments[i];
+    for (k in arg) {
+      if (arg.hasOwnProperty(k)) {
+        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
+          obj[k] = extend({}, obj[k], arg[k]);
+        }else {
+          obj[k] = arg[k];
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function decapitalize(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * This method works the same way array.prototype.map works but if the transformer returns undefine, then
+ * it won't be added to the transformed Array.
+ */
+function transformArray(array, transformer) {
+  var transformedArray = [];
+
+  array.forEach(function(item, index){
+    var transformedItem = transformer(item, index);
+    if(isDefined(transformedItem)) {
+      transformedArray.push(transformedItem);
+    }
+  });
+
+  return transformedArray;
+}
+
+function toFixedDigits(num, digits) {
+  var formattedNum = num + '';
+  digits = isNumber(digits) ? digits : 0;
+  num = isNumber(num) ? num : parseInt(num);
+  if(isNumber(num) && !isNaN(num)){
+    formattedNum = num + '';
+    while(formattedNum.length < digits) {
+      formattedNum = '0' + formattedNum;
+    }
+    return formattedNum;
+  }
+  return NaN + '';
+}
+
+function throttle(callback, delay) {
+  var previousCall = new Date().getTime() - (delay + 1);
+  return function() {
+    var time = new Date().getTime();
+    if ((time - previousCall) >= delay) {
+      previousCall = time;
+      callback.apply(this, arguments);
+    }
+  };
+}
+
+function debounce (callback, wait) {
+  var timeoutId;
+
+  return function (){
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(function(){
+      callback.apply(this, arguments);
+      timeoutId = undefined;
+    }, wait);
+  };
+}
+
+// a function designed to blow up the stack in a naive way
+// but it is ok for videoJs children components
+function treeSearch(root, getChildren, found){
+  var children = getChildren(root);
+  for (var i = 0; i < children.length; i++){
+    if (found(children[i])) {
+      return children[i];
+    }
+    else {
+      var el = treeSearch(children[i], getChildren, found);
+      if (el){
+        return el;
+      }
+    }
+  }
+}
+
+function echoFn(val) {
+  return function () {
+    return val;
+  };
+}
+
+//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
+// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+function isISO8601(value) {
+  if(isNumber(value)){
+    value = value + '';  //we make sure that we are working with strings
+  }
+
+  if(!isString(value)){
+    return false;
+  }
+
+  /*jslint maxlen: 500 */
+  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
+  return iso8086Regex.test(value.trim());
+}
+
+/**
+ * Checks if the Browser is IE9 and below
+ * @returns {boolean}
+ */
+function isOldIE() {
+  var version = getInternetExplorerVersion(navigator);
+  if (version === -1) {
+    return false;
+  }
+
+  return version < 10;
+}
+
+/**
+ * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
+ * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
+ * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
+ */
+function getInternetExplorerVersion(navigator) {
+  var rv = -1;
+
+  if (navigator.appName == 'Microsoft Internet Explorer') {
+    var ua = navigator.userAgent;
+    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    var res = re.exec(ua);
+    if (res !== null) {
+      rv = parseFloat(res[1]);
+    }
+  }
+
+  return rv;
+}
+
+/*** Mobile Utility functions ***/
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
+
+function isMobile() {
+  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
+}
+
+function isIPhone() {
+  return /iP(hone|od)/.test(_UA);
+}
+
+function isAndroid() {
+  return /Android/.test(_UA);
+}
+
+;
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
@@ -2017,295 +2306,6 @@ module.exports = {
 
 //# sourceMappingURL=VPAIDHTML5Client.js.map
 ;
-/*jshint unused:false */
-"use strict";
-
-var NODE_TYPE_ELEMENT = 1;
-
-function noop(){ }
-
-function isNull(o) {
-  return o === null;
-}
-
-function isDefined(o){
-  return o !== undefined;
-}
-
-function isUndefined(o){
-  return o === undefined;
-}
-
-function isObject(obj) {
-  return typeof obj === 'object';
-}
-
-function isFunction(str){
-  return typeof str === 'function';
-}
-
-function isNumber(num){
-  return typeof num === 'number';
-}
-
-function isWindow(obj) {
-  return isObject(obj) && obj.window === obj;
-}
-
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]';
-}
-
-function isArrayLike(obj) {
-  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
-    return false;
-  }
-
-  var length = obj.length;
-
-  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
-    return true;
-  }
-
-  return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
-}
-
-function isString(str){
-  return typeof str === 'string';
-}
-
-function isEmptyString(str) {
-  return isString(str) && str.length === 0;
-}
-
-function isNotEmptyString(str) {
-  return isString(str) && str.length !== 0;
-}
-
-function arrayLikeObjToArray(args) {
-  return Array.prototype.slice.call(args);
-}
-
-function forEach(obj, iterator, context) {
-  var key, length;
-  if (obj) {
-    if (isFunction(obj)) {
-      for (key in obj) {
-        // Need to check if hasOwnProperty exists,
-        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
-      for (key = 0, length = obj.length; key < length; key++) {
-        if (isPrimitive || key in obj) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (obj.forEach && obj.forEach !== forEach) {
-      obj.forEach(iterator, context, obj);
-    } else {
-      for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-var SNAKE_CASE_REGEXP = /[A-Z]/g;
-function snake_case(name, separator) {
-  separator = separator || '_';
-  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-    return (pos ? separator : '') + letter.toLowerCase();
-  });
-}
-
-function isValidEmail(email){
-  if(!isString(email)){
-    return false;
-  }
-  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
-  return EMAIL_REGEXP.test(email.trim());
-}
-
-function extend (obj) {
-  var arg, i, k;
-  for (i = 1; i < arguments.length; i++) {
-    arg = arguments[i];
-    for (k in arg) {
-      if (arg.hasOwnProperty(k)) {
-        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
-          obj[k] = extend({}, obj[k], arg[k]);
-        }else {
-          obj[k] = arg[k];
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-function capitalize(s){
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function decapitalize(s) {
-  return s.charAt(0).toLowerCase() + s.slice(1);
-}
-
-/**
- * This method works the same way array.prototype.map works but if the transformer returns undefine, then
- * it won't be added to the transformed Array.
- */
-function transformArray(array, transformer) {
-  var transformedArray = [];
-
-  array.forEach(function(item, index){
-    var transformedItem = transformer(item, index);
-    if(isDefined(transformedItem)) {
-      transformedArray.push(transformedItem);
-    }
-  });
-
-  return transformedArray;
-}
-
-function toFixedDigits(num, digits) {
-  var formattedNum = num + '';
-  digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
-  if(isNumber(num) && !isNaN(num)){
-    formattedNum = num + '';
-    while(formattedNum.length < digits) {
-      formattedNum = '0' + formattedNum;
-    }
-    return formattedNum;
-  }
-  return NaN + '';
-}
-
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime() - (delay + 1);
-  return function() {
-    var time = new Date().getTime();
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(this, arguments);
-    }
-  };
-}
-
-function debounce (callback, wait) {
-  var timeoutId;
-
-  return function (){
-    if(timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(function(){
-      callback.apply(this, arguments);
-      timeoutId = undefined;
-    }, wait);
-  };
-}
-
-// a function designed to blow up the stack in a naive way
-// but it is ok for videoJs children components
-function treeSearch(root, getChildren, found){
-  var children = getChildren(root);
-  for (var i = 0; i < children.length; i++){
-    if (found(children[i])) {
-      return children[i];
-    }
-    else {
-      var el = treeSearch(children[i], getChildren, found);
-      if (el){
-        return el;
-      }
-    }
-  }
-}
-
-function echoFn(val) {
-  return function () {
-    return val;
-  };
-}
-
-//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
-// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-function isISO8601(value) {
-  if(isNumber(value)){
-    value = value + '';  //we make sure that we are working with strings
-  }
-
-  if(!isString(value)){
-    return false;
-  }
-
-  /*jslint maxlen: 500 */
-  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-  return iso8086Regex.test(value.trim());
-}
-
-/**
- * Checks if the Browser is IE9 and below
- * @returns {boolean}
- */
-function isOldIE() {
-  var version = getInternetExplorerVersion(navigator);
-  if (version === -1) {
-    return false;
-  }
-
-  return version < 10;
-}
-
-/**
- * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
- * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
- * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
- */
-function getInternetExplorerVersion(navigator) {
-  var rv = -1;
-
-  if (navigator.appName == 'Microsoft Internet Explorer') {
-    var ua = navigator.userAgent;
-    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
-    var res = re.exec(ua);
-    if (res !== null) {
-      rv = parseFloat(res[1]);
-    }
-  }
-
-  return rv;
-}
-
-/*** Mobile Utility functions ***/
-var _UA = navigator.userAgent;
-function isIDevice() {
-  return /iP(hone|ad)/.test(_UA);
-}
-
-function isMobile() {
-  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
-}
-
-function isIPhone() {
-  return /iP(hone|od)/.test(_UA);
-}
-
-function isAndroid() {
-  return /Android/.test(_UA);
-}
-
-;
 //Small subset of async
 var async = {};
 
@@ -2931,7 +2931,7 @@ playerUtils.prepareForAds = function (player) {
 
   player.on('play', tryToTriggerFirstPlay);
   player.on('vast.reset', resetFirstPlay);//Every time we change the sources we reset the first play.
-  player.on('vast.firstPlay', restorePlayerToFirstPlay);
+  player.on('vast.firstPlay', restoreContentVolume);
   player.on('error', hideBlackPoster);//If there is an error in the player we remove the blackposter to show the err msg
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
@@ -3034,6 +3034,7 @@ playerUtils.prepareForAds = function (player) {
   function resetFirstPlay() {
     _firstPlay = true;
     blackPoster.show();
+    restoreContentVolume();
   }
 
   function isFirstPlay() {
@@ -3047,7 +3048,7 @@ playerUtils.prepareForAds = function (player) {
     };
   }
 
-  function restorePlayerToFirstPlay() {
+  function restoreContentVolume() {
     if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
@@ -3098,7 +3099,7 @@ playerUtils.removeNativePoster = function (player) {
  * @param events array of events
  * @param handler function to execute once one of the events fires
  */
-playerUtils.only = function only(player, events, handler) {
+playerUtils.once = function once(player, events, handler) {
   function listener() {
     handler.apply(null, arguments);
 
@@ -3440,7 +3441,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   playerUtils.prepareForAds(player);
-  
+
   if (settings.playAdAlways) {
     // No matter what happens we play a new ad before the user sees the video again.
     player.on('vast.contentEnd', function () {
@@ -3452,7 +3453,16 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
 
-  player.on('vast.reset', cancelAds);
+  //If there is an error on the player, we reset the plugin.
+  player.on('error', function() {
+    player.trigger('vast.reset');
+  });
+
+  player.on('vast.reset', function () {
+    //If we are reseting the plugin, we don't want to restore the content
+    snapshot = null;
+    cancelAds();
+  });
 
   player.vast = {
     isEnabled: function () {
@@ -3475,9 +3485,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
 
-    player.on('error', cancelAds);
-    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd'], function() {
-      player.off('error', cancelAds);
+    playerUtils.once(player, ['vast.adsCancel', 'vast.adEnd'], function () {
+      removeAdUnit();
       restoreVideoContent();
     });
 
@@ -3494,45 +3503,40 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     /*** Local functions ***/
-    function restoreVideoContent() {
-      removeAdUnit();
-      setupContentEvents();
-      restoreSnapshot();
 
-      /*** Local functions ***/
-      function removeAdUnit() {
-        if (player.vast && player.vast.adUnit) {
-          player.vast.adUnit = null; //We remove the adUnit
-        }
-      }
-
-      function setupContentEvents() {
-        playerUtils.only(player, ['playing', 'error', 'vast.reset', 'vast.firstPlay'], function (evt) {
-          if(evt.type !== 'playing'){
-            return;
-          }
-
-          player.trigger('vast.contentStart');
-
-          playerUtils.only(player, ['ended', 'vast.reset', 'error', 'vast.firstPlay'], function (evt) {
-            if(evt.type === 'ended') {
-              player.trigger('vast.contentEnd');
-            }
-          });
-        });
-      }
-
-      function restoreSnapshot() {
-        if (snapshot) {
-          playerUtils.restorePlayerSnapshot(player, snapshot);
-          snapshot = null;
-        }
+    function removeAdUnit() {
+      if (player.vast && player.vast.adUnit) {
+        player.vast.adUnit = null; //We remove the adUnit
       }
     }
 
+    function restoreVideoContent() {
+      if (snapshot) {
+        playerUtils.restorePlayerSnapshot(player, snapshot);
+        snapshot = null;
+        setupContentEvents();
+      }
+    }
+
+    function setupContentEvents() {
+      playerUtils.once(player, ['playing', 'vast.reset'], function (evt) {
+        if (evt.type !== 'playing') {
+          return;
+        }
+
+        player.trigger('vast.contentStart');
+
+        playerUtils.once(player, ['ended', 'vast.reset'], function (evt) {
+          if (evt.type === 'ended') {
+            player.trigger('vast.contentEnd');
+          }
+        });
+      });
+    }
+
     function checkAdsEnabled(next) {
-      if(settings.adsEnabled) {
-       return next(null);
+      if (settings.adsEnabled) {
+        return next(null);
       }
       next(new VASTError('Ads are not enabled'));
     }
@@ -3561,7 +3565,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
       }, settings.adCancelTimeout);
 
-      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], clearAdCancelTimeout);
+      playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], clearAdCancelTimeout);
 
       /*** local functions ***/
       function clearAdCancelTimeout() {
@@ -3574,7 +3578,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
-      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], removeSpinnerIcon);
+      playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], removeSpinnerIcon);
     }
 
     function removeSpinnerIcon() {
@@ -3615,16 +3619,20 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
-    player.one('vast.adStart', adAdsLabel);
+    playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {
+      if (evt.type === 'vast.adStart') {
+        addAdsLabel();
+      }
+    });
 
-    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], removeAdsLabel);
+    playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
 
     if (isIDevice()) {
       preventManualProgress();
     }
 
     /*** Local functions ****/
-    function adAdsLabel() {
+    function addAdsLabel() {
       if (adFinished || player.controlBar.getChild('AdsLabel')) {
         return;
       }
@@ -3643,7 +3651,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       var skipad_attempts = 0;
 
       player.on('timeupdate', adTimeupdateHandler);
-      playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
+      playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
 
       /*** Local functions ***/
       function adTimeupdateHandler() {
@@ -4193,7 +4201,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       _paused: true,
       type: 'VPAID',
       pauseAd: function() {
-          player.trigger('vpaid.pauseAd');
+        player.trigger('vpaid.pauseAd');
+        player.pause(true);//we make sure that the video content gets stopped.
       },
       resumeAd: function() {
           player.trigger('vpaid.resumeAd');
@@ -4484,7 +4493,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   adUnit.on('AdSkippableStateChange', updateSkipButtonState);
 
-  playerUtils.only(player, ['vast.adEnd', 'vast.adError'], removeSkipButton);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
 
   next(null, adUnit, vastResponse);
 
@@ -5091,19 +5100,19 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
   this._adUnit = {
     _src: null,
     type: 'VAST',
-    pauseAd: function() {
+    pauseAd: function () {
       that.player.pause(true);
     },
 
-    resumeAd: function() {
+    resumeAd: function () {
       that.player.play(true);
     },
 
-    isPaused: function() {
+    isPaused: function () {
       return that.player.paused(true);
     },
 
-    getSrc: function() {
+    getSrc: function () {
       return this._src;
     }
   };
@@ -5124,7 +5133,7 @@ VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, cal
   source = this.player.selectSource(response.mediaFiles).source;
 
   if (source) {
-    if(this._adUnit) {
+    if (this._adUnit) {
       this._adUnit._src = source;
     }
     return callback(null, source, response);
@@ -5151,7 +5160,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('timeupdate', trackProgress);
   player.on('volumechange', trackVolumeChange);
 
-  playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], unbindEvents);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
@@ -5216,7 +5225,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     player.el().appendChild(skipButton);
     player.on('timeupdate', updateSkipButton);
 
-    playerUtils.only(player, ['ended', 'error'], removeSkipButton);
+    playerUtils.once(player, ['ended', 'error'], removeSkipButton);
 
     function removeSkipButton() {
       player.off('timeupdate', updateSkipButton);
@@ -5265,7 +5274,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
   player.el().insertBefore(blocker, player.controlBar.el());
   player.on('timeupdate', updateBlocker);
-  playerUtils.only(player, ['ended', 'error'], removeBlocker);
+  playerUtils.once(player, ['ended', 'error'], removeBlocker);
 
   return callback(null, mediaFile, tracker, response);
 
@@ -5324,24 +5333,32 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   player.src(source);
 
-  player.on('durationchange', playAd);
-
-  playerUtils.only(player, ['ended', 'error'], function (evt) {
-    if(evt.type === 'ended'){
-      callback(null, response);
-    } else {
+  playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
+    if (evt.type === 'durationchange') {
+      playAd();
+    } else if(evt.type === 'error') {
       callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
     }
-    player.off('durationchange', playAd);
+    //NOTE: If the ads get canceled we do nothing/
   });
 
   /**** local functions ******/
   function playAd() {
     player.play();
-    player.one('playing', function () {
+    playerUtils.once(player, ['playing', 'vast.adsCancel'], function (evt) {
+      if(evt.type === 'vast.adsCancel'){
+        return;
+      }
+
       player.trigger('vast.adStart');
+
+      playerUtils.once(player, ['ended', 'vast.adsCancel'], function (evt) {
+        if(evt.type === 'ended'){
+          callback(null, response);
+        }
+        //NOTE: if the ads get cancel we do nothing
+      });
     });
-    player.off('durationchange', playAd);
   }
 };
 
