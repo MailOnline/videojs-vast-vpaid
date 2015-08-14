@@ -82,7 +82,7 @@ gulp.task('build-assets', function () {
 });
 
 gulp.task('build-libraries', function () {
-  var assetsDevPath = path.join(config.DEV, '/');
+  var assetsDevPath = path.join(config.DEV, '/scripts');
   var assetsDistPath = path.join(config.DIST, '/');
 
   return gulp.src(config.vendor.libraries)
