@@ -402,6 +402,18 @@ describe("playerUtils.prepareForAds", function () {
             assert.equal(player.volume(), 1);
           });
 
+          it("must restore the muted volume on  'vast.reset' evt", function () {
+            playerUtils.prepareForAds(player);
+            player.volume(1);
+            player.muted(false);
+            player.play();
+            assert.isTrue(player.muted());
+
+            player.trigger('vast.reset');
+            assert.isFalse(player.muted());
+            assert.equal(player.volume(), 1);
+          });
+
           it("must set the currentTime to 0 on 'vast.firstPlay' evt", function () {
             var player = videojs(document.createElement('video'), {});
             sinon.stub(player, 'currentTime');

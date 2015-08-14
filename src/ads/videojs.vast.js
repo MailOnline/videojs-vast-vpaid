@@ -45,7 +45,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   playerUtils.prepareForAds(player);
-  
+
   if (settings.playAdAlways) {
     // No matter what happens we play a new ad before the user sees the video again.
     player.on('vast.contentEnd', function () {
@@ -57,7 +57,16 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
 
-  player.on('vast.reset', cancelAds);
+  //If there is an error on the player, we reset the plugin.
+  player.on('error', function() {
+    player.trigger('vast.reset');
+  });
+
+  player.on('vast.reset', function () {
+    //If we are reseting the plugin, we don't want to restore the content
+    snapshot = null;
+    cancelAds();
+  });
 
   player.vast = {
     isEnabled: function () {
@@ -80,9 +89,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
 
-    player.on('error', cancelAds);
-    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd'], function() {
-      player.off('error', cancelAds);
+    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd'], function () {
+      removeAdUnit();
       restoreVideoContent();
     });
 
@@ -99,45 +107,40 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     /*** Local functions ***/
-    function restoreVideoContent() {
-      removeAdUnit();
-      setupContentEvents();
-      restoreSnapshot();
 
-      /*** Local functions ***/
-      function removeAdUnit() {
-        if (player.vast && player.vast.adUnit) {
-          player.vast.adUnit = null; //We remove the adUnit
-        }
-      }
-
-      function setupContentEvents() {
-        playerUtils.only(player, ['playing', 'error', 'vast.reset', 'vast.firstPlay'], function (evt) {
-          if(evt.type !== 'playing'){
-            return;
-          }
-
-          player.trigger('vast.contentStart');
-
-          playerUtils.only(player, ['ended', 'vast.reset', 'error', 'vast.firstPlay'], function (evt) {
-            if(evt.type === 'ended') {
-              player.trigger('vast.contentEnd');
-            }
-          });
-        });
-      }
-
-      function restoreSnapshot() {
-        if (snapshot) {
-          playerUtils.restorePlayerSnapshot(player, snapshot);
-          snapshot = null;
-        }
+    function removeAdUnit() {
+      if (player.vast && player.vast.adUnit) {
+        player.vast.adUnit = null; //We remove the adUnit
       }
     }
 
+    function restoreVideoContent() {
+      if (snapshot) {
+        playerUtils.restorePlayerSnapshot(player, snapshot);
+        snapshot = null;
+        setupContentEvents();
+      }
+    }
+
+    function setupContentEvents() {
+      playerUtils.only(player, ['playing', 'vast.reset'], function (evt) {
+        if (evt.type !== 'playing') {
+          return;
+        }
+
+        player.trigger('vast.contentStart');
+
+        playerUtils.only(player, ['ended', 'vast.reset'], function (evt) {
+          if (evt.type === 'ended') {
+            player.trigger('vast.contentEnd');
+          }
+        });
+      });
+    }
+
     function checkAdsEnabled(next) {
-      if(settings.adsEnabled) {
-       return next(null);
+      if (settings.adsEnabled) {
+        return next(null);
       }
       next(new VASTError('Ads are not enabled'));
     }
@@ -166,7 +169,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
       }, settings.adCancelTimeout);
 
-      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], clearAdCancelTimeout);
+      playerUtils.only(player, ['vast.adStart', 'vast.adsCancel'], clearAdCancelTimeout);
 
       /*** local functions ***/
       function clearAdCancelTimeout() {
@@ -179,7 +182,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
-      playerUtils.only(player, ['vast.adStart', 'vast.adError', 'vast.adsCancel'], removeSpinnerIcon);
+      playerUtils.only(player, ['vast.adStart', 'vast.adsCancel'], removeSpinnerIcon);
     }
 
     function removeSpinnerIcon() {
@@ -220,13 +223,13 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
-    playerUtils.only(player, ['vast.adStart', 'vast.adsCancel', 'error'], function(evt) {
-      if(evt.type === 'vast.adStart'){
+    playerUtils.only(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {
+      if (evt.type === 'vast.adStart') {
         addAdsLabel();
       }
     });
 
-    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], removeAdsLabel);
+    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
 
     if (isIDevice()) {
       preventManualProgress();

@@ -74,6 +74,8 @@ describe("VASTIntegrator", function () {
         this.clock.tick(1);
         assert.isObject(skipButton(player));
         assert.isObject(clickThroughAnchor(player));
+        player.trigger('durationchange');
+        player.trigger('playing');
         player.trigger('ended');
         assertNoError(callback);
         assert.equal(response, secondArg(callback));
@@ -359,8 +361,46 @@ describe("VASTIntegrator", function () {
 
       it("must once the ad ended playing call the callback with the response and no error", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        player.trigger('durationchange');
+        player.trigger('playing');
         player.trigger('ended');
         sinon.assert.calledWithExactly(callback, null, response);
+      });
+
+      it("must not trigger vast.adStart or call the callback if the ad was canceled before the playing evt", function () {
+        var spy = sinon.spy();
+        player.on('vast.adStart', spy);
+        vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        player.trigger('durationchange');
+        player.trigger('vast.adsCancel');
+        player.trigger('playing');
+        player.trigger('ended');
+        sinon.assert.notCalled(spy);
+        sinon.assert.notCalled(callback);
+      });
+
+      it("must not call the callback if the ad was canceled before the ended evt", function () {
+        var spy = sinon.spy();
+        player.on('vast.adStart', spy);
+        vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        player.trigger('durationchange');
+        player.trigger('playing');
+        player.trigger('vast.adsCancel');
+        player.trigger('ended');
+        sinon.assert.calledOnce(spy);
+        sinon.assert.notCalled(callback);
+      });
+
+      it("must not call the callback if the ad was canceled before the durationchange evt", function () {
+        var spy = sinon.spy();
+        player.on('vast.adStart', spy);
+        vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        player.trigger('vast.adsCancel');
+        player.trigger('durationchange');
+        player.trigger('playing');
+        player.trigger('ended');
+        sinon.assert.notCalled(spy);
+        sinon.assert.notCalled(callback);
       });
 
       it("must call the callback with an error if the player had a problem playing the ad", function(){

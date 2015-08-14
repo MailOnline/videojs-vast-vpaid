@@ -42,19 +42,19 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
   this._adUnit = {
     _src: null,
     type: 'VAST',
-    pauseAd: function() {
+    pauseAd: function () {
       that.player.pause(true);
     },
 
-    resumeAd: function() {
+    resumeAd: function () {
       that.player.play(true);
     },
 
-    isPaused: function() {
+    isPaused: function () {
       return that.player.paused(true);
     },
 
-    getSrc: function() {
+    getSrc: function () {
       return this._src;
     }
   };
@@ -75,7 +75,7 @@ VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, cal
   source = this.player.selectSource(response.mediaFiles).source;
 
   if (source) {
-    if(this._adUnit) {
+    if (this._adUnit) {
       this._adUnit._src = source;
     }
     return callback(null, source, response);
@@ -102,7 +102,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('timeupdate', trackProgress);
   player.on('volumechange', trackVolumeChange);
 
-  playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], unbindEvents);
+  playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
@@ -275,24 +275,32 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   player.src(source);
 
-  player.on('durationchange', playAd);
-
-  playerUtils.only(player, ['ended', 'error'], function (evt) {
-    if(evt.type === 'ended'){
-      callback(null, response);
-    } else {
+  playerUtils.only(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
+    if (evt.type === 'durationchange') {
+      playAd();
+    } else if(evt.type === 'error') {
       callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
     }
-    player.off('durationchange', playAd);
+    //NOTE: If the ads get canceled we do nothing/
   });
 
   /**** local functions ******/
   function playAd() {
     player.play();
-    player.one('playing', function () {
+    playerUtils.only(player, ['playing', 'vast.adsCancel'], function (evt) {
+      if(evt.type === 'vast.adsCancel'){
+        return;
+      }
+
       player.trigger('vast.adStart');
+
+      playerUtils.only(player, ['ended', 'vast.adsCancel'], function (evt) {
+        if(evt.type === 'ended'){
+          callback(null, response);
+        }
+        //NOTE: if the ads get cancel we do nothing
+      });
     });
-    player.off('durationchange', playAd);
   }
 };
 

@@ -748,12 +748,12 @@ describe("VPAIDIntegrator", function () {
           assert.isNull(player.el().querySelector('.vast-skip-button'));
         });
 
-        it("must remove the adUnit on 'vast.adError' event", function(){
+        it("must remove the adUnit on 'vast.adsCancel' event", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
           this.clock.tick(1);
           adUnit.isSkippable = false;
-          player.trigger('vast.adError');
+          player.trigger('vast.adsCancel');
           this.clock.tick(1);
           assert.isNull(player.el().querySelector('.vast-skip-button'));
         });

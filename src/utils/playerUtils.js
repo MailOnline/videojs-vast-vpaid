@@ -186,7 +186,7 @@ playerUtils.prepareForAds = function (player) {
 
   player.on('play', tryToTriggerFirstPlay);
   player.on('vast.reset', resetFirstPlay);//Every time we change the sources we reset the first play.
-  player.on('vast.firstPlay', restorePlayerToFirstPlay);
+  player.on('vast.firstPlay', restoreContentVolume);
   player.on('error', hideBlackPoster);//If there is an error in the player we remove the blackposter to show the err msg
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
@@ -289,6 +289,7 @@ playerUtils.prepareForAds = function (player) {
   function resetFirstPlay() {
     _firstPlay = true;
     blackPoster.show();
+    restoreContentVolume();
   }
 
   function isFirstPlay() {
@@ -302,7 +303,7 @@ playerUtils.prepareForAds = function (player) {
     };
   }
 
-  function restorePlayerToFirstPlay() {
+  function restoreContentVolume() {
     if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
