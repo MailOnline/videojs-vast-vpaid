@@ -238,11 +238,14 @@ describe("VPAIDIntegrator", function () {
         });
 
         it("must trigger the vpaid.pauseAd evt", function(){
-          var adUnit =vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
           var spy = sinon.spy();
+          sinon.stub(player, 'pause');
           player.on('vpaid.pauseAd', spy);
           adUnit.pauseAd();
           sinon.assert.calledOnce(spy);
+          sinon.assert.calledOnce(player.pause);
+          player.pause.restore();
         });
 
         it("must trigger the vpaid.resumeAd evt", function(){

@@ -79,7 +79,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       _paused: true,
       type: 'VPAID',
       pauseAd: function() {
-          player.trigger('vpaid.pauseAd');
+        player.trigger('vpaid.pauseAd');
+        player.pause(true);//we make sure that the video content gets stopped.
       },
       resumeAd: function() {
           player.trigger('vpaid.resumeAd');
