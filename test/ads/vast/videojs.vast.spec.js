@@ -532,6 +532,30 @@ describe("videojs.vast plugin", function () {
       assert.isObject(player.controlBar.getChild('AdsLabel'));
     });
 
+    it("must NOT add the adsLabel component if the ad gets canceled. (i.e. vast.adstart)", function () {
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('vast.adsCancel');
+      player.trigger('vast.adStart');
+      assert.isUndefined(player.controlBar.getChild('AdsLabel'));
+    });
+
+    it("must NOT add the adsLabel component if there is an error in the player. (i.e. vast.adstart)", function () {
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      callback(null, response);
+      this.clock.tick(1);
+      player.trigger('error');
+      player.trigger('vast.adStart');
+      assert.isUndefined(player.controlBar.getChild('AdsLabel'));
+    });
+
     it("must remove the adsLabel component when the ads finish playing", function () {
       var response = new VASTResponse();
       response._addMediaFiles([

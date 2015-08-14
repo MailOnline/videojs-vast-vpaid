@@ -220,7 +220,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
-    player.one('vast.adStart', adAdsLabel);
+    playerUtils.only(player, ['vast.adStart', 'vast.adsCancel', 'error'], function(evt) {
+      if(evt.type === 'vast.adStart'){
+        addAdsLabel();
+      }
+    });
 
     playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel', 'error'], removeAdsLabel);
 
@@ -229,7 +233,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     /*** Local functions ****/
-    function adAdsLabel() {
+    function addAdsLabel() {
       if (adFinished || player.controlBar.getChild('AdsLabel')) {
         return;
       }
