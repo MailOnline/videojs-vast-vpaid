@@ -5,19 +5,15 @@ var BuildTaskDoc = require('./BuildTaskDoc');
 gulp.task("watch", function () {
 
   var tasks = [];
-  if (config.env === 'production'){
-    tasks.push('devToDist');
-  }
-
   //Plugin files
-  var scriptsWatcher = gulp.watch(config.plugin.scripts, ['build-scripts'].concat(tasks));
-  var stylesWatcher = gulp.watch(config.plugin.styles, ['build-styles'].concat(tasks));
-  var assetsWatcher = gulp.watch(config.plugin.assets, ['build-assets'].concat(tasks));
+  var scriptsWatcher = gulp.watch(config.plugin.scripts, ['build-scripts']);
+  var stylesWatcher = gulp.watch(config.plugin.styles, ['build-styles']);
+  var assetsWatcher = gulp.watch(config.plugin.assets, ['build-assets']);
 
   //Demo files
-  var demoScriptsWatcher = gulp.watch(config.demo.scripts.concat(['./demo/scripts/**/*.js']), ['build-demo-scripts'].concat(tasks));
-  var demoStylesWatcher = gulp.watch(config.demo.styles, ['build-demo-styles'].concat(tasks));
-  var demoPageWatcher = gulp.watch(config.demo.pages, ['build-demo-page'].concat(tasks));
+  var demoScriptsWatcher = gulp.watch(config.demo.scripts.concat(['./demo/scripts/**/*.js']), ['build-demo-scripts']);
+  var demoStylesWatcher = gulp.watch(config.demo.styles, ['build-demo-styles']);
+  var demoPageWatcher = gulp.watch(config.demo.pages, ['build-demo-page']);
 
   scriptsWatcher.on('change', logFileChange);
   stylesWatcher.on('change', logFileChange);
