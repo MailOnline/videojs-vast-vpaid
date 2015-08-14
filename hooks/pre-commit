@@ -1,8 +1,13 @@
 #!/bin/sh
+while [ ! -d .git ]
+do
+  cd ../
+done
+
 
 files=$(git diff --name-only --diff-filter=ACM | grep "^src/.*js$")
 if [ "$files" = "" ]; then
-    exit 0 
+    exit 0
 fi
 
 pass=true
