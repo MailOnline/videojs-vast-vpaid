@@ -24,7 +24,9 @@
     "iab"
   ],
   "scripts": {
-    "test": "gulp ci-test"
+    "test": "gulp ci-test",
+    "setup-hooks": "./hooks/setup-hooks",
+    "preinstall": "chmod u+x hooks/* && npm run setup-hooks"
   },
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Setting pre-commit hook"
+ln -f -s "$PWD/hooks/pre-commit" .git/hooks/pre-commit
