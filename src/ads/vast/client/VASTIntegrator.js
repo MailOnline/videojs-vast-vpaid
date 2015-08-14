@@ -102,7 +102,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('timeupdate', trackProgress);
   player.on('volumechange', trackVolumeChange);
 
-  playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
@@ -167,7 +167,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     player.el().appendChild(skipButton);
     player.on('timeupdate', updateSkipButton);
 
-    playerUtils.only(player, ['ended', 'error'], removeSkipButton);
+    playerUtils.once(player, ['ended', 'error'], removeSkipButton);
 
     function removeSkipButton() {
       player.off('timeupdate', updateSkipButton);
@@ -216,7 +216,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
   player.el().insertBefore(blocker, player.controlBar.el());
   player.on('timeupdate', updateBlocker);
-  playerUtils.only(player, ['ended', 'error'], removeBlocker);
+  playerUtils.once(player, ['ended', 'error'], removeBlocker);
 
   return callback(null, mediaFile, tracker, response);
 
@@ -275,7 +275,7 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   player.src(source);
 
-  playerUtils.only(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
+  playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
     if (evt.type === 'durationchange') {
       playAd();
     } else if(evt.type === 'error') {
@@ -287,14 +287,14 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
   /**** local functions ******/
   function playAd() {
     player.play();
-    playerUtils.only(player, ['playing', 'vast.adsCancel'], function (evt) {
+    playerUtils.once(player, ['playing', 'vast.adsCancel'], function (evt) {
       if(evt.type === 'vast.adsCancel'){
         return;
       }
 
       player.trigger('vast.adStart');
 
-      playerUtils.only(player, ['ended', 'vast.adsCancel'], function (evt) {
+      playerUtils.once(player, ['ended', 'vast.adsCancel'], function (evt) {
         if(evt.type === 'ended'){
           callback(null, response);
         }

@@ -89,7 +89,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     //We remove the poster to prevent flickering whenever the content starts playing
     playerUtils.removeNativePoster(player);
 
-    playerUtils.only(player, ['vast.adsCancel', 'vast.adEnd'], function () {
+    playerUtils.once(player, ['vast.adsCancel', 'vast.adEnd'], function () {
       removeAdUnit();
       restoreVideoContent();
     });
@@ -123,14 +123,14 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function setupContentEvents() {
-      playerUtils.only(player, ['playing', 'vast.reset'], function (evt) {
+      playerUtils.once(player, ['playing', 'vast.reset'], function (evt) {
         if (evt.type !== 'playing') {
           return;
         }
 
         player.trigger('vast.contentStart');
 
-        playerUtils.only(player, ['ended', 'vast.reset'], function (evt) {
+        playerUtils.once(player, ['ended', 'vast.reset'], function (evt) {
           if (evt.type === 'ended') {
             player.trigger('vast.contentEnd');
           }
@@ -169,7 +169,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         trackAdError(new VASTError('timeout while waiting for the video to start playing', 402));
       }, settings.adCancelTimeout);
 
-      playerUtils.only(player, ['vast.adStart', 'vast.adsCancel'], clearAdCancelTimeout);
+      playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], clearAdCancelTimeout);
 
       /*** local functions ***/
       function clearAdCancelTimeout() {
@@ -182,7 +182,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function addSpinnerIcon() {
       dom.addClass(player.el(), 'vjs-vast-ad-loading');
-      playerUtils.only(player, ['vast.adStart', 'vast.adsCancel'], removeSpinnerIcon);
+      playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], removeSpinnerIcon);
     }
 
     function removeSpinnerIcon() {
@@ -223,13 +223,13 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
-    playerUtils.only(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {
+    playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {
       if (evt.type === 'vast.adStart') {
         addAdsLabel();
       }
     });
 
-    playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
+    playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeAdsLabel);
 
     if (isIDevice()) {
       preventManualProgress();
@@ -255,7 +255,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       var skipad_attempts = 0;
 
       player.on('timeupdate', adTimeupdateHandler);
-      playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
+      playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
 
       /*** Local functions ***/
       function adTimeupdateHandler() {

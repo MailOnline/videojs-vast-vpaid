@@ -718,11 +718,11 @@ describe("playerUtils.removeNativePoster", function () {
   });
 });
 
-describe("playerUtils.only", function () {
+describe("playerUtils.once", function () {
   it("must execute the passed handler once and only once no matter how many events we register to it.", function () {
     var spy = sinon.spy();
     var player = videojs(document.createElement('video'), {});
-    playerUtils.only(player, ['play', 'playing', 'pause'], spy);
+    playerUtils.once(player, ['play', 'playing', 'pause'], spy);
     player.trigger('play');
     player.trigger('playing');
     player.trigger('play');

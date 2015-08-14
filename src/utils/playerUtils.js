@@ -354,7 +354,7 @@ playerUtils.removeNativePoster = function (player) {
  * @param events array of events
  * @param handler function to execute once one of the events fires
  */
-playerUtils.only = function only(player, events, handler) {
+playerUtils.once = function once(player, events, handler) {
   function listener() {
     handler.apply(null, arguments);
 

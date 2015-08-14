@@ -371,7 +371,7 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   adUnit.on('AdSkippableStateChange', updateSkipButtonState);
 
-  playerUtils.only(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
 
   next(null, adUnit, vastResponse);
 
