@@ -15,22 +15,11 @@ var getPackageJsonVersion = function () {
   return JSON.parse(fs.readFileSync('./package.json', 'utf8')).version;
 };
 
-gulp.task('clean-DIST', function (cb) {
-  del([config.DIST], {force: true}, cb);
-});
-
 gulp.task('bump', function () {
   var bumpType = config.bump || "patch";
   return gulp.src(['./bower.json', './package.json'])
     .pipe(bump({type: bumpType}).on('error', gutil.log))
     .pipe(gulp.dest('./'));
-});
-
-gulp.task('DEV-to-DIST', function () {
-  var devFiles = path.join(config.DEV, '/**/*');
-  return gulp.src(devFiles)
-    .pipe(flatten())
-    .pipe(gulp.dest(config.DIST));
 });
 
 gulp.task('commit-build-to-git', function () {
@@ -73,9 +62,7 @@ gulp.task('deploy-demo-page', function(callback) {
 gulp.task('release', function (callback) {
   config.env = 'production';
   runSequence(
-    'clean-DIST',
     'build',
-    'DEV-to-DIST',
     'bump',
     'commit-build-to-git',
     'push-to-master',

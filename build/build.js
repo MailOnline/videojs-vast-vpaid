@@ -40,11 +40,16 @@ gulp.task('build', function (callback) {
 
 
 gulp.task('clean', function (cb) {
-  del([config.DEV], {force: true}, cb);
+  var cleanDirs = [config.DEV];
+  if(config.env === 'production'){
+    cleanDirs.push(config.DIST);
+  }
+  del(cleanDirs, {force: true}, cb);
 });
 
 gulp.task('build-scripts', function () {
-  var scriptsDistPath = path.join(config.DEV, '/scripts');
+  var scriptsDevPath = path.join(config.DEV, '/scripts');
+  var scriptsDistPath = path.join(config.DIST, '/');
   var vendorScriptsStream = gulp.src(config.vendor.scripts);
   var pluginScriptsStream = gulp.src(config.plugin.scripts)
     .pipe(jshint())
@@ -56,37 +61,49 @@ gulp.task('build-scripts', function () {
     .pipe(header('(function (window, document, vjs, undefined) {'))
     .pipe(footer('})(window, document, videojs);'))
     .pipe(concat(config.prodfile.scripts, {newLine: '\n;\n'}))
+    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDevPath)))
     .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)))
     .pipe(gulpif(config.env === 'production', uglify()))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
-    .pipe(gulp.dest(scriptsDistPath))
+    .pipe(gulp.dest(scriptsDevPath))
+    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)))
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(scriptsDistPath));
+    .pipe(gulp.dest(scriptsDevPath))
+    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)));
 });
 
 gulp.task('build-assets', function () {
-  var assetsPath = path.join(config.DEV, '/');
+  var assetsDevPath = path.join(config.DEV, '/');
+  var assetsDistPath = path.join(config.DIST, '/');
 
   return gulp.src(config.vendor.assets)
-    .pipe(gulp.dest(assetsPath));
+    .pipe(gulp.dest(assetsDevPath))
+    .pipe(gulpif(config.env === 'production', gulp.dest(assetsDistPath)));
 });
 
 gulp.task('build-libraries', function () {
-  var assetsPath = path.join(config.DEV, '/scripts');
+  var assetsDevPath = path.join(config.DEV, '/');
+  var assetsDistPath = path.join(config.DIST, '/');
 
   return gulp.src(config.vendor.libraries)
-    .pipe(gulp.dest(assetsPath));
+    .pipe(gulp.dest(assetsDevPath))
+    .pipe(gulpif(config.env === 'production', gulp.dest(assetsDistPath)));
+
 });
 
 gulp.task('build-styles', function () {
-  var distCssPath = path.join(config.DEV, 'styles');
+  var cssDevPath = path.join(config.DEV, 'styles');
+  var cssDistPath = path.join(config.DIST, '/');
+
   return gulp.src(config.plugin.styles)
     .pipe(flatten())
     .pipe(gulpif(config.env === 'production', concat(config.prodfile.styles, {newLine: '\n\n'})))
-    .pipe(gulpif(config.env === 'production', gulp.dest(distCssPath)))
+    .pipe(gulpif(config.env === 'production', gulp.dest(cssDevPath)))
+    .pipe(gulpif(config.env === 'production', gulp.dest(cssDistPath)))
     .pipe(gulpif(config.env === 'production', minifyCSS({keepBreaks: false})))
     .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
-    .pipe(gulp.dest(distCssPath));
+    .pipe(gulp.dest(cssDevPath))
+    .pipe(gulpif(config.env === 'production', gulp.dest(cssDistPath)));
 });
 
 module.exports = new BuildTaskDoc("build", "This task builds the plugin", 4);
