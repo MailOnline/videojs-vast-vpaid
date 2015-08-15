@@ -1,0 +1,25 @@
+#!/bin/sh
+while [ ! -d .git ]
+do
+  cd ../
+done
+
+pass=true
+
+echo "\nRuning Unit Tests:\n"
+
+result="$(gulp test| grep "Error: 1")"
+
+if [ "$result" = "" ]; then
+     echo "\t\033[32mUnit Tests Passed\033[0m"
+else
+     echo "\t\033[31mUnit Tests Failed\033[0m"
+     pass=false
+fi
+
+if ! $pass; then
+    echo "\033[41mPUSH FAILED:\033[0m Your push contains failing tests. Please fix them and try again.\n"
+    exit 1
+else
+    echo "\033[42mPUSH SUCCEEDED\033[0m\n"
+fi

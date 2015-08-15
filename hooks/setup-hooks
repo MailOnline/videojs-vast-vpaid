@@ -2,3 +2,6 @@
 
 echo "Setting pre-commit hook"
 ln -f -s "$PWD/hooks/pre-commit" .git/hooks/pre-commit
+
+echo "Setting pre-push hook"
+ln -f -s "$PWD/hooks/pre-push" .git/hooks/pre-push

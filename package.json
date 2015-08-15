@@ -25,8 +25,9 @@
   ],
   "scripts": {
     "test": "gulp ci-test",
+    "prepare-hooks":"chmod u+x hooks/*",
     "setup-hooks": "./hooks/setup-hooks",
-    "preinstall": "chmod u+x hooks/* && npm run setup-hooks"
+    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s"
   },
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
