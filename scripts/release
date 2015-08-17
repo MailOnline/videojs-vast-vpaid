@@ -1,11 +1,15 @@
 #!/bin/sh
 
 if [ "$TRAVIS" = "true" ]; then
-    if [ "$TRAVIS_BRANCH" = "RELEASE" ]; then
-            # inside this git repo we'll pretend to be a new user
-            git config --global user.name "$USER_NAME"
-            git config --global user.email "$USER_MAIL"
+    # inside this git repo we'll pretend to be a new user
+    git config --global user.name "$USER_NAME"
+    git config --global user.email "$USER_MAIL"
 
+    if [ "$TRAVIS_BRANCH" = "PRERELEASE" ]; then
+            gulp prerelease
+    fi
+
+    if [ "$TRAVIS_BRANCH" = "RELEASE" ]; then
             gulp release
     fi
 fi

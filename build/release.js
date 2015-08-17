@@ -4,7 +4,6 @@ var runSequence = require('run-sequence');
 var BuildTaskDoc = require('./BuildTaskDoc');
 var config = require('./config');
 var bump = require('gulp-bump');
-var gutil = require('gulp-util');
 var ghPages = require('gulp-gh-pages');
 var git = require('gulp-git');
 var del = require('del');
@@ -13,22 +12,6 @@ var fs = require('fs');
 var getPackageJsonVersion = function () {
   return JSON.parse(fs.readFileSync('./package.json', 'utf8')).version;
 };
-
-gulp.task('bump', function () {
-  var bumpType = config.bump || "patch";
-  return gulp.src(['./bower.json', './package.json'])
-    .pipe(bump({type: bumpType}).on('error', gutil.log))
-    .pipe(gulp.dest('./'));
-});
-
-gulp.task('commit-build-to-git', function () {
-  return gulp.src('.')
-    .pipe(git.commit('[Prerelease] Build and release new version', {args: '-a'}));
-});
-
-gulp.task('push-to-master', function (cb) {
-  git.push(config.git.remoteUrl, 'master', {quiet: true}, cb);
-});
 
 gulp.task('create-new-tag-version', function (cb) {
   var version = getPackageJsonVersion();
@@ -47,7 +30,7 @@ gulp.task('update-gh-pages', function() {
     }));
 });
 
-gulp.task('deploy-demo-page', function(callback) {
+gulp.task('deploy-demo', function(callback) {
   runSequence(
     'build-demo',
     'update-gh-pages',
@@ -63,12 +46,8 @@ gulp.task('deploy-demo-page', function(callback) {
 gulp.task('release', function (callback) {
   config.env = 'production';
   runSequence(
-    'build',
-    'bump',
-    'commit-build-to-git',
-    'push-to-master',
     'create-new-tag-version',
-    'deploy-demo-page',
+    'deploy-demo',
     function (error) {
       if (error) {
         console.log(error.message.red);
