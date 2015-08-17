@@ -23,7 +23,7 @@ gulp.task('bump', function () {
 
 gulp.task('commit-build-to-git', function () {
   return gulp.src('.')
-    .pipe(git.commit('[Prerelease] Build and release new version', {args: '-a'}));
+    .pipe(git.commit('[Prerelease] Build and release new version', {args: '-a', quiet: true}));
 });
 
 gulp.task('push-to-master', function (cb) {
@@ -36,7 +36,7 @@ gulp.task('create-new-tag-version', function (cb) {
     if(error) {
       return cb(error);
     }
-    git.push(config.git.remoteUrl, 'master', {args: '--tags --quiet'}, cb);
+    git.push(config.git.remoteUrl, 'master', {args: '--tags', quiet: true}, cb);
   });
 });
 
