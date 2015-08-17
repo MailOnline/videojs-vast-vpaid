@@ -5,7 +5,7 @@ do
 done
 
 #DON'T RUN THE TEST IF WE ARE IN CONTINUOUS_INTEGRATION ENV
-if ["$CONTINUOUS_INTEGRATION" = "true" ]; then
+if [ "$CONTINUOUS_INTEGRATION" = "true" ]; then
    exit 0
 fi
 

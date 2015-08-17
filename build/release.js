@@ -36,7 +36,7 @@ gulp.task('create-new-tag-version', function (cb) {
     if(error) {
       return cb(error);
     }
-    git.push(config.git.remoteUrl, 'master', {args: '--tags'}, cb);
+    git.push(config.git.remoteUrl, 'master', {args: '--tags --quiet'}, cb);
   });
 });
 
