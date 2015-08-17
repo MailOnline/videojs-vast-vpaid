@@ -23,11 +23,11 @@ gulp.task('bump', function () {
 
 gulp.task('commit-build-to-git', function () {
   return gulp.src('.')
-    .pipe(git.commit('[Prerelease] Build and release new version', {args: '-a', quiet: true}));
+    .pipe(git.commit('[Prerelease] Build and release new version', {args: '-a'}));
 });
 
 gulp.task('push-to-master', function (cb) {
-  git.push(config.git.remoteUrl, 'master', cb);
+  git.push(config.git.remoteUrl, 'master', {quiet: true}, cb);
 });
 
 gulp.task('create-new-tag-version', function (cb) {
