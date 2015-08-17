@@ -36,7 +36,7 @@ gulp.task('prerelease', function (callback) {
       if (error) {
         console.log(error.message.red);
       } else {
-        console.log('PRERELEASE FINISHED SUCCESSFULLY'.green);
+        console.log('PRERELEASE SUCCESSFUL'.green);
       }
       callback(error);
     });

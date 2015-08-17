@@ -52,7 +52,7 @@ gulp.task('release', function (callback) {
       if (error) {
         console.log(error.message.red);
       } else {
-        console.log('RELEASE FINISHED SUCCESSFULLY'.green);
+        console.log('RELEASE SUCCESSFUL'.green);
       }
       callback(error);
     });

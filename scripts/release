@@ -7,15 +7,33 @@ if [ "$TRAVIS" = "true" ]; then
       cd ../
     done
 
-    # inside this git repo we'll pretend to be a new user
-    git config --global user.name "$USER_NAME"
-    git config --global user.email "$USER_MAIL"
+    if [ -n "$1" ]; then
+      # inside this git repo we'll pretend to be a new user
+      git config --global user.name "$USER_NAME"
+      git config --global user.email "$USER_MAIL"
+    fi
 
     if [ "$TRAVIS_BRANCH" = "PRERELEASE" ]; then
-            gulp prerelease
+            result=$(gulp prerelease | grep "PRERELEASE SUCCESSFUL")
+
+            if [ "$result" = "" ]; then
+              echo "\n\n\033[31m PRERELEASE FAILED\033[0m\n"
+              exit 1
+            else
+              echo "\n\n\033[32m PRERELEASE SUCCESSFUL\033[0m"
+              exit 0
+            fi
     fi
 
     if [ "$TRAVIS_BRANCH" = "RELEASE" ]; then
-            gulp release
+            result=$(gulp release | grep "RELEASE SUCCESSFUL")
+
+            if [ "$result" = "" ]; then
+              echo "\n\n\033[31m RELEASE FAILED\033[0m\n"
+              exit 1
+            else
+              echo "\n\n\033[32m RELEASE SUCCESSFUL\033[0m"
+              exit 0
+            fi
     fi
 fi
