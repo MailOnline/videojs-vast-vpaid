@@ -1,6 +1,12 @@
 #!/bin/sh
 
 if [ "$TRAVIS" = "true" ]; then
+    # Go up the directory tree until you arrive to the git root
+    while [ ! -d .git ]
+    do
+      cd ../
+    done
+
     # inside this git repo we'll pretend to be a new user
     git config --global user.name "$USER_NAME"
     git config --global user.email "$USER_MAIL"

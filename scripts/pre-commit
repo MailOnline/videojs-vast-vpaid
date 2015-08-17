@@ -1,4 +1,6 @@
 #!/bin/sh
+
+# Go up the directory tree until you arrive to the git root
 while [ ! -d .git ]
 do
   cd ../

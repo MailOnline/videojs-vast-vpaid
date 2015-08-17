@@ -1,11 +1,13 @@
 #!/bin/sh
+
+# Go up the directory tree until you arrive to the git root
 while [ ! -d .git ]
 do
   cd ../
 done
 
 #DON'T RUN THE TEST IF WE ARE IN CONTINUOUS_INTEGRATION ENV
-if [ "$CONTINUOUS_INTEGRATION" = "true" ]; then
+if [ "$TRAVIS" = "true" ]; then
    exit 0
 fi
 
