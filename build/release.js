@@ -1,6 +1,5 @@
 var gulp = require('gulp');
 var path = require('path');
-var flatten = require('gulp-flatten');
 var runSequence = require('run-sequence');
 var BuildTaskDoc = require('./BuildTaskDoc');
 var config = require('./config');
@@ -28,7 +27,7 @@ gulp.task('commit-build-to-git', function () {
 });
 
 gulp.task('push-to-master', function (cb) {
-  git.push('origin', 'master', cb);
+  git.push(config.git.remoteUrl, 'master', cb);
 });
 
 gulp.task('create-new-tag-version', function (cb) {
@@ -37,13 +36,15 @@ gulp.task('create-new-tag-version', function (cb) {
     if(error) {
       return cb(error);
     }
-    git.push('origin', 'master', {args: '--tags'}, cb);
+    git.push(config.git.remoteUrl, 'master', {args: '--tags'}, cb);
   });
 });
 
 gulp.task('update-gh-pages', function() {
   return gulp.src(path.join(config.DEV, '**/*'))
-    .pipe(ghPages());
+    .pipe(ghPages({
+      remoteUrl: config.git.remoteUrl
+    }));
 });
 
 gulp.task('deploy-demo-page', function(callback) {

@@ -2,6 +2,7 @@ language: node_js
 node_js:
   - 0.12.2
 before_install:
+  - rm -rf bower_components
   - npm install -g bower
   - npm install -g codeclimate-test-reporter
   - export CHROME_BIN=chromium-browser
@@ -10,6 +11,8 @@ before_install:
 install:
   - npm install
   - bower install
+after_success:
+  - npm run release
 addons:
   code_climate:
     repo_token:

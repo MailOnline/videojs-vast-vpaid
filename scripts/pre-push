@@ -4,8 +4,12 @@ do
   cd ../
 done
 
-pass=true
+#DON'T RUN THE TEST IF WE ARE IN CONTINUOUS_INTEGRATION ENV
+if ["$CONTINUOUS_INTEGRATION" = "true" ]; then
+   exit 0
+fi
 
+pass=true
 echo "\nRuning Unit Tests:\n"
 
 result="$(gulp test| grep "Error: 1")"

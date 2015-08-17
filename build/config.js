@@ -9,6 +9,9 @@ var knownOptions = {
 
 var options = parseArgs(process.argv.slice(2), knownOptions);
 module.exports = {
+  git:{
+    remoteUrl: process.env.GH_TOKEN ? "https://"+process.env.GH_TOKEN+"@github.com/MailOnline/videojs-vast-vpaid" :"https://github.com/MailOnline/videojs-vast-vpaid"
+  },
   options: options,
   env: options.env,
   //Files needed to build the demo

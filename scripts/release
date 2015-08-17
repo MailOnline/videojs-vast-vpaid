@@ -1,0 +1,15 @@
+#!/bin/sh
+
+CURRENT_BRANCH="$(git symbolic-ref --short -q HEAD)"
+# echo "${branchname}"
+
+if [ "$TRAVIS" = "true" ]; then
+    # inside this git repo we'll pretend to be a new user
+    git config user.name "Travis CI"
+    git config user.email "carlos.pastor@mailonline.co.uk"
+fi
+
+if [ "$TRAVIS_BRANCH" = "master" ]; then
+    echo "RELEASING"
+    gulp release
+fi
