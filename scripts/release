@@ -7,6 +7,5 @@ if [ "$TRAVIS" = "true" ]; then
 fi
 
 if [ "$TRAVIS_BRANCH" = "master" ]; then
-    echo "RELEASING"
     gulp release
 fi
