@@ -14,9 +14,11 @@ if [ "$TRAVIS" = "true" ]; then
     fi
 
     if [ "$TRAVIS_BRANCH" = "PRERELEASE" ]; then
-            result=$(gulp prerelease | grep "PRERELEASE SUCCESSFUL")
+            log=$(gulp prerelease)
+            result=$(echo $log | grep "PRERELEASE SUCCESSFUL")
 
             if [ "$result" = "" ]; then
+              echo "$log"
               echo "\n\n\033[31m PRERELEASE FAILED\033[0m\n"
               exit 1
             else
@@ -26,9 +28,11 @@ if [ "$TRAVIS" = "true" ]; then
     fi
 
     if [ "$TRAVIS_BRANCH" = "RELEASE" ]; then
-            result=$(gulp release | grep "RELEASE SUCCESSFUL")
+            log=$(gulp release)
+            result=$(echo $log | grep "RELEASE SUCCESSFUL")
 
             if [ "$result" = "" ]; then
+              echo "$log"
               echo "\n\n\033[31m RELEASE FAILED\033[0m\n"
               exit 1
             else
