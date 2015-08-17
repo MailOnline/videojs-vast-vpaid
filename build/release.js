@@ -64,11 +64,11 @@ gulp.task('release', function (callback) {
   config.env = 'production';
   runSequence(
     'build',
-    'bump',
-    'commit-build-to-git',
-    'push-to-master',
-    'create-new-tag-version',
-    'deploy-demo-page',
+    //'bump',
+    //'commit-build-to-git',
+    //'push-to-master',
+    //'create-new-tag-version',
+    //'deploy-demo-page',
     function (error) {
       if (error) {
         console.log(error.message.red);
