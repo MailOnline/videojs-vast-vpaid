@@ -66,7 +66,7 @@ gulp.task('release', function (callback) {
     'build',
     'bump',
     'commit-build-to-git',
-    //'push-to-master',
+    'push-to-master',
     //'create-new-tag-version',
     //'deploy-demo-page',
     function (error) {
