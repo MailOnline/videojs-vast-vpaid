@@ -10,7 +10,7 @@ if [ "$CONTINUOUS_INTEGRATION" = "true" ]; then
 fi
 
 
-files=$(git diff --cached --name-only --diff-filter=ACM | grep "^(src|test)/.*js$")
+files=$(git diff --cached --name-only --diff-filter=ACM | grep "^src/\|test/.*js$")
 
 if [ "$files" = "" ]; then
     exit 0
