@@ -1,13 +1,11 @@
 #!/bin/sh
 
 if [ "$TRAVIS" = "true" ]; then
-    if [ "$TRAVIS_BRANCH" = "master" ]; then
-        if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+    if [ "$TRAVIS_BRANCH" = "RELEASE" ]; then
             # inside this git repo we'll pretend to be a new user
             git config --global user.name "$USER_NAME"
             git config --global user.email "$USER_MAIL"
 
             gulp release
-        fi
     fi
 fi
