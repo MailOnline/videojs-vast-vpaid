@@ -27,7 +27,7 @@ gulp.task('commit-build-to-git', function () {
 });
 
 gulp.task('push-to-master', function (cb) {
-  git.push(config.git.remoteUrl, 'DEV', {quiet: true}, cb);
+  git.push(config.git.remoteUrl, 'master', {quiet: true}, cb);
 });
 
 gulp.task('create-new-tag-version', function (cb) {
@@ -67,8 +67,8 @@ gulp.task('release', function (callback) {
     'bump',
     'commit-build-to-git',
     'push-to-master',
-    //'create-new-tag-version',
-    //'deploy-demo-page',
+    'create-new-tag-version',
+    'deploy-demo-page',
     function (error) {
       if (error) {
         console.log(error.message.red);
