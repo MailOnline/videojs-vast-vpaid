@@ -5880,3 +5880,4 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
+//# sourceMappingURL=videojs-vast-vpaid.js.map
