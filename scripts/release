@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e #Quit as soon as there is an error or exit
-set -x #Very verbose mode
 
 if [ "$TRAVIS" = "true" ]; then
     if [ -n "$USER_NAME" ]; then
@@ -15,7 +14,7 @@ if [ "$TRAVIS" = "true" ]; then
         rm -rf /var/tmp/release
         mkdir -p /var/tmp/release
         cd /var/tmp/release
-        git clone --branch RELEASE --single-branch --depth 1 "https://$GH_TOKEN@github.com/MailOnline/videojs-vast-vpaid" . &> /dev/null
+        git clone --branch RELEASE -q --single-branch --depth 1 "https://$GH_TOKEN@github.com/MailOnline/videojs-vast-vpaid" .
         old_version=`cat bower.json | grep version | awk -F\" '{print $4}'`
         rsync -a --del --exclude=.git --exclude=.publish $original_dir/ ./
         gulp bump --version $old_version
