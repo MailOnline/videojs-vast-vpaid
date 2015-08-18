@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e #Quit as soon as there is an error or exit
-set -x #Very verbose mode
 
 if [ "$TRAVIS" = "true" ]; then
     if [ -n "$USER_NAME" ]; then

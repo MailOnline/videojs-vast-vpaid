@@ -1,6 +1,6 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.0.0", //latest stable version can be found in release branch https://github.com/MailOnline/videojs-vast-vpaid/blob/RELEASE/bower.json
+  "version": "0.0.0", //Go to for stable release https://github.com/MailOnline/videojs-vast-vpaid/tree/RELEASE
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
