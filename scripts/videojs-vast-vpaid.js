@@ -3403,7 +3403,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     // maximum amount of time in ms to wait to receive `adsready` from the ad
     // implementation after play has been requested. Ad implementations are
     // expected to load any dynamic libraries and make any requests to determine
-    // ad policies for a video during this time.
+    // ad policies for a video during this time
     timeout: 500,
 
     //TODO:finish this IOS FIX
