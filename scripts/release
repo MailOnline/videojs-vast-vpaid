@@ -1,43 +1,30 @@
 #!/bin/sh
+set -e #Quit as soon as there is an error or exit
+set -x #Very verbose mode
 
 if [ "$TRAVIS" = "true" ]; then
-    # Go up the directory tree until you arrive to the git root
-    while [ ! -d .git ]
-    do
-      cd ../
-    done
-
-    if [ -n "$1" ]; then
+    if [ -n "$USER_NAME" ]; then
       # inside this git repo we'll pretend to be a new user
       git config --global user.name "$USER_NAME"
       git config --global user.email "$USER_MAIL"
     fi
 
-    if [ "$TRAVIS_BRANCH" = "PRERELEASE" ]; then
-            log=$(gulp prerelease)
-            result=$(echo $log | grep "PRERELEASE SUCCESSFUL")
-
-            if [ "$result" = "" ]; then
-              echo "$log"
-              echo "\n\n\033[31m PRERELEASE FAILED\033[0m\n"
-              exit 1
-            else
-              echo "\n\n\033[32m PRERELEASE SUCCESSFUL\033[0m"
-              exit 0
-            fi
-    fi
-
-    if [ "$TRAVIS_BRANCH" = "RELEASE" ]; then
-            log=$(gulp release)
-            result=$(echo $log | grep "RELEASE SUCCESSFUL")
-
-            if [ "$result" = "" ]; then
-              echo "$log"
-              echo "\n\n\033[31m RELEASE FAILED\033[0m\n"
-              exit 1
-            else
-              echo "\n\n\033[32m RELEASE SUCCESSFUL\033[0m"
-              exit 0
-            fi
+    if [ "$TRAVIS_BRANCH" = "prerelease" ]; then
+        gulp build --env production
+        original_dir=`pwd`
+        rm -rf /var/tmp/release
+        mkdir -p /var/tmp/release
+        cd /var/tmp/release
+        git clone --branch RELEASE --single-branch --depth 1 "https://$GH_TOKEN@github.com/MailOnline/videojs-vast-vpaid" . &> /dev/null
+        old_version=`cat bower.json | grep version | awk -F\" '{print $4}'`
+        rsync -a --del --exclude=.git $original_dir/ ./
+        git add -A .
+        gulp bump --version $old_version
+        new_version=`cat bower.json | grep version | awk -F\" '{print $4}'`
+        git commit -m "[RELEASE] build and release $new_version"
+        git tag $new_version
+        git push
+        git push --tags
+#        gulp deploy-demo
     fi
 fi
