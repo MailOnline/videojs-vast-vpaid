@@ -1,6 +1,6 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.0.0", //Go to for stable release https://github.com/MailOnline/videojs-vast-vpaid/tree/RELEASE
+  "version": "0.0.0",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
