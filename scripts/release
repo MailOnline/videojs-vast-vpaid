@@ -17,14 +17,14 @@ if [ "$TRAVIS" = "true" ]; then
         cd /var/tmp/release
         git clone --branch RELEASE --single-branch --depth 1 "https://$GH_TOKEN@github.com/MailOnline/videojs-vast-vpaid" . &> /dev/null
         old_version=`cat bower.json | grep version | awk -F\" '{print $4}'`
-        rsync -a --del --exclude=.git $original_dir/ ./
-        git add -A .
+        rsync -a --del --exclude=.git --exclude=.publish $original_dir/ ./
         gulp bump --version $old_version
+        git add -A .
         new_version=`cat bower.json | grep version | awk -F\" '{print $4}'`
         git commit -m "[RELEASE] build and release $new_version"
         git tag $new_version
         git push
         git push --tags
-#        gulp deploy-demo
+        gulp deploy-demo
     fi
 fi
