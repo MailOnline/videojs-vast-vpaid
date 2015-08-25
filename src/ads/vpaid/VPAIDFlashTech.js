@@ -18,7 +18,7 @@ function VPAIDFlashTech(mediaFile, settings) {
 }
 
 VPAIDFlashTech.supports = function (type) {
-  return type === 'application/x-shockwave-flash';
+  return type === 'application/x-shockwave-flash' && VPAIDFLASHClient.isSupported();
 };
 
 VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {
