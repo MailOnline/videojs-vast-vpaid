@@ -8,35 +8,8 @@ describe("VPAIDFlashTech", function () {
       assert.isFunction(VPAIDFlashTech.supports);
     });
 
-    describe('must handle flash support', function() {
-      var FLASH_STRING = 'application/x-shockwave-flash';
-      var originalFlash;
-
-      beforeEach(function() {
-        originalFlash = VPAIDFLASHClient;
-        VPAIDFLASHClient = {
-          isSupported: function() {
-            return true;
-          }
-        };
-      });
-
-      afterEach(function() {
-        VPAIDFLASHClient = originalFlash;
-      });
-
-      it("must return true when you pass 'application/x-shockwave-flash' if the browser supports", function() {
-        assert.isTrue(VPAIDFlashTech.supports(FLASH_STRING));
-      });
-
-      it("must return false when you pass 'application/x-shockwave-flash' if the browser doesn't support it", function() {
-        sinon.stub(VPAIDFLASHClient, 'isSupported', function () {return false});
-        assert.isFalse(VPAIDFlashTech.supports(FLASH_STRING));
-      });
-
-    });
-
-    it("must return true when you pass 'application/javascript' as type and false otherwise", function () {
+    it("must return true when you pass 'application/x-shockwave-flash' as type and false otherwise", function () {
+      assert.isTrue(VPAIDFlashTech.supports('application/x-shockwave-flash'));
       assert.isFalse(VPAIDFlashTech.supports('application/javascript'));
       assert.isFalse(VPAIDFlashTech.supports(undefined));
       assert.isFalse(VPAIDFlashTech.supports(null));

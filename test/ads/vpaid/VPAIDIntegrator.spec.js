@@ -762,22 +762,6 @@ describe("VPAIDIntegrator", function () {
     });
 
     describe("findSupportedTech", function () {
-      var FLASH_STRING = 'application/x-shockwave-flash';
-      var originalFlash;
-
-      beforeEach(function() {
-        originalFlash = VPAIDFLASHClient;
-        VPAIDFLASHClient = {
-          isSupported: function() {
-            return true;
-          }
-        };
-      });
-
-      afterEach(function() {
-        VPAIDFLASHClient = originalFlash;
-      });
-
       it("must return null if you pass a wrong vastREsponse", function () {
         [undefined, null, [], {}, ''].forEach(function (wrongResponse) {
           assert.isNull(vpaidIntegrator._findSupportedTech(wrongResponse));
@@ -792,19 +776,9 @@ describe("VPAIDIntegrator", function () {
         assert.isNull(vpaidIntegrator._findSupportedTech(vastResponse));
       });
 
-      it("must return null if the tech is not supported", function () {
-        var vastResponse = new VASTResponse();
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
-
-        sinon.stub(VPAIDFLASHClient, 'isSupported', function () {return false});
-
-        assert.isNull(vpaidIntegrator._findSupportedTech(vastResponse));
-      });
-
       it("must return an instance of the supported tech", function () {
         var vastResponse = new VASTResponse();
-
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', 'application/x-shockwave-flash')]);
 
         assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse), VPAIDFlashTech);
       });
@@ -812,7 +786,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass the settings to the to the created tech", function(){
         var settings = {vpaidFlashLoaderPath: '/VPAIDFlash.swf'};
         var vastResponse = new VASTResponse();
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', 'application/x-shockwave-flash')]);
         var flashTech = vpaidIntegrator._findSupportedTech(vastResponse, settings);
         assert.deepEqual(flashTech.settings, settings);
       });

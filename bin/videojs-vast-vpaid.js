@@ -3995,7 +3995,7 @@ function VPAIDFlashTech(mediaFile, settings) {
 }
 
 VPAIDFlashTech.supports = function (type) {
-  return type === 'application/x-shockwave-flash' && VPAIDFLASHClient.isSupported();
+  return type === 'application/x-shockwave-flash';
 };
 
 VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {
@@ -4227,9 +4227,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   }
 
   function removeAdUnit() {
-    if (tech) {
-      tech.unloadAdUnit();
-    }
+    tech.unloadAdUnit();
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
   }
 };
