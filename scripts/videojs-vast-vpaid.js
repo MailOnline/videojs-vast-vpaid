@@ -1550,6 +1550,18 @@ function $addEventsSubscribers() {
     // map the click event to be an object instead of depending of the order of the arguments
     // and to be consistent with the flash
     this._creative.subscribe($clickThruHook.bind(this), AD_CLICK);
+
+    // because we are adding the element inside the iframe
+    // the user is not able to click in the video
+    if (this._videoEl) {
+        var documentElement = this._iframe.contentDocument.documentElement;
+        var videoEl = this._videoEl;
+        documentElement.addEventListener('click', function(e) {
+            if (e.target === documentElement) {
+                videoEl.click();
+            }
+        });
+    }
 }
 
 function $clickThruHook(url, id, playerHandles) {
