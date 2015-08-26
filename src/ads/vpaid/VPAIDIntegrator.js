@@ -105,7 +105,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   }
 
   function removeAdUnit() {
-    tech.unloadAdUnit();
+    if (tech) {
+      tech.unloadAdUnit();
+    }
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
   }
 };
