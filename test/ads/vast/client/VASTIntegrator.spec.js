@@ -225,9 +225,10 @@ describe("VASTIntegrator", function () {
         sinon.assert.calledOnce(tracker.trackExitFullscreen);
       });
 
-      it("must track impressions on adsStart", function () {
+      it("must track impressions and creativeView on adsStart", function () {
         player.trigger('vast.adStart');
         sinon.assert.calledOnce(tracker.trackImpressions);
+        sinon.assert.calledOnce(tracker.trackCreativeView);
       });
 
       it("must track pause and resume events", function () {
@@ -550,7 +551,7 @@ describe("VASTIntegrator", function () {
           clickThroughAnchor(player).getAttribute('href')
         );
       });
-      
+
       it("must set the target of the anchor to blank if there is a clickthrough on the response", function(){
         response.clickThrough = 'http://fake.url?assetUri=[ASSETURI]&contentPlayHead:[CONTENTPLAYHEAD]';
         vastIntegrator._addClickThrough(mediaFile, tracker, response, callback);
@@ -577,7 +578,7 @@ describe("VASTIntegrator", function () {
         sinon.assert.notCalled(player.play);
         sinon.assert.calledOnce(player.pause);
       });
-      
+
       it("must play the ad when you click on the anchor if the player is paused", function(){
         var anchor;
         sinon.stub(player, 'paused');
@@ -590,7 +591,7 @@ describe("VASTIntegrator", function () {
         click(anchor);        sinon.assert.notCalled(tracker.trackClick);
         sinon.assert.calledOnce(player.play);
       });
-      
+
       it("must update the clickThrough anchor on timeupdate", function(){
         sinon.stub(player, 'currentTime');
         player.currentTime.returns(0);

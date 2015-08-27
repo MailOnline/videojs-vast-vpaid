@@ -138,6 +138,10 @@ VASTTracker.prototype.trackImpressions = function trackImpressions() {
   this.trackURLs(this.response.impressions);
 };
 
+VASTTracker.prototype.trackCreativeView = function trackCreativeView() {
+  this.trackEvent('creativeView');
+}
+
 VASTTracker.prototype.trackClick = function trackClick() {
   this.trackURLs(this.response.clickTrackings);
 };

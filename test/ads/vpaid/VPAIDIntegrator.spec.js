@@ -507,13 +507,14 @@ describe("VPAIDIntegrator", function () {
         assert(playSpy.calledOnce);
       });
 
-      it("on 'AdStarted' event, must resume the adUnit and trigger 'play' evt", function(){
+      it("on 'AdStarted' event, must track creativeView, resume the adUnit and trigger 'play' evt", function(){
         var playSpy = sinon.spy();
         player.on('play', playSpy);
         vpaidIntegrator._adUnit = {
           isPaused: echoFn(true)
         };
         adUnit.trigger('AdStarted');
+        sinon.assert.calledOnce(tracker.trackCreativeView);
         assert.isFalse(vpaidIntegrator._adUnit._paused);
         assert(playSpy.calledOnce);
       });
