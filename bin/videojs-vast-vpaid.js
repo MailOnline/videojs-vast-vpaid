@@ -4362,6 +4362,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdStarted', function () {
+    tracker.trackCreativeView();
     notifyPlayToPlayer();
   });
 
@@ -5209,6 +5210,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackImpressions() {
     tracker.trackImpressions();
+    tracker.trackCreativeView();
   }
 
   function trackVolumeChange() {
@@ -5698,6 +5700,10 @@ VASTTracker.prototype.trackErrorWithCode = function trackErrorWithCode(errorcode
 VASTTracker.prototype.trackImpressions = function trackImpressions() {
   this.trackURLs(this.response.impressions);
 };
+
+VASTTracker.prototype.trackCreativeView = function trackCreativeView() {
+  this.trackEvent('creativeView');
+}
 
 VASTTracker.prototype.trackClick = function trackClick() {
   this.trackURLs(this.response.clickTrackings);

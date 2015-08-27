@@ -228,6 +228,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdStarted', function () {
+    tracker.trackCreativeView();
     notifyPlayToPlayer();
   });
 

@@ -304,7 +304,7 @@ describe("VASTTracker", function () {
         sinon.assert.notCalled(vastUtil.track);
       });
     });
-    
+
     describe("trackImpressions", function(){
       var tracker;
 
@@ -314,7 +314,7 @@ describe("VASTTracker", function () {
       });
 
       it("must be a function", function(){
-        assert.isFunction(tracker.trackImpressions)
+        assert.isFunction(tracker.trackImpressions);
       });
 
       it("must track the impressionURLs", function(){
@@ -323,6 +323,31 @@ describe("VASTTracker", function () {
           ASSETURI: ASSET_URI,
           CONTENTPLAYHEAD: "00:00:00.000"
         })
+      });
+    });
+
+    describe("trackCreativeView", function(){
+      var tracker;
+
+      beforeEach(function () {
+        response._addTrackingEvents([
+          createTrackEvent('creativeView', 'http://creativeView.trackEvent.url'),
+        ]);
+        tracker = new VASTTracker(ASSET_URI, response);
+      });
+
+      it("must be a function", function(){
+        assert.isFunction(tracker.trackCreativeView);
+      });
+
+      it("must track the creativeViewURLs when called with trackCreativeView", function(){
+        tracker.trackCreativeView();
+        assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
+      });
+
+      it("must track the creativeViewURLs when called with trackEvent", function(){
+        tracker.trackEvent('creativeView');
+        assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
       });
     });
 

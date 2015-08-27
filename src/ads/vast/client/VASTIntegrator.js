@@ -137,6 +137,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackImpressions() {
     tracker.trackImpressions();
+    tracker.trackCreativeView();
   }
 
   function trackVolumeChange() {
