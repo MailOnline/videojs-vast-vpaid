@@ -140,7 +140,7 @@ VASTTracker.prototype.trackImpressions = function trackImpressions() {
 
 VASTTracker.prototype.trackCreativeView = function trackCreativeView() {
   this.trackEvent('creativeView');
-}
+};
 
 VASTTracker.prototype.trackClick = function trackClick() {
   this.trackURLs(this.response.clickTrackings);
