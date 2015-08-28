@@ -3629,8 +3629,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
-    player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
-
     playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {
       if (evt.type === 'vast.adStart') {
         addAdsLabel();
@@ -3642,6 +3640,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     if (isIDevice()) {
       preventManualProgress();
     }
+
+    player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     /*** Local functions ****/
     function addAdsLabel() {
@@ -3663,7 +3663,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       var skipad_attempts = 0;
 
       player.on('timeupdate', adTimeupdateHandler);
-      playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
+      playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adError'], stopPreventManualProgress);
 
       /*** Local functions ***/
       function adTimeupdateHandler() {
@@ -5703,7 +5703,7 @@ VASTTracker.prototype.trackImpressions = function trackImpressions() {
 
 VASTTracker.prototype.trackCreativeView = function trackCreativeView() {
   this.trackEvent('creativeView');
-}
+};
 
 VASTTracker.prototype.trackClick = function trackClick() {
   this.trackURLs(this.response.clickTrackings);
