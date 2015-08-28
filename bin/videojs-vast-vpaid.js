@@ -1550,6 +1550,18 @@ function $addEventsSubscribers() {
     // map the click event to be an object instead of depending of the order of the arguments
     // and to be consistent with the flash
     this._creative.subscribe($clickThruHook.bind(this), AD_CLICK);
+
+    // because we are adding the element inside the iframe
+    // the user is not able to click in the video
+    if (this._videoEl) {
+        var documentElement = this._iframe.contentDocument.documentElement;
+        var videoEl = this._videoEl;
+        documentElement.addEventListener('click', function(e) {
+            if (e.target === documentElement) {
+                videoEl.click();
+            }
+        });
+    }
 }
 
 function $clickThruHook(url, id, playerHandles) {
@@ -3617,8 +3629,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
     var adFinished = false;
 
-    player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
-
     playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {
       if (evt.type === 'vast.adStart') {
         addAdsLabel();
@@ -3630,6 +3640,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     if (isIDevice()) {
       preventManualProgress();
     }
+
+    player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     /*** Local functions ****/
     function addAdsLabel() {
@@ -3651,7 +3663,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       var skipad_attempts = 0;
 
       player.on('timeupdate', adTimeupdateHandler);
-      playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], stopPreventManualProgress);
+      playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adError'], stopPreventManualProgress);
 
       /*** Local functions ***/
       function adTimeupdateHandler() {
@@ -3995,7 +4007,7 @@ function VPAIDFlashTech(mediaFile, settings) {
 }
 
 VPAIDFlashTech.supports = function (type) {
-  return type === 'application/x-shockwave-flash';
+  return type === 'application/x-shockwave-flash' && VPAIDFLASHClient.isSupported();
 };
 
 VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {
@@ -4227,7 +4239,9 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   }
 
   function removeAdUnit() {
-    tech.unloadAdUnit();
+    if (tech) {
+      tech.unloadAdUnit();
+    }
     dom.removeClass(player.el(), 'vjs-vpaid-ad');
   }
 };
@@ -4348,6 +4362,7 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdStarted', function () {
+    tracker.trackCreativeView();
     notifyPlayToPlayer();
   });
 
@@ -5195,6 +5210,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackImpressions() {
     tracker.trackImpressions();
+    tracker.trackCreativeView();
   }
 
   function trackVolumeChange() {
@@ -5683,6 +5699,10 @@ VASTTracker.prototype.trackErrorWithCode = function trackErrorWithCode(errorcode
 
 VASTTracker.prototype.trackImpressions = function trackImpressions() {
   this.trackURLs(this.response.impressions);
+};
+
+VASTTracker.prototype.trackCreativeView = function trackCreativeView() {
+  this.trackEvent('creativeView');
 };
 
 VASTTracker.prototype.trackClick = function trackClick() {
