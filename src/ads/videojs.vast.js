@@ -298,4 +298,3 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return false;
   }
 });
-

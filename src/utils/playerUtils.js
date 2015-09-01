@@ -193,6 +193,7 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.adStart', addStyles);
   player.on('vast.adEnd', removeStyles);
   player.on('vast.adsCancel', removeStyles);
+  player.on('ended', resetFirstPlay);
 
   /*** Local Functions ***/
 
@@ -289,7 +290,6 @@ playerUtils.prepareForAds = function (player) {
   function resetFirstPlay() {
     _firstPlay = true;
     blackPoster.show();
-    restoreContentVolume();
   }
 
   function isFirstPlay() {
