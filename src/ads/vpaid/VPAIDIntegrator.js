@@ -208,7 +208,7 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
   var tech = this.player.el().querySelector('.vjs-tech');
   var dimension = dom.getDimension(tech);
-  adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
+  adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, {AdParameters: vastResponse.adParameters || ''}, function (error) {
     next(error, adUnit, vastResponse);
   });
 };
