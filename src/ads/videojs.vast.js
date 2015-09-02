@@ -95,8 +95,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     async.waterfall([
-      checkAdsEnabled,
       preparePlayerForAd,
+      checkAdsEnabled,
       playPrerollAd
     ], function (error, response) {
       if (error) {
@@ -115,10 +115,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function restoreVideoContent() {
+      setupContentEvents();
       if (snapshot) {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
-        setupContentEvents();
       }
     }
 
