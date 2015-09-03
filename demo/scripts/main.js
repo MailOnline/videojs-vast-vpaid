@@ -23,11 +23,9 @@ xhook.before(function(request, callback) {
 videojs.plugin('ads-setup', adsSetupPlugin);
 
 dom.onReady(function() {
-  var vastForm = document.querySelector('form#vast-form');
-  var vpaidForm = document.querySelector('form#vpaid-form');
+  var vastForm = document.querySelector('form#vast-vpaid-form');
 
   initForm(vastForm);
-  initForm(vpaidForm);
 
   /*** Local functions ***/
   function initForm(formEl) {

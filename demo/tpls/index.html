@@ -45,24 +45,21 @@
 
 <div class="container">
     <div class="row">
-        <div class="six columns">
+        <div class="twelve columns">
             <div class="vast-container">
-                <section class="header">
-                    <h3 class="title">VAST Ad Response</h3>
-                </section>
-                <form id="vast-form">
+                <form id="vast-vpaid-form">
                     <div class="row">
                         <div class="one-third column">
                             <input type="radio" name="vast-type" class="tag-type-radio" id="vast-tag-radio">
-                            <label for="vast-tag-radio">VAST tag</label>
+                            <label for="vast-tag-radio">VAST/VPAID tag</label>
                         </div>
                         <div class="one-third column">
                             <input type="radio" name="vast-type" class="xml-type-radio" checked="checked" id="vast-sample-radio">
-                            <label for="vast-sample-radio">VAST sample</label>
+                            <label for="vast-sample-radio">VAST/VPAID sample</label>
                         </div>
                         <div class="one-third column">
                             <input type="radio" name="vast-type" class="custom-type-radio" id="vast-custom-radio">
-                            <label for="vast-custom-radio">VAST custom</label>
+                            <label for="vast-custom-radio">VAST/VPAID custom XML</label>
                         </div>
                     </div>
                     <div class="row tag-type">
@@ -77,62 +74,7 @@
                             <select id="vast-samples" class="u-full-width xml-el">
                                 <option selected="selected" value="http://bs.serving-sys.com/BurstingPipe/adServer.bs?cn=is&c=23&pl=VAST&pli=13569296&PluID=0&pos=1886&ord=%%CACHEBUSTER%%&cim=1">VAST serving-sys Preroll Linear</option>
                                 <option value="http://servedby.flashtalking.com/imp/1/31714;812030;208;xml;DailyMail;640x360VASTHTML5/?cachebuster=%%CACHEBUSTER%%">VAST flashtalking Preroll Linear</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row custom-type">
-                        <div class="twelve columns">
-                            <textarea class="u-full-width custom-el" placeholder="Sample VAST XMl"></textarea>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="twelve columns">
-                            <a class="button button-primary" href="#">Update</a>
-                            <a class="button button-info pause" style="display:none;" href="#">Pause Ad</a>
-                            <a class="button button-info resume" style="display:none;" href="#">Resume Ad</a>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="twelve columns">
-                            <div class="vjs-video-container">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="six columns">
-            <div class="vast-container">
-                <section class="header">
-                    <h3 class="title">VPAID Ad Response</h3>
-                </section>
-                <form id="vpaid-form">
-                    <div class="row">
-                        <div class="one-third column">
-                            <input type="radio" name="vpaid-type" class="tag-type-radio"
-                                   id="vpaid-tag-radio">
-                            <label for="vpaid-tag-radio">VPAID tag</label>
-                        </div>
-                        <div class="one-third column">
-                            <input type="radio" name="vpaid-type" checked="checked" class="xml-type-radio" id="vpaid-xml-radio">
-                            <label for="vpaid-xml-radio">VPAID Sample</label>
-                        </div>
-                        <div class="one-third column">
-                            <input type="radio" name="VPAID-type" class="custom-type-radio" id="vpaid-custom-radio">
-                            <label for="vpaid-custom-radio">VPAID custom</label>
-                        </div>
-                    </div>
-                    <div class="row tag-type">
-                        <div class="twelve columns">
-                            <label for="vpaid-tag">VPAID Tag</label>
-                            <input id="vpaid-tag" type="text" name="vpaid-type" class="u-full-width tag-el">
-                        </div>
-                    </div>
-                    <div class="row xml-type">
-                        <div class="twelve columns">
-                            <label for="vpaid-samples">VPAID XML Samples</label>
-                            <select id="vpaid-samples" class="u-full-width xml-el">
-                                <option selected="selected" value="http://search.spotxchange.com/vast/2.00/79391?VPAID=1&content_page_url=test.com&cb=3202405928168446&player_width=300&player_height=250">VPAID Flash spotX Preroll Test Tag</option>
+                                <option value="http://search.spotxchange.com/vast/2.00/79391?VPAID=1&content_page_url=test.com&cb=3202405928168446&player_width=300&player_height=250">VPAID Flash spotX Preroll Test Tag</option>
                                 <option value="http://vast.bp3863356.btrll.com/vast/3863356?n=1426410433&br_w=300&br_h=250&br_pageurl=blah">VPAID Flash Brightroll Preroll test tag</option>
                                 <option value="https://ad3.liverail.com/?LR_PUBLISHER_ID=1331&LR_CAMPAIGN_ID=229&LR_SCHEMA=vast2-vpaid">VPAID Flash LiveRail Preroll test tag</option>
                                 <option value="http://cdn-tags.brainient.com/1228/cba8794a-38a5-448b-ad31-e3f6169645c1/vast.xml?platform=vpaid&v=v6&proto=http">VPAID Flash Brainient Preroll Linear Expand</option>
@@ -144,7 +86,7 @@
                     </div>
                     <div class="row custom-type">
                         <div class="twelve columns">
-                            <textarea class="u-full-width custom-el" placeholder="Sample VPAID XMl"></textarea>
+                            <textarea class="u-full-width custom-el" placeholder="Sample VAST XMl"></textarea>
                         </div>
                     </div>
                     <div class="row">
