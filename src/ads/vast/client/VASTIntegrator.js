@@ -124,9 +124,17 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   }
 
   function trackPause() {
+    //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
+    //      We should not track this pause event because it makes the VAST tracking confusing
+    if(player.currentTime() === player.duration()){
+      return;
+    }
+
     tracker.trackPause();
-    player.one('play', function () {
-      tracker.trackResume();
+    playerUtils.once(player, ['play', 'vast.adEnd', 'vast.adsCancel'], function (evt) {
+      if(evt.type === 'play'){
+        tracker.trackResume();
+      }
     });
   }
 

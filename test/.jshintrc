@@ -104,6 +104,7 @@
     "firstArg": true,
     "secondArg": true,
     "thirdArg": true,
+    "fourthArg": true,
     "click": true
     }
 }
