@@ -24,13 +24,13 @@ describe("VASTTracker", function () {
 
   it("must throw an error if you don't pass an asset URI to the constructor", function () {
     assert.throws(function () {
-      new VASTTracker();
+     var tracker = new VASTTracker();
     }, VASTError, 'VAST Error: on VASTTracker constructor, missing required the URI of the ad asset being played');
   });
 
   it("must throw an error if you don't pass a VASTResponse obj to the constructor", function () {
     assert.throws(function () {
-      new VASTTracker(ASSET_URI);
+      var tracker = new VASTTracker(ASSET_URI);
     }, VASTError, 'VAST Error: on VASTTracker constructor, missing required VAST response');
   });
 
@@ -156,25 +156,25 @@ describe("VASTTracker", function () {
     });
 
     describe("trackProgress", function () {
-      var tracker;
+      var tracker, progressEvent, progressEvent2;
 
       beforeEach(function () {
-        var progressEvent = createTrackEvent('progress', 'http://progress.track.url');
+        progressEvent = createTrackEvent('progress', 'http://progress.track.url');
         progressEvent.offset = 100;
+        progressEvent2 = createTrackEvent('progress', 'http://progress2.track.url');
+        progressEvent2.offset = 150;
         response._addTrackingEvents([
           createTrackEvent('start', 'http://start.track.url'),
           createTrackEvent('rewind', 'http://rewind.track.url'),
           createTrackEvent('firstQuartile', 'http://firstQuartile.track.url'),
           createTrackEvent('midpoint', 'http://midpoint.track.url'),
           createTrackEvent('thirdQuartile', 'http://thirdQuartile.track.url'),
-          progressEvent
+          progressEvent,
+          progressEvent2
         ]);
         tracker = new VASTTracker(ASSET_URI, response);
         sinon.spy(tracker, 'trackEvent');
-      });
-
-      it("must be a function", function () {
-        assert.isFunction(tracker.trackProgress);
+        sinon.spy(tracker, 'trackURLs');
       });
 
       it("must set the progress in the tracker", function () {
@@ -228,9 +228,20 @@ describe("VASTTracker", function () {
 
       it("must trigger the progress event after the specified offset has passed", function(){
         tracker.trackProgress(95);
-        sinon.assert.neverCalledWith(tracker.trackEvent, 'progress', true);
+        sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent.uri]);
+        sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent2.uri]);
         tracker.trackProgress(100);
-        sinon.assert.calledWithExactly(tracker.trackEvent, 'progress', true);
+        sinon.assert.calledWithExactly(tracker.trackURLs, [progressEvent.uri]);
+        sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent2.uri]);
+
+        //Second tracking event
+        tracker.trackURLs.reset();
+        sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent.uri]);
+        sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent2.uri]);
+
+        tracker.trackProgress(150);
+        sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent.uri]);
+        sinon.assert.calledWithExactly(tracker.trackURLs, [progressEvent2.uri]);
       });
     });
 
@@ -322,7 +333,7 @@ describe("VASTTracker", function () {
         assertVASTTrackRequest(['http://impressions.track.url'], {
           ASSETURI: ASSET_URI,
           CONTENTPLAYHEAD: "00:00:00.000"
-        })
+        });
       });
     });
 

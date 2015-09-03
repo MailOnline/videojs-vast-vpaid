@@ -66,7 +66,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
     addTrackEvent('start', ONCE, newProgress > 0);
     addTrackEvent('rewind', ALWAYS, this.progress > newProgress);
     addQuartileEvents.call(this, newProgress);
-    addProgressEvent.call(this, newProgress);
+    trackProgressEvents.call(this, newProgress);
     trackEvents.call(this);
     this.progress = newProgress;
   }
@@ -88,11 +88,22 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
     });
   }
 
-  function addProgressEvent(progress) {
-    var progressEvent = trackingEvents.progress && trackingEvents.progress[0];
-    if (progressEvent) {
-      addTrackEvent('progress', ONCE, progressEvent.offset <= progress);
+  function trackProgressEvents(progress) {
+    if (!isArray(trackingEvents.progress)) {
+      return; //Nothing to track
     }
+
+    var pendingProgressEvts = [];
+    var that = this;
+
+    trackingEvents.progress.forEach(function (evt) {
+      if (evt.offset <= progress) {
+        that.trackURLs([evt.uri]);
+      } else {
+        pendingProgressEvts.push(evt);
+      }
+    });
+    trackingEvents.progress = pendingProgressEvts;
   }
 
   function trackEvents() {

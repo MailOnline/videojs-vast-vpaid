@@ -73,6 +73,7 @@
     "Ad":true,
     "Linear":true,
     "Wrapper":true,
+    "VAST":true,
     "VASTResponse":true,
     "TrackingEvent":true,
     "Creative":true,

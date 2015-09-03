@@ -30,7 +30,7 @@ describe("VASTClient", function () {
   function vastXML(childNodes) {
     childNodes = childNodes || '';
     return '<?xml version="1.0" encoding="utf-8"?>' +
-      '<VAST version="3.0">' + childNodes + '</VAST>'
+      '<VAST version="3.0">' + childNodes + '</VAST>';
   }
 
   function vastAdXML(childNodes) {
@@ -555,13 +555,13 @@ describe("VASTClient", function () {
         }, "on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
       });
       
-      it("must throw a VASTError if there is more than one progress event", function(){
+      it("must throw an VASTError if one of the progress events have a wrong offset", function(){
         var linear = inLineAd.inLine.creatives[0].linear;
         linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', '00:00:1'));
-        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url2', '00:00:1'));
+        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url2', 'fooo:00:1'));
         assertThrowsVASTError(function () {
           vast._buildVASTResponse(ads);
-        }, "on VASTClient._buildVASTResponse, found more than one progress tracking event in VAST response", 101);
+        }, "on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
       });
 
       it("must throw a vastError if the progressEvent has an offset that is not a number", function(){
@@ -569,7 +569,7 @@ describe("VASTClient", function () {
         linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', 'wrongOffset'));
         assertThrowsVASTError(function () {
           vast._buildVASTResponse(ads);
-        }, "on VASTClient._buildVASTResponse, missing offset attribute on progress tracking event", 101);
+        }, "on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
       });
 
       it("must throw a vastError if response have no mediaFiles", function(){
