@@ -124,11 +124,8 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   }
 
   function trackPause() {
-    console.log('##### TRACKING PAUSE');
-
     tracker.trackPause();
     player.one('play', function () {
-      console.log('##### TRACKING RESUME');
       tracker.trackResume();
     });
   }
