@@ -212,6 +212,9 @@ describe("VASTIntegrator", function () {
         tracker = sinon.createStubInstance(VASTTracker);
         mediaFile = createMediaFile('http://foo.video.url.mp4', 'video/mp4');
         vastIntegrator._setupEvents(mediaFile, tracker, response, callback);
+
+        sinon.stub(player, 'currentTime').returns(1);
+        sinon.stub(player, 'duration').returns(20);
       });
 
       it("must track fullscreen change", function () {
@@ -240,10 +243,37 @@ describe("VASTIntegrator", function () {
         sinon.assert.calledOnce(tracker.trackResume);
       });
 
+      it("must NOT track pause and resume events if the ad has finished playing", function(){
+        player.currentTime.returns(20);
+        player.duration.returns(20);
+        player.trigger('pause');
+        sinon.assert.notCalled(tracker.trackPause);
+        sinon.assert.notCalled(tracker.trackResume);
+        player.trigger('play');
+        sinon.assert.notCalled(tracker.trackPause);
+        sinon.assert.notCalled(tracker.trackResume);
+      });
+
+      it("must not track resume event if the ad gets canceled while paused", function(){
+        player.trigger('pause');
+        player.trigger('vast.adsCancel');
+        player.trigger('play');
+        sinon.assert.notCalled(tracker.trackResume);
+      });
+
+      //This test looks like a contradiction but it test the corner case for browsers whose
+      //player.duration and player.currentTime do not equal when the video has ended
+      it("must not track resume event if the ad ends while being paused", function(){
+        player.trigger('pause');
+        player.trigger('vast.adEnd');
+        player.trigger('play');
+        sinon.assert.notCalled(tracker.trackResume);
+      });
+
       it("must track progress", function () {
         player.trigger('timeupdate');
-        sinon.assert.calledWithExactly(tracker.trackProgress, 0);
-        sinon.stub(player, 'currentTime').returns(5);
+        sinon.assert.calledWithExactly(tracker.trackProgress, 1000);
+        player.currentTime.returns(5);
         player.trigger('timeupdate');
         sinon.assert.calledWithExactly(tracker.trackProgress, 5000);
       });
@@ -519,7 +549,7 @@ describe("VASTIntegrator", function () {
 
       function resetAnchorToPreventPageReload(anchor) {
         anchor.target = "_self";
-        anchor.href = "#"
+        anchor.href = "#";
       }
 
       beforeEach(function () {
