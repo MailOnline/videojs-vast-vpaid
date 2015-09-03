@@ -165,7 +165,10 @@ describe("videojs.vast plugin", function () {
     beforeEach(function () {
       clock = sinon.useFakeTimers();
       player = videojs(document.createElement('video'), {});
-      player.vastClient({url: echoFn('/fake.ad.url')});
+      player.vastClient({
+        url: echoFn('/fake.ad.url'),
+        playAdAlways: true
+      });
     });
 
     afterEach(function(){
@@ -179,6 +182,41 @@ describe("videojs.vast plugin", function () {
       player.trigger('vast.firstPlay');
       clock.tick(1);
       sinon.assert.calledOnce(adsCanceled);
+    });
+
+    it("must cancel the ad on replay if the ads are disabled and trigger the content events", function(){
+      var adsCanceled = sinon.spy();
+      var contentStart = sinon.spy();
+      var contentEnd = sinon.spy();
+      player.vast.disable();
+      player.trigger('vast.firstPlay');
+      clock.tick(1);
+      //We simulate we finish playing the video.
+      player.trigger('vast.contentEnd');
+      clock.tick(1);
+      player.on('vast.adsCancel', adsCanceled);
+      player.on('vast.contentStart', contentStart);
+      player.on('vast.contentEnd', contentEnd);
+
+      //We simulate the second first play (replay)
+      player.trigger('vast.firstPlay');
+      clock.tick(1);
+
+      sinon.assert.calledOnce(adsCanceled);
+      sinon.assert.notCalled(contentStart);
+      sinon.assert.notCalled(contentEnd);
+
+      player.trigger('playing');
+
+      sinon.assert.calledOnce(adsCanceled);
+      sinon.assert.calledOnce(contentStart);
+      sinon.assert.notCalled(contentEnd);
+
+      player.trigger('ended');
+
+      sinon.assert.calledOnce(adsCanceled);
+      sinon.assert.calledOnce(contentStart);
+      sinon.assert.calledOnce(contentEnd);
     });
 
     it("must remove the native poster to prevent flickering when video content starts", function(){
@@ -312,7 +350,11 @@ describe("videojs.vast plugin", function () {
 
     it("must set the player.vast.adUnit to null once we finish playing", function(){
       player.vast.adUnit = {
-        type: 'FAKE'
+        type: 'FAKE',
+        isPaused: function() {
+          return false;
+        },
+        pauseAd: noop
       };
       player.vast.disable();
       player.trigger('vast.firstPlay');
@@ -377,7 +419,7 @@ describe("videojs.vast plugin", function () {
     var getVASTResponse, callback, old_UA;
 
     beforeEach(function () {
-      old_UA = _UA;
+      old_UA = window._UA;
       window._UA = "iPhone";
 
       this.clock = sinon.useFakeTimers();

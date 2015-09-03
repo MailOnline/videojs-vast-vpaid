@@ -11,12 +11,13 @@ if [ "$TRAVIS" = "true" ]; then
    exit 0
 fi
 
+# It is not propertly finding the changed files.
+# TODO: Take a look to see why is failing
+#files=$(git diff --name-only --diff-filter=ACM | grep "^src/\|test/.*js$")
 
-files=$(git diff --cached --name-only --diff-filter=ACM | grep "^src/\|test/.*js$")
-
-if [ "$files" = "" ]; then
-    exit 0
-fi
+#if [ "$files" = "" ]; then
+#    exit 0
+#fi
 
 pass=true
 echo "\nRuning Unit Tests:\n"

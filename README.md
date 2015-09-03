@@ -5,8 +5,7 @@
 
   This plugin allows videojs to monetise its videos. To do so, it implements the [VAST](http://www.iab.net/media/file/VASTv3.0.pdf) and [VPAID](http://www.iab.net/media/file/VPAID_2.0_Final_04-10-2012.pdf) specifications from IAB.
 
-  Currently we support VAST and VPAID Flash preroll ads.
-  We are working to support VPAID HTML5 preroll ads, and we will add more VAST ad types as we need them.
+  Currently we support VAST and VPAID [Flash](https://github.com/MailOnline/VPAIDFLASHClient) and [HTML5](https://github.com/MailOnline/VPAIDHTML5Client) preroll ads, we will add more VAST ad types as we need them.
 
   It is important to notice that **VPAID integration is still in beta** and we have not yet released a stable version.
 
@@ -210,10 +209,10 @@
 
 ### 'vast.contentEnded' event
   Fired when the video content ends.
-  
+
 ### 'vast.reset' event
   Trigger the 'vast.reset' event whenever you want to reset the plugin. Beware that if an ad is playing it will be canceled.
-  
+
 ## Running the plugin
   If you want to run the plugin you need to clone the repo into your local environment
   ```
@@ -248,8 +247,7 @@ ____   ____.__     .___                     __          ____   ____             
 ║                         │ If you use "--env production" everything will be minified                      ║
 ║                         │ and the dist folder will be updated accordingly.                               ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
-║ release                 │ Creates a new version of the player and releases it.                           ║
-║                         │ Increasing version, creating new tag and so on (--bump [patch(default)/minor/… ║
+║ deploy-demo             │ Builds the demo and deploys it to github pages                                 ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
 ║ watch                   │ watches for changes on the plugin files and executes the appropriate tasks     ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢

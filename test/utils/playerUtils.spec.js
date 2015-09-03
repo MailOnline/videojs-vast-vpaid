@@ -402,7 +402,7 @@ describe("playerUtils.prepareForAds", function () {
             assert.equal(player.volume(), 1);
           });
 
-          it("must restore the muted volume on  'vast.reset' evt", function () {
+          it("must restore the muted volume on  'vast.reset' evt", function () { // need to be sure we need to reset the volume on reset
             playerUtils.prepareForAds(player);
             player.volume(1);
             player.muted(false);

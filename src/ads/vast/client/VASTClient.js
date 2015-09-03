@@ -244,13 +244,11 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
     }
 
     if (progressEvents) {
-      if (progressEvents.length > 1) {
-        throw new VASTError("on VASTClient._buildVASTResponse, found more than one progress tracking event in VAST response", 101);
-      }
-
-      if (!isNumber(progressEvents[0].offset)) {
-        throw new VASTError("on VASTClient._buildVASTResponse, missing offset attribute on progress tracking event", 101);
-      }
+      progressEvents.forEach(function(progressEvent){
+        if (!isNumber(progressEvent.offset)) {
+          throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
+        }
+      });
     }
   }
 };
