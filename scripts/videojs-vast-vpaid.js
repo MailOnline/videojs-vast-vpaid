@@ -28,10 +28,10 @@ var IVPAIDAdUnit = (function () {
     }, {
         key: 'initAd',
 
-        //width and height is not in the beginning because we will use the default width/height used in the constructor
+        //creativeData is an object to be consistent with VPAIDHTML
         value: function initAd(width, height, viewMode, desiredBitrate) {
-            var creativeData = arguments[4] === undefined ? '' : arguments[4];
-            var environmentVars = arguments[5] === undefined ? '' : arguments[5];
+            var creativeData = arguments[4] === undefined ? { AdParameters: '' } : arguments[4];
+            var environmentVars = arguments[5] === undefined ? { flashVars: '' } : arguments[5];
             var callback = arguments[6] === undefined ? undefined : arguments[6];
         }
     }, {
@@ -203,14 +203,16 @@ var VPAIDAdUnit = (function (_IVPAIDAdUnit) {
     }, {
         key: 'initAd',
         value: function initAd(width, height, viewMode, desiredBitrate) {
-            var creativeData = arguments[4] === undefined ? '' : arguments[4];
-            var environmentVars = arguments[5] === undefined ? '' : arguments[5];
+            var creativeData = arguments[4] === undefined ? { AdParameters: '' } : arguments[4];
+            var environmentVars = arguments[5] === undefined ? { flashVars: '' } : arguments[5];
             var callback = arguments[6] === undefined ? undefined : arguments[6];
 
             //resize element that has the flash object
             this._flash.setSize(width, height);
+            creativeData = creativeData || { AdParameters: '' };
+            environmentVars = environmentVars || { flashVars: '' };
 
-            this._flash.callFlashMethod('initAd', [this._flash.getWidth(), this._flash.getHeight(), viewMode, desiredBitrate, creativeData, environmentVars], callback);
+            this._flash.callFlashMethod('initAd', [this._flash.getWidth(), this._flash.getHeight(), viewMode, desiredBitrate, creativeData.AdParameters || '', environmentVars.flashVars || ''], callback);
         }
     }, {
         key: 'resizeAd',
@@ -763,16 +765,26 @@ Object.defineProperty(JSFlashBridge, 'VPAID_FLASH_HANDLER', {
     value: VPAID_FLASH_HANDLER
 });
 
-window[VPAID_FLASH_HANDLER] = function (flashID, type, event, callID, error, data) {
+/**
+ * External interface handler
+ *
+ * @param {string} flashID identifier of the flash who call this
+ * @param {string} typeID what type of message is, can be 'event' or 'callback'
+ * @param {string} typeName if the typeID is a event the typeName will be the eventName, if is a callback the typeID is the methodName that is related this callback
+ * @param {string} callbackID only applies when the typeID is 'callback', identifier of the callback to call
+ * @param {object} error error object
+ * @param {object} data
+ */
+window[VPAID_FLASH_HANDLER] = function (flashID, typeID, typeName, callbackID, error, data) {
     var instance = registry.getInstanceByID(flashID);
     if (!instance) return;
-    if (event === 'handShake') {
+    if (typeName === 'handShake') {
         instance._handShake(error, data);
     } else {
-        if (type !== 'event') {
-            instance._callCallback(event, callID, error, data);
+        if (typeID !== 'event') {
+            instance._callCallback(typeName, callbackID, error, data);
         } else {
-            instance._trigger(event, data);
+            instance._trigger(typeName, data);
         }
     }
 };
@@ -3064,6 +3076,7 @@ playerUtils.prepareForAds = function (player) {
     if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
+      volumeSnapshot = null;
     }
   }
 
@@ -3124,6 +3137,7 @@ playerUtils.once = function once(player, events, handler) {
     player.on(event, listener);
   });
 };
+
 ;
 'use strict';
 
@@ -3503,8 +3517,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     async.waterfall([
-      checkAdsEnabled,
       preparePlayerForAd,
+      checkAdsEnabled,
       playPrerollAd
     ], function (error, response) {
       if (error) {
@@ -3523,10 +3537,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function restoreVideoContent() {
+      setupContentEvents();
       if (snapshot) {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
-        setupContentEvents();
       }
     }
 
@@ -3706,7 +3720,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return false;
   }
 });
-
 
 ;
 vjs.AdsLabel = vjs.Component.extend({
@@ -4342,7 +4355,7 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
   var tech = this.player.el().querySelector('.vjs-tech');
   var dimension = dom.getDimension(tech);
-  adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
+  adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, {AdParameters: vastResponse.adParameters || ''}, function (error) {
     next(error, adUnit, vastResponse);
   });
 };
@@ -5047,13 +5060,11 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
     }
 
     if (progressEvents) {
-      if (progressEvents.length > 1) {
-        throw new VASTError("on VASTClient._buildVASTResponse, found more than one progress tracking event in VAST response", 101);
-      }
-
-      if (!isNumber(progressEvents[0].offset)) {
-        throw new VASTError("on VASTClient._buildVASTResponse, missing offset attribute on progress tracking event", 101);
-      }
+      progressEvents.forEach(function(progressEvent){
+        if (!isNumber(progressEvent.offset)) {
+          throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
+        }
+      });
     }
   }
 };
@@ -5197,9 +5208,17 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   }
 
   function trackPause() {
+    //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
+    //      We should not track this pause event because it makes the VAST tracking confusing
+    if(player.currentTime() === player.duration()){
+      return;
+    }
+
     tracker.trackPause();
-    player.one('play', function () {
-      tracker.trackResume();
+    playerUtils.once(player, ['play', 'vast.adEnd', 'vast.adsCancel'], function (evt) {
+      if(evt.type === 'play'){
+        tracker.trackResume();
+      }
     });
   }
 
@@ -5629,7 +5648,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
     addTrackEvent('start', ONCE, newProgress > 0);
     addTrackEvent('rewind', ALWAYS, this.progress > newProgress);
     addQuartileEvents.call(this, newProgress);
-    addProgressEvent.call(this, newProgress);
+    trackProgressEvents.call(this, newProgress);
     trackEvents.call(this);
     this.progress = newProgress;
   }
@@ -5651,11 +5670,22 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
     });
   }
 
-  function addProgressEvent(progress) {
-    var progressEvent = trackingEvents.progress && trackingEvents.progress[0];
-    if (progressEvent) {
-      addTrackEvent('progress', ONCE, progressEvent.offset <= progress);
+  function trackProgressEvents(progress) {
+    if (!isArray(trackingEvents.progress)) {
+      return; //Nothing to track
     }
+
+    var pendingProgressEvts = [];
+    var that = this;
+
+    trackingEvents.progress.forEach(function (evt) {
+      if (evt.offset <= progress) {
+        that.trackURLs([evt.uri]);
+      } else {
+        pendingProgressEvts.push(evt);
+      }
+    });
+    trackingEvents.progress = pendingProgressEvts;
   }
 
   function trackEvents() {
