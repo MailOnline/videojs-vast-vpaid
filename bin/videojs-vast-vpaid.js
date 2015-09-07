@@ -3672,7 +3672,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function preventManualProgress() {
       var PROGRESS_THRESHOLD = 1;
-      var previousTime = player.currentTime();
+      var previousTime = 0;
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;
 
@@ -5187,11 +5187,16 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('volumechange', trackVolumeChange);
 
   playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], function(evt){
+    if(evt.type === 'vast.adEnd'){
+      tracker.trackComplete();
+    }
+  });
+
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
   function unbindEvents() {
-    tracker.trackComplete();
     player.off('fullscreenchange', trackFullscreenChange);
     player.off('vast.adStart', trackImpressions);
     player.off('pause', trackPause);

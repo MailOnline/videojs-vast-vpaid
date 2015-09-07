@@ -1,6 +1,6 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
@@ -38,7 +38,7 @@
     "VPAIDHTML5Client": "0.1.11"
   },
   "devDependencies": {
-    "video.js": "4.12.11",
+    "video.js": "4.12.15",
     "xhook": "1.3.0"
   }
 }

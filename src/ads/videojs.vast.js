@@ -250,7 +250,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function preventManualProgress() {
       var PROGRESS_THRESHOLD = 1;
-      var previousTime = player.currentTime();
+      var previousTime = 0;
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;
 
