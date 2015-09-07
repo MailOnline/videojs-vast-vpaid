@@ -3064,6 +3064,7 @@ playerUtils.prepareForAds = function (player) {
     if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
+      volumeSnapshot = null;
     }
   }
 
@@ -3124,6 +3125,7 @@ playerUtils.once = function once(player, events, handler) {
     player.on(event, listener);
   });
 };
+
 ;
 'use strict';
 
@@ -3503,8 +3505,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     async.waterfall([
-      checkAdsEnabled,
       preparePlayerForAd,
+      checkAdsEnabled,
       playPrerollAd
     ], function (error, response) {
       if (error) {
@@ -3523,10 +3525,10 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function restoreVideoContent() {
+      setupContentEvents();
       if (snapshot) {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         snapshot = null;
-        setupContentEvents();
       }
     }
 
@@ -3658,7 +3660,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
     function preventManualProgress() {
       var PROGRESS_THRESHOLD = 1;
-      var previousTime = player.currentTime();
+      var previousTime = 0;
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;
 
@@ -3706,7 +3708,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     return false;
   }
 });
-
 
 ;
 vjs.AdsLabel = vjs.Component.extend({
@@ -4342,7 +4343,7 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
 VPAIDIntegrator.prototype._initAd = function (adUnit, vastResponse, next) {
   var tech = this.player.el().querySelector('.vjs-tech');
   var dimension = dom.getDimension(tech);
-  adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, vastResponse.adParameters || '', function (error) {
+  adUnit.initAd(dimension.width, dimension.height, this.VIEW_MODE.NORMAL, -1, {AdParameters: vastResponse.adParameters || ''}, function (error) {
     next(error, adUnit, vastResponse);
   });
 };
@@ -5047,13 +5048,11 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
     }
 
     if (progressEvents) {
-      if (progressEvents.length > 1) {
-        throw new VASTError("on VASTClient._buildVASTResponse, found more than one progress tracking event in VAST response", 101);
-      }
-
-      if (!isNumber(progressEvents[0].offset)) {
-        throw new VASTError("on VASTClient._buildVASTResponse, missing offset attribute on progress tracking event", 101);
-      }
+      progressEvents.forEach(function(progressEvent){
+        if (!isNumber(progressEvent.offset)) {
+          throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
+        }
+      });
     }
   }
 };
@@ -5197,9 +5196,17 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   }
 
   function trackPause() {
+    //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
+    //      We should not track this pause event because it makes the VAST tracking confusing
+    if(player.currentTime() === player.duration()){
+      return;
+    }
+
     tracker.trackPause();
-    player.one('play', function () {
-      tracker.trackResume();
+    playerUtils.once(player, ['play', 'vast.adEnd', 'vast.adsCancel'], function (evt) {
+      if(evt.type === 'play'){
+        tracker.trackResume();
+      }
     });
   }
 
@@ -5629,7 +5636,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
     addTrackEvent('start', ONCE, newProgress > 0);
     addTrackEvent('rewind', ALWAYS, this.progress > newProgress);
     addQuartileEvents.call(this, newProgress);
-    addProgressEvent.call(this, newProgress);
+    trackProgressEvents.call(this, newProgress);
     trackEvents.call(this);
     this.progress = newProgress;
   }
@@ -5651,11 +5658,22 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
     });
   }
 
-  function addProgressEvent(progress) {
-    var progressEvent = trackingEvents.progress && trackingEvents.progress[0];
-    if (progressEvent) {
-      addTrackEvent('progress', ONCE, progressEvent.offset <= progress);
+  function trackProgressEvents(progress) {
+    if (!isArray(trackingEvents.progress)) {
+      return; //Nothing to track
     }
+
+    var pendingProgressEvts = [];
+    var that = this;
+
+    trackingEvents.progress.forEach(function (evt) {
+      if (evt.offset <= progress) {
+        that.trackURLs([evt.uri]);
+      } else {
+        pendingProgressEvts.push(evt);
+      }
+    });
+    trackingEvents.progress = pendingProgressEvts;
   }
 
   function trackEvents() {
