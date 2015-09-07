@@ -294,6 +294,12 @@ describe("VASTIntegrator", function () {
         sinon.assert.calledWithExactly(callback, null, mediaFile, response);
       });
 
+      it("must not track complete evt on 'vast.adCancel'", function(){
+        player.trigger('vast.adsCancel');
+        player.trigger('vast.adEnd');
+        sinon.assert.notCalled(tracker.trackComplete);
+      });
+
       describe("on 'vast.adEnd' even", function () {
         beforeEach(function () {
           player.trigger('vast.adEnd');
