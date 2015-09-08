@@ -330,9 +330,25 @@ describe("videojs.vast plugin", function () {
         sinon.assert.notCalled(contentEndedSpy);
       });
 
+      it("must not be triggered if there is an vast.firstPlay after restoring the content", function(){
+        player.trigger('vast.firstPlay');
+        player.trigger('playing');
+        player.trigger('ended');
+        sinon.assert.notCalled(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
       it("must not trigger vast.contentEnd if there is a vast.reset after restoring the content", function(){
         player.trigger('playing');
         player.trigger('vast.reset');
+        player.trigger('ended');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
+      it("must not trigger vast.contentEnd if there is a vast.firstPlay after restoring the content", function(){
+        player.trigger('playing');
+        player.trigger('vast.firstPlay');
         player.trigger('ended');
         sinon.assert.calledOnce(contentStartSpy);
         sinon.assert.notCalled(contentEndedSpy);
@@ -343,6 +359,15 @@ describe("videojs.vast plugin", function () {
         sinon.assert.calledOnce(contentStartSpy);
         sinon.assert.notCalled(contentEndedSpy);
         player.trigger('vast.reset');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+      });
+
+      it("must not trigger vast.contentEnd if there is a vast.firstPlay while playing the content", function(){
+        player.trigger('playing');
+        sinon.assert.calledOnce(contentStartSpy);
+        sinon.assert.notCalled(contentEndedSpy);
+        player.trigger('vast.firstPlay');
         sinon.assert.calledOnce(contentStartSpy);
         sinon.assert.notCalled(contentEndedSpy);
       });
