@@ -123,14 +123,14 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function setupContentEvents() {
-      playerUtils.once(player, ['playing', 'vast.reset'], function (evt) {
+      playerUtils.once(player, ['playing', 'vast.reset', 'vast.firstPlay'], function (evt) {
         if (evt.type !== 'playing') {
           return;
         }
 
         player.trigger('vast.contentStart');
 
-        playerUtils.once(player, ['ended', 'vast.reset'], function (evt) {
+        playerUtils.once(player, ['ended', 'vast.reset', 'vast.firstPlay'], function (evt) {
           if (evt.type === 'ended') {
             player.trigger('vast.contentEnd');
           }

@@ -484,6 +484,33 @@ describe("VPAIDIntegrator", function () {
         sinon.assert.calledWithExactly(VASTTracker, adUnit.options.src, vastResponse);
       });
 
+      it("must propagate adUnit events prepending the prefix 'vpaid.' to the evt type", function(){
+        [
+          'AdSkipped',
+          'AdImpression',
+          'AdStarted',
+          'AdVideoStart',
+          'AdPlaying',
+          'AdPaused',
+          'AdVideoFirstQuartile',
+          'AdVideoMidpoint',
+          'AdVideoThirdQuartile',
+          'AdVideoComplete',
+          'AdClickThru',
+          'AdUserAcceptInvitation',
+          'AdUserClose',
+          'AdUserMinimize',
+          'AdError',
+          'AdVolumeChange'
+        ].forEach(function (evtType) {
+          var spy = sinon.spy();
+          player.on('vpaid.'+ evtType, spy);
+          adUnit.trigger(evtType, {});
+          sinon.assert.calledOnce(spy);
+        });
+
+      });
+
       it("on 'AdSkipped' event, must track skip", function(){
         adUnit.trigger('AdSkipped');
         sinon.assert.calledOnce(tracker.trackSkip);
