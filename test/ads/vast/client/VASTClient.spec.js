@@ -504,7 +504,7 @@ describe("VASTClient", function () {
         assert.deepEqual(vast.errorURLMacros, ['http://t4.liverail.com/?metric=error&erc=[ERRORCODE]']);
       });
     });
-    
+
     describe("_buildVASTResponse", function(){
       var ads, wrapperAd, wrapperAd2, inLineAd;
 
@@ -538,7 +538,7 @@ describe("VASTClient", function () {
       it("must be a function", function(){
         assert.isFunction(vast._buildVASTResponse);
       });
-      
+
       it("must given an array of ads, build a vast response", function(){
         assert.instanceOf(vast._buildVASTResponse(ads), VASTResponse);
       });
@@ -548,13 +548,18 @@ describe("VASTClient", function () {
         assert.deepEqual(ads, response.ads);
       });
 
+      it("must not fail validation if response duration is 0", function(){
+          inLineAd.inLine.creatives[0].linear.duration = 0;
+          assert.instanceOf(vast._buildVASTResponse(ads), VASTResponse);
+      });
+
       it("must throw a VASTError if the generated response has no duration", function(){
         inLineAd.inLine.creatives[0].linear.duration = undefined;
         assertThrowsVASTError(function () {
           vast._buildVASTResponse(ads);
         }, "on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
       });
-      
+
       it("must throw an VASTError if one of the progress events have a wrong offset", function(){
         var linear = inLineAd.inLine.creatives[0].linear;
         linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', '00:00:1'));
@@ -581,4 +586,3 @@ describe("VASTClient", function () {
     });
   });
 });
-
