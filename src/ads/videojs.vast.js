@@ -249,7 +249,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function preventManualProgress() {
-      var PROGRESS_THRESHOLD = 1;
+      //IOS video clock is very unreliable and we need a 3 seconds threshold to ensure that the user forwarded/rewound the ad
+      var PROGRESS_THRESHOLD = 3;
       var previousTime = 0;
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;

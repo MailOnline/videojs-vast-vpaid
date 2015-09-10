@@ -196,11 +196,19 @@ describe("VASTTracker", function () {
         sinon.assert.calledWithExactly(tracker.trackEvent, 'start', true);
       });
 
-      it("must track the rewind event if the new progress is smaller than the current one", function () {
-        tracker.trackProgress(10);
+      it("must NOT track the rewind event if the new progress is smaller than the current one by less thant 3 seconds", function () {
+        tracker.trackProgress(1000);
         tracker.trackEvent.reset();
 
         tracker.trackProgress(5);
+        sinon.assert.notCalled(tracker.trackEvent);
+      });
+
+      it("must track the rewind event if the new progress is smaller than the current one by more than 3 seconds", function () {
+        tracker.trackProgress(10000);
+        tracker.trackEvent.reset();
+
+        tracker.trackProgress(5000);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'rewind', false);
       });
 

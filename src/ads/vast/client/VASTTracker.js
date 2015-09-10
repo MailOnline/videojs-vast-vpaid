@@ -56,22 +56,27 @@ VASTTracker.prototype.trackEvent = function trackEvent(eventName, trackOnce) {
   }
 };
 
-VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
+VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   var events = [];
   var ONCE = true;
   var ALWAYS = false;
   var trackingEvents = this.response.trackingEvents;
 
-  if (isNumber(newProgress)) {
-    addTrackEvent('start', ONCE, newProgress > 0);
-    addTrackEvent('rewind', ALWAYS, this.progress > newProgress);
-    addQuartileEvents.call(this, newProgress);
-    trackProgressEvents.call(this, newProgress);
+  if (isNumber(newProgressInMs)) {
+    addTrackEvent('start', ONCE, newProgressInMs > 0);
+    addTrackEvent('rewind', ALWAYS, hasRewound(this.progress, newProgressInMs));
+    addQuartileEvents.call(this, newProgressInMs);
+    trackProgressEvents.call(this, newProgressInMs);
     trackEvents.call(this);
-    this.progress = newProgress;
+    this.progress = newProgressInMs;
   }
 
   /*** Local function ***/
+  function hasRewound(currentProgress, newProgress){
+    var REWIND_THRESHOLD = 3000; //IOS video clock is very unreliable and we need a 3 seconds threshold to ensure that there was a rewind an that it was on purpose.
+    return currentProgress > newProgressInMs && Math.abs(newProgress - currentProgress) > REWIND_THRESHOLD;
+  }
+
   function addTrackEvent(eventName, trackOnce, canBeAdded) {
     if (trackingEvents[eventName] && canBeAdded) {
       events.push({
