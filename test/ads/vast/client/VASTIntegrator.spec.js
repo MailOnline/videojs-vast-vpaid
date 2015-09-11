@@ -77,6 +77,7 @@ describe("VASTIntegrator", function () {
         player.trigger('durationchange');
         player.trigger('playing');
         player.trigger('ended');
+        player.trigger('vast.adEnd');
         assertNoError(callback);
         assert.equal(response, secondArg(callback));
         assert.isNull(skipButton(player));
@@ -300,6 +301,12 @@ describe("VASTIntegrator", function () {
         sinon.assert.notCalled(tracker.trackComplete);
       });
 
+      it("must not track complete evt on 'vast.adSkip'", function(){
+        player.trigger('vast.adSkip');
+        player.trigger('vast.adEnd');
+        sinon.assert.notCalled(tracker.trackComplete);
+      });
+
       describe("on 'vast.adEnd' even", function () {
         beforeEach(function () {
           player.trigger('vast.adEnd');
@@ -404,6 +411,14 @@ describe("VASTIntegrator", function () {
         sinon.assert.calledWithExactly(callback, null, response);
       });
 
+      it("must on 'vast.adSkip' evt, call the callback with the response and no error", function () {
+        vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        player.trigger('durationchange');
+        player.trigger('playing');
+        player.trigger('vast.adSkip');
+        sinon.assert.calledWithExactly(callback, null, response);
+      });
+
       it("must not trigger vast.adStart or call the callback if the ad was canceled before the playing evt", function () {
         var spy = sinon.spy();
         player.on('vast.adStart', spy);
@@ -479,13 +494,13 @@ describe("VASTIntegrator", function () {
 
         it("must remove the skip button once the ad finish playing", function () {
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
-          player.trigger('ended');
+          player.trigger('vast.adEnd');
           assert.isNull(skipButton(player));
         });
 
-        it("must remove the skip button if there was an error playing the ad", function () {
+        it("must remove the skip button if the ad gets canceled", function () {
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
-          player.trigger('error');
+          player.trigger('vast.adsCancel');
           assert.isNull(skipButton(player));
         });
 
@@ -504,9 +519,9 @@ describe("VASTIntegrator", function () {
           sinon.assert.notCalled(tracker.trackSkip);
         });
 
-        it("must trigger the end of the ad if you click on an enabled skip button", function () {
+        it("must trigger the 'vast.adSkip' evt if you click on an enabled skip button", function () {
           var spy = sinon.spy();
-          player.on('ended', spy);
+          player.on('vast.adSkip', spy);
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           var skipBut = skipButton(player);
           dom.addClass(skipBut, 'enabled');
@@ -514,9 +529,9 @@ describe("VASTIntegrator", function () {
           sinon.assert.calledOnce(spy);
         });
 
-        it("must NOT trigger the end of the ad if you click on a skip button that is not enabled", function () {
+        it("must NOT trigger the 'vast.adSkip' evt if you click on a skip button that is not enabled", function () {
           var spy = sinon.spy();
-          player.on('ended', spy);
+          player.on('vast.adSkip', spy);
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           var skipBut = skipButton(player);
           click(skipBut);
@@ -624,7 +639,8 @@ describe("VASTIntegrator", function () {
 
         anchor = clickThroughAnchor(player);
         resetAnchorToPreventPageReload(anchor);
-        click(anchor);        sinon.assert.notCalled(tracker.trackClick);
+        click(anchor);
+        sinon.assert.notCalled(tracker.trackClick);
         sinon.assert.calledOnce(player.play);
       });
 
@@ -649,14 +665,14 @@ describe("VASTIntegrator", function () {
       it("must remove the anchor when the ad ends", function(){
         vastIntegrator._addClickThrough(mediaFile, tracker, response, callback);
         assert.isObject(clickThroughAnchor(player));
-        player.trigger('ended');
+        player.trigger('vast.adEnd');
         assert.isNull(clickThroughAnchor(player));
       });
 
-      it("must remove the anchor on ad error", function(){
+      it("must remove the anchor on ad cancel", function(){
         vastIntegrator._addClickThrough(mediaFile, tracker, response, callback);
         assert.isObject(clickThroughAnchor(player));
-        player.trigger('error');
+        player.trigger('vast.adsCancel');
         assert.isNull(clickThroughAnchor(player));
       });
     });
