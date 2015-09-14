@@ -8,9 +8,9 @@ function VASTTracker(assetURI, vastResponse) {
   this.assetURI = assetURI;
   this.progress = 0;
   this.quartiles = {
-    firstQuartile: Math.round(25 * vastResponse.duration) / 100,
-    midpoint: Math.round(50 * vastResponse.duration) / 100,
-    thirdQuartile: Math.round(75 * vastResponse.duration) / 100
+    firstQuartile: {tracked: false, time: Math.round(25 * vastResponse.duration) / 100},
+    midpoint: {tracked: false, time: Math.round(50 * vastResponse.duration) / 100},
+    thirdQuartile: {tracked: false, time: Math.round(75 * vastResponse.duration) / 100}
   };
 
   /*** Local Functions ***/
@@ -72,7 +72,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   }
 
   /*** Local function ***/
-  function hasRewound(currentProgress, newProgress){
+  function hasRewound(currentProgress, newProgress) {
     var REWIND_THRESHOLD = 3000; //IOS video clock is very unreliable and we need a 3 seconds threshold to ensure that there was a rewind an that it was on purpose.
     return currentProgress > newProgressInMs && Math.abs(newProgress - currentProgress) > REWIND_THRESHOLD;
   }
@@ -87,10 +87,26 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   }
 
   function addQuartileEvents(progress) {
-    forEach(this.quartiles, function (quartileTime, eventName) {
-      //We only fire the quartile event if the progress is bigger than the quartile time by one second at most.
-      addTrackEvent(eventName, ONCE, progress >= quartileTime && progress <= (quartileTime + 1000));
-    });
+    var firstQuartile = this.quartiles.firstQuartile;
+    var midpoint = this.quartiles.midpoint;
+    var thirdQuartile = this.quartiles.thirdQuartile;
+
+    if (!firstQuartile.tracked) {
+      firstQuartile.tracked = canBeTracked(firstQuartile, progress);
+      addTrackEvent('firstQuartile', ONCE, firstQuartile.tracked);
+    } else if (!midpoint.tracked) {
+      midpoint.tracked = canBeTracked(midpoint, progress);
+      addTrackEvent('midpoint', ONCE, midpoint.tracked);
+    } else {
+      thirdQuartile.tracked = canBeTracked(thirdQuartile, progress);
+      addTrackEvent('thirdQuartile', ONCE, thirdQuartile.tracked);
+    }
+  }
+
+  function canBeTracked(quartile, progress) {
+    var quartileTime = quartile.time;
+    //We only fire the quartile event if the progress is bigger than the quartile time by 5 seconds at most.
+    return progress >= quartileTime && progress <= (quartileTime + 5000);
   }
 
   function trackProgressEvents(progress) {
@@ -119,21 +135,13 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
 };
 
 [
-  'start',
   'rewind',
   'fullscreen',
   'exitFullscreen',
-  'complete',
   'pause',
   'resume',
-  'close',
-  'closeLinear',
-  'skip',
   'mute',
   'unmute',
-  'firstQuartile',
-  'midpoint',
-  'thirdQuartile',
   'acceptInvitation',
   'acceptInvitationLinear',
   'collapse',
@@ -143,6 +151,34 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
       this.trackEvent(eventName);
     };
   });
+
+[
+  'start',
+  'skip',
+  'close',
+  'closeLinear'
+].forEach(function (eventName) {
+    VASTTracker.prototype['track' + capitalize(eventName)] = function () {
+      this.trackEvent(eventName, true);
+    };
+  });
+
+[
+  'firstQuartile',
+  'midpoint',
+  'thirdQuartile'
+].forEach(function (quartile) {
+    VASTTracker.prototype['track' + capitalize(quartile)] = function () {
+      this.quartiles[quartile].tracked = true;
+      this.trackEvent(quartile, true);
+    };
+  });
+
+VASTTracker.prototype.trackComplete = function () {
+  if(this.quartiles.thirdQuartile.tracked){
+    this.trackEvent('complete', true);
+  }
+};
 
 VASTTracker.prototype.trackErrorWithCode = function trackErrorWithCode(errorcode) {
   if (isNumber(errorcode)) {
