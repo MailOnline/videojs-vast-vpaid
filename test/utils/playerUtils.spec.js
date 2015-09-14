@@ -139,7 +139,7 @@ describe("playerUtils", function () {
       tech.setAttribute('style', '');
       playerUtils.restorePlayerSnapshot(player, snapshot);
       assert.equal(snapshot.style, 'border:none');
-      assert.equal(tech.getAttribute('style'), snapshot.style)
+      assert.equal(tech.getAttribute('style'), snapshot.style);
     });
 
     describe("when src has not changed", function () {
@@ -159,13 +159,13 @@ describe("playerUtils", function () {
       it("if snapshot was playing must start the video", function () {
         snapshot.playing = true;
         playerUtils.restorePlayerSnapshot(player, snapshot);
-        sinon.assert.calledOnce(player.play)
+        sinon.assert.calledOnce(player.play);
       });
 
       it("if snapshot was paused must not start the video", function () {
         snapshot.playing = false;
         playerUtils.restorePlayerSnapshot(player, snapshot);
-        sinon.assert.notCalled(player.play)
+        sinon.assert.notCalled(player.play);
       });
     });
 
@@ -212,7 +212,7 @@ describe("playerUtils", function () {
           player.currentTime.restore();
         });
 
-        it("must resume the the player if the tech is ready to resume", function () {
+        it("must resume the video if the tech is ready to resume", function () {
           snapshot.playing = true;
           snapshot.currentTime = 10;
           playerUtils.isReadyToResume.returns(true);
@@ -223,6 +223,21 @@ describe("playerUtils", function () {
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
           sinon.assert.called(player.play);
+        });
+
+        it("must try to resume the video event the video el does not triggers the 'canplay' evt", function(){
+          var clock = sinon.useFakeTimers();
+          snapshot.playing = true;
+          snapshot.currentTime = 10;
+          playerUtils.isReadyToResume.returns(true);
+          player.play.reset();
+          playerUtils.restorePlayerSnapshot(player, snapshot);
+          sinon.assert.notCalled(player.play);
+          clock.tick(1000);
+
+          sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
+          sinon.assert.called(player.play);
+          clock.restore();
         });
 
         it("must wait until the tech is ready to resume the player", function () {

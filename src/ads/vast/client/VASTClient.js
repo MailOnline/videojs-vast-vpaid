@@ -239,7 +239,7 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
       throw new VASTError("on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
     }
 
-    if (!response.duration) {
+    if (response.duration === undefined) {
       throw new VASTError("on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
     }
 

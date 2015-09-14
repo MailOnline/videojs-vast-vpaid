@@ -70,9 +70,9 @@ describe("VASTTracker", function () {
       response._addDuration(10000);
       var tracker = new VASTTracker(ASSET_URI, response);
       assert.deepEqual(tracker.quartiles, {
-        firstQuartile: 2500,
-        midpoint: 5000,
-        thirdQuartile: 7500
+        firstQuartile: { tracked: false, time: 2500},
+        midpoint:{ tracked: false, time: 5000 },
+        thirdQuartile: { tracked: false, time: 7500 }
       });
     });
 
@@ -196,15 +196,23 @@ describe("VASTTracker", function () {
         sinon.assert.calledWithExactly(tracker.trackEvent, 'start', true);
       });
 
-      it("must track the rewind event if the new progress is smaller than the current one", function () {
-        tracker.trackProgress(10);
+      it("must NOT track the rewind event if the new progress is smaller than the current one by less thant 3 seconds", function () {
+        tracker.trackProgress(1000);
         tracker.trackEvent.reset();
 
         tracker.trackProgress(5);
+        sinon.assert.notCalled(tracker.trackEvent);
+      });
+
+      it("must track the rewind event if the new progress is smaller than the current one by more than 3 seconds", function () {
+        tracker.trackProgress(10000);
+        tracker.trackEvent.reset();
+
+        tracker.trackProgress(5000);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'rewind', false);
       });
 
-      it("must track the quartile event if the progress is bigger than the quartile time by on second at most", function () {
+      it("must track the quartile on the proper order", function () {
         tracker.trackEvent.reset();
 
         //FirstQuartile
@@ -223,6 +231,31 @@ describe("VASTTracker", function () {
         tracker.trackProgress(65000);// <== 65 seconds
         sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
         tracker.trackProgress(75500);//<== 75.5 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'thirdQuartile', true);
+      });
+
+      it("must not be possible to track a bigger quartile if the previous quartile has not been tracked", function(){
+        tracker.trackEvent.reset();
+
+        tracker.trackProgress(75500);//<== 75.5 seconds
+        tracker.trackProgress(50000);//<== 50 seconds
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'firstQuartile', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
+
+        tracker.trackProgress(29000);//<== 25 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
+
+        tracker.trackProgress(50000);//<== 25 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'midpoint', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
+
+        tracker.trackProgress(78500);//<== 25 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'midpoint', true);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'thirdQuartile', true);
       });
 
@@ -246,21 +279,13 @@ describe("VASTTracker", function () {
     });
 
     [
-      'start',
       'rewind',
       'fullscreen',
       'exitFullscreen',
-      'complete',
       'pause',
       'resume',
-      'close',
-      'closeLinear',
-      'skip',
       'mute',
       'unmute',
-      'firstQuartile',
-      'midpoint',
-      'thirdQuartile',
       'acceptInvitation',
       'acceptInvitationLinear',
       'collapse',
@@ -275,16 +300,78 @@ describe("VASTTracker", function () {
           sinon.spy(tracker, 'trackEvent');
         });
 
-        it("must be a function", function(){
-          assert.isFunction(tracker[fnName]);
-        });
-
         it("must track the '" + eventName + "' event", function(){
           tracker[fnName]();
           sinon.assert.calledWithExactly(tracker.trackEvent, eventName);
         });
       });
     });
+
+    [
+      'start',
+      'skip',
+      'close',
+      'closeLinear'
+    ].forEach(function (eventName) {
+      var fnName = 'track' + capitalize(eventName);
+      describe(fnName, function(){
+        var tracker;
+
+        beforeEach(function () {
+          tracker = new VASTTracker(ASSET_URI, response);
+          sinon.spy(tracker, 'trackEvent');
+        });
+
+        it("must track the '" + eventName + "' event", function(){
+          tracker[fnName]();
+          sinon.assert.calledWithExactly(tracker.trackEvent, eventName, true);
+        });
+      });
+    });
+
+    [
+      'firstQuartile',
+      'midpoint',
+      'thirdQuartile'
+    ].forEach(function (quartile) {
+      var fnName = 'track' + capitalize(quartile);
+      describe(fnName, function(){
+        var tracker;
+
+        beforeEach(function () {
+          tracker = new VASTTracker(ASSET_URI, response);
+          sinon.spy(tracker, 'trackEvent');
+        });
+
+        it("must track the '" + quartile + "' event", function(){
+          tracker[fnName]();
+          sinon.assert.calledWithExactly(tracker.trackEvent, quartile, true);
+          assert.isTrue(tracker.quartiles[quartile].tracked);
+        });
+      });
+    });
+
+    describe("trackComplete", function(){
+      var tracker;
+
+      beforeEach(function () {
+        tracker = new VASTTracker(ASSET_URI, response);
+        sinon.spy(tracker, 'trackEvent');
+      });
+
+      it("must not track the complete event if the thirdQuartile was not tracked", function(){
+        tracker.trackComplete();
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'complete', true);
+      });
+
+      it("must track the complete event if the thirdQuartile was tracked", function(){
+        tracker.quartiles.thirdQuartile.tracked = true;
+        tracker.trackComplete();
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'complete', true);
+      });
+    });
+
+
 
     describe("trackErrorWithCode", function(){
       var tracker;
