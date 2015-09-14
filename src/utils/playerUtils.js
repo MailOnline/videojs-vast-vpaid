@@ -78,8 +78,7 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
     // safari requires a call to `load` to pick up a changed source
     player.load();
 
-    // and then resume from the snapshots time once the original src has loaded
-    player.one('canplay', tryToResume);
+    resumeVideo();
 
   } else {
     restoreTracks();
@@ -90,6 +89,19 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
   }
 
   /*** Local Functions ***/
+
+  function resumeVideo() {
+    //Sometimes when the page is too heavy the canplay evt is not triggered on firefox.
+    //This code ensure that it gets fired always
+    var timeoutId = setTimeout(function() {
+      player.trigger('canplay');
+    }, 1000);
+
+    player.one('canplay', function(){
+      clearTimeout(timeoutId);
+      tryToResume();
+    });
+  }
 
   /**
    * Determine whether the player needs to be restored to its state

@@ -160,7 +160,7 @@ function transformArray(array, transformer) {
 function toFixedDigits(num, digits) {
   var formattedNum = num + '';
   digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
+  num = isNumber(num) ? num : parseInt(num, 10);
   if(isNumber(num) && !isNaN(num)){
     formattedNum = num + '';
     while(formattedNum.length < digits) {

@@ -64,15 +64,15 @@ var vastUtil = {
 
     /*** local functions ***/
     function parseHoursToMs(hourStr) {
-      return parseInt(hourStr) * 60 * 60 * 1000;
+      return parseInt(hourStr, 10) * 60 * 60 * 1000;
     }
 
     function parseMinToMs(minStr) {
-      return parseInt(minStr) * 60 * 1000;
+      return parseInt(minStr, 10) * 60 * 1000;
     }
 
     function parseSecToMs(secStr) {
-      return parseInt(secStr) * 1000;
+      return parseInt(secStr, 10) * 1000;
     }
   },
 

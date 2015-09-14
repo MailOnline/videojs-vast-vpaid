@@ -103,7 +103,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('volumechange', trackVolumeChange);
 
   playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
-  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], function(evt){
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adSkip'], function(evt){
     if(evt.type === 'vast.adEnd'){
       tracker.trackComplete();
     }
@@ -181,7 +181,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     player.el().appendChild(skipButton);
     player.on('timeupdate', updateSkipButton);
 
-    playerUtils.once(player, ['ended', 'error'], removeSkipButton);
+    playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
 
     function removeSkipButton() {
       player.off('timeupdate', updateSkipButton);
@@ -196,7 +196,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     skipButton.onclick = function (e) {
       if (dom.hasClass(skipButton, 'enabled')) {
         tracker.trackSkip();
-        player.trigger('ended');//We trigger the end of the ad playing
+        player.trigger('vast.adSkip');
       }
 
       //We prevent event propagation to avoid problems with the clickThrough and so on
@@ -230,7 +230,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
   player.el().insertBefore(blocker, player.controlBar.el());
   player.on('timeupdate', updateBlocker);
-  playerUtils.once(player, ['ended', 'error'], removeBlocker);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeBlocker);
 
   return callback(null, mediaFile, tracker, response);
 
@@ -308,8 +308,8 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
       player.trigger('vast.adStart');
 
-      playerUtils.once(player, ['ended', 'vast.adsCancel'], function (evt) {
-        if(evt.type === 'ended'){
+      playerUtils.once(player, ['ended', 'vast.adsCancel', 'vast.adSkip'], function (evt) {
+        if(evt.type === 'ended' || evt.type === 'vast.adSkip'){
           callback(null, response);
         }
         //NOTE: if the ads get cancel we do nothing
