@@ -287,6 +287,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
 
+  player.preload("auto"); //without preload=auto the durationchange event is never fired
   player.src(source);
 
   playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
@@ -321,4 +322,3 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 VASTIntegrator.prototype._trackError = function trackError(error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
-

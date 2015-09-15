@@ -61,6 +61,16 @@ describe("VASTIntegrator", function () {
         assertError(callback, 'On VASTIntegrator, missing required VASTResponse');
       });
 
+      it("must set preload to auto", function () {
+        // without preload=auto the durationchange event is never fired
+        var response = new VASTResponse();
+        var mediaFile = createMediaFile('http://foo.video.url.mp4', 'video/mp4');
+        response._addMediaFiles([mediaFile]);
+        var adUnit = vastIntegrator.playAd(response, noop);
+        this.clock.tick(1); // FF fail to set preload if there isn't at least an instruction in the middle
+        assert.equal(player.preload(), "auto");
+      });
+
       it("must play the ad using the response", function () {
         var response = new VASTResponse();
 
