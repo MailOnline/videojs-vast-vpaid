@@ -153,11 +153,11 @@ dom.onReady(function() {
         return 'XML';
       }
 
-      return 'CUSTOM'
+      return 'CUSTOM';
     }
 
     function createVideoEl(container, cb) {
-      var videoTag = '<video class="video-js vjs-default-skin" controls preload="none" poster="http://video-js.zencoder.com/oceans-clip.png" >' +
+      var videoTag = '<video class="video-js vjs-default-skin" controls preload="auto" poster="http://video-js.zencoder.com/oceans-clip.png" >' +
         '<source src="http://video-js.zencoder.com/oceans-clip.mp4" type="video/mp4"/>' +
         '<source src="http://video-js.zencoder.com/oceans-clip.webm" type="video/webm"/>' +
         '<source src="http://video-js.zencoder.com/oceans-clip.ogv" type="video/ogg"/>' +
