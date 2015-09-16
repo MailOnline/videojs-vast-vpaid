@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e #Quit as soon as there is an error or exit
 
-if [ "$TRAVIS" = "true" ]; then
+if [ "$TRAVIS" = "true" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
     if [ -n "$USER_NAME" ]; then
       # inside this git repo we'll pretend to be a new user
       git config --global user.name "$USER_NAME"
