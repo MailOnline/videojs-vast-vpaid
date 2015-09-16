@@ -130,8 +130,9 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackPause() {
     //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
-    //      We should not track this pause event because it makes the VAST tracking confusing
-    if(player.currentTime() === player.duration()){
+    //      We should not track this pause event because it makes the VAST tracking confusing again we use a
+    //      Threshold of 2 seconds to prevent false positives on IOS.
+    if (Math.abs(player.duration() - player.currentTime()) < 2) {
       return;
     }
 
@@ -287,6 +288,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
 
+  player.preload("auto"); //without preload=auto the durationchange event is never fired
   player.src(source);
 
   playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
@@ -321,4 +323,3 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 VASTIntegrator.prototype._trackError = function trackError(error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
-

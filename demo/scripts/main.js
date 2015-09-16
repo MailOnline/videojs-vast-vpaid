@@ -153,7 +153,7 @@ dom.onReady(function() {
         return 'XML';
       }
 
-      return 'CUSTOM'
+      return 'CUSTOM';
     }
 
     function createVideoEl(container, cb) {
