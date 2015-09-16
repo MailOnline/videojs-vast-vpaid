@@ -5227,8 +5227,9 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackPause() {
     //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
-    //      We should not track this pause event because it makes the VAST tracking confusing
-    if(player.currentTime() === player.duration()){
+    //      We should not track this pause event because it makes the VAST tracking confusing again we use a
+    //      Threshold of 2 seconds to prevent false positives on IOS.
+    if (Math.abs(player.duration() - player.currentTime()) < 2) {
       return;
     }
 
@@ -5384,6 +5385,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
 
+  player.preload("auto"); //without preload=auto the durationchange event is never fired
   player.src(source);
 
   playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
@@ -5418,7 +5420,6 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 VASTIntegrator.prototype._trackError = function trackError(error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
-
 
 ;
 (function (window) {
@@ -5687,19 +5688,26 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   }
 
   function addQuartileEvents(progress) {
+    var quartiles = this.quartiles;
     var firstQuartile = this.quartiles.firstQuartile;
     var midpoint = this.quartiles.midpoint;
     var thirdQuartile = this.quartiles.thirdQuartile;
 
     if (!firstQuartile.tracked) {
-      firstQuartile.tracked = canBeTracked(firstQuartile, progress);
-      addTrackEvent('firstQuartile', ONCE, firstQuartile.tracked);
+      trackQuartile('firstQuartile', progress);
     } else if (!midpoint.tracked) {
-      midpoint.tracked = canBeTracked(midpoint, progress);
-      addTrackEvent('midpoint', ONCE, midpoint.tracked);
+      trackQuartile('midpoint', progress);
     } else {
-      thirdQuartile.tracked = canBeTracked(thirdQuartile, progress);
-      addTrackEvent('thirdQuartile', ONCE, thirdQuartile.tracked);
+      trackQuartile('thirdQuartile', progress);
+    }
+
+    /*** Local function ***/
+    function trackQuartile(quartileName, progress){
+      var quartile = quartiles[quartileName];
+      if(canBeTracked(quartile, progress)){
+        quartile.tracked = true;
+        addTrackEvent(quartileName, ONCE, true);
+      }
     }
   }
 
