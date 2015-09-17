@@ -85,10 +85,6 @@ describe("VASTClient", function () {
         this.clock.restore();
       });
 
-      it("must be a function", function(){
-        assert.isFunction(vast.getVASTResponse);
-      });
-
       it("must pass the VASTResponse to the callback", function() {
         var response;
         vast.getVASTResponse('http://fake.url', callback);
@@ -155,10 +151,6 @@ describe("VASTClient", function () {
         vastUtil.track = origTrack;
       });
 
-      it("must be a function", function () {
-        assert.isFunction(vast._sendVASTResponse);
-      });
-
       it("must return a function", function () {
         assert.isFunction(vast._sendVASTResponse(noop));
       });
@@ -207,10 +199,6 @@ describe("VASTClient", function () {
 
       afterEach(function(){
         this.clock.restore();
-      });
-
-      it("must be a function", function () {
-        assert.isFunction(vast._getAd);
       });
 
       it("must ensure that the first argument is a URL", function () {
@@ -352,10 +340,6 @@ describe("VASTClient", function () {
         xhr.restore();
       });
 
-      it("must be a function", function () {
-        assert.isFunction(vast._requestVASTXml);
-      });
-
       it("must request the VAST response using the passed URL", function () {
         vast._requestVASTXml(url, noop);
         assert.equal(1, requests.length);
@@ -395,10 +379,6 @@ describe("VASTClient", function () {
     });
 
     describe("_buildVastTree", function () {
-      it("must be a function", function () {
-        assert.isFunction(vast._buildVastTree);
-      });
-
       it("must return the VASTTree of the passed vast XML", function () {
         var vastTree = vast._buildVastTree(vastAdXML());
         var actual = xml.toJXONTree(vastAdXML());
@@ -429,10 +409,6 @@ describe("VASTClient", function () {
     });
 
     describe("_buildAd", function(){
-      it("must be a function", function(){
-        assert.isFunction(vast._buildAd);
-      });
-
       it("must given a valid ad jxon tree return an instance of Ad", function(){
         var adTree = xml.toJXONTree(vastInLineXML('<Creatives><Creative></Creative></Creatives>')).ad;
         assert.instanceOf(vast._buildAd(adTree), Ad);
@@ -533,10 +509,6 @@ describe("VASTClient", function () {
         ads.push(wrapperAd);
         ads.push(wrapperAd2);
         ads.push(inLineAd);
-      });
-
-      it("must be a function", function(){
-        assert.isFunction(vast._buildVASTResponse);
       });
 
       it("must given an array of ads, build a vast response", function(){

@@ -127,19 +127,29 @@ VASTClient.prototype._getAd = function getVASTAd(adTagUrl, callback) {
   }
 };
 
-VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
-  try{
-    http.get(url, function (error, response, status){
-      if(error) {
-        return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
-      }
-
-      callback(null, response);
-    }, {
-      withCredentials: true
-    });
-  }catch(e){
+VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callback) {
+  try {
+    if (isFunction(adTagUrl)) {
+      adTagUrl(requestHandler);
+    } else {
+      http.get(adTagUrl, requestHandler, {
+        withCredentials: true
+      });
+    }
+  } catch (e) {
     callback(e);
+  }
+
+  /*** Local functions ***/
+  function requestHandler(error, response, status) {
+    if (error) {
+      var errMsg = isDefined(status)?
+            "on VASTClient.requestVastXML, HTTP request error with status '" + status + "'" :
+            "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn";
+      return callback(new VASTError(errMsg, 301));
+    }
+
+    callback(null, response);
   }
 };
 
@@ -159,8 +169,8 @@ VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {
     throw new VASTError('on VASTClient.buildVastTree, no Ad in VAST tree', 303);
   }
 
-  if(vastVersion && (vastVersion != 3 && vastVersion != 2)){
-    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102);
+  if (vastVersion && (vastVersion != 3 && vastVersion != 2)) {
+    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "' + vastVersion + '"', 102);
   }
 
   return vastTree;
@@ -184,11 +194,11 @@ VASTClient.prototype._buildAd = function buildAd(adJxonTree) {
   /*** Local Functions ***/
 
   function addErrorUrlMacros(ad) {
-    if(ad.wrapper && ad.wrapper.error) {
+    if (ad.wrapper && ad.wrapper.error) {
       that.errorURLMacros.push(ad.wrapper.error);
     }
 
-    if(ad.inLine && ad.inLine.error){
+    if (ad.inLine && ad.inLine.error) {
       that.errorURLMacros.push(ad.inLine.error);
     }
   }
@@ -236,7 +246,7 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
   function validateResponse(response) {
     var progressEvents = response.trackingEvents.progress;
 
-    if(!response.hasLinear()){
+    if (!response.hasLinear()) {
       throw new VASTError("on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
     }
 
@@ -245,7 +255,7 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
     }
 
     if (progressEvents) {
-      progressEvents.forEach(function(progressEvent){
+      progressEvents.forEach(function (progressEvent) {
         if (!isNumber(progressEvent.offset)) {
           throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
         }

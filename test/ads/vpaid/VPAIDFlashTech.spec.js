@@ -4,10 +4,6 @@ describe("VPAIDFlashTech", function () {
   });
 
   describe("supports", function () {
-    it("must be a function", function () {
-      assert.isFunction(VPAIDFlashTech.supports);
-    });
-
     describe('must handle flash support', function() {
       var FLASH_STRING = 'application/x-shockwave-flash';
       var originalFlash;
@@ -30,7 +26,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must return false when you pass 'application/x-shockwave-flash' if the browser doesn't support it", function() {
-        sinon.stub(VPAIDFLASHClient, 'isSupported', function () {return false});
+        sinon.stub(VPAIDFLASHClient, 'isSupported', function () {return false;});
         assert.isFalse(VPAIDFlashTech.supports(FLASH_STRING));
       });
 
@@ -47,8 +43,8 @@ describe("VPAIDFlashTech", function () {
   it("must complain if you don't pass a valid media file", function(){
     [undefined, null, {}, []].forEach(function (invalidMediaFile) {
       assert.throws(function() {
-        new VPAIDFlashTech(invalidMediaFile);
-      }, VASTError, 'VAST Error: on VPAIDFlashTech, invalid MediaFile')
+        var tech = new VPAIDFlashTech(invalidMediaFile);
+      }, VASTError, 'VAST Error: on VPAIDFlashTech, invalid MediaFile');
     });
   });
 

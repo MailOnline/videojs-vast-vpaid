@@ -8,10 +8,6 @@ describe("MediaFile", function () {
     '</MediaFile>';
   });
 
-  it("must be a function", function () {
-    assert.isFunction(MediaFile);
-  });
-
   it("must return an instance of MediaFile", function () {
     assert.instanceOf(MediaFile(xml.toJXONTree(mediaFileXML)), MediaFile);
   });
