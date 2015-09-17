@@ -325,10 +325,10 @@ describe("VASTClient", function () {
     });
 
     describe("_requestVASTXml", function () {
-      var xhr, requests, url;
+      var xhr, requests, adTagUrl;
 
       beforeEach(function () {
-        url = 'http://foo.bar';
+        adTagUrl = 'http://foo.bar';
         xhr = sinon.useFakeXMLHttpRequest();
         requests = [];
         xhr.onCreate = function (xhr) {
@@ -340,8 +340,8 @@ describe("VASTClient", function () {
         xhr.restore();
       });
 
-      it("must request the VAST response using the passed URL", function () {
-        vast._requestVASTXml(url, noop);
+      it("must request the VAST response using the passed adTagUrl", function () {
+        vast._requestVASTXml(adTagUrl, noop);
         assert.equal(1, requests.length);
         assert.equal('http://foo.bar/', requests[0].url);
       });
@@ -352,7 +352,7 @@ describe("VASTClient", function () {
           throw new Error('Error creating xhr');
         };
 
-        vast._requestVASTXml(url, callback);
+        vast._requestVASTXml(adTagUrl, callback);
 
         sinon.assert.calledWithExactly(callback, sinon.match(Error));
         assert.equal(firstArg(callback).message, 'Error creating xhr');
@@ -361,7 +361,7 @@ describe("VASTClient", function () {
       describe("on XHR GET request error", function () {
         it("must call the callback with an explanatory error and the VASTResponse", function () {
           var callback = sinon.spy();
-          vast._requestVASTXml(url, callback);
+          vast._requestVASTXml(adTagUrl, callback);
           requests[0].respond(404, {"Content-Type": "application/json"}, '404 Not found');
 
           assertError(callback, "on VASTClient.requestVastXML, HTTP request error with status '404'", 301);
@@ -371,9 +371,37 @@ describe("VASTClient", function () {
       describe("on XHR GET request success", function () {
         it("must pass the response and the data object to the callback", function () {
           var callback = sinon.spy();
-          vast._requestVASTXml(url, callback);
+          vast._requestVASTXml(adTagUrl, callback);
           requests[0].respond(200, {"Content-Type": "application/json"}, vastAdXML());
           sinon.assert.calledWithExactly(callback, null, vastAdXML());
+        });
+      });
+
+      describe("with adTagUrl fn", function(){
+        it("must request the XML using the passed adTagUrl function", function(){
+          var spy = sinon.spy();
+          vast._requestVASTXml(spy, noop);
+          assert.equal(0, requests.length);
+          sinon.assert.calledWithExactly(spy, sinon.match.func);
+        });
+
+        it("on error, must call the callback with an explanatory error and the VASTResponse", function(){
+          var callback = sinon.spy();
+          var adTagXMLSpy = sinon.spy();
+          vast._requestVASTXml(adTagXMLSpy, callback);
+          var handler = firstArg(adTagXMLSpy);
+          handler(new Error('meeec'), null);
+          assertError(callback, "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn", 301);
+        });
+
+        it("must pass the response and the data object to the callback", function(){
+          var callback = sinon.spy();
+          var adTagXMLSpy = sinon.spy();
+          vast._requestVASTXml(adTagXMLSpy, callback);
+          var handler = firstArg(adTagXMLSpy);
+          handler(null, vastAdXML());
+          sinon.assert.calledWithExactly(callback, null, vastAdXML());
+
         });
       });
     });
