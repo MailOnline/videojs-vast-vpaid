@@ -139,6 +139,27 @@
   >```
   >On initialization, the plugin well call the function and store the returned Media tag to request the VAST/VPAID ads.
 
+### adTagXML
+  >You can now do the VAST xml http request on your own with our shinny new adTagXML. All you need to do is to create your custom ad plugin and pass the requestFn to the adTagXML function.
+  >
+  >##### Using the adTagXML options
+  >```javascript
+  >var vastAd = player.vastClient({
+  >adTagXML: requestVASTXML,
+  > ...
+  >});
+  >
+  >function requestVASTXML(callback) {
+  >    //The setTimeout below is to simulate asynchrony
+  >    setTimeout(function(){
+  >      callback(null, '<VAST version="3.0"><Ad><Inline>...</Inline></Ad></VAST>');
+  >    }, 0);
+  >}
+  >```
+  >As you can see the requestVASTXML function above expects a node like error-first-callback that needs to be called whenever we have the VAST XML. 
+  >And if you had any error executing the request, you need to pass it as the first argument of the callback.
+  >It is important to note that the VAST XML must be passed as a string. 
+
 ### playAdAlways
   >Flag to indicate if we must play an ad whenever possible. If set to true the plugin will play an ad every time the user watches a new video or replays the actual video.
   >Defaults to false
