@@ -66,8 +66,8 @@ VASTClient.prototype._getAd = function getVASTAd(adTagUrl, callback) {
 
   /*** local function ***/
   function sanityCheck(opts, cb) {
-    if (!isString(opts.adTagUrl)) {
-      return new VASTError('on VASTClient._getAd, missing video tag URL');
+    if (!opts.adTagUrl) {
+      return new VASTError('on VASTClient._getAd, missing ad tag URL');
     }
 
     if (!isFunction(cb)) {

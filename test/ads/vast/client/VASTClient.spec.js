@@ -204,28 +204,28 @@ describe("VASTClient", function () {
       it("must ensure that the first argument is a URL", function () {
         assert.throws(function () {
           vast._getAd();
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
 
         assert.doesNotThrow(function () {
           vast._getAd('http://foo.bar', noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
       });
 
       it("must call the callback with an explanatory error if the url is missing but the callback is set", function () {
         var callback = sinon.spy();
         vast._getAd(null, callback);
-        assertError(callback, 'on VASTClient._getAd, missing video tag URL');
+        assertError(callback, 'on VASTClient._getAd, missing ad tag URL');
         assert.isNull(secondArg(callback));
       });
 
       it("must be possible to pass an options argument as the first parameter that contains the URL", function () {
         assert.throws(function () {
           vast._getAd({});
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
 
         assert.doesNotThrow(function () {
           vast._getAd({adTagUrl: 'http://foo.bar'}, noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
       });
 
       it("must ensure that you pass a callback function", function () {
