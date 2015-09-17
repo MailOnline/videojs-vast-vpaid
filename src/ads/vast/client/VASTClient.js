@@ -11,14 +11,14 @@ function VASTClient(options) {
   this.errorURLMacros = [];
 }
 
-VASTClient.prototype.getVASTResponse = function getVASTResponse(url, callback) {
+VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callback) {
   var that = this;
 
   //We reset the errorURLMacros before doing anything.
   this.errorURLMacros = [];
 
   async.waterfall([
-      this._getAd.bind(this, url),
+      this._getAd.bind(this, adTagUrl),
       buildVASTResponse
     ],
     this._sendVASTResponse(callback));

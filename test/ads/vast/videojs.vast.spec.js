@@ -65,7 +65,7 @@ describe("videojs.vast plugin", function () {
     player.on('vast.adError', spy);
     player.vastClient();
     sinon.assert.calledOnce(spy);
-    assertError(spy, 'on VideoJS VAST plugin, missing url on options object');
+    assertError(spy, 'on VideoJS VAST plugin, missing adTagUrl on options object');
   });
 
   it("must not trigger 'vast.adError' if the ads url is passed as part of the options", function () {

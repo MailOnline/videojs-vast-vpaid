@@ -83,7 +83,36 @@
 
 ## Options
 
-### url
+### adTagUrl
+  >Use it to pass the ad media tag, it can be a string containing the Media tag url
+  >
+  >##### Hardcoded Media Tag
+  >
+  > var vastAd = player.vastClient({
+  >   adTagUrl: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+  >  ...
+  > });
+  >
+  >
+  >or a function that will return the Media tag whenever called
+  >
+  >
+  >#####  Dynamic Media Tag
+  >```javascript
+  >var vastAd = player.vastClient({
+  >adTagUrl: getAdsUrl,
+  > ...
+  >});
+  >
+  >function getAdsUrl() {
+  >      return "http://pubads.g.doubleclick.net/gampad/ads?env=....";
+  >}
+  >```
+  >On initialization, the plugin well call the function and store the returned Media tag to request the VAST/VPAID ads.
+
+
+### url (deprecated)
+  >**this option is deprecated and you should use adTagUrl instead**
   >Use it to pass the ad media tag, it can be a string containing the Media tag url
   >
   >##### Hardcoded Media Tag

@@ -36,12 +36,16 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   var settings = extend({}, defaultOpts, options || {});
 
-  if (isString(settings.url)) {
-    settings.url = echoFn(settings.url);
+  if(isUndefined(settings.adTagUrl) && settings.url){
+    settings.adTagUrl = settings.url;
   }
 
-  if (!isDefined(settings.url)) {
-    return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
+  if (isString(settings.adTagUrl)) {
+    settings.adTagUrl = echoFn(settings.adTagUrl);
+  }
+
+  if (!isDefined(settings.adTagUrl)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
 
   playerUtils.prepareForAds(player);
@@ -208,7 +212,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function getVastResponse(callback) {
-    vast.getVASTResponse(settings.url(), callback);
+    vast.getVASTResponse(settings.adTagUrl(), callback);
   }
 
   function playAd(vastResponse, callback) {
