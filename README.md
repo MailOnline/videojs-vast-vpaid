@@ -112,7 +112,8 @@
 
 
 ### url (deprecated)
-  >**this option is deprecated and you should use adTagUrl instead**
+  >**This option is deprecated and you should use adTagUrl instead**
+  >
   >Use it to pass the ad media tag, it can be a string containing the Media tag url
   >
   >##### Hardcoded Media Tag
@@ -142,7 +143,7 @@
 ### adTagXML
   >You can now do the VAST xml http request on your own with our shinny new adTagXML. All you need to do is to create your custom ad plugin and pass the requestFn to the adTagXML function.
   >
-  >##### Using the adTagXML options
+  >##### Using the adTagXML option
   >```javascript
   >var vastAd = player.vastClient({
   >adTagXML: requestVASTXML,
