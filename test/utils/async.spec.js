@@ -12,10 +12,6 @@ describe("async", function () {
       this.clock.restore();
     });
 
-    it("must be a function", function () {
-      assert.isFunction(async.setImmediate);
-    });
-
     it("must call the passed function asynchronously", function () {
       var spy = sinon.spy();
       async.setImmediate(spy);
@@ -32,10 +28,6 @@ describe("async", function () {
       task1 = sinon.spy();
       task2 = sinon.spy();
       task3 = sinon.spy();
-    });
-
-    it("must be a function", function () {
-      assert.isFunction(async.iterator);
     });
 
     it("must return an iterator that iterates over the array of tasks", function () {
@@ -59,10 +51,6 @@ describe("async", function () {
   });
 
   describe("waterfall", function () {
-    it("must be a function", function () {
-      assert.isFunction(async.waterfall);
-    });
-
     it("must pass an error to the callback if you don't pass an array for tasks", function () {
       var callback = sinon.spy();
       async.waterfall(null, callback);
@@ -152,17 +140,13 @@ describe("async", function () {
   });
 
   describe("when", function () {
-    it("must be a function", function () {
-      assert.isFunction(async.when);
-    });
-
     it("must return a function", function () {
       assert.isFunction(async.when(false, noop));
     });
 
     it("must throw an exception if the second argument is not a callback", function () {
       assert.throws(function () {
-        async.when()
+        async.when();
       }, Error, 'async.when error: missing callback argument');
     });
 

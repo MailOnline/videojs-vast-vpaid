@@ -1,8 +1,4 @@
 describe("Linear", function(){
-  it("must be a function", function(){
-    assert.isFunction(Linear);
-  });
-
   it("must return an instance of Linear", function(){
     var linear = Linear(xml.toJXONTree('<Linear></Linear>'));
     assert.instanceOf(linear, Linear);
@@ -57,6 +53,7 @@ describe("Linear", function(){
   });
 
   describe("trackingEvents", function(){
+    /*jshint maxlen: 500 */
     it("must be filled with all the tracking events that the xml provides", function(){
       var linearXML = '<Linear>' +
         '<TrackingEvents>'+

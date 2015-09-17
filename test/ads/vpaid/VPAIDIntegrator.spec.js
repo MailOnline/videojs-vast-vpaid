@@ -370,10 +370,6 @@ describe("VPAIDIntegrator", function () {
 
       });
 
-      it("must be a function", function () {
-        assert.isFunction(vpaidIntegrator._handshake);
-      });
-
       it("must pass an error to the callback if the VPAID version is smaller than 1.0", function () {
         vpaidIntegrator._handshake(adUnitWrapper, response, next);
         sinon.assert.calledWith(vpaidAdUnit.handshakeVersion, '2.0');
@@ -431,10 +427,6 @@ describe("VPAIDIntegrator", function () {
 
       afterEach(function(){
         dom.getDimension.restore();
-      });
-
-      it("must be a function", function () {
-        assert.isFunction(vpaidIntegrator._initAd);
       });
 
       it("must call pass the with, height, viewmode, desired bitrate, and creativeData to the adUnit's initAd", function () {

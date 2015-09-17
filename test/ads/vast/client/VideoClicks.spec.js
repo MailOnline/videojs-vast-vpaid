@@ -8,10 +8,6 @@ describe("VideoClicks", function () {
     videoClicks = new VideoClicks(xml.toJXONTree(videoClicksXML));
   });
 
-  it("must be a function", function () {
-    assert.isFunction(VideoClicks);
-  });
-
   it("must return an instance of VideoClicks", function () {
     assert.instanceOf(VideoClicks(videoClicksXML), VideoClicks);
   });

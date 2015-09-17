@@ -162,10 +162,6 @@ describe("isString", function () {
 });
 
 describe("isEmptyString", function(){
-  it("must be a function", function(){
-    assert.isFunction(isEmptyString);
-  });
-
   it("must return true if you pass an empty string", function(){
     assert.isTrue(isEmptyString(''));
   });
@@ -384,7 +380,7 @@ describe("extend", function () {
 
   it("must return the passed object if that is the only thing you pass", function () {
     var o = {};
-    assert.strictEqual(extend(o), o)
+    assert.strictEqual(extend(o), o);
   });
 
   //Regression test
@@ -511,7 +507,7 @@ describe("transform", function(){
       {
         name: 'ITEM2'
       }
-    ]
+    ];
   });
   
   it("must call the transform function with each item of the array and its index", function(){
@@ -529,7 +525,7 @@ describe("transform", function(){
       return index;
     });
 
-    assert.deepEqual(newArray, [0, 1])
+    assert.deepEqual(newArray, [0, 1]);
   });
 
   it("must ignore undefined transformed items", function(){
@@ -537,15 +533,11 @@ describe("transform", function(){
       return undefined;
     });
 
-    assert.deepEqual(newArray, [])
+    assert.deepEqual(newArray, []);
   });
 });
 
 describe("toFixedDigits", function(){
-  it("must be a function", function(){
-    assert.isFunction(toFixedDigits)
-  });
-
   it("must return a string that contains the numbers with the fixed number of digits", function(){
     assert.equal(toFixedDigits(3, 2), '03');
     assert.equal(toFixedDigits(11, 2), '11');
@@ -631,7 +623,7 @@ describe("treeSearch", function(){
   var isName = function (name){
     return function (obj){
       return obj.name == name;
-    }
+    };
   };
 
   it("must traverse a tree", function(){
@@ -646,10 +638,6 @@ describe("treeSearch", function(){
 });
 
 describe("echoFn", function(){
-  it("must be a function", function(){
-    assert.isFunction(echoFn);
-  });
-
   it("must return a function", function(){
     assert.isFunction(echoFn());
   });
@@ -666,10 +654,6 @@ describe("echoFn", function(){
 });
 
 describe("isISO8601", function(){
-  it("must be a function", function(){
-    assert.isFunction(isISO8601);
-  });
-
   it("must return false for YYYY date format (year)", function(){
     assert.isTrue(isISO8601("1983"));
   });
@@ -728,6 +712,7 @@ describe("isISO8601", function(){
   });
 });
 
+/*jshint maxlen: 500 */
 describe("getInternetExplorerVersion", function(){
   var navigators = {
     nonIe: {
