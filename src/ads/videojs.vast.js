@@ -36,7 +36,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   var settings = extend({}, defaultOpts, options || {});
 
-  if(isUndefined(settings.adTagUrl) && settings.url){
+  if(isUndefined(settings.adTagUrl) && isDefined(settings.url)){
     settings.adTagUrl = settings.url;
   }
 
@@ -44,7 +44,11 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     settings.adTagUrl = echoFn(settings.adTagUrl);
   }
 
-  if (!isDefined(settings.adTagUrl)) {
+  if (isDefined(settings.adTagXML) && !isFunction(settings.adTagXML)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, the passed adTagXML option does not contain a function'));
+  }
+
+  if (!isDefined(settings.adTagUrl) && !isFunction(settings.adTagXML)) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
 
@@ -212,7 +216,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function getVastResponse(callback) {
-    vast.getVASTResponse(settings.adTagUrl(), callback);
+    vast.getVASTResponse(settings.adTagUrl ? settings.adTagUrl() : settings.adTagXML, callback);
   }
 
   function playAd(vastResponse, callback) {

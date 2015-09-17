@@ -133,6 +133,8 @@ VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
       if(error) {
         return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
       }
+      console.log('VASTXML RESPONSE', response);
+
       callback(null, response);
     }, {
       withCredentials: true
