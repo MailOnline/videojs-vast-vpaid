@@ -236,7 +236,7 @@ describe("VASTClient", function () {
         }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
 
         assert.doesNotThrow(function () {
-          vast._getAd({url: 'http://foo.bar'}, noop);
+          vast._getAd({adTagUrl: 'http://foo.bar'}, noop);
         }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
       });
 
@@ -260,7 +260,7 @@ describe("VASTClient", function () {
       it("must call the callback with a VASTError if we reach the WRAPPER_LIMIT on ad requests", function(){
         vast.WRAPPER_LIMIT = 2;
         vast._getAd({
-          url: 'http://fake.url',
+          adTagUrl: 'http://fake.url',
           ads: [
             new Ad(xml.toJXONTree(vastAdXML())),
             new Ad(xml.toJXONTree(vastAdXML()))

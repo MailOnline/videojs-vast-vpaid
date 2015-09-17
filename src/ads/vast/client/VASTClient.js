@@ -46,10 +46,10 @@ VASTClient.prototype._sendVASTResponse = function sendVASTResponse(callback) {
   };
 };
 
-VASTClient.prototype._getAd = function getVASTAd(url, callback) {
+VASTClient.prototype._getAd = function getVASTAd(adTagUrl, callback) {
   var error;
   var that = this;
-  var options = isObject(url) && !isNull(url) ? url : {url: url};
+  var options = isObject(adTagUrl) && !isNull(adTagUrl) ? adTagUrl : {adTagUrl: adTagUrl};
   options.ads = options.ads || [];
   error = sanityCheck(options, callback);
   if (error) {
@@ -66,7 +66,7 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
 
   /*** local function ***/
   function sanityCheck(opts, cb) {
-    if (!isString(opts.url)) {
+    if (!isString(opts.adTagUrl)) {
       return new VASTError('on VASTClient._getAd, missing video tag URL');
     }
 
@@ -80,7 +80,7 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
   }
 
   function requestVASTXml(callback) {
-    that._requestVASTXml(options.url, callback);
+    that._requestVASTXml(options.adTagUrl, callback);
   }
 
   function buildAd(adXML, callback) {
@@ -120,7 +120,7 @@ VASTClient.prototype._getAd = function getVASTAd(url, callback) {
 
     function getNextAd(ad, previousAds, callback) {
       return that._getAd({
-        url: ad.wrapper.VASTAdTagURI,
+        adTagUrl: ad.wrapper.VASTAdTagURI,
         ads: previousAds.concat(ad)
       }, callback);
     }
@@ -133,7 +133,6 @@ VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
       if(error) {
         return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
       }
-      console.log('VASTXML RESPONSE', response);
 
       callback(null, response);
     }, {
