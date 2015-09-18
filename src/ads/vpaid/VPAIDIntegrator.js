@@ -50,10 +50,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
-  player.on('error', triggerVpaidAdEnd);
   player.on('vast.adsCancel', triggerVpaidAdEnd);
   player.one('vpaid.adEnd', function(){
-    player.off('error', triggerVpaidAdEnd);
     player.off('vast.adsCancel', triggerVpaidAdEnd);
     removeAdUnit();
   });

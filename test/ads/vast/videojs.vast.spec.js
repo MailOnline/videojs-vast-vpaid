@@ -405,7 +405,7 @@ describe("videojs.vast plugin", function () {
       assert.isNull(player.vast.adUnit);
     });
 
-    describe("", function(){
+    describe(":", function(){
       beforeEach(function(){
         sinon.stub(playerUtils, 'restorePlayerSnapshot');
       });
@@ -428,21 +428,7 @@ describe("videojs.vast plugin", function () {
         sinon.assert.calledOnce(playerUtils.restorePlayerSnapshot);
       });
 
-      it("must remove the adUnit but not restore the video content on 'error' evt", function(){
-        player.vast.adUnit = {
-          type: 'FAKE',
-          pauseAd: noop,
-          resumeAd: noop,
-          isPaused: noop
-        };
-        player.trigger('vast.firstPlay');
-        clock.tick(1);
-        player.trigger('error');
-        assert.isNull(player.vast.adUnit);
-        sinon.assert.notCalled(playerUtils.restorePlayerSnapshot);
-      });
-
-      it("must remove the adUnit but not restore the video content on 'vast.reset' evt", function(){
+       it("must remove the adUnit but not restore the video content on 'vast.reset' evt", function(){
         player.vast.adUnit = {
           type: 'FAKE',
           pauseAd: noop,

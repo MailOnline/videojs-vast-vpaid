@@ -153,14 +153,6 @@ describe("VPAIDIntegrator", function () {
         assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse');
       });
 
-      it("must trigger a vpaid.adEnd evt on error evt", function(){
-        var spy = sinon.spy();
-        player.on('vpaid.adEnd', spy);
-        vpaidIntegrator.playAd(vastResponse, callback);
-        player.trigger('error');
-        assert.isTrue(spy.calledOnce);
-      });
-
       it("must trigger a vpaid.adEnd evt on vast.adsCancel evt", function(){
         var spy = sinon.spy();
         player.on('vpaid.adEnd', spy);
@@ -169,11 +161,11 @@ describe("VPAIDIntegrator", function () {
         assert.isTrue(spy.calledOnce);
       });
 
-      it("must trigger a vpaid.adEnd evt twice", function(){
+      it("must NOT trigger a vpaid.adEnd evt twice", function(){
         var spy = sinon.spy();
         player.on('vpaid.adEnd', spy);
         vpaidIntegrator.playAd(vastResponse, callback);
-        player.trigger('error');
+        player.trigger('vast.adsCancel');
         player.trigger('vast.adsCancel');
         assert.isTrue(spy.calledOnce);
       });
@@ -195,7 +187,7 @@ describe("VPAIDIntegrator", function () {
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
       });
 
-      ['error', 'vast.adsCancel', 'vpaid.adEnd'].forEach(function (evt) {
+      ['vast.adsCancel', 'vpaid.adEnd'].forEach(function (evt) {
         it("must remove 'vjs-vpaid-ad' class if there is  an '"+evt+"' event", function () {
           vpaidIntegrator.playAd(vastResponse, callback);
           player.trigger(evt);
