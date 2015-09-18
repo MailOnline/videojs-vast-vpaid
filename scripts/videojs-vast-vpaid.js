@@ -3482,11 +3482,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
 
-  //If there is an error on the player, we reset the plugin.
-  player.on('error', function() {
-    player.trigger('vast.reset');
-  });
-
   player.on('vast.reset', function () {
     //If we are reseting the plugin, we don't want to restore the content
     snapshot = null;
@@ -4201,10 +4196,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
-  player.on('error', triggerVpaidAdEnd);
   player.on('vast.adsCancel', triggerVpaidAdEnd);
   player.one('vpaid.adEnd', function(){
-    player.off('error', triggerVpaidAdEnd);
     player.off('vast.adsCancel', triggerVpaidAdEnd);
     removeAdUnit();
   });
@@ -6018,3 +6011,4 @@ var vastUtil = {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
   }
 };})(window, document, videojs);
+//# sourceMappingURL=videojs-vast-vpaid.js.map
