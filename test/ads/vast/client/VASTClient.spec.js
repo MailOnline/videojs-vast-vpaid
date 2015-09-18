@@ -85,10 +85,6 @@ describe("VASTClient", function () {
         this.clock.restore();
       });
 
-      it("must be a function", function(){
-        assert.isFunction(vast.getVASTResponse);
-      });
-
       it("must pass the VASTResponse to the callback", function() {
         var response;
         vast.getVASTResponse('http://fake.url', callback);
@@ -155,10 +151,6 @@ describe("VASTClient", function () {
         vastUtil.track = origTrack;
       });
 
-      it("must be a function", function () {
-        assert.isFunction(vast._sendVASTResponse);
-      });
-
       it("must return a function", function () {
         assert.isFunction(vast._sendVASTResponse(noop));
       });
@@ -209,35 +201,31 @@ describe("VASTClient", function () {
         this.clock.restore();
       });
 
-      it("must be a function", function () {
-        assert.isFunction(vast._getAd);
-      });
-
       it("must ensure that the first argument is a URL", function () {
         assert.throws(function () {
           vast._getAd();
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
 
         assert.doesNotThrow(function () {
           vast._getAd('http://foo.bar', noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
       });
 
       it("must call the callback with an explanatory error if the url is missing but the callback is set", function () {
         var callback = sinon.spy();
         vast._getAd(null, callback);
-        assertError(callback, 'on VASTClient._getAd, missing video tag URL');
+        assertError(callback, 'on VASTClient._getAd, missing ad tag URL');
         assert.isNull(secondArg(callback));
       });
 
       it("must be possible to pass an options argument as the first parameter that contains the URL", function () {
         assert.throws(function () {
           vast._getAd({});
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
 
         assert.doesNotThrow(function () {
-          vast._getAd({url: 'http://foo.bar'}, noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing video tag URL');
+          vast._getAd({adTagUrl: 'http://foo.bar'}, noop);
+        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
       });
 
       it("must ensure that you pass a callback function", function () {
@@ -260,7 +248,7 @@ describe("VASTClient", function () {
       it("must call the callback with a VASTError if we reach the WRAPPER_LIMIT on ad requests", function(){
         vast.WRAPPER_LIMIT = 2;
         vast._getAd({
-          url: 'http://fake.url',
+          adTagUrl: 'http://fake.url',
           ads: [
             new Ad(xml.toJXONTree(vastAdXML())),
             new Ad(xml.toJXONTree(vastAdXML()))
@@ -337,10 +325,10 @@ describe("VASTClient", function () {
     });
 
     describe("_requestVASTXml", function () {
-      var xhr, requests, url;
+      var xhr, requests, adTagUrl;
 
       beforeEach(function () {
-        url = 'http://foo.bar';
+        adTagUrl = 'http://foo.bar';
         xhr = sinon.useFakeXMLHttpRequest();
         requests = [];
         xhr.onCreate = function (xhr) {
@@ -352,12 +340,8 @@ describe("VASTClient", function () {
         xhr.restore();
       });
 
-      it("must be a function", function () {
-        assert.isFunction(vast._requestVASTXml);
-      });
-
-      it("must request the VAST response using the passed URL", function () {
-        vast._requestVASTXml(url, noop);
+      it("must request the VAST response using the passed adTagUrl", function () {
+        vast._requestVASTXml(adTagUrl, noop);
         assert.equal(1, requests.length);
         assert.equal('http://foo.bar/', requests[0].url);
       });
@@ -368,7 +352,7 @@ describe("VASTClient", function () {
           throw new Error('Error creating xhr');
         };
 
-        vast._requestVASTXml(url, callback);
+        vast._requestVASTXml(adTagUrl, callback);
 
         sinon.assert.calledWithExactly(callback, sinon.match(Error));
         assert.equal(firstArg(callback).message, 'Error creating xhr');
@@ -377,7 +361,7 @@ describe("VASTClient", function () {
       describe("on XHR GET request error", function () {
         it("must call the callback with an explanatory error and the VASTResponse", function () {
           var callback = sinon.spy();
-          vast._requestVASTXml(url, callback);
+          vast._requestVASTXml(adTagUrl, callback);
           requests[0].respond(404, {"Content-Type": "application/json"}, '404 Not found');
 
           assertError(callback, "on VASTClient.requestVastXML, HTTP request error with status '404'", 301);
@@ -387,18 +371,42 @@ describe("VASTClient", function () {
       describe("on XHR GET request success", function () {
         it("must pass the response and the data object to the callback", function () {
           var callback = sinon.spy();
-          vast._requestVASTXml(url, callback);
+          vast._requestVASTXml(adTagUrl, callback);
           requests[0].respond(200, {"Content-Type": "application/json"}, vastAdXML());
           sinon.assert.calledWithExactly(callback, null, vastAdXML());
+        });
+      });
+
+      describe("with adTagUrl fn", function(){
+        it("must request the XML using the passed adTagUrl function", function(){
+          var spy = sinon.spy();
+          vast._requestVASTXml(spy, noop);
+          assert.equal(0, requests.length);
+          sinon.assert.calledWithExactly(spy, sinon.match.func);
+        });
+
+        it("on error, must call the callback with an explanatory error and the VASTResponse", function(){
+          var callback = sinon.spy();
+          var adTagXMLSpy = sinon.spy();
+          vast._requestVASTXml(adTagXMLSpy, callback);
+          var handler = firstArg(adTagXMLSpy);
+          handler(new Error('meeec'), null);
+          assertError(callback, "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn", 301);
+        });
+
+        it("must pass the response and the data object to the callback", function(){
+          var callback = sinon.spy();
+          var adTagXMLSpy = sinon.spy();
+          vast._requestVASTXml(adTagXMLSpy, callback);
+          var handler = firstArg(adTagXMLSpy);
+          handler(null, vastAdXML());
+          sinon.assert.calledWithExactly(callback, null, vastAdXML());
+
         });
       });
     });
 
     describe("_buildVastTree", function () {
-      it("must be a function", function () {
-        assert.isFunction(vast._buildVastTree);
-      });
-
       it("must return the VASTTree of the passed vast XML", function () {
         var vastTree = vast._buildVastTree(vastAdXML());
         var actual = xml.toJXONTree(vastAdXML());
@@ -429,10 +437,6 @@ describe("VASTClient", function () {
     });
 
     describe("_buildAd", function(){
-      it("must be a function", function(){
-        assert.isFunction(vast._buildAd);
-      });
-
       it("must given a valid ad jxon tree return an instance of Ad", function(){
         var adTree = xml.toJXONTree(vastInLineXML('<Creatives><Creative></Creative></Creatives>')).ad;
         assert.instanceOf(vast._buildAd(adTree), Ad);
@@ -533,10 +537,6 @@ describe("VASTClient", function () {
         ads.push(wrapperAd);
         ads.push(wrapperAd2);
         ads.push(inLineAd);
-      });
-
-      it("must be a function", function(){
-        assert.isFunction(vast._buildVASTResponse);
       });
 
       it("must given an array of ads, build a vast response", function(){

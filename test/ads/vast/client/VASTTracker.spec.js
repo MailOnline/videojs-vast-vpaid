@@ -14,10 +14,6 @@ describe("VASTTracker", function () {
     ASSET_URI = 'http://ASSET_URI';
   });
 
-  it("must be a function", function () {
-    assert.isFunction(VASTTracker);
-  });
-
   it("must return an instance of itself", function () {
     assert.instanceOf(VASTTracker(ASSET_URI, response), VASTTracker);
   });
@@ -83,10 +79,6 @@ describe("VASTTracker", function () {
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must be a function", function(){
-        assert.isFunction(tracker.trackURLs);
-      });
-
       it("must add ASSETURI and CONTENTPLAYHEAD to the tracking variables", function(){
         tracker.trackURLs(['http://sample.track.url']);
         assertVASTTrackRequest(['http://sample.track.url'], {
@@ -123,10 +115,6 @@ describe("VASTTracker", function () {
           createTrackEvent('firstQuartile', 'http://firstQuartile.trackEvent.url')
         ]);
         tracker = new VASTTracker(ASSET_URI, response);
-      });
-
-      it("must be a function", function () {
-        assert.isFunction(tracker.trackEvent);
       });
 
       it("must track the passed event", function () {
@@ -381,10 +369,6 @@ describe("VASTTracker", function () {
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must be a function", function(){
-        assert.isFunction(tracker.trackErrorWithCode);
-      });
-
       it("must track the passed error code", function(){
         tracker.trackErrorWithCode(101);
         assertVASTTrackRequest(['http://error.track.url'], {
@@ -411,10 +395,6 @@ describe("VASTTracker", function () {
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must be a function", function(){
-        assert.isFunction(tracker.trackImpressions);
-      });
-
       it("must track the impressionURLs", function(){
         tracker.trackImpressions();
         assertVASTTrackRequest(['http://impressions.track.url'], {
@@ -434,10 +414,6 @@ describe("VASTTracker", function () {
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must be a function", function(){
-        assert.isFunction(tracker.trackCreativeView);
-      });
-
       it("must track the creativeViewURLs when called with trackCreativeView", function(){
         tracker.trackCreativeView();
         assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
@@ -455,10 +431,6 @@ describe("VASTTracker", function () {
       beforeEach(function () {
         response._addClickTrackings(['http://click.track.url']);
         tracker = new VASTTracker(ASSET_URI, response);
-      });
-
-      it("must be a function", function(){
-        assert.isFunction(tracker.trackClick);
       });
 
       it("must track the clickTracking URLS", function(){

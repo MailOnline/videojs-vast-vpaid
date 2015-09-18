@@ -1,11 +1,7 @@
 describe("HttpRequest", function () {
-  it("must be a function", function () {
-    assert.isFunction(HttpRequest);
-  });
-
   it("must throw an exception if you don't pass a xhrFactory function", function () {
     assert.throws(function () {
-      new HttpRequest();
+      var http = new HttpRequest();
     }, HttpRequestError, 'HttpRequest Error: Missing XMLHttpRequest factory method');
   });
 
@@ -32,10 +28,6 @@ describe("HttpRequest", function () {
     });
 
     describe("run", function () {
-      it("must be a function", function () {
-        assert.isFunction($http.run);
-      });
-
       it("must throw an exception if you don't pass a valid url", function () {
         assert.throws(function () {
           $http.run('GET');
@@ -229,10 +221,6 @@ describe("HttpRequest", function () {
     });
 
     describe("get", function () {
-      it("must be a function", function () {
-        assert.isFunction($http.get);
-      });
-
       it("must do a GET request", function () {
         var run = sinon.spy($http, 'run');
         var options = {};

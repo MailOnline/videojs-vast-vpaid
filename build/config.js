@@ -33,7 +33,6 @@ module.exports = {
     ],
 
     scripts: [
-      'bower_components/xhook/dist/xhook.js',
       'bower_components/video.js/dist/video-js/video.dev.js'
     ]
   },

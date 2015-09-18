@@ -1,24 +1,6 @@
 var dom = require('./miniDom');
 var adsSetupPlugin = require('./ads-setup-plugin');
 var messages = require('./messages');
-var custom_xhr = {};
-
-xhook.before(function(request, callback) {
-  var intercept_urls = Object.keys(custom_xhr);
-  var i, len, match, intercept_url;
-
-  for (i = 0, len = intercept_urls.length; i < len; i++) {
-    intercept_url = intercept_urls[i];
-    match = new RegExp(intercept_url + "$", "gi");
-    if (request.url.match(match)) {
-      return callback({
-        status: 200,
-        data: custom_xhr[intercept_url]
-      });
-    }
-  }
-  callback();
-});
 
 videojs.plugin('ads-setup', adsSetupPlugin);
 
@@ -99,26 +81,30 @@ dom.onReady(function() {
 
     function updateDemo() {
       createVideoEl(videoContainer, function(videoEl) {
-        var adsTag;
         var mode = activeMode();
-        if (mode === 'TAG') {
-          adsTag = tagEl.value;
-        } else if (mode === 'XML') {
-          adsTag = xmlEl.value;
-        } else {
-          adsTag = 'CUSTOM_AD_TAG' + new Date().getTime();
-          custom_xhr[adsTag] = customEl.value;
-        }
-
-        player = videojs(videoEl, {
+        var adPluginOpts = {
           "plugins": {
             "ads-setup":{
               "adCancelTimeout":20000,// Wait for ten seconds before canceling the ad.
-              "adsEnabled": true,
-              "adsTag": adsTag
+              "adsEnabled": true
             }
           }
-        });
+        };
+
+        if (mode === 'TAG') {
+          adPluginOpts.plugins["ads-setup"].adTagUrl = tagEl.value;
+        } else if (mode === 'XML') {
+          adPluginOpts.plugins["ads-setup"].adTagUrl = xmlEl.value;
+        } else {
+          adPluginOpts.plugins["ads-setup"].adTagXML = function(done){
+            //The setTimeout is to simulate asynchrony
+            setTimeout(function () {
+              done(null, customEl.value);
+            }, 0);
+          };
+        }
+
+        player = videojs(videoEl, adPluginOpts);
 
         //We hide the pause and resume btns every time we update
         if (pauseBtn) {

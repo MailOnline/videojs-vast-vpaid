@@ -3,10 +3,6 @@ describe("VASTResponse", function () {
     assert.deepEqual(vastResponse, new VASTResponse());
   }
 
-  it("must be a function", function () {
-    assert.isFunction(VASTResponse);
-  });
-
   it("must return an instance of itself", function () {
     assert.instanceOf(VASTResponse(), VASTResponse);
   });
@@ -88,10 +84,6 @@ describe("VASTResponse", function () {
     //HELPER FUNCTIONS
 
     describe("addAd", function () {
-      it("must be a function", function () {
-        assert.isFunction(response.addAd);
-      });
-
       it("must add the passed ad to the ads array", function () {
         var vastJTree = xml.toJXONTree('<VAST><Ad></Ad></VAST>');
         var ad = new Ad(vastJTree.ad);
@@ -140,10 +132,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addErrorTrackUrl", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addErrorTrackUrl);
-      });
-
       it("must be possible to pass the error as a string", function () {
         response._addErrorTrackUrl('http://t4.liverail.com/?metric=error&erc=[ERRORCODE]');
         assert.deepEqual(['http://t4.liverail.com/?metric=error&erc=[ERRORCODE]'], response.errorURLMacros);
@@ -168,10 +156,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addImpressions", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addImpressions);
-      });
-
       it("must not add any impression if you don't pass an array of impressions", function () {
         response._addImpressions();
         response._addImpressions({});
@@ -208,10 +192,6 @@ describe("VASTResponse", function () {
     });
 
     describe("addClickTrough", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addClickThrough);
-      });
-
       it("must not add anything if you don't pass a url str", function () {
         response._addClickThrough();
         response._addClickThrough({});
@@ -226,10 +206,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addClickTrackings", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addClickTrackings);
-      });
-
       it("must not add any clickTracking if you don't pass an array of tracking urls", function () {
         response._addClickTrackings();
         response._addClickTrackings({});
@@ -252,10 +228,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addCustomClicks", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addCustomClicks);
-      });
-
       it("must not add any customClick unless you pass an array with them inside", function () {
         response._addCustomClicks();
         response._addCustomClicks({});
@@ -285,11 +257,6 @@ describe("VASTResponse", function () {
         return new TrackingEvent(xml.toJXONTree(trackingXML));
       }
 
-
-      it("must be a function", function () {
-        assert.isFunction(response._addTrackingEvents);
-      });
-
       it("must populate the tracking event with the passed events", function(){
         var startEvent = createTrackEvent('start', 'http://track.url.com');
         response._addTrackingEvents(startEvent);
@@ -315,10 +282,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addTitle", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addTitle);
-      });
-
       it("must not set the title in the response if you don't pass a strinc with text on it", function () {
         response._addTitle('');
         response._addTitle({});
@@ -335,10 +298,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addDuration", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addDuration);
-      });
-
       it("must add the duration to the response", function () {
         response._addDuration(123);
         assert.equal(response.duration, 123);
@@ -353,10 +312,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addVideoClicks", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addVideoClicks)
-      });
-
       it("must not add anything to the response if you don't pass an instace of Inline", function () {
         response._addVideoClicks();
         response._addVideoClicks({});
@@ -405,10 +360,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addMediaFiles", function(){
-      it("must be a function", function(){
-        assert.isFunction(response._addMediaFiles);
-      });
-
       it("must not add any mediaFile unless you pass an array with them inside", function () {
         response._addMediaFiles();
         response._addMediaFiles({});
@@ -437,10 +388,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addLinear", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addLinear)
-      });
-
       it("must not add anything to the response if you don't pass an instace of Inline", function () {
         response._addLinear();
         response._addLinear({});
@@ -515,10 +462,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addInLine", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addInLine);
-      });
-
       it("must not add anything to the response if you don't pass an instance of Inline", function () {
         response._addInLine();
         response._addInLine({});
@@ -565,10 +508,6 @@ describe("VASTResponse", function () {
     });
 
     describe("_addWrapper", function () {
-      it("must be a function", function () {
-        assert.isFunction(response._addWrapper);
-      });
-
       it("must not add anything to the response if you don't pass an instance of Wrapper", function () {
         response._addWrapper();
         response._addWrapper({});
