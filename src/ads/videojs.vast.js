@@ -65,11 +65,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
 
-  //If there is an error on the player, we reset the plugin.
-  player.on('error', function() {
-    player.trigger('vast.reset');
-  });
-
   player.on('vast.reset', function () {
     //If we are reseting the plugin, we don't want to restore the content
     snapshot = null;
