@@ -361,10 +361,6 @@ describe("dom", function () {
   });
 
   describe("remove", function () {
-    it("must be a function", function () {
-      assert.isFunction(dom.remove)
-    });
-
     it("must remove the passed node from the document", function () {
       var node = document.createElement('div');
       node.id = 'testElem';
@@ -376,10 +372,6 @@ describe("dom", function () {
   });
 
   describe("isDomElement", function () {
-    it("must be a function", function () {
-      assert.isFunction(dom.isDomElement);
-    });
-
     it("must return true if you pass a DOM element and false otherwise", function () {
       assert.isTrue(dom.isDomElement(document.createElement('div')));
       assert.isFalse(dom.isDomElement(document.createTextNode('foo text')));
@@ -393,10 +385,6 @@ describe("dom", function () {
   });
 
   describe("click", function () {
-    it("must be a function", function () {
-      assert.isFunction(dom.click);
-    });
-
     it("must execute the handler whenever the user clicks on the element", function () {
       var anchor = createEl('a');
       var spy = sinon.spy();
@@ -407,10 +395,6 @@ describe("dom", function () {
   });
 
   describe("once", function () {
-    it("must be a function", function () {
-      assert.isFunction(dom.once);
-    });
-
     it("must register a listener to the specified event type", function () {
       var el = createEl('div');
       var spy = sinon.spy();

@@ -1,8 +1,4 @@
 describe("Wrapper", function () {
-  it("must be a function", function () {
-    assert.isFunction(Wrapper);
-  });
-
   it("must return an instance of Wrapper", function () {
     assert.instanceOf(Wrapper(xml.toJXONTree('<Wrapper></Wrapper>')), Wrapper);
   });

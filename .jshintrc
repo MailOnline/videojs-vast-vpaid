@@ -54,6 +54,7 @@
     "isOldIE":true,
     "isMobile": true,
     "isIPhone": true,
+    "isAndroid": true,
     /* Utils */
     "dom":true,
     "xml":true,

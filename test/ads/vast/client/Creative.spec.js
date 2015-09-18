@@ -1,8 +1,4 @@
 describe("Creative", function(){
-  it("must be a function", function(){
-    assert.isFunction(Creative);
-  });
-
   it("must return an instance of Creative", function(){
     assert.instanceOf(Creative(xml.toJXONTree('<Creative id="8455"></Creative>')), Creative);
   });

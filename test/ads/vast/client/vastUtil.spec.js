@@ -10,10 +10,6 @@ describe("vastUtil", function () {
       _parseURLMacro = vastUtil._parseURLMacro;
     });
 
-    it("must be a function", function () {
-      assert.isFunction(vastUtil._parseURLMacro);
-    });
-
     it("must parse the passed macro using the passed variables", function () {
       assert.equal('http://foo.bar/BLA', _parseURLMacro('http://foo.bar/[CODE]', {CODE: 'BLA'}));
       assert.equal('http://foo.bar/BLA/123', _parseURLMacro('http://foo.bar/[CODE]/[END]', {CODE: 'BLA', END: 123}));
@@ -25,10 +21,6 @@ describe("vastUtil", function () {
 
     beforeEach(function(){
       parseURLMacro = vastUtil.parseURLMacro;
-    });
-
-    it("must be a function", function(){
-      assert.isFunction(vastUtil.parseURLMacro);
     });
 
     it("must parse the passed macro and return the parsed url", function () {
@@ -82,10 +74,6 @@ describe("vastUtil", function () {
       track = vastUtil.track;
     });
 
-    it("must be a function", function () {
-      assert.isFunction(track);
-    });
-
     it("must return an array with the created track images", function () {
       var macros = [
         'http://foo.bar/[CODE]',
@@ -106,10 +94,6 @@ describe("vastUtil", function () {
 
     beforeEach(function () {
       parseDuration = vastUtil.parseDuration;
-    });
-
-    it("must be a function", function () {
-      assert.isFunction(vastUtil.parseDuration);
     });
 
     it("must return null if the duration is not an string with the format HH:MM:SS[.mmm]", function () {
@@ -133,10 +117,6 @@ describe("vastUtil", function () {
 
     beforeEach(function(){
       parseImpressions = vastUtil.parseImpressions;
-    });
-
-    it("must be a function", function(){
-      assert.isFunction(vastUtil.parseImpressions);
     });
 
     it("must return an empty array if you pass no impressions", function () {
@@ -187,10 +167,6 @@ describe("vastUtil", function () {
       parseCreatives = vastUtil.parseCreatives;
     });
 
-    it("must be a function", function(){
-      assert.isFunction(vastUtil.parseCreatives);
-    });
-
     it("must return an empty array if you pass no creativesJTree", function () {
       assertEmptyArray(parseCreatives());
     });
@@ -219,10 +195,6 @@ describe("vastUtil", function () {
   });
 
   describe("formatProgress", function(){
-    it("must be a function", function(){
-      assert.isFunction(vastUtil.formatProgress);
-    });
-
     it("must return the formatted progress", function(){
       assert.equal(vastUtil.formatProgress(12345000), "03:25:45.000");
       assert.equal(vastUtil.formatProgress(123000), "00:02:03.000");
@@ -235,10 +207,6 @@ describe("vastUtil", function () {
 
     beforeEach(function(){
       parseOffset = vastUtil.parseOffset;
-    });
-
-    it("must be a function", function(){
-      assert.isFunction(vastUtil.parseOffset);
     });
 
     it("must return the passed offset string in ms", function(){

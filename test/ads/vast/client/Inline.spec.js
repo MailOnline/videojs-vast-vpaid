@@ -14,10 +14,6 @@ describe("InLine", function () {
 
   });
 
-  it("must be a function", function () {
-    assert.isFunction(InLine);
-  });
-
   it("must return an instance of InLine", function () {
     assert.instanceOf(InLine(xml.toJXONTree(inlineXML)), InLine);
   });
@@ -190,6 +186,7 @@ describe("InLine", function () {
         assert.isUndefined(inline.error);
       });
 
+      /*jshint maxlen: 700 */
       it("must contain the tracking error uri if set", function () {
         inlineXML = '<InLine>' +
         '<Error><![CDATA[http://pubads.g.doubleclick.net/pagead/conversion/?ai=Bc4roEKqOVIzhJqPi7ga7y4G4CrjOsO4FAAAAEAEgyJaWHDgAWNiN_Je3AWC7rquD0AqyARN3d3cuZGFpbHltYWlsLmNvLnVrugENOHg4X3htbF92YXN0M8gBBdoBqAFodHRwOi8vd3d3LmRhaWx5bWFpbC5jby51ay90dnNob3diaXovYXJ0aWNsZS0yODU2OTEyL1BhcnR5LWdpcmwtUmloYW5uYS1sZXRzLWxvb3NlLWRhbmNlZmxvb3Itc2hvd3MtcmF1bmNoeS1tb3Zlcy1zZW1pLXNoZWVyLWdvd24tQnJpdGlzaC1GYXNoaW9uLUF3YXJkcy1hZnRlcnBhcnR5Lmh0bWyYAuiEAakCPN_bpEVluj7AAgLgAgDqAiEvNTc2NS9kbS52aWRlby9kbV92aWRlb190dnNob3diaXr4AvnRHpAD0AWYA9AFqAMB4AQBoAYj&sigh=fy3coLR3uPk&label=videoplayfailed[ERRORCODE]]]></Error>' +
