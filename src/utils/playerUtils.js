@@ -72,13 +72,14 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
     // on ios7, fiddling with textTracks too early will cause safari to crash
     player.one('contentloadedmetadata', restoreTracks);
 
+    player.one('canplay', tryToResume);
+    ensureCanplayEvtGetsFired();
+
     // if the src changed for ad playback, reset it
     player.src({src: snapshot.src, type: snapshot.type});
 
     // safari requires a call to `load` to pick up a changed source
     player.load();
-
-    resumeVideo();
 
   } else {
     restoreTracks();
@@ -90,16 +91,17 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
 
   /*** Local Functions ***/
 
-  function resumeVideo() {
-    //Sometimes when the page is too heavy the canplay evt is not triggered on firefox.
-    //This code ensure that it gets fired always
+  /**
+   * Sometimes firefox does not trigger the 'canplay' evt.
+   * This code ensure that it always gets triggered triggered.
+   */
+  function ensureCanplayEvtGetsFired() {
     var timeoutId = setTimeout(function() {
       player.trigger('canplay');
     }, 1000);
 
     player.one('canplay', function(){
       clearTimeout(timeoutId);
-      tryToResume();
     });
   }
 
