@@ -1,5 +1,5 @@
+/*jslint maxlen: 700 */
 describe("VASTClient", function () {
-
   function assertError(callback, msg, code) {
     var error = firstArg(callback);
     assert.instanceOf(error, VASTError);
@@ -111,7 +111,7 @@ describe("VASTClient", function () {
         sinon.assert.calledWith(vast._requestVASTXml, 'http://fake.url');
         flushVASTXmlRequest(null, vastXML('<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI.com]]></VASTAdTagURI></Wrapper></Ad>'));
 
-        assertError(callback, 'on VASTClient._getAd, players wrapper limit reached (the limit is 1)', 302);
+        assertError(callback, 'on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is 1)', 302);
       });
 
       it("must track a 102 error if the VAST version is not 2.0 or 3.0", function(){
@@ -122,205 +122,104 @@ describe("VASTClient", function () {
         '<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI.com]]></VASTAdTagURI></Wrapper></Ad>' +
         '</VAST>');
 
-        assertError(callback, 'on VASTClient.buildVastTree, not supported VAST version "1"', 102);
+        assertError(callback, 'on VASTClient.getVASTAd.validateVASTTree, not supported VAST version "1"', 102);
+      });
+
+      it("must complain if you don't pass a proper adTagUrl", function(){
+        assert.throws(function () {
+          vast.getVASTResponse();
+        }, VASTError, 'on VASTClient.getVASTResponse, missing ad tag URL');
+      });
+
+      it("must pass an error to the callback if there was a callback and not adUrlTag", function(){
+        vast.getVASTResponse(null, callback);
+        this.clock.tick(1);
+        var error = firstArg(callback);
+        assert.instanceOf(error, VASTError);
+        assert.equal(error.message, 'VAST Error: on VASTClient.getVASTResponse, missing ad tag URL');
+        sinon.assert.notCalled(vast._requestVASTXml);
+      });
+
+      it("must complain if you don't pass a callback", function(){
+        assert.throws(function () {
+          vast.getVASTResponse('http://testUrlTag');
+        }, VASTError, 'on VASTClient.getVASTResponse, missing callback function');
       });
     });
 
-    describe("_sendVASTResponse", function () {
-      var sendVASTResponse, callback, sendResponse, error, response, origTrack;
-
-      function assertVASTTrackRequest(URLs, variables) {
-        URLs = isArray(URLs) ? URLs : [URLs];
-        sinon.assert.calledWithExactly(vastUtil.track, URLs, variables);
-      }
-
-      beforeEach(function () {
-        vast.errorURLMacros.push('http://t4.liverail.com/?metric=error&erc=[ERRORCODE]');
-        sendVASTResponse = VAST.sendVASTResponse;
-        callback = sinon.spy();
-        sendResponse = vast._sendVASTResponse(callback);
-        error = new VASTError('foo error');
-        response = new VASTResponse();
-
-        //We stub vastUtil.track
-        origTrack = vastUtil.track;
-        vastUtil.track = sinon.spy();
-      });
-
-      afterEach(function () {
-        vastUtil.track = origTrack;
-      });
-
-      it("must return a function", function () {
-        assert.isFunction(vast._sendVASTResponse(noop));
-      });
-
-      describe("with error", function () {
-        it("must call the callback passing the error obj and the response", function () {
-          sendResponse(error, null);
-          sinon.assert.calledWithExactly(callback, error, null);
-        });
-
-        it("must try to track the error if there is a response", function () {
-          sendResponse(error, response);
-          sinon.assert.calledWithExactly(callback, error, response);
-          assertVASTTrackRequest("http://t4.liverail.com/?metric=error&erc=[ERRORCODE]", {ERRORCODE: 900});
-        });
-
-        it("must use the error code if provided on the error object", function () {
-          error = new VASTError('foo error', 101);
-          sendResponse(error, response);
-          sinon.assert.calledWithExactly(callback, error, response);
-          assertVASTTrackRequest("http://t4.liverail.com/?metric=error&erc=[ERRORCODE]", {ERRORCODE: 101});
-        });
-      });
-
-      describe("with no Error", function () {
-        it("must call the callback with null as the error obj and the passed response", function () {
-          sendResponse(null, response);
-          sinon.assert.calledWithExactly(callback, null, response);
-        });
-
-        it("must not track anything", function () {
-          sendResponse(null, response);
-          sinon.assert.calledWithExactly(callback, null, response);
-          sinon.assert.notCalled(vastUtil.track);
-        });
-      });
-    });
-
-    describe("getAd", function () {
-      var callback;
+    describe("_buildVASTResponse", function(){
+      var ads, wrapperAd, wrapperAd2, inLineAd;
 
       beforeEach(function(){
-        this.clock = sinon.useFakeTimers();
-        callback = sinon.spy();
-      });
-
-      afterEach(function(){
-        this.clock.restore();
-      });
-
-      it("must ensure that the first argument is a URL", function () {
-        assert.throws(function () {
-          vast._getAd();
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
-
-        assert.doesNotThrow(function () {
-          vast._getAd('http://foo.bar', noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
-      });
-
-      it("must call the callback with an explanatory error if the url is missing but the callback is set", function () {
-        var callback = sinon.spy();
-        vast._getAd(null, callback);
-        assertError(callback, 'on VASTClient._getAd, missing ad tag URL');
-        assert.isNull(secondArg(callback));
-      });
-
-      it("must be possible to pass an options argument as the first parameter that contains the URL", function () {
-        assert.throws(function () {
-          vast._getAd({});
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
-
-        assert.doesNotThrow(function () {
-          vast._getAd({adTagUrl: 'http://foo.bar'}, noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing ad tag URL');
-      });
-
-      it("must ensure that you pass a callback function", function () {
-        assert.throws(function () {
-          vast._getAd('http://fake.url');
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing callback function');
-
-        assert.doesNotThrow(function () {
-          vast._getAd('http://foo.bar', noop);
-        }, VASTError, 'VAST Error: on VASTClient._getAd, missing callback function');
-      });
-
-      it("must request the VASTXml", function(){
-        sinon.stub(vast, '_requestVASTXml', noop);
-        vast._getAd('http://FAKE.URL', callback);
-        this.clock.tick(1);
-        sinon.assert.calledWith(vast._requestVASTXml, 'http://FAKE.URL');
-      });
-
-      it("must call the callback with a VASTError if we reach the WRAPPER_LIMIT on ad requests", function(){
-        vast.WRAPPER_LIMIT = 2;
-        vast._getAd({
-          adTagUrl: 'http://fake.url',
-          ads: [
-            new Ad(xml.toJXONTree(vastAdXML())),
-            new Ad(xml.toJXONTree(vastAdXML()))
-          ]
-        }, callback);
-
-        assertError(callback, "on VASTClient._getAd, players wrapper limit reached (the limit is " + vast.WRAPPER_LIMIT + ")", 302);
-      });
-
-      describe("must return an ad chain array", function(){
-        var flushVASTXmlRequest;
-
-        beforeEach(function(){
-          sinon.stub(vast, '_requestVASTXml', noop);
-
-          flushVASTXmlRequest = function (error, vastXML) {
-            var cb;
-            cb = secondArg(vast._requestVASTXml);
-            cb(error, vastXML);
-            this.clock.tick(1);
-          }.bind(this);
-        });
-
-        it("with all the ads requested to get the final Inline ad.", function() {
-          var adsChain;
-          vast._getAd('http://fake.url', callback);
-          this.clock.tick(1);
-          sinon.assert.calledWith(vast._requestVASTXml, 'http://fake.url');
-          flushVASTXmlRequest(null, vastXML('<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI.com]]></VASTAdTagURI></Wrapper></Ad>'));
-
-          sinon.assert.calledWith(vast._requestVASTXml, 'http://VASTAdTagURI.com');
-          flushVASTXmlRequest(null, vastInLineXML('<Creatives><Creative><Linear>' +
+        var wrapperAdTree = xml.toJXONTree(vastAdXML('<Wrapper></Wrapper>')).ad;
+        var wrapperAd2Tree = xml.toJXONTree(vastAdXML('<Wrapper></Wrapper>')).ad;
+        var inlineAdTree = xml.toJXONTree(vastInLineXML('<Creatives>' +
+          '<Creative>' +
+          '<Linear>' +
           '<Duration>00:00:58</Duration>' +
-          '</Linear></Creative></Creatives>'));
+          '<MediaFiles>' +
+          '<MediaFile id="1" delivery="progressive" type="video/x-flv" bitrate="457" width="300" height="225">' +
+          '<![CDATA[http://gcdn.2mdn.net/MotifFiles/html/2215309/PID_914438_1235753019000_dcrmvideo.flv]]>' +
+          '</MediaFile>' +
+          '<MediaFile id="2" delivery="streaming" type="video/x-flv" bitrate="457" width="300" height="225">' +
+          '<![CDATA[http://gcdn.2mdn.net/MotifFiles/html/2215309/PID_914438_1235753019000_dcrmvideo.flv]]>' +
+          '</MediaFile>' +
+          '</MediaFiles>' +
+          '</Linear></Creative></Creatives>')).ad;
 
-          assertNoError(callback);
-          adsChain = secondArg(callback);
+        ads = [];
+        wrapperAd = new Ad(wrapperAdTree);
+        wrapperAd2 = new Ad(wrapperAd2Tree);
+        inLineAd = new Ad(inlineAdTree);
 
-          assert.isArray(adsChain);
-          assert.equal(adsChain.length, 2);
-          assert.equal(adsChain[0].wrapper.VASTAdTagURI, 'http://VASTAdTagURI.com');
-          assert.equal(adsChain[1].inLine.creatives[0].linear.duration, 58000);
-        });
+        ads.push(wrapperAd);
+        ads.push(wrapperAd2);
+        ads.push(inLineAd);
+      });
 
-        it("built searching for a possible valid ad on all the ads returned by the VAST response", function(){
-          var adsChain;
-          vast._getAd('http://fake.url', callback);
-          this.clock.tick(1);
-          sinon.assert.calledWith(vast._requestVASTXml, 'http://fake.url');
-          flushVASTXmlRequest(null, vastXML('<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI.com]]></VASTAdTagURI></Wrapper></Ad>' +
-          '<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI2.com]]></VASTAdTagURI></Wrapper></Ad>' +
-          '<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI3.com]]></VASTAdTagURI></Wrapper></Ad>'));
+      it("must given an array of ads, build a vast response", function(){
+        assert.instanceOf(vast._buildVASTResponse(ads), VASTResponse);
+      });
 
-          sinon.assert.calledWith(vast._requestVASTXml, 'http://VASTAdTagURI.com');
-          flushVASTXmlRequest(new VASTError('fake error'));
+      it("must ad the ads to the response", function(){
+        var response = vast._buildVASTResponse(ads);
+        assert.deepEqual(ads, response.ads);
+      });
 
-          sinon.assert.calledWith(vast._requestVASTXml, 'http://VASTAdTagURI2.com');
-          flushVASTXmlRequest(new VASTError('fake error'));
+      it("must not fail validation if response duration is 0", function(){
+        inLineAd.inLine.creatives[0].linear.duration = 0;
+        assert.instanceOf(vast._buildVASTResponse(ads), VASTResponse);
+      });
 
-          sinon.assert.calledWith(vast._requestVASTXml, 'http://VASTAdTagURI3.com');
-          flushVASTXmlRequest(null, vastInLineXML('<Creatives><Creative><Linear>' +
-          '<Duration>00:00:58</Duration>' +
-          '</Linear></Creative></Creatives>'));
+      it("must throw a VASTError if the generated response has no duration", function(){
+        inLineAd.inLine.creatives[0].linear.duration = undefined;
+        assertThrowsVASTError(function () {
+          vast._buildVASTResponse(ads);
+        }, "on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
+      });
 
-          assertNoError(callback);
-          adsChain = secondArg(callback);
+      it("must throw an VASTError if one of the progress events have a wrong offset", function(){
+        var linear = inLineAd.inLine.creatives[0].linear;
+        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', '00:00:1'));
+        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url2', 'fooo:00:1'));
+        assertThrowsVASTError(function () {
+          vast._buildVASTResponse(ads);
+        }, "on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
+      });
 
-          assert.isArray(adsChain);
-          assert.equal(adsChain.length, 2);
-          assert.equal(adsChain[0].wrapper.VASTAdTagURI, 'http://VASTAdTagURI3.com');
-          assert.equal(adsChain[1].inLine.creatives[0].linear.duration, 58000);
-        });
+      it("must throw a vastError if the progressEvent has an offset that is not a number", function(){
+        var linear = inLineAd.inLine.creatives[0].linear;
+        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', 'wrongOffset'));
+        assertThrowsVASTError(function () {
+          vast._buildVASTResponse(ads);
+        }, "on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
+      });
+
+      it("must throw a vastError if response have no mediaFiles", function(){
+        inLineAd.inLine.creatives[0].linear = undefined;
+        assertThrowsVASTError(function () {
+          vast._buildVASTResponse(ads);
+        }, "on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
       });
     });
 
@@ -406,182 +305,351 @@ describe("VASTClient", function () {
       });
     });
 
-    describe("_buildVastTree", function () {
-      it("must return the VASTTree of the passed vast XML", function () {
-        var vastTree = vast._buildVastTree(vastAdXML());
-        var actual = xml.toJXONTree(vastAdXML());
-        actual.ads = [actual.ad];
-        assert.deepEqual(actual, vastTree);
-      });
+    describe("_getVASTAd", function(){
+      var xhr, requests, callback;
 
-      it("must throw an explanatory error if there is a problem parsing the xml", function () {
-        assertThrowsVASTError(function () {
-          vast._buildVastTree('<invalid xml');
-        }, 'on VASTClient.buildVastTree, error parsing xml', 100);
-      });
+      function assertErrorTrack(msg, code, adChainIds){
+        var adChain = secondArg(vast._trackError);
 
-      it("must throw an error with 303 errorCode if the VAST tree has no ad/ads", function () {
-        assertThrowsVASTError(function () {
-          vast._buildVastTree(vastXML());
-        }, 'on VASTClient.buildVastTree, no Ad in VAST tree', 303);
-      });
+        assertError(vast._trackError, msg, code);
 
-      it("must add a convenient ads property containing all the ads of the vastXML", function(){
-        var vastTree = vast._buildVastTree(vastAdXML());
-        assert.deepEqual(vastTree.ads, [vastTree.ad]);
+        adChainIds.forEach(function(adId, index) {
+          assert.equal(adId, adChain[index].id);
+        });
+      }
 
-        vastTree = vast._buildVastTree(vastXML('<Ad></Ad><Ad></Ad>'));
-        assert.deepEqual(vastTree.ads, vastTree.ad);
-      });
-
-    });
-
-    describe("_buildAd", function(){
-      it("must given a valid ad jxon tree return an instance of Ad", function(){
-        var adTree = xml.toJXONTree(vastInLineXML('<Creatives><Creative></Creative></Creatives>')).ad;
-        assert.instanceOf(vast._buildAd(adTree), Ad);
-      });
-
-      it("must throw an error if there was an unexpected error while creating the Ad", function(){
-        //We stub Ad constructor
-        var AdConstructor = Ad;
-        window.Ad = function (){
-          throw new Error('there was an unexpected error building the Ad');
+      beforeEach(function () {
+        this.clock = sinon.useFakeTimers();
+        callback = sinon.spy();
+        xhr = sinon.useFakeXMLHttpRequest();
+        requests = [];
+        xhr.onCreate = function (xhr) {
+          requests.push(xhr);
         };
-        var adTree = xml.toJXONTree(vastInLineXML()).ad;
-
-        assertThrowsVASTError(function () {
-          vast._buildAd(adTree);
-        }, "on VASTClient._buildAd, there was an unexpected error building the Ad", 900);
-
-        //We restore Ad constructor
-        window.Ad = AdConstructor;
+        sinon.stub(vast, '_trackError');
       });
 
-      it("must throw an error if the ad does not contain an Inline or a wrapper", function(){
-        var adTree = xml.toJXONTree(vastAdXML()).ad;
-
-        assertThrowsVASTError(function () {
-          vast._buildAd(adTree);
-        }, "on VASTClient._buildAd, nor wrapper nor inline elements found on the Ad", 101);
+      afterEach(function () {
+        xhr.restore();
+        this.clock.restore();
+        vast._trackError.restore();
       });
 
-      it("must throw an error if the ad contain an inline element and a wrapper ", function(){
-        var adXml = vastAdXML('<InLine></InLine><Wrapper></Wrapper>');
-        var adTree = xml.toJXONTree(adXml).ad;
-
-        assertThrowsVASTError(function () {
-          vast._buildAd(adTree);
-        }, 'on VASTClient._buildAd, InLine and Wrapper both found on the same Ad', 101);
+      it("must request the ad tree with passed adTagUrl", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, noop);
+        this.clock.tick(1);
+        assert.equal(1, requests.length);
+        assert.equal(adTagUrl, requests[0].url);
       });
 
-      it("must throw an error if the inline has no creative element", function(){
-        var adTree = xml.toJXONTree(vastInLineXML()).ad;
+      it("must pass a 301 error to the callback if there was an error with the request", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+        requests[0].respond(404, {"Content-Type": "text"}, '404 Not found');
+        this.clock.tick(1);
+        assertError(callback, "on VASTClient.requestVastXML, HTTP request error with status '404'", 301);
 
-        assertThrowsVASTError(function () {
-          vast._buildAd(adTree);
-        }, "on VASTClient._buildAd, missing creative in InLine element", 101);
       });
 
-      it("must throw an error if the wrapper has no VASTAdTagURI", function(){
-        var adXml = vastAdXML('<Wrapper></Wrapper>');
-        var adTree = xml.toJXONTree(adXml).ad;
+      it("must pass a 100 error to the callback if there was an error parsing the XML", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+        requests[0].respond(200, {"Content-Type": "application/xml"}, 'wrong xml');
+        this.clock.tick(1);
 
-        assertThrowsVASTError(function () {
-          vast._buildAd(adTree);
-        }, "on VASTClient._buildAd, missing 'VASTAdTagURI' in wrapper", 101);
+        assertError(callback, "on VASTClient.getVASTAd.buildVastWaterfall, error parsing xml", 100);
       });
 
-      it("must add the error from the wrapper or the inline to this.errorURLMacros", function(){
-        var adTree = xml.toJXONTree(vastInLineXML('<Error><![CDATA[http://t4.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error>' +
-        '<Creatives><Creative></Creative></Creatives>')).ad;
-        vast._buildAd(adTree);
-        assert.deepEqual(vast.errorURLMacros, ['http://t4.liverail.com/?metric=error&erc=[ERRORCODE]']);
+      it("must pass a 303 error to the callback if there was no ad on the returned VAST XML", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+        requests[0].respond(200, {"Content-Type": "application/xml"}, vastXML());
+        this.clock.tick(1);
 
-        vast.errorURLMacros.length = 0;
-        var adXml = vastAdXML('<Wrapper>' +
-        '<Error><![CDATA[http://t4.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error>' +
-        '<VASTAdTagURI><![CDATA[http://demo.tremormedia.com/proddev/vast/vast_inline_linear.xml]]></VASTAdTagURI>' +
-        '</Wrapper>');
-        adTree = xml.toJXONTree(adXml).ad;
-        vast._buildAd(adTree);
-        assert.deepEqual(vast.errorURLMacros, ['http://t4.liverail.com/?metric=error&erc=[ERRORCODE]']);
+        assertError(callback, 'on VASTClient.getVASTAd.validateVASTTree, no Ad in VAST tree', 303);
+      });
+
+      it("must pass a 102 error to the callback and track it if the returned vast ad version is not supported", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="1.0"><Ad></Ad></VAST>');
+        this.clock.tick(1);
+
+        assertError(callback, 'on VASTClient.getVASTAd.validateVASTTree, not supported VAST version "1"', 102);
+      });
+
+      it("must request the next ad if the adTree returned a wrapper", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+        assert.equal(2, requests.length);
+        assert.equal(requests[1].url, 'http://vastadtaguri.com/');
+      });
+
+      it("must pass a 301 error to the callback and track it if there was an error with the request of the next ad in the chain", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(404, {"Content-Type": "text"}, '404 Not found');
+        this.clock.tick(2);
+
+        assertError(callback, "on VASTClient.requestVastXML, HTTP request error with status '404'", 301);
+        assertErrorTrack("on VASTClient.requestVastXML, HTTP request error with status '404'", 301, ['firstAd']);
+      });
+
+      it("must pass a a 100 error to the callback and track it if there was an error parsing the next ad in the chain", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, 'wrong xml');
+        this.clock.tick(1);
+
+        assertError(callback, "on VASTClient.getVASTAd.requestVASTAd, error parsing xml", 100);
+        assertErrorTrack("on VASTClient.getVASTAd.requestVASTAd, error parsing xml", 100, ['firstAd']);
+      });
+
+      it("must pass a a 100 error to the callback and track it if there was an error building the next ad in the chain", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="secondAd"></Ad></VAST>');
+        sinon.stub(window, 'Ad').throws(new Error('CUSTOM ERROR'));
+        this.clock.tick(1);
+
+        assertError(callback, "on VASTClient.getVASTAd.buildAd, error parsing xml", 100);
+        assertErrorTrack("on VASTClient.getVASTAd.buildAd, error parsing xml", 100, ['firstAd']);
+        window.Ad.restore();
+      });
+
+      it("must pass a 302 error to the callback and track it if the adChain reached the configured WRAPPER_LIMIT", function(){
+        vast.WRAPPER_LIMIT = 3;
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="secondAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri2.com]]></VASTAdTagURI><Error><![CDATA[http://t2.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[2].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="thirdAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri3.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        assertError(callback, "on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is 3)", 302);
+        assertErrorTrack("on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is 3)", 302, ['firstAd', 'secondAd', 'thirdAd']);
+      });
+
+      it("must pass a 101 error to the callback and track it if one of the ads on the adChain returned an inline and a wrapper on the same ad", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="secondAd"><InLine></InLine><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri2.com]]></VASTAdTagURI><Error><![CDATA[http://t2.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        assertError(callback, 'on VASTClient.getVASTAd.validateAd, InLine and Wrapper both found on the same Ad', 101);
+        assertErrorTrack('on VASTClient.getVASTAd.validateAd, InLine and Wrapper both found on the same Ad', 101, ['firstAd', 'secondAd']);
+      });
+
+      it("must pass a 101 error to the callback and track it if the ad in the chain had neither a wrapper nor an inline", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="secondAd"></Ad></VAST>');
+        this.clock.tick(1);
+
+        assertError(callback, 'on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad', 101);
+        assertErrorTrack('on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad', 101, ['firstAd', 'secondAd']);
+      });
+
+      it("must return a 101 error to the callback and track it if one of the ads in the chain contains an inline with no creative", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="secondAd"><InLine></InLine></Ad></VAST>');
+        this.clock.tick(1);
+
+        assertError(callback, "on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101);
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101, ['firstAd', 'secondAd']);
+      });
+
+      it("must return a 101 error to the callback and track it if one of the ads in the chain is a wrapper with no VASTAdTagURI", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="firstAd"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        requests[1].respond(200, {"Content-Type": "text"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="secondAd"><Wrapper></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+
+        assertError(callback, "on VASTClient.getVASTAd.validateAd, missing 'VASTAdTagURI' in wrapper", 101);
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, missing 'VASTAdTagURI' in wrapper", 101, ['firstAd', 'secondAd']);
+      });
+
+      it("must request the next ad in the waterfall if the previous ad chain returned an error", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="adChain1"></Ad><Ad id="adChain2"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+        //It must track the failed first error
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad", 101, ['adChain1']);
+
+        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2.1"><InLine><Creatives><Creative><Linear>' +
+          '<Duration>00:00:58</Duration>' +
+          '</Linear></Creative></Creatives></InLine></Ad>'));
+        this.clock.tick(1);
+
+        assert.isNull(firstArg(callback));
+        var adChain = secondArg(callback);
+        assert.isArray(adChain);
+        assert.equal(adChain.length, 2);
+        assert.equal(adChain[0].id, 'adChain2');
+        assert.equal(adChain[1].id, 'adChain2.1');
+      });
+
+      it("must pass the latest error from the adChain to the callback but it must track all the errors from all the adchains in the VAST waterfall", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="adChain1"></Ad><Ad id="adChain2"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+        //It must track the failed first error
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad", 101, ['adChain1']);
+
+        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2"><InLine><Creatives></Creatives></InLine></Ad>'));
+        this.clock.tick(1);
+
+        assertError(callback, "on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101);
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101, ['adChain2', 'adChain2']);
+      });
+
+      it("must not pass an error to the callback if one of the adChains in the VAST waterfall returned a valid ad", function(){
+        var adTagUrl = 'http://foo.bar/';
+        vast._getVASTAd(adTagUrl, callback);
+        this.clock.tick(1);
+
+        requests[0].respond(200, {"Content-Type": "application/xml"}, '<?xml version="1.0" encoding="utf-8"?>' +
+          '<VAST version="2.0"><Ad id="adChain1"></Ad><Ad id="adChain2"><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
+        this.clock.tick(1);
+        //It must track the failed first error
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad", 101, ['adChain1']);
+
+        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2.1"><InLine><Creatives><Creative><Linear>' +
+          '<Duration>00:00:58</Duration>' +
+          '</Linear></Creative></Creatives></InLine></Ad>'));
+        this.clock.tick(1);
+
+        assert.isNull(firstArg(callback));
+        var adChain = secondArg(callback);
+        assert.isArray(adChain);
+        assert.equal(adChain.length, 2);
+        assert.equal(adChain[0].id, 'adChain2');
+        assert.equal(adChain[1].id, 'adChain2.1');
       });
     });
 
-    describe("_buildVASTResponse", function(){
-      var ads, wrapperAd, wrapperAd2, inLineAd;
-
+    describe("_trackError", function(){
+      var adChain;
+      
       beforeEach(function(){
-        var wrapperAdTree = xml.toJXONTree(vastAdXML('<Wrapper></Wrapper>')).ad;
-        var wrapperAd2Tree = xml.toJXONTree(vastAdXML('<Wrapper></Wrapper>')).ad;
-        var inlineAdTree = xml.toJXONTree(vastInLineXML('<Creatives>' +
-        '<Creative>' +
-        '<Linear>' +
-        '<Duration>00:00:58</Duration>' +
-        '<MediaFiles>' +
-        '<MediaFile id="1" delivery="progressive" type="video/x-flv" bitrate="457" width="300" height="225">' +
-        '<![CDATA[http://gcdn.2mdn.net/MotifFiles/html/2215309/PID_914438_1235753019000_dcrmvideo.flv]]>' +
-        '</MediaFile>' +
-        '<MediaFile id="2" delivery="streaming" type="video/x-flv" bitrate="457" width="300" height="225">' +
-        '<![CDATA[http://gcdn.2mdn.net/MotifFiles/html/2215309/PID_914438_1235753019000_dcrmvideo.flv]]>' +
-        '</MediaFile>' +
-        '</MediaFiles>' +
-        '</Linear></Creative></Creatives>')).ad;
+        sinon.stub(vastUtil, 'track');
 
-        ads = [];
-        wrapperAd = new Ad(wrapperAdTree);
-        wrapperAd2 = new Ad(wrapperAd2Tree);
-        inLineAd = new Ad(inlineAdTree);
+        var adTree = xml.toJXONTree(vastInLineXML('<Error><![CDATA[http://t1.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error>' +
+          '<Creatives><Creative></Creative></Creatives>')).ad;
+        var adTree2 = xml.toJXONTree(vastInLineXML('<Error><![CDATA[http://t2.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error>' +
+          '<Creatives><Creative></Creative></Creatives>')).ad;
+        var adTree3 = xml.toJXONTree(vastXML('<Ad><Wrapper><VASTAdTagURI><![CDATA[http://VASTAdTagURI.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad>')).ad;
 
-        ads.push(wrapperAd);
-        ads.push(wrapperAd2);
-        ads.push(inLineAd);
+        adChain = [
+          new Ad(adTree),
+          new Ad(adTree2),
+          new Ad(adTree3)
+        ];
       });
 
-      it("must given an array of ads, build a vast response", function(){
-        assert.instanceOf(vast._buildVASTResponse(ads), VASTResponse);
+      afterEach(function(){
+        vastUtil.track.restore();
       });
 
-      it("must ad the ads to the response", function(){
-        var response = vast._buildVASTResponse(ads);
-        assert.deepEqual(ads, response.ads);
+      it("must track the passed error to all the error macros in the passed adChain", function(){
+        var error = new VASTError("on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
+        vast._trackError(error, adChain);
+        sinon.assert.calledOnce(vastUtil.track);
+
+        assert.deepEqual(firstArg(vastUtil.track), [
+          'http://t1.liverail.com/?metric=error&erc=[ERRORCODE]',
+          'http://t2.liverail.com/?metric=error&erc=[ERRORCODE]',
+          'http://t3.liverail.com/?metric=error&erc=[ERRORCODE]'
+        ]);
+        assert.deepEqual(secondArg(vastUtil.track), {ERRORCODE: 200});
       });
 
-      it("must not fail validation if response duration is 0", function(){
-          inLineAd.inLine.creatives[0].linear.duration = 0;
-          assert.instanceOf(vast._buildVASTResponse(ads), VASTResponse);
-      });
+      it("must track the error code 900 if the passed error does not have a code", function(){
+        var error = new VASTError("custom error");
+        vast._trackError(error, adChain);
+        sinon.assert.calledOnce(vastUtil.track);
 
-      it("must throw a VASTError if the generated response has no duration", function(){
-        inLineAd.inLine.creatives[0].linear.duration = undefined;
-        assertThrowsVASTError(function () {
-          vast._buildVASTResponse(ads);
-        }, "on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
-      });
-
-      it("must throw an VASTError if one of the progress events have a wrong offset", function(){
-        var linear = inLineAd.inLine.creatives[0].linear;
-        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', '00:00:1'));
-        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url2', 'fooo:00:1'));
-        assertThrowsVASTError(function () {
-          vast._buildVASTResponse(ads);
-        }, "on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
-      });
-
-      it("must throw a vastError if the progressEvent has an offset that is not a number", function(){
-        var linear = inLineAd.inLine.creatives[0].linear;
-        linear.trackingEvents.push(createProgressTrackEvent('http://foo.url1', 'wrongOffset'));
-        assertThrowsVASTError(function () {
-          vast._buildVASTResponse(ads);
-        }, "on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
-      });
-
-      it("must throw a vastError if response have no mediaFiles", function(){
-         inLineAd.inLine.creatives[0].linear = undefined;
-        assertThrowsVASTError(function () {
-          vast._buildVASTResponse(ads);
-        }, "on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
+        assert.deepEqual(firstArg(vastUtil.track), [
+          'http://t1.liverail.com/?metric=error&erc=[ERRORCODE]',
+          'http://t2.liverail.com/?metric=error&erc=[ERRORCODE]',
+          'http://t3.liverail.com/?metric=error&erc=[ERRORCODE]'
+        ]);
+        assert.deepEqual(secondArg(vastUtil.track), {ERRORCODE: 900});
       });
     });
   });
