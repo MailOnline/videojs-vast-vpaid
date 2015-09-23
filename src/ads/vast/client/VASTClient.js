@@ -17,10 +17,9 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callba
   var error = sanityCheck(adTagUrl, callback);
   if (error) {
     if (isFunction(callback)) {
-      callback(error);
-    } else {
-      throw error;
+      return callback(error);
     }
+    throw error;
   }
 
   async.waterfall([
@@ -154,25 +153,22 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   function validateAd(ad) {
     var wrapper = ad.wrapper;
     var inLine = ad.inLine;
+    var errMsgPrefix = 'on VASTClient.getVASTAd.validateAd, ';
 
     if (inLine && wrapper) {
-      return new VASTError('on VASTClient.getVASTAd.validateAd, InLine and Wrapper both found on the same Ad', 101);
+      return new VASTError(errMsgPrefix +"InLine and Wrapper both found on the same Ad", 101);
     }
 
     if (!inLine && !wrapper) {
-      return new VASTError('on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad', 101);
+      return new VASTError(errMsgPrefix + "nor wrapper nor inline elements found on the Ad", 101);
     }
 
-    if (inLine) {
-      if (inLine.creatives.length === 0) {
-        return new VASTError("on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101);
-      }
+    if (inLine && inLine.creatives.length === 0) {
+      return new VASTError(errMsgPrefix + "missing creative in InLine element", 101);
     }
 
-    if (wrapper) {
-      if (!wrapper.VASTAdTagURI) {
-        return new VASTError("on VASTClient.getVASTAd.validateAd, missing 'VASTAdTagURI' in wrapper", 101);
-      }
+    if (wrapper && !wrapper.VASTAdTagURI) {
+      return new VASTError(errMsgPrefix + "missing 'VASTAdTagURI' in wrapper", 101);
     }
   }
 

@@ -131,11 +131,13 @@ describe("VASTClient", function () {
         }, VASTError, 'on VASTClient.getVASTResponse, missing ad tag URL');
       });
 
-      it("must pass an error to the callback if there was a callback", function(){
+      it("must pass an error to the callback if there was a callback and not adUrlTag", function(){
         vast.getVASTResponse(null, callback);
+        this.clock.tick(1);
         var error = firstArg(callback);
         assert.instanceOf(error, VASTError);
         assert.equal(error.message, 'VAST Error: on VASTClient.getVASTResponse, missing ad tag URL');
+        sinon.assert.notCalled(vast._requestVASTXml);
       });
 
       it("must complain if you don't pass a callback", function(){
