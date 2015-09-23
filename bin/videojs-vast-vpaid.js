@@ -1592,7 +1592,7 @@ module.exports = VPAIDAdUnit;
 var utils = require('./utils');
 var unique = utils.unique('vpaidIframe');
 var VPAIDAdUnit = require('./VPAIDAdUnit');
-var defaultTemplate = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n</head>\n<body>\n    <script type=\"text/javascript\" src=\"{{iframeURL_JS}}\"></script>\n    <script>\n        parent.postMessage('{\"event\": \"ready\", \"id\": \"{{iframeID}}\"}', window.location.origin);\n    </script>\n    <div class=\"ad-element\">\n    </div>\n</body>\n</html>\n";
+var defaultTemplate = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n  <style>body{margin:0;padding:0;}</style> </head>\n<body>\n    <script type=\"text/javascript\" src=\"{{iframeURL_JS}}\"></script>\n    <script>\n        parent.postMessage('{\"event\": \"ready\", \"id\": \"{{iframeID}}\"}', window.location.origin);\n    </script>\n    <div class=\"ad-element\">\n    </div>\n</body>\n</html>\n";
 
 var AD_STOPPED = 'AdStopped';
 
@@ -1945,6 +1945,7 @@ function createIframe(parent, url) {
     nEl.src = url || 'about:blank';
     nEl.width = '100%';
     nEl.height = '100%';
+    nEl.border = 'none';
     nEl.style.position = 'absolute';
     nEl.style.left = '0';
     nEl.style.top = '0';
