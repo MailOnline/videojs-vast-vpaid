@@ -4846,14 +4846,19 @@ function VASTClient(options) {
 VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callback) {
   var that = this;
 
-  //We reset the errorURLMacros before doing anything.
-  this.errorURLMacros = [];
+  var error = sanityCheck(adTagUrl, callback);
+  if (error) {
+    if (isFunction(callback)) {
+      return callback(error);
+    }
+    throw error;
+  }
 
   async.waterfall([
-      this._getAd.bind(this, adTagUrl),
+      this._getVASTAd.bind(this, adTagUrl),
       buildVASTResponse
     ],
-    this._sendVASTResponse(callback));
+    callback);
 
   /*** Local functions ***/
   function buildVASTResponse(adsChain, cb) {
@@ -4864,98 +4869,153 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callba
       cb(e);
     }
   }
-};
 
-VASTClient.prototype._sendVASTResponse = function sendVASTResponse(callback) {
-  var that = this;
-  callback = callback || noop;
-
-  return function (error, response) {
-    if (error) {
-      vastUtil.track(that.errorURLMacros, {ERRORCODE: error.code || 900});  //900 <== Undefined error
-    }
-    callback(error, response);
-  };
-};
-
-VASTClient.prototype._getAd = function getVASTAd(adTagUrl, callback) {
-  var error;
-  var that = this;
-  var options = isObject(adTagUrl) && !isNull(adTagUrl) ? adTagUrl : {adTagUrl: adTagUrl};
-  options.ads = options.ads || [];
-  error = sanityCheck(options, callback);
-  if (error) {
-    if (isFunction(callback)) {
-      return callback(error, null);
-    }
-    throw error;
-  }
-
-  async.waterfall([
-    requestVASTXml,
-    buildAd
-  ], callback);
-
-  /*** local function ***/
-  function sanityCheck(opts, cb) {
-    if (!opts.adTagUrl) {
-      return new VASTError('on VASTClient._getAd, missing ad tag URL');
+  function sanityCheck(adTagUrl, cb) {
+    if (!adTagUrl) {
+      return new VASTError('on VASTClient.getVASTResponse, missing ad tag URL');
     }
 
     if (!isFunction(cb)) {
-      return new VASTError('on VASTClient._getAd, missing callback function');
-    }
-
-    if (opts.ads.length >= that.WRAPPER_LIMIT) {
-      return new VASTError("on VASTClient._getAd, players wrapper limit reached (the limit is " + that.WRAPPER_LIMIT + ")", 302);
+      return new VASTError('on VASTClient.getVASTResponse, missing callback function');
     }
   }
+};
 
-  function requestVASTXml(callback) {
-    that._requestVASTXml(options.adTagUrl, callback);
-  }
+VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
+  var that = this;
 
-  function buildAd(adXML, callback) {
-    var adTree;
-    try {
-      adTree = that._buildVastTree(adXML);
-      getValidAd(adTree.ads, options.ads, callback);
-    } catch (e) {
-      callback(e);
+  getAdWaterfall(adTagUrl, function (error, vastTree) {
+    var waterfallAds = vastTree && isArray(vastTree.ads) ? vastTree.ads : null;
+    if (error) {
+      that._trackError(error, waterfallAds);
+      return callback(error, waterfallAds);
     }
 
-    /*** local Functions  ***/
-    function getValidAd(possibleAds, previousAds, callback) {
-      getAd(possibleAds.shift(), previousAds, function (error, adChain) {
-        if (error) {
-          if (possibleAds.length > 0) {
-            return getValidAd(possibleAds, previousAds, callback);
-          }
-          return callback(error);
+    getAd(waterfallAds.shift(), [], waterfallHandler);
+
+    /*** Local functions ***/
+    function waterfallHandler(error, adChain) {
+      if (error) {
+        that._trackError(error, adChain);
+        if (waterfallAds.length > 0) {
+          getAd(waterfallAds.shift(),[], waterfallHandler);
+        } else {
+          callback(error, adChain);
         }
+      } else {
         callback(null, adChain);
-      });
-    }
-
-    function getAd(adTree, previousAds, callback) {
-      try {
-        var ad = that._buildAd(adTree);
-
-        if (ad.wrapper) {
-          return getNextAd(ad, previousAds, callback);
-        }
-        return callback(null, previousAds.concat(ad));
-      } catch (e) {
-        callback(e);
       }
     }
+  });
 
-    function getNextAd(ad, previousAds, callback) {
-      return that._getAd({
-        adTagUrl: ad.wrapper.VASTAdTagURI,
-        ads: previousAds.concat(ad)
-      }, callback);
+  /*** Local functions ***/
+  function getAdWaterfall(adTagUrl, callback) {
+    var requestVastXML = that._requestVASTXml.bind(that, adTagUrl);
+    async.waterfall([
+      requestVastXML,
+      buildVastWaterfall
+    ], callback);
+  }
+
+  function buildVastWaterfall(xmlStr, callback) {
+    var vastTree;
+    try {
+      vastTree = xml.toJXONTree(xmlStr);
+      vastTree.ads = isArray(vastTree.ad) ? vastTree.ad : [vastTree.ad];
+      callback(validateVASTTree(vastTree), vastTree);
+    } catch (e) {
+      callback(new VASTError("on VASTClient.getVASTAd.buildVastWaterfall, error parsing xml", 100), null);
     }
+  }
+
+  function validateVASTTree(vastTree) {
+    var vastVersion = xml.attr(vastTree, 'version');
+
+    if (!vastTree.ad) {
+      return new VASTError('on VASTClient.getVASTAd.validateVASTTree, no Ad in VAST tree', 303);
+    }
+
+    if (vastVersion && (vastVersion != 3 && vastVersion != 2)) {
+      return new VASTError('on VASTClient.getVASTAd.validateVASTTree, not supported VAST version "' + vastVersion + '"', 102);
+    }
+
+    return null;
+  }
+
+  function getAd(adTagUrl, adChain, callback) {
+    if (adChain.length >= that.WRAPPER_LIMIT) {
+      return callback(new VASTError("on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is " + that.WRAPPER_LIMIT + ")", 302), adChain);
+    }
+
+    async.waterfall([
+      function (next) {
+        if (isString(adTagUrl)) {
+          requestVASTAd(adTagUrl, next);
+        } else {
+          next(null, adTagUrl);
+        }
+      },
+      buildAd
+    ], function (error, ad) {
+      if (ad) {
+        adChain.push(ad);
+      }
+
+      if (error) {
+        return callback(error, adChain);
+      }
+
+      if (ad.wrapper) {
+        return getAd(ad.wrapper.VASTAdTagURI, adChain, callback);
+      }
+
+      return callback(null, adChain);
+    });
+  }
+
+  function buildAd(adJxonTree, callback) {
+    try {
+      var ad = new Ad(adJxonTree);
+      callback(validateAd(ad), ad);
+    } catch (e) {
+      callback(new VASTError('on VASTClient.getVASTAd.buildAd, error parsing xml', 100), null);
+    }
+  }
+
+  function validateAd(ad) {
+    var wrapper = ad.wrapper;
+    var inLine = ad.inLine;
+    var errMsgPrefix = 'on VASTClient.getVASTAd.validateAd, ';
+
+    if (inLine && wrapper) {
+      return new VASTError(errMsgPrefix +"InLine and Wrapper both found on the same Ad", 101);
+    }
+
+    if (!inLine && !wrapper) {
+      return new VASTError(errMsgPrefix + "nor wrapper nor inline elements found on the Ad", 101);
+    }
+
+    if (inLine && inLine.creatives.length === 0) {
+      return new VASTError(errMsgPrefix + "missing creative in InLine element", 101);
+    }
+
+    if (wrapper && !wrapper.VASTAdTagURI) {
+      return new VASTError(errMsgPrefix + "missing 'VASTAdTagURI' in wrapper", 101);
+    }
+  }
+
+  function requestVASTAd(adTagUrl, callback) {
+    that._requestVASTXml(adTagUrl, function (error, xmlStr) {
+      if (error) {
+        return callback(error);
+      }
+      try {
+        var vastTree = xml.toJXONTree(xmlStr);
+        callback(validateVASTTree(vastTree), vastTree.ad);
+      } catch (e) {
+        callback(new VASTError("on VASTClient.getVASTAd.requestVASTAd, error parsing xml", 100));
+      }
+    });
   }
 };
 
@@ -4975,89 +5035,13 @@ VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callbac
   /*** Local functions ***/
   function requestHandler(error, response, status) {
     if (error) {
-      var errMsg = isDefined(status)?
-            "on VASTClient.requestVastXML, HTTP request error with status '" + status + "'" :
-            "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn";
-      return callback(new VASTError(errMsg, 301));
+      var errMsg = isDefined(status) ?
+      "on VASTClient.requestVastXML, HTTP request error with status '" + status + "'" :
+        "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn";
+      return callback(new VASTError(errMsg, 301), null);
     }
 
     callback(null, response);
-  }
-};
-
-VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {
-  var vastTree, vastVersion;
-
-  try {
-    vastTree = xml.toJXONTree(xmlStr);
-    vastVersion = xml.attr(vastTree, 'version');
-    vastTree.ads = isArray(vastTree.ad) ? vastTree.ad : [vastTree.ad];
-
-  } catch (e) {
-    throw new VASTError("on VASTClient.buildVastTree, error parsing xml", 100);
-  }
-
-  if (!vastTree.ad) {
-    throw new VASTError('on VASTClient.buildVastTree, no Ad in VAST tree', 303);
-  }
-
-  if (vastVersion && (vastVersion != 3 && vastVersion != 2)) {
-    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "' + vastVersion + '"', 102);
-  }
-
-  return vastTree;
-
-};
-
-VASTClient.prototype._buildAd = function buildAd(adJxonTree) {
-  var ad;
-  var that = this;
-
-  try {
-    ad = new Ad(adJxonTree);
-  } catch (e) {
-    throw new VASTError('on VASTClient._buildAd, ' + e.message, 900);
-  }
-
-  addErrorUrlMacros(ad);
-  validateAd(ad);
-
-  return ad;
-  /*** Local Functions ***/
-
-  function addErrorUrlMacros(ad) {
-    if (ad.wrapper && ad.wrapper.error) {
-      that.errorURLMacros.push(ad.wrapper.error);
-    }
-
-    if (ad.inLine && ad.inLine.error) {
-      that.errorURLMacros.push(ad.inLine.error);
-    }
-  }
-
-  function validateAd(ad) {
-    var wrapper = ad.wrapper;
-    var inLine = ad.inLine;
-
-    if (inLine && wrapper) {
-      throw new VASTError('on VASTClient._buildAd, InLine and Wrapper both found on the same Ad', 101);
-    }
-
-    if (!inLine && !wrapper) {
-      throw new VASTError('on VASTClient._buildAd, nor wrapper nor inline elements found on the Ad', 101);
-    }
-
-    if (inLine) {
-      if (inLine.creatives.length === 0) {
-        throw new VASTError("on VASTClient._buildAd, missing creative in InLine element", 101);
-      }
-    }
-
-    if (wrapper) {
-      if (!wrapper.VASTAdTagURI) {
-        throw new VASTError("on VASTClient._buildAd, missing 'VASTAdTagURI' in wrapper", 101);
-      }
-    }
   }
 };
 
@@ -5092,6 +5076,27 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
           throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
         }
       });
+    }
+  }
+};
+
+VASTClient.prototype._trackError = function (error, adChain) {
+  if (!isArray(adChain) || adChain.length === 0) { //There is nothing to track
+    return;
+  }
+
+  var errorURLMacros = [];
+  adChain.forEach(addErrorUrlMacros);
+  vastUtil.track(errorURLMacros, {ERRORCODE: error.code || 900});  //900 <== Undefined error
+
+  /*** Local functions  ***/
+  function addErrorUrlMacros(ad) {
+    if (ad.wrapper && ad.wrapper.error) {
+      errorURLMacros.push(ad.wrapper.error);
+    }
+
+    if (ad.inLine && ad.inLine.error) {
+      errorURLMacros.push(ad.inLine.error);
     }
   }
 };
