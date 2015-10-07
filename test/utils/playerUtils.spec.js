@@ -375,6 +375,11 @@ describe("playerUtils.prepareForAds", function () {
       sinon.assert.calledOnce(blackPoster.hide);
     });
 
+    it("must hide the blackPoster on 'vast.adError' event", function () {
+      player.trigger('vast.adError');
+      sinon.assert.calledOnce(blackPoster.hide);
+    });
+
     it("must not hide the blackPoster if is already hidden", function () {
       dom.addClass(blackPoster.el(), 'vjs-hidden');
       player.trigger('vast.adStart');

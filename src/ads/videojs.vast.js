@@ -98,8 +98,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     async.waterfall([
-      preparePlayerForAd,
       checkAdsEnabled,
+      preparePlayerForAd,
       playPrerollAd
     ], function (error, response) {
       if (error) {
