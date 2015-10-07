@@ -204,6 +204,7 @@ playerUtils.prepareForAds = function (player) {
   player.on('error', hideBlackPoster);//If there is an error in the player we remove the blackposter to show the err msg
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
+  player.on('vast.adError', hideBlackPoster);
   player.on('vast.adStart', addStyles);
   player.on('vast.adEnd', removeStyles);
   player.on('vast.adsCancel', removeStyles);
