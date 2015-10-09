@@ -729,6 +729,20 @@ describe("VPAIDIntegrator", function () {
           assert.isNotNull(player.el().querySelector('.vast-skip-button'));
         });
 
+        it("must only add one skip button no matter how many 'AdSkippableStateChange' evts we receive while the adUnit is skippable", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick(1);
+
+          assert.equal(player.el().querySelectorAll('.vast-skip-button').length, 1);
+        });
+
         it("must remove the skip button if the adUnit is no longer skippable", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
