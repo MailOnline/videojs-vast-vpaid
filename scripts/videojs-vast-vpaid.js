@@ -4544,7 +4544,9 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
     player.trigger('vpaid.AdSkippableStateChange');
     adUnit.getAdSkippableState(function (error, isSkippable) {
       if (isSkippable) {
-        addSkipButton(player);
+        if (!skipButton) {
+          addSkipButton(player);
+        }
       } else {
         removeSkipButton(player);
       }
