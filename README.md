@@ -1,4 +1,4 @@
-# videojs-vast-plugin
+# videojs-vast-vpaid plugin
 [![Build Status](https://travis-ci.org/MailOnline/videojs-vast-vpaid.svg?branch=master)](https://travis-ci.org/MailOnline/videojs-vast-vpaid)
 [![Code Climate](https://codeclimate.com/github/MailOnline/videojs-vast-vpaid/badges/gpa.svg)](https://codeclimate.com/github/MailOnline/videojs-vast-vpaid)
 [![Test Coverage](https://codeclimate.com/github/MailOnline/videojs-vast-vpaid/badges/coverage.svg)](https://codeclimate.com/github/MailOnline/videojs-vast-vpaid/coverage)
@@ -25,8 +25,8 @@
   3.- After videoJs add the plugin script stylesheet and swfobject (if you want to support flashvpaid) to your page
   ```
   <script src="/path/to/swfobject.js"></script>
-  <link href="/path/to/videojs-vast-plugin.css" rel="stylesheet">
-  <script src="/path/to/videojs-vast-plugin.min.js"></script>
+  <link href="/path/to/videojs-vast-vpaid.css" rel="stylesheet">
+  <script src="/path/to/videojs-vast-vpaid.min.js"></script>
   ```
 
   if you need to support older browsers that don't support ES5 add this to your page before the plugin script
@@ -328,6 +328,6 @@ ____   ____.__     .___                     __          ____   ____             
   http://localhost:8085
 
 ## License
-videojs-vast-plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
+videojs-vast-vpaid plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
 
 Copyright (c) 2015 MailOnline
