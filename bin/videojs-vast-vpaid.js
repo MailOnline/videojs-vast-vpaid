@@ -1349,6 +1349,89 @@ function isAndroid() {
 }
 
 ;
+//Small subset of async
+var async = {};
+
+async.setImmediate = function (fn) {
+  setTimeout(fn, 0);
+};
+
+async.iterator = function (tasks) {
+  var makeCallback = function (index) {
+    var fn = function () {
+      if (tasks.length) {
+        tasks[index].apply(null, arguments);
+      }
+      return fn.next();
+    };
+    fn.next = function () {
+      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
+    };
+    return fn;
+  };
+  return makeCallback(0);
+};
+
+
+async.waterfall = function (tasks, callback) {
+  callback = callback || function () { };
+  if (!isArray(tasks)) {
+    var err = new Error('First argument to waterfall must be an array of functions');
+    return callback(err);
+  }
+  if (!tasks.length) {
+    return callback();
+  }
+  var wrapIterator = function (iterator) {
+    return function (err) {
+      if (err) {
+        callback.apply(null, arguments);
+        callback = function () {
+        };
+      }
+      else {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var next = iterator.next();
+        if (next) {
+          args.push(wrapIterator(next));
+        }
+        else {
+          args.push(callback);
+        }
+        async.setImmediate(function () {
+          iterator.apply(null, args);
+        });
+      }
+    };
+  };
+  wrapIterator(async.iterator(tasks))();
+};
+
+async.when = function (condition, callback) {
+  if (!isFunction(callback)) {
+    throw new Error("async.when error: missing callback argument");
+  }
+
+  var isAllowed = isFunction(condition) ? condition : function () {
+    return !!condition;
+  };
+
+  return function () {
+    var args = arrayLikeObjToArray(arguments);
+    var next = args.pop();
+
+    if (isAllowed.apply(null, args)) {
+      return callback.apply(this, arguments);
+    }
+
+    args.unshift(null);
+    return next.apply(null, args);
+  };
+};
+
+
+
+;
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
@@ -2310,89 +2393,6 @@ module.exports = {
 
 
 //# sourceMappingURL=VPAIDHTML5Client.js.map
-;
-//Small subset of async
-var async = {};
-
-async.setImmediate = function (fn) {
-  setTimeout(fn, 0);
-};
-
-async.iterator = function (tasks) {
-  var makeCallback = function (index) {
-    var fn = function () {
-      if (tasks.length) {
-        tasks[index].apply(null, arguments);
-      }
-      return fn.next();
-    };
-    fn.next = function () {
-      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
-    };
-    return fn;
-  };
-  return makeCallback(0);
-};
-
-
-async.waterfall = function (tasks, callback) {
-  callback = callback || function () { };
-  if (!isArray(tasks)) {
-    var err = new Error('First argument to waterfall must be an array of functions');
-    return callback(err);
-  }
-  if (!tasks.length) {
-    return callback();
-  }
-  var wrapIterator = function (iterator) {
-    return function (err) {
-      if (err) {
-        callback.apply(null, arguments);
-        callback = function () {
-        };
-      }
-      else {
-        var args = Array.prototype.slice.call(arguments, 1);
-        var next = iterator.next();
-        if (next) {
-          args.push(wrapIterator(next));
-        }
-        else {
-          args.push(callback);
-        }
-        async.setImmediate(function () {
-          iterator.apply(null, args);
-        });
-      }
-    };
-  };
-  wrapIterator(async.iterator(tasks))();
-};
-
-async.when = function (condition, callback) {
-  if (!isFunction(callback)) {
-    throw new Error("async.when error: missing callback argument");
-  }
-
-  var isAllowed = isFunction(condition) ? condition : function () {
-    return !!condition;
-  };
-
-  return function () {
-    var args = arrayLikeObjToArray(arguments);
-    var next = args.pop();
-
-    if (isAllowed.apply(null, args)) {
-      return callback.apply(this, arguments);
-    }
-
-    args.unshift(null);
-    return next.apply(null, args);
-  };
-};
-
-
-
 ;
 "use strict";
 
