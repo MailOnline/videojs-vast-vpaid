@@ -43,7 +43,7 @@
   Below you have a simple ads-setup-plugin
 
   ```javascript
-  vjs.plugin('ads-setup', function (opts) {
+  videojs.plugin('ads-setup', function (opts) {
     var player = this;
     var adsCancelTimeout = 3000;
 
@@ -141,7 +141,7 @@
   >On initialization, the plugin well call the function and store the returned Media tag to request the VAST/VPAID ads.
 
 ### adTagXML
-  >You can now do the VAST xml request on your own with our shinny new adTagXML option. 
+  >You can now do the VAST xml request on your own with our shinny new adTagXML option.
   >
   >All you need to do is to pass the request fn as the adTagXML option when you initialize the plugin. See below for an example
   >
@@ -159,9 +159,9 @@
   >    }, 0);
   >}
   >```
-  >As you can see the requestVASTXML function above expects a node like error-first-callback that needs to be called whenever we are ready to serve the VAST XML.  
-  >If you had any error executing the request, you need to pass it as the first argument of the callback 
-  >and if there was no error pass null as the first argument and the VAST XML string as the second argument. 
+  >As you can see the requestVASTXML function above expects a node like error-first-callback that needs to be called whenever we are ready to serve the VAST XML.
+  >If you had any error executing the request, you need to pass it as the first argument of the callback
+  >and if there was no error pass null as the first argument and the VAST XML string as the second argument.
 
 ### playAdAlways
   >Flag to indicate if we must play an ad whenever possible. If set to true the plugin will play an ad every time the user watches a new video or replays the actual video.
@@ -247,7 +247,7 @@
 
 ### 'vast.adStart' event
   Fired when the ad starts playing
-  
+
 ### 'vast.adStart' event
   Fired when the ad starts playing
 
