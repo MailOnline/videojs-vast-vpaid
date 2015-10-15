@@ -15,7 +15,6 @@ after_success:
 branches:
   except:
   - RELEASE
-  - /^\d+\.\d+\.\d+$/
 addons:
   code_climate:
     repo_token:
