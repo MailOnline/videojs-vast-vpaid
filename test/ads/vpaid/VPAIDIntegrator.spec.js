@@ -78,7 +78,7 @@ describe("VPAIDIntegrator", function () {
       'unloadAdUnit': noop,
       'on': sinon.spy()
     };
-    adUnitWrapper = new VPAIDAdUnitWrapper(vpaidAdUnit);
+    adUnitWrapper = new VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000});
   });
 
   afterEach(function () {
