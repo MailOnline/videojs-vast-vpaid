@@ -168,7 +168,7 @@
   >Defaults to false
 
 ## adCancelTimeout
- >Number of milliseconds for the ad to start before canceling it. Defaults to 3000
+ >Number of milliseconds for the ad to start before canceling it. Defaults to 3000ms
 
 ## adsEnabled
  >Flag to disable the ads. Defaults to false.
