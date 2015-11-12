@@ -86,6 +86,7 @@
     "VPAIDIntegrator":true,
     "VASTClient":true,
     "AdsLoader":true,
+    "AdResponse":true,
     "VASTTracker":true,
     "HttpRequestError":true,
     "HttpRequest":true,
