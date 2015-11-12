@@ -84,6 +84,7 @@
     "VASTIntegrator":true,
     "VPAIDIntegrator":true,
     "VASTClient":true,
+    "AdsLoader":true,
     "VASTTracker":true,
     "VPAIDAdUnitWrapper":true,
     /* Video.js */
