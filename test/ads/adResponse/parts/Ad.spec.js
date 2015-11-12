@@ -19,7 +19,7 @@ describe("Ad", function () {
 
   it("must not set the sequence number if not defined", function () {
     var ad = Ad(xml.toJXONTree('<ad></ad>'));
-    assert.isUndefined(ad.sequence)
+    assert.isUndefined(ad.sequence);
   });
 
   it("must set the sequence number if defined as attr", function () {

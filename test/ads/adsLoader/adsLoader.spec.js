@@ -1,5 +1,5 @@
 /*jslint maxlen: 700 */
-describe.only("AdsLoader", function () {
+describe("AdsLoader", function () {
   function assertError(callback, msg, code) {
     var error = firstArg(callback);
     assert.instanceOf(error, VASTError);
