@@ -75,9 +75,11 @@ module.exports = {
     ],
     tests: {
       unit: [
+        {pattern: 'test-fixtures/**/*', included: false, watched: true},
         'test/test-utils.css',
         'test/test-utils.js',
-        'test/**/*.js'
+        'test/**/*.js',
+        'test/fixtures-load.js'
       ]
     }
   },

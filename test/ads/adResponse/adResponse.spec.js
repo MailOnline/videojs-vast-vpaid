@@ -1,13 +1,61 @@
-describe("AdResponse", function () {
+describe.only("AdResponse", function () {
   function assertAdResponseEmpty(response) {
     assert.deepEqual(response, new AdResponse());
   }
 
-  it("must return an instance of itself", function () {
-    assert.instanceOf(AdResponse(), AdResponse);
+  function getAdChain() {
+    var adChain = [];
+
+    [
+      fixture.getXmlFixture('wrapper'),
+      fixture.getXmlFixture('wrapper2'),
+      fixture.getXmlFixture('ad')
+    ].forEach(function (adXml) {
+        var vastJTree = xml.toJXONTree(adXml);
+        adChain.push(new Ad(vastJTree.ad));
+    });
+
+    return adChain;
+  }
+
+  var adChain;
+
+  beforeEach(function () {
+    adChain = getAdChain();
   });
 
-  describe("instance", function () {
+  describe("constructor", function () {
+    it("must throw an exception if you don't pass a valid ad chain", function () {
+      assert.throws(function () {
+        new AdResponse();
+      }, AdError, 'Ad Error: AdResponse Constructor, the passed ad chain is invalid or empty');
+
+      assert.throws(function () {
+        new AdResponse([]);
+      }, AdError, 'Ad Error: AdResponse Constructor, the passed ad chain is invalid or empty');
+    });
+  });
+
+  describe("adChain", function () {
+    it("must contain the original adChain", function () {
+      var response = new AdResponse(adChain);
+      assert.equal(response.adChain, adChain);
+    });
+  });
+
+  describe("ad", function () {
+    var response;
+
+    beforeEach(function () {
+      response = new AdResponse(adChain);
+    });
+
+    it("must be an object", function () {
+      assert.isObject(response.ad);
+    });
+  });
+
+  describe.skip("instance", function () {
     var response;
 
     beforeEach(function () {
@@ -69,14 +117,14 @@ describe("AdResponse", function () {
       });
     });
 
-    describe("mediaFiles", function(){
-      it("must be an empty array by default", function(){
+    describe("mediaFiles", function () {
+      it("must be an empty array by default", function () {
         assertEmptyArray(response.mediaFiles);
       });
     });
 
-    describe("skipoffset", function(){
-      it("must be undefined by default", function(){
+    describe("skipoffset", function () {
+      it("must be undefined by default", function () {
         assert.isUndefined(response.skipoffset);
       });
     });
@@ -101,7 +149,7 @@ describe("AdResponse", function () {
         assert.deepEqual([], response.ads);
       });
 
-      it("must add the inline to the response if the passed ad has an Inline", function(){
+      it("must add the inline to the response if the passed ad has an Inline", function () {
         var vastJTree = xml.toJXONTree('<VAST><Ad><InLine></InLine></Ad></VAST>');
         var ad = new Ad(vastJTree.ad);
         sinon.stub(response, '_addInLine');
@@ -109,7 +157,7 @@ describe("AdResponse", function () {
         sinon.assert.calledWithExactly(response._addInLine, ad.inLine);
       });
 
-      it("must add the wrapper to the response if the passed ad has a wrapper", function(){
+      it("must add the wrapper to the response if the passed ad has a wrapper", function () {
         var vastJTree = xml.toJXONTree('<VAST><Ad><Wrapper></Wrapper></Ad></VAST>');
         var ad = new Ad(vastJTree.ad);
         sinon.stub(response, '_addWrapper');
@@ -118,12 +166,12 @@ describe("AdResponse", function () {
       });
     });
 
-    describe("hasLinear", function(){
-      it("must return false by default", function(){
+    describe("hasLinear", function () {
+      it("must return false by default", function () {
         assert.isFalse(response.hasLinear());
       });
 
-      it("must return true if you add linear ad to the response", function(){
+      it("must return true if you add linear ad to the response", function () {
         var linearXML = '<Linear><Duration>00:00:58</Duration></Linear>';
         var linear = new Linear(xml.toJXONTree(linearXML));
         response._addLinear(linear);
@@ -249,7 +297,7 @@ describe("AdResponse", function () {
       });
     });
 
-    describe("_addTrackingEvents", function(){
+    describe("_addTrackingEvents", function () {
       function createTrackEvent(eventName, uri) {
         var trackingXML = '<Tracking event="' + eventName + '">' +
           '<![CDATA[' + uri + ']]>' +
@@ -257,7 +305,7 @@ describe("AdResponse", function () {
         return new TrackingEvent(xml.toJXONTree(trackingXML));
       }
 
-      it("must populate the tracking event with the passed events", function(){
+      it("must populate the tracking event with the passed events", function () {
         var startEvent = createTrackEvent('start', 'http://track.url.com');
         response._addTrackingEvents(startEvent);
         assert.deepEqual(response.trackingEvents, {
@@ -274,7 +322,7 @@ describe("AdResponse", function () {
         });
       });
 
-      it("must not do anything if we don't pass a tracking event", function(){
+      it("must not do anything if we don't pass a tracking event", function () {
         response._addTrackingEvents();
         response._addTrackingEvents([]);
         assert.deepEqual(response.trackingEvents, {});
@@ -359,7 +407,7 @@ describe("AdResponse", function () {
       });
     });
 
-    describe("_addMediaFiles", function(){
+    describe("_addMediaFiles", function () {
       it("must not add any mediaFile unless you pass an array with them inside", function () {
         response._addMediaFiles();
         response._addMediaFiles({});
@@ -368,7 +416,7 @@ describe("AdResponse", function () {
         assertEmptyArray(response.mediaFiles);
       });
 
-      it("must add the passed mediaFiles to the response", function(){
+      it("must add the passed mediaFiles to the response", function () {
         var linearXML = '<?xml version="1.0" encoding="UTF-8"?>' +
           '<Linear>' +
           '<MediaFiles>' +
@@ -396,7 +444,7 @@ describe("AdResponse", function () {
         assertAdResponseEmpty(response);
       });
 
-      it("must add the duration to the response", function(){
+      it("must add the duration to the response", function () {
         var linearXML = '<Linear><Duration>00:00:58</Duration></Linear>';
         var linear = new Linear(xml.toJXONTree(linearXML));
         response._addLinear(linear);
@@ -440,7 +488,7 @@ describe("AdResponse", function () {
         assert.deepEqual(response.mediaFiles, linear.mediaFiles);
       });
 
-      it("must add the skipoffset to the response", function(){
+      it("must add the skipoffset to the response", function () {
         var linearXML = '<?xml version="1.0" encoding="UTF-8"?>' +
           '<Linear skipoffset="00:00:01.000"></Linear>';
         var linear = Linear(xml.toJXONTree(linearXML));
@@ -449,10 +497,10 @@ describe("AdResponse", function () {
         assert.equal(response.skipoffset, 1000);
       });
 
-      it("must add the adParameters to the response", function(){
+      it("must add the adParameters to the response", function () {
         var linearXML = '<?xml version="1.0" encoding="UTF-8"?>' +
           '<Linear>' +
-            '<AdParameters xmlEncoded="true"><![CDATA['+xml.encode('<data>Some Data</data>')+']]></AdParameters>' +
+          '<AdParameters xmlEncoded="true"><![CDATA[' + xml.encode('<data>Some Data</data>') + ']]></AdParameters>' +
           '</Linear>';
         var linear = Linear(xml.toJXONTree(linearXML));
 
@@ -495,7 +543,7 @@ describe("AdResponse", function () {
         assert.deepEqual([
             "http://Impression.url.track.com",
             "http://Impression2.url.track.com"
-            ],
+          ],
           response.impressions);
       });
 
@@ -538,8 +586,8 @@ describe("AdResponse", function () {
           response.impressions);
       });
 
-      describe("with linear creative", function(){
-        it("must add the videoClicks", function(){
+      describe("with linear creative", function () {
+        it("must add the videoClicks", function () {
           var wrapperXML = '<Wrapper><Creatives><Creative><Linear><VideoClicks>' +
             '<ClickThrough><![CDATA[ http://www.target.com ]]></ClickThrough>' +
             '<CustomClick><![CDATA[ http://www.tracking1.com ]]></CustomClick>' +
@@ -554,7 +602,7 @@ describe("AdResponse", function () {
           assert.deepEqual(response.customClicks, ['http://www.tracking1.com']);
         });
 
-        it("must add the trackingEvents", function(){
+        it("must add the trackingEvents", function () {
           var wrapperXML = '<Wrapper><Creatives><Creative><Linear><TrackingEvents>' +
             '<Tracking event="firstQuartile"><![CDATA[ http://www.tracking1.com ]]></Tracking>' +
             '</TrackingEvents></Linear></Creative></Creatives></Wrapper>';

@@ -86,6 +86,7 @@
     "VASTClient":true,
     "AdsLoader":true,
     "AdResponse":true,
+    "AdError":true,
     "VASTTracker":true,
     "VPAIDAdUnitWrapper":true,
     /* Video.js */

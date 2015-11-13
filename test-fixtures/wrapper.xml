@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">
+ <Ad id="127169192">
+  <Wrapper fallbackOnNoAd="true">
+   <AdSystem>GDFP</AdSystem>
+   <VASTAdTagURI><![CDATA[http://mol.wrapper.vastadtaguri]]]></VASTAdTagURI>
+   <Error><![CDATA[http://mol.wrapper.error[ERRORCODE]]]></Error>
+   <Impression><![CDATA[http://mol.wrapper.impression]]></Impression>
+   <Creatives>
+    <Creative id="64424963312" sequence="1">
+     <Linear>
+      <TrackingEvents>
+        <Tracking event="start"><![CDATA[http://mol.wrapper.track.start]]></Tracking>
+       <Tracking event="firstQuartile"><![CDATA[http://mol.wrapper.track.firstquartile]]></Tracking>
+       <Tracking event="midpoint"><![CDATA[http://mol.wrapper.track.midpoint]]></Tracking>
+       <Tracking event="thirdQuartile"><![CDATA[http://mol.wrapper.track.thirdquartile]]></Tracking>
+       <Tracking event="complete"><![CDATA[http://mol.wrapper.track.complete]]></Tracking>
+       <Tracking event="mute"><![CDATA[http://mol.wrapper.track.complete]]></Tracking>
+       <Tracking event="unmute"><![CDATA[http://mol.wrapper.track.unmute]]></Tracking>
+       <Tracking event="rewind"><![CDATA[http://mol.wrapper.track.rewind]]></Tracking>
+       <Tracking event="pause"><![CDATA[http://mol.wrapper.track.pause]]></Tracking>
+       <Tracking event="resume"><![CDATA[http://mol.wrapper.track.resume]]></Tracking>
+       <Tracking event="fullscreen"><![CDATA[http://mol.wrapper.track.fullscreen]]></Tracking>
+       <Tracking event="creativeView"><![CDATA[http://mol.wrapper.track.creativeview]]></Tracking>
+       <Tracking event="exitFullscreen"><![CDATA[http://mol.wrapper.track.exitfullscreen]]></Tracking>
+       <Tracking event="acceptInvitationLinear"><![CDATA[http://mol.wrapper.track.acceptinvitationlinear]]></Tracking>
+       <Tracking event="closeLinear"><![CDATA[http://mol.wrapper.track.closelinear]]></Tracking>
+       <Tracking event="start"><![CDATA[http://mol.wrapper.track.start2]]></Tracking>
+       <Tracking event="complete"><![CDATA[http://mol.wrapper.track.complete2]]></Tracking>
+      </TrackingEvents>
+      <VideoClicks>
+       <ClickTracking id=""><![CDATA[http://mol.wrapper.track.click]]></ClickTracking>
+       <ClickTracking id="GDFP"><![CDATA[mol.wrapper.track.click2]]></ClickTracking>
+      </VideoClicks>
+     </Linear>
+    </Creative>
+   </Creatives>
+  </Wrapper>
+ </Ad>
+</VAST>

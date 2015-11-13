@@ -1,20 +1,53 @@
-function AdResponse() {
-  if (!(this instanceof AdResponse)) {
-    return new AdResponse();
+function AdResponse(adChain) {
+  sanityCheck(adChain);
+
+  this.adChain = adChain;
+  this.ad = {};
+
+
+  /*** local functions ***/
+
+  function sanityCheck(adChain) {
+    if(!isArray(adChain) || adChain.length === 0){
+      throw new AdError("AdResponse Constructor, the passed ad chain is invalid or empty");
+    }
   }
 
-  this._linearAdded = false;
-  this.ads = [];
-  this.errorURLMacros = [];
-  this.impressions = [];
-  this.clickTrackings = [];
-  this.customClicks = [];
-  this.trackingEvents = {};
-  this.mediaFiles = [];
-  this.clickThrough = undefined;
-  this.adTitle = '';
-  this.duration = undefined;
-  this.skipoffset = undefined;
+  function init(response){
+    response._linearAdded = false;
+    response.ads = [];
+    response.errorURLMacros = [];
+    response.impressions = [];
+    response.clickTrackings = [];
+    response.customClicks = [];
+    response.trackingEvents = {};
+    response.mediaFiles = [];
+    response.clickThrough = undefined;
+    response.adTitle = '';
+    response.duration = undefined;
+    response.skipoffset = undefined;
+  }
+
+
+  function validate(response) {
+    var progressEvents = response.trackingEvents.progress;
+
+    if (!response.hasLinear()) {
+      throw new VASTError("on AdsLoader._buildVASTResponse, Received an Ad type that is not supported", 200);
+    }
+
+    if (response.duration === undefined) {
+      throw new VASTError("on AdsLoader._buildVASTResponse, Missing duration field in VAST response", 101);
+    }
+
+    if (progressEvents) {
+      progressEvents.forEach(function (progressEvent) {
+        if (!isNumber(progressEvent.offset)) {
+          throw new VASTError("on AdsLoader._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
+        }
+      });
+    }
+  }
 }
 
 AdResponse.prototype.addAd = function (ad) {

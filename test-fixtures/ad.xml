@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">
+ <Ad id="83938212894">
+  <InLine>
+   <AdSystem>AdSense</AdSystem>
+   <AdTitle>Test Video Ad</AdTitle>
+   <Description><![CDATA[This is a test video vast XML response]]></Description>
+   <Error><![CDATA[http://molads.error.html?label=videoplayfailed[ERRORCODE]]]></Error>
+   <Impression><![CDATA[http://mol.adview?video01]]></Impression>
+   <Creatives>
+    <Creative id="83888477094" sequence="1">
+     <Linear>
+      <Duration>00:00:19</Duration>
+      <TrackingEvents>
+       <Tracking event="start"><![CDATA[http://mol.track.start]]></Tracking>
+       <Tracking event="firstQuartile"><![CDATA[http://mol.track.firstquartile]]></Tracking>
+       <Tracking event="midpoint"><![CDATA[http://mol.track.midpoint]]></Tracking>
+       <Tracking event="thirdQuartile"><![CDATA[http://mol.track.thirdquartile]]></Tracking>
+       <Tracking event="complete"><![CDATA[http://mol.track.complete]]></Tracking>
+       <Tracking event="mute"><![CDATA[http://mol.track.complete]]></Tracking>
+       <Tracking event="unmute"><![CDATA[http://mol.track.unmute]]></Tracking>
+       <Tracking event="rewind"><![CDATA[http://mol.track.rewind]]></Tracking>
+       <Tracking event="pause"><![CDATA[http://mol.track.pause]]></Tracking>
+       <Tracking event="resume"><![CDATA[http://mol.track.resume]]></Tracking>
+       <Tracking event="fullscreen"><![CDATA[http://mol.track.fullscreen]]></Tracking>
+       <Tracking event="creativeView"><![CDATA[http://mol.track.creativeview]]></Tracking>
+       <Tracking event="exitFullscreen"><![CDATA[http://mol.track.exitfullscreen]]></Tracking>
+       <Tracking event="acceptInvitationLinear"><![CDATA[http://mol.track.acceptinvitationlinear]]></Tracking>
+       <Tracking event="closeLinear"><![CDATA[http://mol.track.closelinear]]></Tracking>
+       <Tracking event="start"><![CDATA[http://mol.track.start2]]></Tracking>
+       <Tracking event="complete"><![CDATA[http://mol.track.complete2]]></Tracking>
+      </TrackingEvents>
+      <VideoClicks>
+       <ClickThrough><![CDATA[http://mol.clickthrough]]></ClickThrough>
+       <ClickTracking id=""><![CDATA[http://mol.track.click]]></ClickTracking>
+      </VideoClicks>
+      <MediaFiles>
+       <MediaFile delivery="progressive" width="720" height="360" type="video/mp4" bitrate="320" scalable="true" maintainAspectRatio="true"><![CDATA[http://mol.advideo_720_360.mp4]]></MediaFile>
+       <MediaFile delivery="progressive" width="400" height="300" type="video/mp4" bitrate="320" scalable="true" maintainAspectRatio="true"><![CDATA[http://mol.advideo_720_360.mp4]]></MediaFile>
+      </MediaFiles>
+     </Linear>
+    </Creative>
+   </Creatives>
+  </InLine>
+ </Ad>
+</VAST>
