@@ -18,10 +18,14 @@ describe.only("AdResponse", function () {
     return adChain;
   }
 
-  var adChain;
+  var adChain, wrapper, wrapper2, ad;
 
   beforeEach(function () {
     adChain = getAdChain();
+    wrapper = adChain[0];
+    wrapper2 = adChain[1];
+    ad = adChain[2];
+
   });
 
   describe("constructor", function () {
@@ -36,24 +40,191 @@ describe.only("AdResponse", function () {
     });
   });
 
-  describe("adChain", function () {
-    it("must contain the original adChain", function () {
+  it("must contain the original adChain", function () {
+    var response = new AdResponse(adChain);
+    assert.equal(response.adChain, adChain);
+  });
+
+  describe("adTitle", function(){
+    it("must contain the adTitle", function(){
       var response = new AdResponse(adChain);
-      assert.equal(response.adChain, adChain);
+      assert.equal(response.adTitle, "Test Video Ad");
+    });
+
+    it("must be empty if there is no title", function(){
+      ad.inLine.adTitle = undefined;
+      var response = new AdResponse(adChain);
+      assert.equal(response.adTitle, "");
     });
   });
 
-  describe("ad", function () {
-    var response;
-
-    beforeEach(function () {
-      response = new AdResponse(adChain);
+  describe("errors", function(){
+    it("must be an array", function(){
+      var response = new AdResponse(adChain);
+      assert.isArray(response.errors);
     });
 
-    it("must be an object", function () {
-      assert.isObject(response.ad);
+    it("must contain all the errorUrlMacros of the adChain", function(){
+      var response = new AdResponse(adChain);
+
+      assert.deepEqual(response.errors, [
+        'http://mol.wrapper.error[ERRORCODE]',
+        'http://mol.wrapper2.error[ERRORCODE]',
+        'http://molads.error.html?label=videoplayfailed[ERRORCODE]'
+      ]);
+    });
+
+    it("must only add the existing urlMacros", function(){
+      wrapper.wrapper.error = undefined;
+      var response = new AdResponse(adChain);
+
+      assert.deepEqual(response.errors, [
+        'http://mol.wrapper2.error[ERRORCODE]',
+        'http://molads.error.html?label=videoplayfailed[ERRORCODE]'
+      ]);
     });
   });
+
+  describe("impressions", function () {
+    it("must be an array", function () {
+      var response = new AdResponse(adChain);
+      assert.isArray(response.impressions);
+    });
+
+    it("must contain all the impression macros of the adChain", function(){
+      var response = new AdResponse(adChain);
+      assert.deepEqual(response.impressions, [
+        'http://mol.wrapper.impression',
+        'http://mol.wrapper2.impression',
+        'http://mol.wrapper2.impression2',
+        'http://mol.adview?video01'
+      ]);
+    });
+  });
+
+  describe("linear", function(){
+    it("must be an obj", function(){
+      var response = new AdResponse(adChain);
+      assert.isObject(response.linear);
+    });
+
+    it("must not be added if the adChain had no Linear", function(){
+      var emptyVASTAdXML = '<?xml version="1.0" encoding="UTF-8"?>'+
+                          '<VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">'+
+                          '<Ad><InLine><Creatives></Creatives></InLine></Ad></VAST>';
+      var emptyAd = new Ad( xml.toJXONTree(emptyVASTAdXML).ad);
+      var response = new AdResponse([emptyAd]);
+      assert.isUndefined(response.linear);
+    });
+
+    it("must contain the duration", function(){
+      var response = new AdResponse(adChain);
+      assert.equal(response.linear.duration, 19000);
+    });
+
+    it("must contain the adChain tracking events", function(){
+      var response = new AdResponse(adChain);
+      assert.deepEqual(response.linear.trackingEvents, {
+          "start":[
+            {"name":"start","uri":"http://mol.wrapper.track.start"},
+            {"name":"start","uri":"http://mol.wrapper.track.start2"},
+            {"name":"start","uri":"http://mol.track.start"},
+            {"name":"start","uri":"http://mol.track.start2"}
+          ],
+          "firstQuartile":[
+            {"name":"firstQuartile","uri":"http://mol.wrapper.track.firstquartile"},
+            {"name":"firstQuartile","uri":"http://mol.wrapper2.track.firstquartile"},
+            {"name":"firstQuartile","uri":"http://mol.track.firstquartile"}
+          ],
+          "midpoint":[
+            {"name":"midpoint","uri":"http://mol.wrapper.track.midpoint"},
+            {"name":"midpoint","uri":"http://mol.wrapper2.track.midpoint"},
+            {"name":"midpoint","uri":"http://mol.track.midpoint"}
+          ],
+          "thirdQuartile":[
+            {"name":"thirdQuartile","uri":"http://mol.wrapper.track.thirdquartile"},
+            {"name":"thirdQuartile","uri":"http://mol.wrapper2.track.thirdquartile"},
+            {"name":"thirdQuartile","uri":"http://mol.track.thirdquartile"}
+          ],
+          "complete":[
+            {"name":"complete","uri":"http://mol.wrapper.track.complete"},
+            {"name":"complete","uri":"http://mol.wrapper.track.complete2"},
+            {"name":"complete","uri":"http://mol.wrapper2.track.complete"},
+            {"name":"complete","uri":"http://mol.wrapper2.track.complete2"},
+            {"name":"complete","uri":"http://mol.track.complete"},
+            {"name":"complete","uri":"http://mol.track.complete2"}
+          ],
+          "mute":[
+            {"name":"mute","uri":"http://mol.wrapper.track.complete"},
+            {"name":"mute","uri":"http://mol.wrapper2.track.complete"},
+            {"name":"mute","uri":"http://mol.track.complete"}
+          ],
+          "unmute":[
+            {"name":"unmute","uri":"http://mol.wrapper.track.unmute"},
+            {"name":"unmute","uri":"http://mol.wrapper2.track.unmute"},
+            {"name":"unmute","uri":"http://mol.track.unmute"}
+          ],
+          "rewind":[
+            {"name":"rewind","uri":"http://mol.wrapper.track.rewind"},
+            {"name":"rewind","uri":"http://mol.wrapper2.track.rewind"},
+            {"name":"rewind","uri":"http://mol.track.rewind"}
+          ],
+          "pause":[
+            {"name":"pause","uri":"http://mol.wrapper.track.pause"},
+            {"name":"pause","uri":"http://mol.wrapper2.track.pause"},
+            {"name":"pause","uri":"http://mol.track.pause"}
+          ],
+          "resume":[
+            {"name":"resume","uri":"http://mol.wrapper.track.resume"},
+            {"name":"resume","uri":"http://mol.wrapper2.track.resume"},
+            {"name":"resume","uri":"http://mol.track.resume"}
+          ],
+          "fullscreen":[
+            {"name":"fullscreen","uri":"http://mol.wrapper.track.fullscreen"},
+            {"name":"fullscreen","uri":"http://mol.wrapper2.track.fullscreen"},
+            {"name":"fullscreen","uri":"http://mol.track.fullscreen"}
+          ],
+          "creativeView":[
+            {"name":"creativeView","uri":"http://mol.wrapper.track.creativeview"},
+            {"name":"creativeView","uri":"http://mol.wrapper2.track.creativeview"},
+            {"name":"creativeView","uri":"http://mol.track.creativeview"}
+          ],
+          "exitFullscreen":[
+            {"name":"exitFullscreen","uri":"http://mol.wrapper.track.exitfullscreen"},
+            {"name":"exitFullscreen","uri":"http://mol.wrapper2.track.exitfullscreen"},
+            {"name":"exitFullscreen","uri":"http://mol.track.exitfullscreen"}
+          ],
+          "acceptInvitationLinear":[
+            {"name":"acceptInvitationLinear","uri":"http://mol.wrapper.track.acceptinvitationlinear"},
+            {"name":"acceptInvitationLinear","uri":"http://mol.wrapper2.track.acceptinvitationlinear"},
+            {"name":"acceptInvitationLinear","uri":"http://mol.track.acceptinvitationlinear"}
+          ],
+          "closeLinear":[
+            {"name":"closeLinear","uri":"http://mol.wrapper.track.closelinear"},{
+            "name":"closeLinear","uri":"http://mol.wrapper2.track.closelinear"},
+            {"name":"closeLinear","uri":"http://mol.track.closelinear"}
+          ]
+        });
+    });
+
+    it("must contain the clickThrough", function(){
+      var response = new AdResponse(adChain);
+      assert.equal(response.linear.clickThrough, 'http://mol.clickthrough');
+    });
+
+    it("must contain the clickTrackings", function(){
+      var response = new AdResponse(adChain);
+      assert.deepEqual(response.linear.clickTrackings, [
+        'http://mol.wrapper.track.click',
+        'http://mol.wrapper.track.click2',
+        'http://mol.wrapper2.track.click',
+        'http://mol.wrapper2.track.click2',
+        'http://mol.track.click'
+
+      ]);
+    });
+  });
+
 
   describe.skip("instance", function () {
     var response;
@@ -63,57 +234,10 @@ describe.only("AdResponse", function () {
     });
 
     // FIELDS
-    describe("ads", function () {
-      it("must be an array", function () {
-        assert.isArray(response.ads);
-      });
-    });
-
-    describe("errorURLMacros", function () {
-      it("must be an array", function () {
-        assert.isArray(response.errorURLMacros);
-      });
-    });
-
-    describe("impressions", function () {
-      it("must be an array", function () {
-        assert.isArray(response.impressions);
-      });
-    });
-
-    describe("clickThrough", function () {
-      it("must be undefined by default", function () {
-        assert.isUndefined(response.clickThrough);
-      });
-    });
-
-    describe("clickTrackings", function () {
-      it("must be an array", function () {
-        assert.isArray(response.clickTrackings);
-      });
-    });
 
     describe("customClicks", function () {
       it("must be an array", function () {
         assert.isArray(response.customClicks);
-      });
-    });
-
-    describe("trackingEvents", function () {
-      it("must be an array", function () {
-        assert.isObject(response.trackingEvents);
-      });
-    });
-
-    describe("adTitle", function () {
-      it("must be an empty string", function () {
-        assert.isTrue(isEmptyString(response.adTitle));
-      });
-    });
-
-    describe('duration', function () {
-      it("must be undefined by default", function () {
-        assert.isUndefined(response.duration);
       });
     });
 
@@ -166,18 +290,6 @@ describe.only("AdResponse", function () {
       });
     });
 
-    describe("hasLinear", function () {
-      it("must return false by default", function () {
-        assert.isFalse(response.hasLinear());
-      });
-
-      it("must return true if you add linear ad to the response", function () {
-        var linearXML = '<Linear><Duration>00:00:58</Duration></Linear>';
-        var linear = new Linear(xml.toJXONTree(linearXML));
-        response._addLinear(linear);
-        assert.isTrue(response.hasLinear());
-      });
-    });
 
     describe("_addErrorTrackUrl", function () {
       it("must be possible to pass the error as a string", function () {
@@ -200,42 +312,6 @@ describe.only("AdResponse", function () {
       it("must not add anything if you pass undefined", function () {
         response._addErrorTrackUrl();
         assert.deepEqual([], response.errorURLMacros);
-      });
-    });
-
-    describe("_addImpressions", function () {
-      it("must not add any impression if you don't pass an array of impressions", function () {
-        response._addImpressions();
-        response._addImpressions({});
-        response._addImpressions('');
-        response._addImpressions([]);
-        assertEmptyArray(response.impressions);
-      });
-
-      it("must add the passed impressionTree to the impressions array", function () {
-        var impressionTree = xml.toJXONTree('<InLine><Impression id="1234"><![CDATA[http://Impression.url.track.com]]></Impression></InLine>');
-        var inLine = new InLine(impressionTree);
-        response._addImpressions(inLine.impressions);
-        assert.deepEqual([
-            "http://Impression.url.track.com"
-          ],
-          response.impressions);
-      });
-
-      it("must add all passed impressionTree array to the impressions array", function () {
-        var impressionXML = '<Wrapper>' +
-          '<Impression id="1234"><![CDATA[http://Impression.url.track.com]]></Impression>' +
-          '<Impression><![CDATA[http://Impression2.url.track.com]]></Impression>' +
-          '<Impression id="1111"></Impression>' +
-          '</Wrapper>';
-        var impressionTree = xml.toJXONTree(impressionXML);
-        var wrapper = new Wrapper(impressionTree);
-        response._addImpressions(wrapper.impressions);
-        assert.deepEqual([
-            "http://Impression.url.track.com",
-            "http://Impression2.url.track.com"
-          ],
-          response.impressions);
       });
     });
 
@@ -294,68 +370,6 @@ describe.only("AdResponse", function () {
           'http://CustomClick1',
           'http://CustomClick2'
         ], response.customClicks);
-      });
-    });
-
-    describe("_addTrackingEvents", function () {
-      function createTrackEvent(eventName, uri) {
-        var trackingXML = '<Tracking event="' + eventName + '">' +
-          '<![CDATA[' + uri + ']]>' +
-          '</Tracking>';
-        return new TrackingEvent(xml.toJXONTree(trackingXML));
-      }
-
-      it("must populate the tracking event with the passed events", function () {
-        var startEvent = createTrackEvent('start', 'http://track.url.com');
-        response._addTrackingEvents(startEvent);
-        assert.deepEqual(response.trackingEvents, {
-          start: [startEvent]
-        });
-
-
-        var startEvent2 = createTrackEvent('start', 'http://track.url2.com');
-        var endEvent = createTrackEvent('end', 'http://track.url3.com');
-        response._addTrackingEvents([startEvent2, endEvent]);
-        assert.deepEqual(response.trackingEvents, {
-          start: [startEvent, startEvent2],
-          end: [endEvent]
-        });
-      });
-
-      it("must not do anything if we don't pass a tracking event", function () {
-        response._addTrackingEvents();
-        response._addTrackingEvents([]);
-        assert.deepEqual(response.trackingEvents, {});
-      });
-    });
-
-    describe("_addTitle", function () {
-      it("must not set the title in the response if you don't pass a strinc with text on it", function () {
-        response._addTitle('');
-        response._addTitle({});
-        response._addTitle([]);
-        response._addTitle();
-
-        assert.equal('', response.adTitle);
-      });
-
-      it("must set the passed title into the response", function () {
-        response._addTitle('The title of the ad');
-        assert.equal('The title of the ad', response.adTitle);
-      });
-    });
-
-    describe("_addDuration", function () {
-      it("must add the duration to the response", function () {
-        response._addDuration(123);
-        assert.equal(response.duration, 123);
-      });
-
-      it("must not add anything to the response if you don't pass a number for the duration", function () {
-        response._addDuration('1234');
-        response._addDuration();
-        response._addDuration([222]);
-        assert.equal(response.duration, undefined);
       });
     });
 

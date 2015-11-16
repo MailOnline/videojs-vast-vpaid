@@ -6,11 +6,11 @@
    <VASTAdTagURI><![CDATA[http://mol.wrapper2.vastadtaguri]]]></VASTAdTagURI>
    <Error><![CDATA[http://mol.wrapper2.error[ERRORCODE]]]></Error>
    <Impression><![CDATA[http://mol.wrapper2.impression]]></Impression>
+   <Impression><![CDATA[http://mol.wrapper2.impression2]]></Impression>
    <Creatives>
     <Creative id="64424963312" sequence ="1">
      <Linear>
       <TrackingEvents>
-        <Tracking event="start"><![CDATA[http://mol.wrapper2.track.start]]></Tracking>
        <Tracking event="firstQuartile"><![CDATA[http://mol.wrapper2.track.firstquartile]]></Tracking>
        <Tracking event="midpoint"><![CDATA[http://mol.wrapper2.track.midpoint]]></Tracking>
        <Tracking event="thirdQuartile"><![CDATA[http://mol.wrapper2.track.thirdquartile]]></Tracking>
@@ -25,12 +25,11 @@
        <Tracking event="exitFullscreen"><![CDATA[http://mol.wrapper2.track.exitfullscreen]]></Tracking>
        <Tracking event="acceptInvitationLinear"><![CDATA[http://mol.wrapper2.track.acceptinvitationlinear]]></Tracking>
        <Tracking event="closeLinear"><![CDATA[http://mol.wrapper2.track.closelinear]]></Tracking>
-       <Tracking event="start"><![CDATA[http://mol.wrapper2.track.start2]]></Tracking>
        <Tracking event="complete"><![CDATA[http://mol.wrapper2.track.complete2]]></Tracking>
       </TrackingEvents>
       <VideoClicks>
        <ClickTracking id=""><![CDATA[http://mol.wrapper2.track.click]]></ClickTracking>
-       <ClickTracking id="GDFP"><![CDATA[mol.wrapper2.track.click2]]></ClickTracking>
+       <ClickTracking id="GDFP"><![CDATA[http://mol.wrapper2.track.click2]]></ClickTracking>
       </VideoClicks>
      </Linear>
     </Creative>

@@ -30,7 +30,7 @@
       </TrackingEvents>
       <VideoClicks>
        <ClickTracking id=""><![CDATA[http://mol.wrapper.track.click]]></ClickTracking>
-       <ClickTracking id="GDFP"><![CDATA[mol.wrapper.track.click2]]></ClickTracking>
+       <ClickTracking id="GDFP"><![CDATA[http://mol.wrapper.track.click2]]></ClickTracking>
       </VideoClicks>
      </Linear>
     </Creative>
