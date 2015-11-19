@@ -11,12 +11,8 @@ function VPAIDIntegrator(player, settings) {
   this.player = player;
   this.containerEl = createVPAIDContainerEl(player);
   this.options = {
-    responseTimeout: 2000,
-    VPAID_VERSION: {
-      full: '2.0',
-      major: 2,
-      minor: 0
-    }
+    responseTimeout: 5000,
+    VPAID_VERSION: '2.0'
   };
   this.settings = settings;
 
@@ -146,13 +142,14 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
   var player = this.player;
   var vjsTechEl = player.el().querySelector('.vjs-tech');
+  var responseTimeout = this.settings.responseTimeout || this.options.responseTimeout;
   tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
     if (error) {
       return next(error, adUnit, vastResponse);
     }
 
     try {
-      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src, responseTimeout: responseTimeout});
       var techClass = 'vjs-' + tech.name + '-ad';
       dom.addClass(player.el(), techClass);
       player.one('vpaid.adEnd', function() {
@@ -180,7 +177,7 @@ VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback
 };
 
 VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, next) {
-  adUnit.handshakeVersion('2.0', function (error, version) {
+  adUnit.handshakeVersion(this.options.VPAID_VERSION, function (error, version) {
     if (error) {
       return next(error, adUnit, vastResponse);
     }

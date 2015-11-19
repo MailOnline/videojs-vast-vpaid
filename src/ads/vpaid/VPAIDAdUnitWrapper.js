@@ -1,13 +1,11 @@
 function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
   if (!(this instanceof VPAIDAdUnitWrapper)) {
-    return new VPAIDAdUnitWrapper(vpaidAdUnit);
+    return new VPAIDAdUnitWrapper(vpaidAdUnit, opts);
   }
   sanityCheck(vpaidAdUnit, opts);
-  var defaultOpts = {
-    responseTimeout: 5000
-  };
 
-  this.options = extend({}, defaultOpts, opts || {});
+  this.options = extend({}, opts);
+
   this._adUnit = vpaidAdUnit;
 
   /*** Local Functions ***/
@@ -16,8 +14,12 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
       throw new VASTError('on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
     }
 
-    if (opts && !isObject(opts)) {
+    if (!isObject(opts)) {
       throw new VASTError("on VPAIDAdUnitWrapper, expected options hash  but got '" + opts + "'");
+    }
+
+    if (!("responseTimeout" in opts) || !isNumber(opts.responseTimeout) ){
+      throw new VASTError("on VPAIDAdUnitWrapper, expected responseTimeout in options");
     }
   }
 }

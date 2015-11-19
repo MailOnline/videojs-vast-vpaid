@@ -63,13 +63,13 @@ describe("VPAIDAdUnitWrapper", function(){
 
   describe("constructor", function(){
     it("must return an instance of itself", function(){
-     assert.instanceOf(VPAIDAdUnitWrapper(vpaidAdUnit), VPAIDAdUnitWrapper);
+     assert.instanceOf(VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000}), VPAIDAdUnitWrapper);
     });
 
     it("must throw a VASTError if the passed VPAIDAdUnit does not fully implement the VPAID api", function(){
      [null, undefined, noop, 'foo', {}, []].forEach(function(invalidAdUnit) {
        assert.throws(function () {
-         var adUnitWrapper = new VPAIDAdUnitWrapper(invalidAdUnit);
+         var adUnitWrapper = new VPAIDAdUnitWrapper(invalidAdUnit, {responseTimeout: 5000});
        }, VASTError, 'on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
      });
     });
@@ -81,7 +81,7 @@ describe("VPAIDAdUnitWrapper", function(){
     });
 
     it("must publish the VPAIDAdUnit in '_adUnit'", function(){
-      var wrapper = new VPAIDAdUnitWrapper(vpaidAdUnit);
+      var wrapper = new VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000});
       assert.equal(wrapper._adUnit, vpaidAdUnit);
     });
   });
@@ -90,7 +90,7 @@ describe("VPAIDAdUnitWrapper", function(){
     var wrapper;
 
     beforeEach(function(){
-      wrapper = new VPAIDAdUnitWrapper(vpaidAdUnit);
+      wrapper = new VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000});
     });
 
     describe("adUnitAsyncCall", function(){
@@ -223,7 +223,7 @@ describe("VPAIDAdUnitWrapper", function(){
           wrapper.waitForEvent();
         }, VASTError, "on VPAIDAdUnitWrapper.waitForEvent, missing evt name");
       });
-      
+
       it("must complain if you don't pass a callback", function(){
         assert.throws(function () {
           wrapper.waitForEvent('adInit');
