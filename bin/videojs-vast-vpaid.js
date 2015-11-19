@@ -3789,14 +3789,12 @@ vjs.BlackPoster.prototype.createEl = function(){
 ;
 function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
   if (!(this instanceof VPAIDAdUnitWrapper)) {
-    return new VPAIDAdUnitWrapper(vpaidAdUnit);
+    return new VPAIDAdUnitWrapper(vpaidAdUnit, opts);
   }
   sanityCheck(vpaidAdUnit, opts);
-  var defaultOpts = {
-    responseTimeout: 5000
-  };
 
-  this.options = extend({}, defaultOpts, opts || {});
+  this.options = extend({}, opts);
+
   this._adUnit = vpaidAdUnit;
 
   /*** Local Functions ***/
@@ -3805,8 +3803,12 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
       throw new VASTError('on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
     }
 
-    if (opts && !isObject(opts)) {
+    if (!isObject(opts)) {
       throw new VASTError("on VPAIDAdUnitWrapper, expected options hash  but got '" + opts + "'");
+    }
+
+    if (!("responseTimeout" in opts) || !isNumber(opts.responseTimeout) ){
+      throw new VASTError("on VPAIDAdUnitWrapper, expected responseTimeout in options");
     }
   }
 }
@@ -4158,12 +4160,8 @@ function VPAIDIntegrator(player, settings) {
   this.player = player;
   this.containerEl = createVPAIDContainerEl(player);
   this.options = {
-    responseTimeout: 2000,
-    VPAID_VERSION: {
-      full: '2.0',
-      major: 2,
-      minor: 0
-    }
+    responseTimeout: 5000,
+    VPAID_VERSION: '2.0'
   };
   this.settings = settings;
 
@@ -4293,13 +4291,14 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
   var player = this.player;
   var vjsTechEl = player.el().querySelector('.vjs-tech');
+  var responseTimeout = this.settings.responseTimeout || this.options.responseTimeout;
   tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
     if (error) {
       return next(error, adUnit, vastResponse);
     }
 
     try {
-      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src, responseTimeout: responseTimeout});
       var techClass = 'vjs-' + tech.name + '-ad';
       dom.addClass(player.el(), techClass);
       player.one('vpaid.adEnd', function() {
@@ -4327,7 +4326,7 @@ VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback
 };
 
 VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, next) {
-  adUnit.handshakeVersion('2.0', function (error, version) {
+  adUnit.handshakeVersion(this.options.VPAID_VERSION, function (error, version) {
     if (error) {
       return next(error, adUnit, vastResponse);
     }
