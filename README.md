@@ -247,9 +247,6 @@
 
 ### 'vast.adStart' event
   Fired when the ad starts playing
-  
-### 'vast.adStart' event
-  Fired when the ad starts playing
 
 ### 'vast.adSkip' event
   Fired when the a vast ad gets skiped
