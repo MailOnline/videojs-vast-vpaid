@@ -11,16 +11,14 @@ module.exports = function (karma) {
     files: [],
     exclude: [],
     frameworks: ['mocha', 'chai-sinon'],
-    plugins: [
-      'karma-*'
-    ],
+
     preprocessors: {},
 
     logLevel: 'ERROR',
     /**
      * How to report, by default.
      */
-    reporters: ['dots'],
+    reporters: ['progress'],
 
     /**
      * On which port should the browser connect, on which port is the test runner
@@ -55,4 +53,3 @@ module.exports = function (karma) {
     ]
   });
 };
-

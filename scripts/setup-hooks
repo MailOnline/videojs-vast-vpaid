@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #DON'T SETUP THE HOOKS IF YOU ARE IN CI
 if [ "$CONTINUOUS_INTEGRATION" != "true" ]; then
