@@ -18,8 +18,8 @@
 
   2.- If don't have videoJs, add their scripts and stylesheet to your page
   ```
-  <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
-  <script src="http://vjs.zencdn.net/4.12/video.js"></script>
+  <link href="http://vjs.zencdn.net/5.0/video-js.min.css" rel="stylesheet">
+  <script src="http://vjs.zencdn.net/5.0/video.min.js"></script>
   ```
 
   3.- After videoJs add the plugin script stylesheet and swfobject (if you want to support flashvpaid) to your page
