@@ -51,7 +51,7 @@
       //Media tag URL
       url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
       playAdAlways: true,
-      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+      //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
       adCancelTimeout: adsCancelTimeout,
       adsEnabled: !!options.adsEnabled
     });
@@ -171,7 +171,7 @@
  >Number of milliseconds for the ad to start before canceling it. Defaults to 3000ms
 
 ## adsEnabled
- >Flag to disable the ads. Defaults to false.
+ >Flag to disable the ads. Defaults to true.
 
 ## autoResize
  >Flag to enable resize of the adUnit on window's `resize` and `orientationchange` events. This is useful for responsive players. Defaults to true
@@ -185,7 +185,7 @@
   var vastPlugin = player.vastClient({
      url: getAdsUrl,
      playAdAlways: true,
-     //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+     //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
      adCancelTimeout: adsCancelTimeout,
      adsEnabled: !!options.adsEnabled
    });
@@ -226,7 +226,7 @@
      player.vastClient({
        url: getAdsUrl,
        playAdAlways: true,
-       //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+       //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
        adCancelTimeout: adsCancelTimeout,
        adsEnabled: !!options.adsEnabled
      });
@@ -298,7 +298,7 @@ ____   ____.__     .___                     __          ____   ____             
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
 ║ start-dev               │ Starts dev server and watch task.                                              ║
 ║                         │ If you use "--env production" everything will be minified                      ║
-║                         │ and the dist folder will be updated accordingly.                               ║
+║                         │ and the bin folder will be updated accordingly.                               ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
 ║ deploy-demo             │ Builds the demo and deploys it to github pages                                 ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
@@ -322,7 +322,7 @@ ____   ____.__     .___                     __          ____   ____             
   $ gulp start-dev
   ```
   and open the following link into your browser
-  http://localhost:8085
+  http://localhost:8086
 
 ## License
 videojs-vast-vpaid plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
