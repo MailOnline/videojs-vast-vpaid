@@ -1,3 +1,4 @@
+var vjsComponent = videojs.getComponent('Component');
 /**
  * The component that shows a black screen until the ads plugin has decided if it can or it can not play the ad.
  *
@@ -12,10 +13,10 @@
  * @param {Object=} options
  * @constructor
  */
-vjs.BlackPoster = vjs.Component.extend({
+var BlackPoster = videojs.extend(vjsComponent, {
   /** @constructor */
-  init: function(player, options){
-    vjs.Component.call(this, player, options);
+  constructor: function(player, options){
+    vjsComponent.call(this, player, options);
 
     var posterImg = player.getChild('posterImage');
 
@@ -32,8 +33,10 @@ vjs.BlackPoster = vjs.Component.extend({
  * Create the black poster div element
  * @return {Element}
  */
-vjs.BlackPoster.prototype.createEl = function(){
-  return vjs.createEl('div', {
+BlackPoster.prototype.createEl = function(){
+  return vjsComponent.prototype.createEl.call(this, 'div', {
     className: 'vjs-black-poster'
   });
 };
+
+videojs.registerComponent('BlackPoster', BlackPoster);

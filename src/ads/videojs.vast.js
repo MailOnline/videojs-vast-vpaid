@@ -1,4 +1,4 @@
-vjs.plugin('vastClient', function VASTPlugin(options) {
+videojs.plugin('vastClient', function VASTPlugin(options) {
   var snapshot;
   var player = this;
   var vast = new VASTClient();

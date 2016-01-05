@@ -20,7 +20,7 @@ module.exports = {
       'demo/tpls/index.html'
     ],
     styles: [
-      'bower_components/video.js/dist/video-js/video-js.css',
+      'bower_components/video.js/dist/video-js.css',
       'demo/styles/*.css'
     ],
 
@@ -29,11 +29,11 @@ module.exports = {
     ],
 
     fonts: [
-      'bower_components/video.js/dist/video-js/font/*'
+      'bower_components/video.js/dist/font/*'
     ],
 
     scripts: [
-      'bower_components/video.js/dist/video-js/video.dev.js'
+      'bower_components/video.js/dist/video.js'
     ]
   },
 
