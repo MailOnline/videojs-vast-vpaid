@@ -25,4 +25,4 @@ gulp.task( "dev-server", ['build-demo'], function() {
   supervisor( "demo/server/index.js" );
 });
 
-module.exports = new BuildTaskDoc("start-dev", "Starts dev server and watch task. \nIf you use \"--env production\" everything will be minified \nand the dist folder will be updated accordingly. ", 1);
+module.exports = new BuildTaskDoc("start-dev", "Starts dev server and watch task. \nIf you use \"--env production\" everything will be minified \nand the bin folder will be updated accordingly. ", 1);
