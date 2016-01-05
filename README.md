@@ -49,7 +49,7 @@
 
     var vastAd = player.vastClient({
       //Media tag URL
-      url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+      adTagUrl: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
       playAdAlways: true,
       //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
       adCancelTimeout: adsCancelTimeout,
@@ -67,7 +67,7 @@
          data-setup='{
                   "plugins": {
                           "vastClient":{
-                              "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+                              "adTagUrl": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
                               "adsCancelTimeout": 5000,
                               "adsEnabled": true
                           }
@@ -183,7 +183,7 @@
  An invocation to ```player.vastClient({...})``` returns and object that with some helper functions that allow you to dynamically enable or disable the vast plugin, or check if it is enabled.
   ```javascript
   var vastPlugin = player.vastClient({
-     url: getAdsUrl,
+     adTagUrl: getAdsUrl,
      playAdAlways: true,
      //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
      adCancelTimeout: adsCancelTimeout,
@@ -224,7 +224,7 @@
   The returned object described above it is also published as a player property so that you can use it anywhere as long as you have access to the player instance.
   ```javascript
      player.vastClient({
-       url: getAdsUrl,
+       adTagUrl: getAdsUrl,
        playAdAlways: true,
        //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
        adCancelTimeout: adsCancelTimeout,
