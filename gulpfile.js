@@ -14,7 +14,7 @@ var buildTasksMap = requireDir('./build');
 gulp.task('default', function (finishTask) {
     async.series([
             printWelcomeMessage,
-            pringBanner,
+            printBanner,
             printTasksHelpTable
         ],
         finishTask
@@ -27,7 +27,7 @@ gulp.task('default', function (finishTask) {
         done(null);
     }
 
-    function pringBanner(done) {
+    function printBanner(done) {
         asciify('Videojs Vast Vpaid', function (err, res) {
             console.log(res.help);
             done(null);

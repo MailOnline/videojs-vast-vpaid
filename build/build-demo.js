@@ -6,7 +6,8 @@ var template = require('gulp-template');
 var globUtils = require('./globUtils');
 var flatten = require('gulp-flatten');
 var BuildTaskDoc = require('./BuildTaskDoc');
-var browserify = require('gulp-browserify');
+var source     = require('vinyl-source-stream');
+var browserify = require('browserify');
 var rename = require('gulp-rename');
 var mergeStream = require('merge-stream');
 
@@ -74,11 +75,12 @@ gulp.task('build-demo-scripts', function () {
   var dependencies_stream = gulp.src(config.demo.scripts)
     .pipe(flatten());
 
-  var bundle_stream = gulp.src([mainScript])
-    .pipe(browserify({
+  var bundle_stream = browserify({
+      entries: mainScript,
       insertGlobals : true,
       debug : true
-    }))
+    }).bundle()
+    .pipe(source(mainScript))
     .pipe(rename('demo_bundle.js'));
 
   return mergeStream(dependencies_stream, bundle_stream)
