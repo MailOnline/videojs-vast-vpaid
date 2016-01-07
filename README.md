@@ -260,7 +260,7 @@
 ### 'vast.contentStart' event
   Fired whenever the video content starts playing
 
-### 'vast.contentEnded' event
+### 'vast.contentEnd' event
   Fired when the video content ends.
 
 ### 'vast.reset' event
