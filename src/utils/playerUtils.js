@@ -9,20 +9,20 @@ var playerUtils = {};
  */
 playerUtils.getPlayerSnapshot = function getPlayerSnapshot(player) {
   var tech = player.el().querySelector('.vjs-tech');
+
   var snapshot = {
     ended: player.ended(),
     src: player.currentSrc(),
     currentTime: player.currentTime(),
     type: player.currentType(),
     playing: !player.paused(),
-    suppressedTracks: getSuppressedTracks(player)
+    suppressedTracks: getSuppressedTracks(player),
+    techName: player.techName
   };
-
   if (tech) {
     snapshot.nativePoster = tech.poster;
     snapshot.style = tech.getAttribute('style');
   }
-
   return snapshot;
 
   /**** Local Functions ****/
@@ -69,6 +69,11 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
   }
 
   if (hasSrcChanged(player, snapshot)) {
+    // if the player technology has changed, reset it
+    if(player.techName !== snapshot.techName) {
+      player.loadTech(snapshot.techName);
+    }
+
     // on ios7, fiddling with textTracks too early will cause safari to crash
     player.one('contentloadedmetadata', restoreTracks);
 
