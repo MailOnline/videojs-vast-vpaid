@@ -64,7 +64,7 @@ describe("playerUtils", function () {
         type: 'video/mp4',
         playing: true,
         suppressedTracks: [],
-        techName: 'Html5'
+        techName: 'Html5',
         nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none'
       });
