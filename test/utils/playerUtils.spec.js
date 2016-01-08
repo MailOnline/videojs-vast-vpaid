@@ -33,7 +33,8 @@ describe("playerUtils", function () {
         suppressedTracks: [],
         nativePoster: 'http://video-js.zencoder.com/v/oceans.png',
         style: 'border:none',
-        playing: false
+        playing: false,
+        techName: 'Html5'
       });
     });
 
@@ -46,7 +47,8 @@ describe("playerUtils", function () {
         currentTime: 0,
         type: 'video/mp4',
         playing: false,
-        suppressedTracks: []
+        suppressedTracks: [],
+        techName: 'Html5'
       });
 
       dom.addClass(tech, 'vjs-tech');
@@ -63,7 +65,8 @@ describe("playerUtils", function () {
         playing: true,
         suppressedTracks: [],
         nativePoster: 'http://video-js.zencoder.com/v/oceans.png',
-        style: 'border:none'
+        style: 'border:none',
+        techName: 'Html5'
       });
     });
 
@@ -190,6 +193,16 @@ describe("playerUtils", function () {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         assert.equal(player.src(), snapshot.src);
         assert.equal(player.currentType(), snapshot.type);
+      });
+
+      it("must restore the player tech if it changed", function () {
+        sinon.stub(player, 'loadTech');
+        var clonedSnapshot = JSON.parse(JSON.stringify(snapshot));
+        clonedSnapshot.techName = 'Flash';
+        playerUtils.restorePlayerSnapshot(player, clonedSnapshot);
+        sinon.assert.calledOnce(player.loadTech);
+        sinon.assert.calledWithExactly(player.loadTech, clonedSnapshot.techName);
+        player.loadTech.restore();
       });
 
       it("must load the restored src", function () {
