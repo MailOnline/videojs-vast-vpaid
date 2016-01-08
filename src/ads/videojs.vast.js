@@ -151,10 +151,15 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     function preparePlayerForAd(next) {
       if (canPlayPrerollAd()) {
         snapshot = playerUtils.getPlayerSnapshot(player);
-        player.pause();
-        addSpinnerIcon();
-        startAdCancelTimeout();
-        next(null);
+         var pausedInterval = setInterval(function() {
+            player.pause();
+            if (player.paused()) {
+              clearInterval(pausedInterval);
+              addSpinnerIcon();
+              startAdCancelTimeout();
+              next(null);
+            }
+          }, 1);
       } else {
         next(new VASTError('video content has been playing before preroll ad'));
       }
