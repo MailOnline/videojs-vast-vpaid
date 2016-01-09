@@ -4,17 +4,15 @@ describe("playerUtils", function () {
   beforeEach(function () {
     testDiv = document.createElement("div");
     testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
-      'controls preload="none" style="border:none"' +
+      'controls preload="none" style="border:none" ' +
       'poster="http://vjs.zencdn.net/v/oceans.png" >' +
       '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
-      '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
-      '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs(testDiv.querySelector("#playerVideoTestEl"), {});
     tech = player.el().querySelector('.vjs-tech');
   });
 
@@ -25,6 +23,7 @@ describe("playerUtils", function () {
   describe("getPlayerSnapshot", function () {
     it("must return a snapshot obj", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
+
       assert.deepEqual(snapshot, {
         ended: false,
         src: "http://vjs.zencdn.net/v/oceans.mp4",
@@ -728,15 +727,17 @@ describe("playerUtils.removeNativePoster", function () {
   beforeEach(function () {
     testDiv = document.createElement("div");
     testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
-      'controls preload="none" style="border:none"' +
+      'controls preload="none" style="border:none" ' +
       'poster="http://vjs.zencdn.net/v/oceans.png" >' +
       '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs(testDiv.querySelector("#playerVideoTestEl"), {});
     tech = player.el().querySelector('.vjs-tech');
   });
 
@@ -745,7 +746,6 @@ describe("playerUtils.removeNativePoster", function () {
   });
 
   it("must remove the poster of the passed player", function () {
-    var tech = player.el().querySelector('.vjs-tech');
     playerUtils.removeNativePoster(player);
     assert.isNull(tech.getAttribute('poster'));
   });
