@@ -5,10 +5,10 @@ describe("playerUtils", function () {
     testDiv = document.createElement("div");
     testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
       'controls preload="none" style="border:none"' +
-      'poster="http://video-js.zencoder.com/v/oceans.png" >' +
-      '<source src="http://video-js.zencoder.com/v/oceans.mp4" type="video/mp4"/>' +
-      '<source src="http://video-js.zencoder.com/v/oceans.webm" type="video/webm"/>' +
-      '<source src="http://video-js.zencoder.com/v/oceans.ogv" type="video/ogg"/>' +
+      'poster="http://vjs.zencdn.net/v/oceans.png" >' +
+      '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
@@ -27,11 +27,11 @@ describe("playerUtils", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
       assert.deepEqual(snapshot, {
         ended: false,
-        src: "http://video-js.zencoder.com/v/oceans.mp4",
+        src: "http://vjs.zencdn.net/v/oceans.mp4",
         currentTime: 0,
         type: 'video/mp4',
         suppressedTracks: [],
-        nativePoster: 'http://video-js.zencoder.com/v/oceans.png',
+        nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none',
         playing: false,
         techName: 'Html5'
@@ -43,7 +43,7 @@ describe("playerUtils", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
       assert.deepEqual(snapshot, {
         ended: false,
-        src: "http://video-js.zencoder.com/v/oceans.mp4",
+        src: "http://vjs.zencdn.net/v/oceans.mp4",
         currentTime: 0,
         type: 'video/mp4',
         playing: false,
@@ -59,14 +59,14 @@ describe("playerUtils", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
       assert.deepEqual(snapshot, {
         ended: false,
-        src: "http://video-js.zencoder.com/v/oceans.mp4",
+        src: "http://vjs.zencdn.net/v/oceans.mp4",
         currentTime: 0,
         type: 'video/mp4',
         playing: true,
         suppressedTracks: [],
-        nativePoster: 'http://video-js.zencoder.com/v/oceans.png',
-        style: 'border:none',
-        techName: 'Html5'
+        techName: 'Html5',
+        nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
+        style: 'border:none'
       });
     });
 
@@ -134,7 +134,7 @@ describe("playerUtils", function () {
     it("must restore the player poster", function () {
       tech.poster = '';
       playerUtils.restorePlayerSnapshot(player, snapshot);
-      assert.equal(snapshot.nativePoster, "http://video-js.zencoder.com/v/oceans.png");
+      assert.equal(snapshot.nativePoster, "http://vjs.zencdn.net/v/oceans.png");
       assert.equal(tech.poster, snapshot.nativePoster);
     });
 
@@ -729,8 +729,8 @@ describe("playerUtils.removeNativePoster", function () {
     testDiv = document.createElement("div");
     testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
       'controls preload="none" style="border:none"' +
-      'poster="http://video-js.zencoder.com/v/oceans.png" >' +
-      '<source src="http://video-js.zencoder.com/v/oceans.mp4" type="video/mp4"/>' +
+      'poster="http://vjs.zencdn.net/v/oceans.png" >' +
+      '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +

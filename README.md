@@ -49,9 +49,9 @@
 
     var vastAd = player.vastClient({
       //Media tag URL
-      url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+      adTagUrl: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
       playAdAlways: true,
-      //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+      //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
       adCancelTimeout: adsCancelTimeout,
       adsEnabled: !!options.adsEnabled
     });
@@ -63,19 +63,19 @@
 ```html
   <video id="example_video_1" class="video-js vjs-default-skin"
          controls preload="auto" width="640" height="264"
-         poster="http://video-js.zencoder.com/v/oceans.png"
+         poster="http://vjs.zencdn.net/v/oceans.png"
          data-setup='{
                   "plugins": {
                           "vastClient":{
-                              "url": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+                              "adTagUrl": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
                               "adsCancelTimeout": 5000,
                               "adsEnabled": true
                           }
                   }
              }'>
-      <source src="http://video-js.zencoder.com/v/oceans.mp4" type='video/mp4'/>
-      <source src="http://video-js.zencoder.com/v/oceans.webm" type='video/webm'/>
-      <source src="http://video-js.zencoder.com/v/oceans.ogv" type='video/ogg'/>
+      <source src="http://vjs.zencdn.net/v/oceans.mp4" type='video/mp4'/>
+      <source src="http://vjs.zencdn.net/v/oceans.webm" type='video/webm'/>
+      <source src="http://vjs.zencdn.net/v/oceans.ogv" type='video/ogg'/>
       <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a
               href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
   </video>
@@ -171,7 +171,7 @@
  >Number of milliseconds for the ad to start before canceling it. Defaults to 3000ms
 
 ## adsEnabled
- >Flag to disable the ads. Defaults to false.
+ >Flag to disable the ads. Defaults to true.
 
 ## autoResize
  >Flag to enable resize of the adUnit on window's `resize` and `orientationchange` events. This is useful for responsive players. Defaults to true
@@ -183,9 +183,9 @@
  An invocation to ```player.vastClient({...})``` returns and object that with some helper functions that allow you to dynamically enable or disable the vast plugin, or check if it is enabled.
   ```javascript
   var vastPlugin = player.vastClient({
-     url: getAdsUrl,
+     adTagUrl: getAdsUrl,
      playAdAlways: true,
-     //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+     //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
      adCancelTimeout: adsCancelTimeout,
      adsEnabled: !!options.adsEnabled
    });
@@ -224,9 +224,9 @@
   The returned object described above it is also published as a player property so that you can use it anywhere as long as you have access to the player instance.
   ```javascript
      player.vastClient({
-       url: getAdsUrl,
+       adTagUrl: getAdsUrl,
        playAdAlways: true,
-       //Note: As requested we set the preroll timeout at the same place thant the adsCancelTimeout
+       //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
        adCancelTimeout: adsCancelTimeout,
        adsEnabled: !!options.adsEnabled
      });
@@ -298,7 +298,7 @@ ____   ____.__     .___                     __          ____   ____             
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
 ║ start-dev               │ Starts dev server and watch task.                                              ║
 ║                         │ If you use "--env production" everything will be minified                      ║
-║                         │ and the dist folder will be updated accordingly.                               ║
+║                         │ and the bin folder will be updated accordingly.                               ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
 ║ deploy-demo             │ Builds the demo and deploys it to github pages                                 ║
 ╟─────────────────────────┼────────────────────────────────────────────────────────────────────────────────╢
@@ -322,7 +322,7 @@ ____   ____.__     .___                     __          ____   ____             
   $ gulp start-dev
   ```
   and open the following link into your browser
-  http://localhost:8085
+  http://localhost:8086
 
 ## License
 videojs-vast-vpaid plugin is licensed under the MIT License, Version 2.0. [View the license file](LICENSE)
