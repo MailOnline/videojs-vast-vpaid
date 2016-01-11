@@ -16,8 +16,7 @@ playerUtils.getPlayerSnapshot = function getPlayerSnapshot(player) {
     currentTime: player.currentTime(),
     type: player.currentType(),
     playing: !player.paused(),
-    suppressedTracks: getSuppressedTracks(player),
-    techName: player.techName
+    suppressedTracks: getSuppressedTracks(player)
   };
   if (tech) {
     snapshot.nativePoster = tech.poster;
@@ -69,11 +68,6 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
   }
 
   if (hasSrcChanged(player, snapshot)) {
-    // if the player technology has changed, reset it
-    if(player.techName !== snapshot.techName) {
-      player.loadTech(snapshot.techName);
-    }
-
     // on ios7, fiddling with textTracks too early will cause safari to crash
     player.one('contentloadedmetadata', restoreTracks);
 
@@ -85,7 +79,6 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
 
     // safari requires a call to `load` to pick up a changed source
     player.load();
-
   } else {
     restoreTracks();
 
