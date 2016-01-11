@@ -4,27 +4,27 @@ describe("playerUtils", function () {
   beforeEach(function () {
     testDiv = document.createElement("div");
     testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
-      'controls preload="none" style="border:none"' +
+      'controls preload="none" style="border:none" ' +
       'poster="http://vjs.zencdn.net/v/oceans.png" >' +
       '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
-      '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
-      '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs(testDiv.querySelector("#playerVideoTestEl"), {});
     tech = player.el().querySelector('.vjs-tech');
   });
 
   afterEach(function () {
+    player.dispose();
     dom.remove(testDiv);
   });
 
   describe("getPlayerSnapshot", function () {
     it("must return a snapshot obj", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
+
       assert.deepEqual(snapshot, {
         ended: false,
         src: "http://vjs.zencdn.net/v/oceans.mp4",
@@ -33,8 +33,7 @@ describe("playerUtils", function () {
         suppressedTracks: [],
         nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none',
-        playing: false,
-        techName: 'Html5'
+        playing: false
       });
     });
 
@@ -47,8 +46,7 @@ describe("playerUtils", function () {
         currentTime: 0,
         type: 'video/mp4',
         playing: false,
-        suppressedTracks: [],
-        techName: 'Html5'
+        suppressedTracks: []
       });
 
       dom.addClass(tech, 'vjs-tech');
@@ -64,7 +62,6 @@ describe("playerUtils", function () {
         type: 'video/mp4',
         playing: true,
         suppressedTracks: [],
-        techName: 'Html5',
         nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none'
       });
@@ -187,22 +184,12 @@ describe("playerUtils", function () {
       });
 
       it("must restore the src", function () {
-        assert.equal(player.src(), "http://c.brightcove.com/services/mobile/streaming/index/rendition.m3u8?assetId=4367587778001");
+        assert.equal(player.currentSrc(), "http://c.brightcove.com/services/mobile/streaming/index/rendition.m3u8?assetId=4367587778001");
         assert.equal(player.currentType(), '');
 
         playerUtils.restorePlayerSnapshot(player, snapshot);
-        assert.equal(player.src(), snapshot.src);
+        assert.equal(player.currentSrc(), snapshot.src);
         assert.equal(player.currentType(), snapshot.type);
-      });
-
-      it("must restore the player tech if it changed", function () {
-        sinon.stub(player, 'loadTech');
-        var clonedSnapshot = JSON.parse(JSON.stringify(snapshot));
-        clonedSnapshot.techName = 'Flash';
-        playerUtils.restorePlayerSnapshot(player, clonedSnapshot);
-        sinon.assert.calledOnce(player.loadTech);
-        sinon.assert.calledWithExactly(player.loadTech, clonedSnapshot.techName);
-        player.loadTech.restore();
       });
 
       it("must load the restored src", function () {
@@ -262,7 +249,7 @@ describe("playerUtils", function () {
           playerUtils.restorePlayerSnapshot(player, snapshot);
           player.trigger('canplay');
           sinon.assert.notCalled(player.play);
-          sinon.assert.notCalled(player.currentTime);
+          sinon.assert.neverCalledWith(player.currentTime, snapshot.currentTime);
           clock.tick(1000);
           playerUtils.isReadyToResume.returns(false);
           clock.tick(1100);
@@ -282,7 +269,7 @@ describe("playerUtils", function () {
           playerUtils.restorePlayerSnapshot(player, snapshot);
           player.trigger('canplay');
           sinon.assert.notCalled(player.play);
-          sinon.assert.notCalled(player.currentTime);
+          sinon.assert.neverCalledWith(player.currentTime, snapshot.currentTime);
           clock.tick(2000);
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
@@ -301,7 +288,7 @@ describe("playerUtils", function () {
           playerUtils.restorePlayerSnapshot(player, snapshot);
           player.trigger('canplay');
           sinon.assert.notCalled(player.play);
-          sinon.assert.notCalled(player.currentTime);
+          sinon.assert.neverCalledWith(player.currentTime, snapshot.currentTime);
           player.play.throws();
           clock.tick(2000);
 
@@ -351,13 +338,7 @@ describe("playerUtils.prepareForAds", function () {
     window.isIPhone.restore();
   });
 
-  it("must add the blackPoster component to the player", function () {
-    var player = videojs(document.createElement('video'), {});
-    playerUtils.prepareForAds(player);
-    assert.isObject(player.getChild('blackPoster'));
-  });
-
-  describe("", function () {
+  describe("BlackPoster", function () {
     var player, blackPoster;
 
     beforeEach(function () {
@@ -371,6 +352,10 @@ describe("playerUtils.prepareForAds", function () {
     afterEach(function () {
       blackPoster.hide.restore();
       blackPoster.show.restore();
+    });
+
+    it("must add the blackPoster component to the player", function () {
+      assert.isObject(player.getChild('blackPoster'));
     });
 
     it("must hide the BlackPoster on 'error' event", function () {
@@ -728,24 +713,26 @@ describe("playerUtils.removeNativePoster", function () {
   beforeEach(function () {
     testDiv = document.createElement("div");
     testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
-      'controls preload="none" style="border:none"' +
+      'controls preload="none" style="border:none" ' +
       'poster="http://vjs.zencdn.net/v/oceans.png" >' +
       '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs(testDiv.querySelector("#playerVideoTestEl"), {});
     tech = player.el().querySelector('.vjs-tech');
   });
 
   afterEach(function () {
+    player.dispose();
     dom.remove(testDiv);
   });
 
   it("must remove the poster of the passed player", function () {
-    var tech = player.el().querySelector('.vjs-tech');
     playerUtils.removeNativePoster(player);
     assert.isNull(tech.getAttribute('poster'));
   });

@@ -1,7 +1,8 @@
-vjs.AdsLabel = vjs.Component.extend({
+var vjsComponent = videojs.getComponent('Component');
+var AdsLabel = videojs.extend(vjsComponent, {
   /** @constructor */
-  init: function (player, options) {
-    vjs.Component.call(this, player, options);
+  constructor: function (player, options) {
+    vjsComponent.call(this, player, options);
 
     var that = this;
 
@@ -16,9 +17,11 @@ vjs.AdsLabel = vjs.Component.extend({
   }
 });
 
-vjs.AdsLabel.prototype.createEl = function(){
-  return vjs.Component.prototype.createEl.call(this, 'div', {
+AdsLabel.prototype.createEl = function(){
+  return vjsComponent.prototype.createEl.call(this, 'div', {
     className: 'vjs-ads-label vjs-control vjs-label-hidden',
     innerHTML: 'Advertisement'
   });
 };
+
+videojs.registerComponent('AdsLabel', AdsLabel);
