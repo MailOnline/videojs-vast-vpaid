@@ -72,6 +72,8 @@
     "MediaFile":true,
     "Ad":true,
     "Linear":true,
+    "Companion":true,
+    "Companion":true,
     "Wrapper":true,
     "VASTResponse":true,
     "TrackingEvent":true,

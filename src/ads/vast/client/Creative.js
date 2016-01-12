@@ -12,4 +12,15 @@ function Creative(creativeJTree) {
   if(creativeJTree.linear) {
     this.linear = new Linear(creativeJTree.linear);
   }
+
+  if (creativeJTree.companionAds) {
+    var companions = [];
+    var companionAds = creativeJTree.companionAds && creativeJTree.companionAds.companion;
+    companionAds = isArray(companionAds) ? companionAds : [companionAds];
+    companionAds.forEach(function (companionData) {
+      companions.push(new Companion(companionData));
+    });
+
+    this.companionAds = companions;
+  }
 }
