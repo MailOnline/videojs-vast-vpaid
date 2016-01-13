@@ -216,7 +216,7 @@ describe("playerUtils", function () {
         beforeEach(function () {
           sinon.stub(player, 'play');
           sinon.stub(playerUtils, 'isReadyToResume');
-          sinon.spy(player, 'currentTime');
+          sinon.stub(player, 'currentTime');
         });
 
         afterEach(function () {
@@ -229,12 +229,15 @@ describe("playerUtils", function () {
           snapshot.playing = true;
           snapshot.currentTime = 10;
           playerUtils.isReadyToResume.returns(true);
+          player.currentTime.returns(0);
           player.play.reset();
+          player.currentTime.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
           sinon.assert.notCalled(player.play);
           player.trigger('canplay');
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
+          player.trigger('seeked');
           sinon.assert.called(player.play);
         });
 
@@ -243,12 +246,15 @@ describe("playerUtils", function () {
           snapshot.playing = true;
           snapshot.currentTime = 10;
           playerUtils.isReadyToResume.returns(true);
+          player.currentTime.returns(0);
           player.play.reset();
+          player.currentTime.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
           sinon.assert.notCalled(player.play);
           clock.tick(1000);
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
+          player.trigger('seeked');
           sinon.assert.called(player.play);
           clock.restore();
         });
@@ -258,6 +264,7 @@ describe("playerUtils", function () {
           snapshot.playing = true;
           snapshot.currentTime = 10;
           playerUtils.isReadyToResume.returns(false);
+          player.currentTime.returns(0);
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
           player.trigger('canplay');
@@ -268,6 +275,7 @@ describe("playerUtils", function () {
           clock.tick(1100);
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
+          player.trigger('seeked');
           sinon.assert.called(player.play);
 
           clock.restore();
@@ -278,6 +286,7 @@ describe("playerUtils", function () {
           snapshot.playing = true;
           snapshot.currentTime = 10;
           playerUtils.isReadyToResume.returns(false);
+          player.currentTime.returns(0);
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
           player.trigger('canplay');
@@ -286,6 +295,7 @@ describe("playerUtils", function () {
           clock.tick(2000);
 
           sinon.assert.calledWithExactly(player.currentTime, snapshot.currentTime);
+          player.trigger('seeked');
           sinon.assert.called(player.play);
 
           clock.restore();
@@ -295,8 +305,9 @@ describe("playerUtils", function () {
           var clock = sinon.useFakeTimers();
           sinon.stub(videojs.log, 'warn');
           snapshot.playing = true;
-          snapshot.currentTime = 10;
+          snapshot.currentTime = 0;
           playerUtils.isReadyToResume.returns(false);
+          player.currentTime.returns(0);
           player.play.reset();
           playerUtils.restorePlayerSnapshot(player, snapshot);
           player.trigger('canplay');
@@ -315,28 +326,28 @@ describe("playerUtils", function () {
   describe("isReadyToResume", function () {
     it("must return true if the tech.readyState > 1", function () {
       assert.isTrue(playerUtils.isReadyToResume({
-        readyState: 2
+        readyState: function() {return 2;}
       }));
     });
 
     it("must return true if the tech doesn't expose the seekable time ranges", function () {
       assert.isTrue(playerUtils.isReadyToResume({
-        readyState: 0,
-        seekable: undefined
+        readyState: function() {return 0;},
+        seekable: function() {return undefined;}
       }));
     });
 
     it("must return true if the tech exposes the seekable time ranges", function () {
       assert.isTrue(playerUtils.isReadyToResume({
-        readyState: 0,
-        seekable: ['fake_time_range']
+        readyState: function() {return 0;},
+        seekable: function() {return {length: 1};}
       }));
     });
 
     it("must return false if the tech isn not ready an seekable", function () {
       assert.isFalse(playerUtils.isReadyToResume({
-        readyState: 0,
-        seekable: []
+        readyState: function() {return 0;},
+        seekable: function() {return {length: 0};}
       }));
     });
   });
