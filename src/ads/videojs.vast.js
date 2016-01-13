@@ -100,6 +100,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     async.waterfall([
       checkAdsEnabled,
       preparePlayerForAd,
+      startAdCancelTimeout,
       playPrerollAd
     ], function (error, response) {
       if (error) {
@@ -153,8 +154,15 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
         snapshot = playerUtils.getPlayerSnapshot(player);
         player.pause();
         addSpinnerIcon();
-        startAdCancelTimeout();
-        next(null);
+
+        if(player.paused()) {
+          next(null);
+        } else {
+          playerUtils.once(player, ['playing'], function() {
+            player.pause();
+            next(null);
+          });
+        }
       } else {
         next(new VASTError('video content has been playing before preroll ad'));
       }
@@ -164,7 +172,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
       return !isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
-    function startAdCancelTimeout() {
+    function startAdCancelTimeout(next) {
       var adCancelTimeoutId;
       adsCanceled = false;
 
@@ -181,6 +189,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
           adCancelTimeoutId = null;
         }
       }
+
+      next(null);
     }
 
     function addSpinnerIcon() {
