@@ -28,10 +28,10 @@ var IVPAIDAdUnit = (function () {
     }, {
         key: 'initAd',
 
-        //width and height is not in the beginning because we will use the default width/height used in the constructor
+        //creativeData is an object to be consistent with VPAIDHTML
         value: function initAd(width, height, viewMode, desiredBitrate) {
-            var creativeData = arguments[4] === undefined ? '' : arguments[4];
-            var environmentVars = arguments[5] === undefined ? '' : arguments[5];
+            var creativeData = arguments[4] === undefined ? { AdParameters: '' } : arguments[4];
+            var environmentVars = arguments[5] === undefined ? { flashVars: '' } : arguments[5];
             var callback = arguments[6] === undefined ? undefined : arguments[6];
         }
     }, {
@@ -203,14 +203,16 @@ var VPAIDAdUnit = (function (_IVPAIDAdUnit) {
     }, {
         key: 'initAd',
         value: function initAd(width, height, viewMode, desiredBitrate) {
-            var creativeData = arguments[4] === undefined ? '' : arguments[4];
-            var environmentVars = arguments[5] === undefined ? '' : arguments[5];
+            var creativeData = arguments[4] === undefined ? { AdParameters: '' } : arguments[4];
+            var environmentVars = arguments[5] === undefined ? { flashVars: '' } : arguments[5];
             var callback = arguments[6] === undefined ? undefined : arguments[6];
 
             //resize element that has the flash object
             this._flash.setSize(width, height);
+            creativeData = creativeData || { AdParameters: '' };
+            environmentVars = environmentVars || { flashVars: '' };
 
-            this._flash.callFlashMethod('initAd', [this._flash.getWidth(), this._flash.getHeight(), viewMode, desiredBitrate, creativeData, environmentVars], callback);
+            this._flash.callFlashMethod('initAd', [this._flash.getWidth(), this._flash.getHeight(), viewMode, desiredBitrate, creativeData.AdParameters || '', environmentVars.flashVars || ''], callback);
         }
     }, {
         key: 'resizeAd',
@@ -763,16 +765,26 @@ Object.defineProperty(JSFlashBridge, 'VPAID_FLASH_HANDLER', {
     value: VPAID_FLASH_HANDLER
 });
 
-window[VPAID_FLASH_HANDLER] = function (flashID, type, event, callID, error, data) {
+/**
+ * External interface handler
+ *
+ * @param {string} flashID identifier of the flash who call this
+ * @param {string} typeID what type of message is, can be 'event' or 'callback'
+ * @param {string} typeName if the typeID is a event the typeName will be the eventName, if is a callback the typeID is the methodName that is related this callback
+ * @param {string} callbackID only applies when the typeID is 'callback', identifier of the callback to call
+ * @param {object} error error object
+ * @param {object} data
+ */
+window[VPAID_FLASH_HANDLER] = function (flashID, typeID, typeName, callbackID, error, data) {
     var instance = registry.getInstanceByID(flashID);
     if (!instance) return;
-    if (event === 'handShake') {
+    if (typeName === 'handShake') {
         instance._handShake(error, data);
     } else {
-        if (type !== 'event') {
-            instance._callCallback(event, callID, error, data);
+        if (typeID !== 'event') {
+            instance._callCallback(typeName, callbackID, error, data);
         } else {
-            instance._trigger(event, data);
+            instance._trigger(typeName, data);
         }
     }
 };
@@ -1048,24 +1060,377 @@ function stringEndsWith(string, search) {
 
 //# sourceMappingURL=VPAIDFLASHClient.js.map
 ;
-/**
- There is a bug on android 4.2 ont the way it parses string
- The code bellow fixes the problem if there is a problem
- */
-(function () {
- var parseNum;
- if(parseInt('09') !== 9) {
-  parseNum = window.parseInt;
-  window.parseInt = function(str) {
-   if(typeof str === 'string' && !/^(\s+)?0+(\s+)?$/.test(str)){
-    //We remove the 0 from the left of the number
-    return parseNum(str.replace(/^0+/, ''));
-   }
+/*jshint unused:false */
+"use strict";
 
-   return parseNum(str);
+var NODE_TYPE_ELEMENT = 1;
+
+function noop(){ }
+
+function isNull(o) {
+  return o === null;
+}
+
+function isDefined(o){
+  return o !== undefined;
+}
+
+function isUndefined(o){
+  return o === undefined;
+}
+
+function isObject(obj) {
+  return typeof obj === 'object';
+}
+
+function isFunction(str){
+  return typeof str === 'function';
+}
+
+function isNumber(num){
+  return typeof num === 'number';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isArray(array){
+  return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isArrayLike(obj) {
+  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
+    return false;
+  }
+
+  var length = obj.length;
+
+  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
+    return true;
+  }
+
+  return isString(obj) || isArray(obj) || length === 0 ||
+    typeof length === 'number' && length > 0 && (length - 1) in obj;
+}
+
+function isString(str){
+  return typeof str === 'string';
+}
+
+function isEmptyString(str) {
+  return isString(str) && str.length === 0;
+}
+
+function isNotEmptyString(str) {
+  return isString(str) && str.length !== 0;
+}
+
+function arrayLikeObjToArray(args) {
+  return Array.prototype.slice.call(args);
+}
+
+function forEach(obj, iterator, context) {
+  var key, length;
+  if (obj) {
+    if (isFunction(obj)) {
+      for (key in obj) {
+        // Need to check if hasOwnProperty exists,
+        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
+        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (isArray(obj)) {
+      var isPrimitive = typeof obj !== 'object';
+      for (key = 0, length = obj.length; key < length; key++) {
+        if (isPrimitive || key in obj) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    } else if (obj.forEach && obj.forEach !== forEach) {
+      obj.forEach(iterator, context, obj);
+    } else {
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          iterator.call(context, obj[key], key, obj);
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+var SNAKE_CASE_REGEXP = /[A-Z]/g;
+function snake_case(name, separator) {
+  separator = separator || '_';
+  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return (pos ? separator : '') + letter.toLowerCase();
+  });
+}
+
+function isValidEmail(email){
+  if(!isString(email)){
+    return false;
+  }
+  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+  return EMAIL_REGEXP.test(email.trim());
+}
+
+function extend (obj) {
+  var arg, i, k;
+  for (i = 1; i < arguments.length; i++) {
+    arg = arguments[i];
+    for (k in arg) {
+      if (arg.hasOwnProperty(k)) {
+        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
+          obj[k] = extend({}, obj[k], arg[k]);
+        }else {
+          obj[k] = arg[k];
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function decapitalize(s) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * This method works the same way array.prototype.map works but if the transformer returns undefine, then
+ * it won't be added to the transformed Array.
+ */
+function transformArray(array, transformer) {
+  var transformedArray = [];
+
+  array.forEach(function(item, index){
+    var transformedItem = transformer(item, index);
+    if(isDefined(transformedItem)) {
+      transformedArray.push(transformedItem);
+    }
+  });
+
+  return transformedArray;
+}
+
+function toFixedDigits(num, digits) {
+  var formattedNum = num + '';
+  digits = isNumber(digits) ? digits : 0;
+  num = isNumber(num) ? num : parseInt(num, 10);
+  if(isNumber(num) && !isNaN(num)){
+    formattedNum = num + '';
+    while(formattedNum.length < digits) {
+      formattedNum = '0' + formattedNum;
+    }
+    return formattedNum;
+  }
+  return NaN + '';
+}
+
+function throttle(callback, delay) {
+  var previousCall = new Date().getTime() - (delay + 1);
+  return function() {
+    var time = new Date().getTime();
+    if ((time - previousCall) >= delay) {
+      previousCall = time;
+      callback.apply(this, arguments);
+    }
   };
- }
-})();
+}
+
+function debounce (callback, wait) {
+  var timeoutId;
+
+  return function (){
+    if(timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(function(){
+      callback.apply(this, arguments);
+      timeoutId = undefined;
+    }, wait);
+  };
+}
+
+// a function designed to blow up the stack in a naive way
+// but it is ok for videoJs children components
+function treeSearch(root, getChildren, found){
+  var children = getChildren(root);
+  for (var i = 0; i < children.length; i++){
+    if (found(children[i])) {
+      return children[i];
+    }
+    else {
+      var el = treeSearch(children[i], getChildren, found);
+      if (el){
+        return el;
+      }
+    }
+  }
+}
+
+function echoFn(val) {
+  return function () {
+    return val;
+  };
+}
+
+//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
+// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+function isISO8601(value) {
+  if(isNumber(value)){
+    value = value + '';  //we make sure that we are working with strings
+  }
+
+  if(!isString(value)){
+    return false;
+  }
+
+  /*jslint maxlen: 500 */
+  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
+  return iso8086Regex.test(value.trim());
+}
+
+/**
+ * Checks if the Browser is IE9 and below
+ * @returns {boolean}
+ */
+function isOldIE() {
+  var version = getInternetExplorerVersion(navigator);
+  if (version === -1) {
+    return false;
+  }
+
+  return version < 10;
+}
+
+/**
+ * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
+ * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
+ * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
+ */
+function getInternetExplorerVersion(navigator) {
+  var rv = -1;
+
+  if (navigator.appName == 'Microsoft Internet Explorer') {
+    var ua = navigator.userAgent;
+    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    var res = re.exec(ua);
+    if (res !== null) {
+      rv = parseFloat(res[1]);
+    }
+  }
+
+  return rv;
+}
+
+/*** Mobile Utility functions ***/
+var _UA = navigator.userAgent;
+function isIDevice() {
+  return /iP(hone|ad)/.test(_UA);
+}
+
+function isMobile() {
+  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
+}
+
+function isIPhone() {
+  return /iP(hone|od)/.test(_UA);
+}
+
+function isAndroid() {
+  return /Android/.test(_UA);
+}
+
+;
+//Small subset of async
+var async = {};
+
+async.setImmediate = function (fn) {
+  setTimeout(fn, 0);
+};
+
+async.iterator = function (tasks) {
+  var makeCallback = function (index) {
+    var fn = function () {
+      if (tasks.length) {
+        tasks[index].apply(null, arguments);
+      }
+      return fn.next();
+    };
+    fn.next = function () {
+      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
+    };
+    return fn;
+  };
+  return makeCallback(0);
+};
+
+
+async.waterfall = function (tasks, callback) {
+  callback = callback || function () { };
+  if (!isArray(tasks)) {
+    var err = new Error('First argument to waterfall must be an array of functions');
+    return callback(err);
+  }
+  if (!tasks.length) {
+    return callback();
+  }
+  var wrapIterator = function (iterator) {
+    return function (err) {
+      if (err) {
+        callback.apply(null, arguments);
+        callback = function () {
+        };
+      }
+      else {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var next = iterator.next();
+        if (next) {
+          args.push(wrapIterator(next));
+        }
+        else {
+          args.push(callback);
+        }
+        async.setImmediate(function () {
+          iterator.apply(null, args);
+        });
+      }
+    };
+  };
+  wrapIterator(async.iterator(tasks))();
+};
+
+async.when = function (condition, callback) {
+  if (!isFunction(callback)) {
+    throw new Error("async.when error: missing callback argument");
+  }
+
+  var isAllowed = isFunction(condition) ? condition : function () {
+    return !!condition;
+  };
+
+  return function () {
+    var args = arrayLikeObjToArray(arguments);
+    var next = args.pop();
+
+    if (isAllowed.apply(null, args)) {
+      return callback.apply(this, arguments);
+    }
+
+    args.unshift(null);
+    return next.apply(null, args);
+  };
+};
+
+
+
 ;
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
@@ -2029,378 +2394,6 @@ module.exports = {
 
 //# sourceMappingURL=VPAIDHTML5Client.js.map
 ;
-/*jshint unused:false */
-"use strict";
-
-var NODE_TYPE_ELEMENT = 1;
-
-function noop(){ }
-
-function isNull(o) {
-  return o === null;
-}
-
-function isDefined(o){
-  return o !== undefined;
-}
-
-function isUndefined(o){
-  return o === undefined;
-}
-
-function isObject(obj) {
-  return typeof obj === 'object';
-}
-
-function isFunction(str){
-  return typeof str === 'function';
-}
-
-function isNumber(num){
-  return typeof num === 'number';
-}
-
-function isWindow(obj) {
-  return isObject(obj) && obj.window === obj;
-}
-
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]';
-}
-
-function isArrayLike(obj) {
-  if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
-    return false;
-  }
-
-  var length = obj.length;
-
-  if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
-    return true;
-  }
-
-  return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
-}
-
-function isString(str){
-  return typeof str === 'string';
-}
-
-function isEmptyString(str) {
-  return isString(str) && str.length === 0;
-}
-
-function isNotEmptyString(str) {
-  return isString(str) && str.length !== 0;
-}
-
-function arrayLikeObjToArray(args) {
-  return Array.prototype.slice.call(args);
-}
-
-function forEach(obj, iterator, context) {
-  var key, length;
-  if (obj) {
-    if (isFunction(obj)) {
-      for (key in obj) {
-        // Need to check if hasOwnProperty exists,
-        // as on IE8 the result of querySelectorAll is an object without a hasOwnProperty function
-        if (key !== 'prototype' && key !== 'length' && key !== 'name' && (!obj.hasOwnProperty || obj.hasOwnProperty(key))) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
-      for (key = 0, length = obj.length; key < length; key++) {
-        if (isPrimitive || key in obj) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    } else if (obj.forEach && obj.forEach !== forEach) {
-      obj.forEach(iterator, context, obj);
-    } else {
-      for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          iterator.call(context, obj[key], key, obj);
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-var SNAKE_CASE_REGEXP = /[A-Z]/g;
-function snake_case(name, separator) {
-  separator = separator || '_';
-  return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-    return (pos ? separator : '') + letter.toLowerCase();
-  });
-}
-
-function isValidEmail(email){
-  if(!isString(email)){
-    return false;
-  }
-  var EMAIL_REGEXP = /^[a-z0-9!#$%&'*+\/=?^_`{|}~.-]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
-  return EMAIL_REGEXP.test(email.trim());
-}
-
-function extend (obj) {
-  var arg, i, k;
-  for (i = 1; i < arguments.length; i++) {
-    arg = arguments[i];
-    for (k in arg) {
-      if (arg.hasOwnProperty(k)) {
-        if(isObject(obj[k]) && !isNull(obj[k]) && isObject(arg[k])){
-          obj[k] = extend({}, obj[k], arg[k]);
-        }else {
-          obj[k] = arg[k];
-        }
-      }
-    }
-  }
-  return obj;
-}
-
-function capitalize(s){
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function decapitalize(s) {
-  return s.charAt(0).toLowerCase() + s.slice(1);
-}
-
-/**
- * This method works the same way array.prototype.map works but if the transformer returns undefine, then
- * it won't be added to the transformed Array.
- */
-function transformArray(array, transformer) {
-  var transformedArray = [];
-
-  array.forEach(function(item, index){
-    var transformedItem = transformer(item, index);
-    if(isDefined(transformedItem)) {
-      transformedArray.push(transformedItem);
-    }
-  });
-
-  return transformedArray;
-}
-
-function toFixedDigits(num, digits) {
-  var formattedNum = num + '';
-  digits = isNumber(digits) ? digits : 0;
-  num = isNumber(num) ? num : parseInt(num);
-  if(isNumber(num) && !isNaN(num)){
-    formattedNum = num + '';
-    while(formattedNum.length < digits) {
-      formattedNum = '0' + formattedNum;
-    }
-    return formattedNum;
-  }
-  return NaN + '';
-}
-
-function throttle(callback, delay) {
-  var previousCall = new Date().getTime() - (delay + 1);
-  return function() {
-    var time = new Date().getTime();
-    if ((time - previousCall) >= delay) {
-      previousCall = time;
-      callback.apply(this, arguments);
-    }
-  };
-}
-
-function debounce (callback, wait) {
-  var timeoutId;
-
-  return function (){
-    if(timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(function(){
-      callback.apply(this, arguments);
-      timeoutId = undefined;
-    }, wait);
-  };
-}
-
-// a function designed to blow up the stack in a naive way
-// but it is ok for videoJs children components
-function treeSearch(root, getChildren, found){
-  var children = getChildren(root);
-  for (var i = 0; i < children.length; i++){
-    if (found(children[i])) {
-      return children[i];
-    }
-    else {
-      var el = treeSearch(children[i], getChildren, found);
-      if (el){
-        return el;
-      }
-    }
-  }
-}
-
-function echoFn(val) {
-  return function () {
-    return val;
-  };
-}
-
-//Note: Supported formats come from http://www.w3.org/TR/NOTE-datetime
-// and the iso8601 regex comes from http://www.pelagodesign.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-function isISO8601(value) {
-  if(isNumber(value)){
-    value = value + '';  //we make sure that we are working with strings
-  }
-
-  if(!isString(value)){
-    return false;
-  }
-
-  /*jslint maxlen: 500 */
-  var iso8086Regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-  return iso8086Regex.test(value.trim());
-}
-
-/**
- * Checks if the Browser is IE9 and below
- * @returns {boolean}
- */
-function isOldIE() {
-  var version = getInternetExplorerVersion(navigator);
-  if (version === -1) {
-    return false;
-  }
-
-  return version < 10;
-}
-
-/**
- * Returns the version of Internet Explorer or a -1 (indicating the use of another browser).
- * Source: https://msdn.microsoft.com/en-us/library/ms537509(v=vs.85).aspx
- * @returns {number} the version of Internet Explorer or a -1 (indicating the use of another browser).
- */
-function getInternetExplorerVersion(navigator) {
-  var rv = -1;
-
-  if (navigator.appName == 'Microsoft Internet Explorer') {
-    var ua = navigator.userAgent;
-    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
-    var res = re.exec(ua);
-    if (res !== null) {
-      rv = parseFloat(res[1]);
-    }
-  }
-
-  return rv;
-}
-
-/*** Mobile Utility functions ***/
-var _UA = navigator.userAgent;
-function isIDevice() {
-  return /iP(hone|ad)/.test(_UA);
-}
-
-function isMobile() {
-  return /iP(hone|ad|od)|Android|Windows Phone/.test(_UA);
-}
-
-function isIPhone() {
-  return /iP(hone|od)/.test(_UA);
-}
-
-function isAndroid() {
-  return /Android/.test(_UA);
-}
-
-;
-//Small subset of async
-var async = {};
-
-async.setImmediate = function (fn) {
-  setTimeout(fn, 0);
-};
-
-async.iterator = function (tasks) {
-  var makeCallback = function (index) {
-    var fn = function () {
-      if (tasks.length) {
-        tasks[index].apply(null, arguments);
-      }
-      return fn.next();
-    };
-    fn.next = function () {
-      return (index < tasks.length - 1) ? makeCallback(index + 1) : null;
-    };
-    return fn;
-  };
-  return makeCallback(0);
-};
-
-
-async.waterfall = function (tasks, callback) {
-  callback = callback || function () { };
-  if (!isArray(tasks)) {
-    var err = new Error('First argument to waterfall must be an array of functions');
-    return callback(err);
-  }
-  if (!tasks.length) {
-    return callback();
-  }
-  var wrapIterator = function (iterator) {
-    return function (err) {
-      if (err) {
-        callback.apply(null, arguments);
-        callback = function () {
-        };
-      }
-      else {
-        var args = Array.prototype.slice.call(arguments, 1);
-        var next = iterator.next();
-        if (next) {
-          args.push(wrapIterator(next));
-        }
-        else {
-          args.push(callback);
-        }
-        async.setImmediate(function () {
-          iterator.apply(null, args);
-        });
-      }
-    };
-  };
-  wrapIterator(async.iterator(tasks))();
-};
-
-async.when = function (condition, callback) {
-  if (!isFunction(callback)) {
-    throw new Error("async.when error: missing callback argument");
-  }
-
-  var isAllowed = isFunction(condition) ? condition : function () {
-    return !!condition;
-  };
-
-  return function () {
-    var args = arrayLikeObjToArray(arguments);
-    var next = args.pop();
-
-    if (isAllowed.apply(null, args)) {
-      return callback.apply(this, arguments);
-    }
-
-    args.unshift(null);
-    return next.apply(null, args);
-  };
-};
-
-
-
-;
 "use strict";
 
 var dom = {};
@@ -2766,20 +2759,20 @@ var playerUtils = {};
  */
 playerUtils.getPlayerSnapshot = function getPlayerSnapshot(player) {
   var tech = player.el().querySelector('.vjs-tech');
+
   var snapshot = {
     ended: player.ended(),
     src: player.currentSrc(),
     currentTime: player.currentTime(),
     type: player.currentType(),
     playing: !player.paused(),
-    suppressedTracks: getSuppressedTracks(player)
+    suppressedTracks: getSuppressedTracks(player),
+    techName: player.techName
   };
-
   if (tech) {
     snapshot.nativePoster = tech.poster;
     snapshot.style = tech.getAttribute('style');
   }
-
   return snapshot;
 
   /**** Local Functions ****/
@@ -2826,17 +2819,22 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
   }
 
   if (hasSrcChanged(player, snapshot)) {
+    // if the player technology has changed, reset it
+    if(player.techName !== snapshot.techName) {
+      player.loadTech(snapshot.techName);
+    }
+
     // on ios7, fiddling with textTracks too early will cause safari to crash
     player.one('contentloadedmetadata', restoreTracks);
+
+    player.one('canplay', tryToResume);
+    ensureCanplayEvtGetsFired();
 
     // if the src changed for ad playback, reset it
     player.src({src: snapshot.src, type: snapshot.type});
 
     // safari requires a call to `load` to pick up a changed source
     player.load();
-
-    // and then resume from the snapshots time once the original src has loaded
-    player.one('canplay', tryToResume);
 
   } else {
     restoreTracks();
@@ -2847,6 +2845,20 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
   }
 
   /*** Local Functions ***/
+
+  /**
+   * Sometimes firefox does not trigger the 'canplay' evt.
+   * This code ensure that it always gets triggered triggered.
+   */
+  function ensureCanplayEvtGetsFired() {
+    var timeoutId = setTimeout(function() {
+      player.trigger('canplay');
+    }, 1000);
+
+    player.one('canplay', function(){
+      clearTimeout(timeoutId);
+    });
+  }
 
   /**
    * Determine whether the player needs to be restored to its state
@@ -2947,6 +2959,7 @@ playerUtils.prepareForAds = function (player) {
   player.on('error', hideBlackPoster);//If there is an error in the player we remove the blackposter to show the err msg
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
+  player.on('vast.adError', hideBlackPoster);
   player.on('vast.adStart', addStyles);
   player.on('vast.adEnd', removeStyles);
   player.on('vast.adsCancel', removeStyles);
@@ -3446,12 +3459,20 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
 
   var settings = extend({}, defaultOpts, options || {});
 
-  if (isString(settings.url)) {
-    settings.url = echoFn(settings.url);
+  if(isUndefined(settings.adTagUrl) && isDefined(settings.url)){
+    settings.adTagUrl = settings.url;
   }
 
-  if (!isDefined(settings.url)) {
-    return trackAdError(new VASTError('on VideoJS VAST plugin, missing url on options object'));
+  if (isString(settings.adTagUrl)) {
+    settings.adTagUrl = echoFn(settings.adTagUrl);
+  }
+
+  if (isDefined(settings.adTagXML) && !isFunction(settings.adTagXML)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, the passed adTagXML option does not contain a function'));
+  }
+
+  if (!isDefined(settings.adTagUrl) && !isFunction(settings.adTagXML)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
 
   playerUtils.prepareForAds(player);
@@ -3466,11 +3487,6 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   player.on('vast.firstPlay', tryToPlayPrerollAd);
-
-  //If there is an error on the player, we reset the plugin.
-  player.on('error', function() {
-    player.trigger('vast.reset');
-  });
 
   player.on('vast.reset', function () {
     //If we are reseting the plugin, we don't want to restore the content
@@ -3505,8 +3521,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     });
 
     async.waterfall([
-      preparePlayerForAd,
       checkAdsEnabled,
+      preparePlayerForAd,
       playPrerollAd
     ], function (error, response) {
       if (error) {
@@ -3533,14 +3549,14 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function setupContentEvents() {
-      playerUtils.once(player, ['playing', 'vast.reset'], function (evt) {
+      playerUtils.once(player, ['playing', 'vast.reset', 'vast.firstPlay'], function (evt) {
         if (evt.type !== 'playing') {
           return;
         }
 
         player.trigger('vast.contentStart');
 
-        playerUtils.once(player, ['ended', 'vast.reset'], function (evt) {
+        playerUtils.once(player, ['ended', 'vast.reset', 'vast.firstPlay'], function (evt) {
           if (evt.type === 'ended') {
             player.trigger('vast.contentEnd');
           }
@@ -3618,7 +3634,7 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
   }
 
   function getVastResponse(callback) {
-    vast.getVASTResponse(settings.url(), callback);
+    vast.getVASTResponse(settings.adTagUrl ? settings.adTagUrl() : settings.adTagXML, callback);
   }
 
   function playAd(vastResponse, callback) {
@@ -3659,7 +3675,8 @@ vjs.plugin('vastClient', function VASTPlugin(options) {
     }
 
     function preventManualProgress() {
-      var PROGRESS_THRESHOLD = 1;
+      //IOS video clock is very unreliable and we need a 3 seconds threshold to ensure that the user forwarded/rewound the ad
+      var PROGRESS_THRESHOLD = 3;
       var previousTime = 0;
       var tech = player.el().querySelector('.vjs-tech');
       var skipad_attempts = 0;
@@ -3777,14 +3794,12 @@ vjs.BlackPoster.prototype.createEl = function(){
 ;
 function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
   if (!(this instanceof VPAIDAdUnitWrapper)) {
-    return new VPAIDAdUnitWrapper(vpaidAdUnit);
+    return new VPAIDAdUnitWrapper(vpaidAdUnit, opts);
   }
   sanityCheck(vpaidAdUnit, opts);
-  var defaultOpts = {
-    responseTimeout: 5000
-  };
 
-  this.options = extend({}, defaultOpts, opts || {});
+  this.options = extend({}, opts);
+
   this._adUnit = vpaidAdUnit;
 
   /*** Local Functions ***/
@@ -3793,8 +3808,12 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
       throw new VASTError('on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
     }
 
-    if (opts && !isObject(opts)) {
+    if (!isObject(opts)) {
       throw new VASTError("on VPAIDAdUnitWrapper, expected options hash  but got '" + opts + "'");
+    }
+
+    if (!("responseTimeout" in opts) || !isNumber(opts.responseTimeout) ){
+      throw new VASTError("on VPAIDAdUnitWrapper, expected responseTimeout in options");
     }
   }
 }
@@ -4146,12 +4165,8 @@ function VPAIDIntegrator(player, settings) {
   this.player = player;
   this.containerEl = createVPAIDContainerEl(player);
   this.options = {
-    responseTimeout: 2000,
-    VPAID_VERSION: {
-      full: '2.0',
-      major: 2,
-      minor: 0
-    }
+    responseTimeout: 5000,
+    VPAID_VERSION: '2.0'
   };
   this.settings = settings;
 
@@ -4185,10 +4200,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   tech = this._findSupportedTech(vastResponse, this.settings);
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
-  player.on('error', triggerVpaidAdEnd);
   player.on('vast.adsCancel', triggerVpaidAdEnd);
   player.one('vpaid.adEnd', function(){
-    player.off('error', triggerVpaidAdEnd);
     player.off('vast.adsCancel', triggerVpaidAdEnd);
     removeAdUnit();
   });
@@ -4283,13 +4296,14 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
   var player = this.player;
   var vjsTechEl = player.el().querySelector('.vjs-tech');
+  var responseTimeout = this.settings.responseTimeout || this.options.responseTimeout;
   tech.loadAdUnit(this.containerEl, vjsTechEl, function (error, adUnit) {
     if (error) {
       return next(error, adUnit, vastResponse);
     }
 
     try {
-      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src});
+      var WrappedAdUnit = new VPAIDAdUnitWrapper(adUnit, {src: tech.mediaFile.src, responseTimeout: responseTimeout});
       var techClass = 'vjs-' + tech.name + '-ad';
       dom.addClass(player.el(), techClass);
       player.one('vpaid.adEnd', function() {
@@ -4317,7 +4331,7 @@ VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback
 };
 
 VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, next) {
-  adUnit.handshakeVersion('2.0', function (error, version) {
+  adUnit.handshakeVersion(this.options.VPAID_VERSION, function (error, version) {
     if (error) {
       return next(error, adUnit, vastResponse);
     }
@@ -4355,29 +4369,35 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   var that = this;
 
   adUnit.on('AdSkipped', function () {
+    player.trigger('vpaid.AdSkipped');
     tracker.trackSkip();
   });
 
   adUnit.on('AdImpression', function () {
+    player.trigger('vpaid.AdImpression');
     tracker.trackImpressions();
   });
 
   adUnit.on('AdStarted', function () {
+    player.trigger('vpaid.AdStarted');
     tracker.trackCreativeView();
     notifyPlayToPlayer();
   });
 
   adUnit.on('AdVideoStart', function () {
+    player.trigger('vpaid.AdVideoStart');
     tracker.trackStart();
     notifyPlayToPlayer();
   });
 
   adUnit.on('AdPlaying', function () {
+    player.trigger('vpaid.AdPlaying');
     tracker.trackResume();
     notifyPlayToPlayer();
   });
 
   adUnit.on('AdPaused', function () {
+    player.trigger('vpaid.AdPaused');
     tracker.trackPause();
     notifyPauseToPlayer();
   });
@@ -4398,22 +4418,27 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   }
 
   adUnit.on('AdVideoFirstQuartile', function () {
+    player.trigger('vpaid.AdVideoFirstQuartile');
     tracker.trackFirstQuartile();
   });
 
   adUnit.on('AdVideoMidpoint', function () {
+    player.trigger('vpaid.AdVideoMidpoint');
     tracker.trackMidpoint();
   });
 
   adUnit.on('AdVideoThirdQuartile', function () {
+    player.trigger('vpaid.AdVideoThirdQuartile');
     tracker.trackThirdQuartile();
   });
 
   adUnit.on('AdVideoComplete', function () {
+    player.trigger('vpaid.AdVideoComplete');
     tracker.trackComplete();
   });
 
   adUnit.on('AdClickThru', function (data) {
+    player.trigger('vpaid.AdClickThru');
     var url = data.url;
     var playerHandles = data.playerHandles;
     var clickThruUrl = isNotEmptyString(url) ? url : generateClickThroughURL(vastResponse.clickThrough);
@@ -4434,25 +4459,30 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   });
 
   adUnit.on('AdUserAcceptInvitation', function () {
+    player.trigger('vpaid.AdUserAcceptInvitation');
     tracker.trackAcceptInvitation();
     tracker.trackAcceptInvitationLinear();
   });
 
   adUnit.on('AdUserClose', function () {
+    player.trigger('vpaid.AdUserClose');
     tracker.trackClose();
     tracker.trackCloseLinear();
   });
 
   adUnit.on('AdUserMinimize', function () {
+    player.trigger('vpaid.AdUserMinimize');
     tracker.trackCollapse();
   });
 
   adUnit.on('AdError', function () {
+    player.trigger('vpaid.AdError');
     //NOTE: we track errors code 901, as noted in VAST 3.0
     tracker.trackErrorWithCode(901);
   });
 
   adUnit.on('AdVolumeChange', function () {
+    player.trigger('vpaid.AdVolumeChange');
     var lastVolume = player.volume();
     adUnit.getAdVolume(function (error, currentVolume) {
       if (currentVolume === 0 && lastVolume > 0) {
@@ -4515,9 +4545,12 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
   /*** Local function ***/
   function updateSkipButtonState() {
+    player.trigger('vpaid.AdSkippableStateChange');
     adUnit.getAdSkippableState(function (error, isSkippable) {
       if (isSkippable) {
-        addSkipButton(player);
+        if (!skipButton) {
+          addSkipButton(player);
+        }
       } else {
         removeSkipButton(player);
       }
@@ -4578,6 +4611,7 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
     }
 
     function updatePlayerVolume() {
+      player.trigger('vpaid.AdVolumeChange');
       adUnit.getAdVolume(function (error, vol) {
         if (error) {
           logError(error);
@@ -4611,7 +4645,9 @@ VPAIDIntegrator.prototype._startAd = function (adUnit, vastResponse, next) {
 };
 
 VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next) {
+  var player = this.player;
   adUnit.on('AdStopped', function () {
+   player.trigger('vpaid.AdStopped');
    finishPlayingAd(null);
   });
 
@@ -4643,7 +4679,6 @@ function logError(error) {
   }
 }
 
-
 ;
 function Ad(adJTree) {
   if (!(this instanceof Ad)) {
@@ -4662,6 +4697,41 @@ function Ad(adJTree) {
   }
 }
 ;
+function Companion(companionJTree) {
+  if (!(this instanceof Companion)) {
+    return new Companion(companionJTree);
+  }
+
+  //Required Fields
+  this.creativeType = companionJTree.staticResource.attr('creativeType');
+  this.creativeResource = xml.keyValue(companionJTree.staticResource);
+
+  // Optional Fields
+  this.id = companionJTree.attr('id');
+  this.width = companionJTree.attr('width');
+  this.height = companionJTree.attr('height');
+  this.expandedWidth = companionJTree.attr('expandedWidth');
+  this.expandedHeight = companionJTree.attr('expandedHeight');
+  this.scalable = companionJTree.attr('scalable');
+  this.maintainAspectRatio = companionJTree.attr('maintainAspectRatio');
+  this.minSuggestedDuration = companionJTree.attr('minSuggestedDuration');
+  this.apiFramework = companionJTree.attr('apiFramework');
+  this.companionClickThrough = xml.keyValue(companionJTree.companionClickThrough);
+  this.trackingEvents = parseTrackingEvents(companionJTree.trackingEvents && companionJTree.trackingEvents.tracking);
+
+  /*** Local functions ***/
+  function parseTrackingEvents(trackingEvents) {
+    var trackings = [];
+    if (isDefined(trackingEvents)) {
+      trackingEvents = isArray(trackingEvents) ? trackingEvents : [trackingEvents];
+      trackingEvents.forEach(function (trackingData) {
+        trackings.push(new TrackingEvent(trackingData));
+      });
+    }
+    return trackings;
+  }
+}
+;
 
 function Creative(creativeJTree) {
   if(!(this instanceof Creative)) {
@@ -4675,6 +4745,17 @@ function Creative(creativeJTree) {
 
   if(creativeJTree.linear) {
     this.linear = new Linear(creativeJTree.linear);
+  }
+
+  if (creativeJTree.companionAds) {
+    var companions = [];
+    var companionAds = creativeJTree.companionAds && creativeJTree.companionAds.companion;
+    companionAds = isArray(companionAds) ? companionAds : [companionAds];
+    companionAds.forEach(function (companionData) {
+      companions.push(new Companion(companionData));
+    });
+
+    this.companionAds = companions;
   }
 }
 ;
@@ -4815,17 +4896,22 @@ function VASTClient(options) {
   this.errorURLMacros = [];
 }
 
-VASTClient.prototype.getVASTResponse = function getVASTResponse(url, callback) {
+VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callback) {
   var that = this;
 
-  //We reset the errorURLMacros before doing anything.
-  this.errorURLMacros = [];
+  var error = sanityCheck(adTagUrl, callback);
+  if (error) {
+    if (isFunction(callback)) {
+      return callback(error);
+    }
+    throw error;
+  }
 
   async.waterfall([
-      this._getAd.bind(this, url),
+      this._getVASTAd.bind(this, adTagUrl),
       buildVASTResponse
     ],
-    this._sendVASTResponse(callback));
+    callback);
 
   /*** Local functions ***/
   function buildVASTResponse(adsChain, cb) {
@@ -4836,189 +4922,179 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse(url, callback) {
       cb(e);
     }
   }
-};
 
-VASTClient.prototype._sendVASTResponse = function sendVASTResponse(callback) {
-  var that = this;
-  callback = callback || noop;
-
-  return function (error, response) {
-    if (error) {
-      vastUtil.track(that.errorURLMacros, {ERRORCODE: error.code || 900});  //900 <== Undefined error
-    }
-    callback(error, response);
-  };
-};
-
-VASTClient.prototype._getAd = function getVASTAd(url, callback) {
-  var error;
-  var that = this;
-  var options = isObject(url) && !isNull(url) ? url : {url: url};
-  options.ads = options.ads || [];
-  error = sanityCheck(options, callback);
-  if (error) {
-    if (isFunction(callback)) {
-      return callback(error, null);
-    }
-    throw error;
-  }
-
-  async.waterfall([
-    requestVASTXml,
-    buildAd
-  ], callback);
-
-  /*** local function ***/
-  function sanityCheck(opts, cb) {
-    if (!isString(opts.url)) {
-      return new VASTError('on VASTClient._getAd, missing video tag URL');
+  function sanityCheck(adTagUrl, cb) {
+    if (!adTagUrl) {
+      return new VASTError('on VASTClient.getVASTResponse, missing ad tag URL');
     }
 
     if (!isFunction(cb)) {
-      return new VASTError('on VASTClient._getAd, missing callback function');
-    }
-
-    if (opts.ads.length >= that.WRAPPER_LIMIT) {
-      return new VASTError("on VASTClient._getAd, players wrapper limit reached (the limit is " + that.WRAPPER_LIMIT + ")", 302);
-    }
-  }
-
-  function requestVASTXml(callback) {
-    that._requestVASTXml(options.url, callback);
-  }
-
-  function buildAd(adXML, callback) {
-    var adTree;
-    try {
-      adTree = that._buildVastTree(adXML);
-      getValidAd(adTree.ads, options.ads, callback);
-    } catch (e) {
-      callback(e);
-    }
-
-    /*** local Functions  ***/
-    function getValidAd(possibleAds, previousAds, callback) {
-      getAd(possibleAds.shift(), previousAds, function (error, adChain) {
-        if (error) {
-          if (possibleAds.length > 0) {
-            return getValidAd(possibleAds, previousAds, callback);
-          }
-          return callback(error);
-        }
-        callback(null, adChain);
-      });
-    }
-
-    function getAd(adTree, previousAds, callback) {
-      try {
-        var ad = that._buildAd(adTree);
-
-        if (ad.wrapper) {
-          return getNextAd(ad, previousAds, callback);
-        }
-        return callback(null, previousAds.concat(ad));
-      } catch (e) {
-        callback(e);
-      }
-    }
-
-    function getNextAd(ad, previousAds, callback) {
-      return that._getAd({
-        url: ad.wrapper.VASTAdTagURI,
-        ads: previousAds.concat(ad)
-      }, callback);
+      return new VASTError('on VASTClient.getVASTResponse, missing callback function');
     }
   }
 };
 
-VASTClient.prototype._requestVASTXml = function requestVASTXml(url, callback) {
-  try{
-    http.get(url, function (error, response, status){
-      if(error) {
-        return callback(new VASTError("on VASTClient.requestVastXML, HTTP request error with status '" + status + "'", 301));
-      }
-      callback(null, response);
-    }, {
-      withCredentials: true
-    });
-  }catch(e){
-    callback(e);
-  }
-};
-
-VASTClient.prototype._buildVastTree = function buildVastTree(xmlStr) {
-  var vastTree, vastVersion;
-
-  try {
-    vastTree = xml.toJXONTree(xmlStr);
-    vastVersion = xml.attr(vastTree, 'version');
-    vastTree.ads = isArray(vastTree.ad) ? vastTree.ad : [vastTree.ad];
-
-  } catch (e) {
-    throw new VASTError("on VASTClient.buildVastTree, error parsing xml", 100);
-  }
-
-  if (!vastTree.ad) {
-    throw new VASTError('on VASTClient.buildVastTree, no Ad in VAST tree', 303);
-  }
-
-  if(vastVersion && (vastVersion != 3 && vastVersion != 2)){
-    throw new VASTError('on VASTClient.buildVastTree, not supported VAST version "'+vastVersion+'"', 102);
-  }
-
-  return vastTree;
-
-};
-
-VASTClient.prototype._buildAd = function buildAd(adJxonTree) {
-  var ad;
+VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   var that = this;
 
-  try {
-    ad = new Ad(adJxonTree);
-  } catch (e) {
-    throw new VASTError('on VASTClient._buildAd, ' + e.message, 900);
-  }
-
-  addErrorUrlMacros(ad);
-  validateAd(ad);
-
-  return ad;
-  /*** Local Functions ***/
-
-  function addErrorUrlMacros(ad) {
-    if(ad.wrapper && ad.wrapper.error) {
-      that.errorURLMacros.push(ad.wrapper.error);
+  getAdWaterfall(adTagUrl, function (error, vastTree) {
+    var waterfallAds = vastTree && isArray(vastTree.ads) ? vastTree.ads : null;
+    if (error) {
+      that._trackError(error, waterfallAds);
+      return callback(error, waterfallAds);
     }
 
-    if(ad.inLine && ad.inLine.error){
-      that.errorURLMacros.push(ad.inLine.error);
+    getAd(waterfallAds.shift(), [], waterfallHandler);
+
+    /*** Local functions ***/
+    function waterfallHandler(error, adChain) {
+      if (error) {
+        that._trackError(error, adChain);
+        if (waterfallAds.length > 0) {
+          getAd(waterfallAds.shift(),[], waterfallHandler);
+        } else {
+          callback(error, adChain);
+        }
+      } else {
+        callback(null, adChain);
+      }
+    }
+  });
+
+  /*** Local functions ***/
+  function getAdWaterfall(adTagUrl, callback) {
+    var requestVastXML = that._requestVASTXml.bind(that, adTagUrl);
+    async.waterfall([
+      requestVastXML,
+      buildVastWaterfall
+    ], callback);
+  }
+
+  function buildVastWaterfall(xmlStr, callback) {
+    var vastTree;
+    try {
+      vastTree = xml.toJXONTree(xmlStr);
+      vastTree.ads = isArray(vastTree.ad) ? vastTree.ad : [vastTree.ad];
+      callback(validateVASTTree(vastTree), vastTree);
+    } catch (e) {
+      callback(new VASTError("on VASTClient.getVASTAd.buildVastWaterfall, error parsing xml", 100), null);
+    }
+  }
+
+  function validateVASTTree(vastTree) {
+    var vastVersion = xml.attr(vastTree, 'version');
+
+    if (!vastTree.ad) {
+      return new VASTError('on VASTClient.getVASTAd.validateVASTTree, no Ad in VAST tree', 303);
+    }
+
+    if (vastVersion && (vastVersion != 3 && vastVersion != 2)) {
+      return new VASTError('on VASTClient.getVASTAd.validateVASTTree, not supported VAST version "' + vastVersion + '"', 102);
+    }
+
+    return null;
+  }
+
+  function getAd(adTagUrl, adChain, callback) {
+    if (adChain.length >= that.WRAPPER_LIMIT) {
+      return callback(new VASTError("on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is " + that.WRAPPER_LIMIT + ")", 302), adChain);
+    }
+
+    async.waterfall([
+      function (next) {
+        if (isString(adTagUrl)) {
+          requestVASTAd(adTagUrl, next);
+        } else {
+          next(null, adTagUrl);
+        }
+      },
+      buildAd
+    ], function (error, ad) {
+      if (ad) {
+        adChain.push(ad);
+      }
+
+      if (error) {
+        return callback(error, adChain);
+      }
+
+      if (ad.wrapper) {
+        return getAd(ad.wrapper.VASTAdTagURI, adChain, callback);
+      }
+
+      return callback(null, adChain);
+    });
+  }
+
+  function buildAd(adJxonTree, callback) {
+    try {
+      var ad = new Ad(adJxonTree);
+      callback(validateAd(ad), ad);
+    } catch (e) {
+      callback(new VASTError('on VASTClient.getVASTAd.buildAd, error parsing xml', 100), null);
     }
   }
 
   function validateAd(ad) {
     var wrapper = ad.wrapper;
     var inLine = ad.inLine;
+    var errMsgPrefix = 'on VASTClient.getVASTAd.validateAd, ';
 
     if (inLine && wrapper) {
-      throw new VASTError('on VASTClient._buildAd, InLine and Wrapper both found on the same Ad', 101);
+      return new VASTError(errMsgPrefix +"InLine and Wrapper both found on the same Ad", 101);
     }
 
     if (!inLine && !wrapper) {
-      throw new VASTError('on VASTClient._buildAd, nor wrapper nor inline elements found on the Ad', 101);
+      return new VASTError(errMsgPrefix + "nor wrapper nor inline elements found on the Ad", 101);
     }
 
-    if (inLine) {
-      if (inLine.creatives.length === 0) {
-        throw new VASTError("on VASTClient._buildAd, missing creative in InLine element", 101);
-      }
+    if (inLine && inLine.creatives.length === 0) {
+      return new VASTError(errMsgPrefix + "missing creative in InLine element", 101);
     }
 
-    if (wrapper) {
-      if (!wrapper.VASTAdTagURI) {
-        throw new VASTError("on VASTClient._buildAd, missing 'VASTAdTagURI' in wrapper", 101);
-      }
+    if (wrapper && !wrapper.VASTAdTagURI) {
+      return new VASTError(errMsgPrefix + "missing 'VASTAdTagURI' in wrapper", 101);
     }
+  }
+
+  function requestVASTAd(adTagUrl, callback) {
+    that._requestVASTXml(adTagUrl, function (error, xmlStr) {
+      if (error) {
+        return callback(error);
+      }
+      try {
+        var vastTree = xml.toJXONTree(xmlStr);
+        callback(validateVASTTree(vastTree), vastTree.ad);
+      } catch (e) {
+        callback(new VASTError("on VASTClient.getVASTAd.requestVASTAd, error parsing xml", 100));
+      }
+    });
+  }
+};
+
+VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callback) {
+  try {
+    if (isFunction(adTagUrl)) {
+      adTagUrl(requestHandler);
+    } else {
+      http.get(adTagUrl, requestHandler, {
+        withCredentials: true
+      });
+    }
+  } catch (e) {
+    callback(e);
+  }
+
+  /*** Local functions ***/
+  function requestHandler(error, response, status) {
+    if (error) {
+      var errMsg = isDefined(status) ?
+      "on VASTClient.requestVastXML, HTTP request error with status '" + status + "'" :
+        "on VASTClient.requestVastXML, Error getting the the VAST XML with he passed adTagXML fn";
+      return callback(new VASTError(errMsg, 301), null);
+    }
+
+    callback(null, response);
   }
 };
 
@@ -5039,20 +5115,41 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
   function validateResponse(response) {
     var progressEvents = response.trackingEvents.progress;
 
-    if(!response.hasLinear()){
+    if (!response.hasLinear()) {
       throw new VASTError("on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
     }
 
-    if (!response.duration) {
+    if (response.duration === undefined) {
       throw new VASTError("on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
     }
 
     if (progressEvents) {
-      progressEvents.forEach(function(progressEvent){
+      progressEvents.forEach(function (progressEvent) {
         if (!isNumber(progressEvent.offset)) {
           throw new VASTError("on VASTClient._buildVASTResponse, missing or wrong offset attribute on progress tracking event", 101);
         }
       });
+    }
+  }
+};
+
+VASTClient.prototype._trackError = function (error, adChain) {
+  if (!isArray(adChain) || adChain.length === 0) { //There is nothing to track
+    return;
+  }
+
+  var errorURLMacros = [];
+  adChain.forEach(addErrorUrlMacros);
+  vastUtil.track(errorURLMacros, {ERRORCODE: error.code || 900});  //900 <== Undefined error
+
+  /*** Local functions  ***/
+  function addErrorUrlMacros(ad) {
+    if (ad.wrapper && ad.wrapper.error) {
+      errorURLMacros.push(ad.wrapper.error);
+    }
+
+    if (ad.inLine && ad.inLine.error) {
+      errorURLMacros.push(ad.inLine.error);
     }
   }
 };
@@ -5175,11 +5272,16 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('volumechange', trackVolumeChange);
 
   playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adSkip'], function(evt){
+    if(evt.type === 'vast.adEnd'){
+      tracker.trackComplete();
+    }
+  });
+
   return callback(null, adMediaFile, response);
 
   /*** Local Functions ***/
   function unbindEvents() {
-    tracker.trackComplete();
     player.off('fullscreenchange', trackFullscreenChange);
     player.off('vast.adStart', trackImpressions);
     player.off('pause', trackPause);
@@ -5197,8 +5299,9 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackPause() {
     //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
-    //      We should not track this pause event because it makes the VAST tracking confusing
-    if(player.currentTime() === player.duration()){
+    //      We should not track this pause event because it makes the VAST tracking confusing again we use a
+    //      Threshold of 2 seconds to prevent false positives on IOS.
+    if (Math.abs(player.duration() - player.currentTime()) < 2) {
       return;
     }
 
@@ -5248,7 +5351,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     player.el().appendChild(skipButton);
     player.on('timeupdate', updateSkipButton);
 
-    playerUtils.once(player, ['ended', 'error'], removeSkipButton);
+    playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
 
     function removeSkipButton() {
       player.off('timeupdate', updateSkipButton);
@@ -5263,7 +5366,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     skipButton.onclick = function (e) {
       if (dom.hasClass(skipButton, 'enabled')) {
         tracker.trackSkip();
-        player.trigger('ended');//We trigger the end of the ad playing
+        player.trigger('vast.adSkip');
       }
 
       //We prevent event propagation to avoid problems with the clickThrough and so on
@@ -5297,7 +5400,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
   player.el().insertBefore(blocker, player.controlBar.el());
   player.on('timeupdate', updateBlocker);
-  playerUtils.once(player, ['ended', 'error'], removeBlocker);
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeBlocker);
 
   return callback(null, mediaFile, tracker, response);
 
@@ -5354,6 +5457,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
   var player = this.player;
 
+  player.preload("auto"); //without preload=auto the durationchange event is never fired
   player.src(source);
 
   playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
@@ -5375,8 +5479,8 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
       player.trigger('vast.adStart');
 
-      playerUtils.once(player, ['ended', 'vast.adsCancel'], function (evt) {
-        if(evt.type === 'ended'){
+      playerUtils.once(player, ['ended', 'vast.adsCancel', 'vast.adSkip'], function (evt) {
+        if(evt.type === 'ended' || evt.type === 'vast.adSkip'){
           callback(null, response);
         }
         //NOTE: if the ads get cancel we do nothing
@@ -5388,7 +5492,6 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 VASTIntegrator.prototype._trackError = function trackError(error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
-
 
 ;
 (function (window) {
@@ -5578,9 +5681,9 @@ function VASTTracker(assetURI, vastResponse) {
   this.assetURI = assetURI;
   this.progress = 0;
   this.quartiles = {
-    firstQuartile: Math.round(25 * vastResponse.duration) / 100,
-    midpoint: Math.round(50 * vastResponse.duration) / 100,
-    thirdQuartile: Math.round(75 * vastResponse.duration) / 100
+    firstQuartile: {tracked: false, time: Math.round(25 * vastResponse.duration) / 100},
+    midpoint: {tracked: false, time: Math.round(50 * vastResponse.duration) / 100},
+    thirdQuartile: {tracked: false, time: Math.round(75 * vastResponse.duration) / 100}
   };
 
   /*** Local Functions ***/
@@ -5626,22 +5729,27 @@ VASTTracker.prototype.trackEvent = function trackEvent(eventName, trackOnce) {
   }
 };
 
-VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
+VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   var events = [];
   var ONCE = true;
   var ALWAYS = false;
   var trackingEvents = this.response.trackingEvents;
 
-  if (isNumber(newProgress)) {
-    addTrackEvent('start', ONCE, newProgress > 0);
-    addTrackEvent('rewind', ALWAYS, this.progress > newProgress);
-    addQuartileEvents.call(this, newProgress);
-    trackProgressEvents.call(this, newProgress);
+  if (isNumber(newProgressInMs)) {
+    addTrackEvent('start', ONCE, newProgressInMs > 0);
+    addTrackEvent('rewind', ALWAYS, hasRewound(this.progress, newProgressInMs));
+    addQuartileEvents.call(this, newProgressInMs);
+    trackProgressEvents.call(this, newProgressInMs);
     trackEvents.call(this);
-    this.progress = newProgress;
+    this.progress = newProgressInMs;
   }
 
   /*** Local function ***/
+  function hasRewound(currentProgress, newProgress) {
+    var REWIND_THRESHOLD = 3000; //IOS video clock is very unreliable and we need a 3 seconds threshold to ensure that there was a rewind an that it was on purpose.
+    return currentProgress > newProgressInMs && Math.abs(newProgress - currentProgress) > REWIND_THRESHOLD;
+  }
+
   function addTrackEvent(eventName, trackOnce, canBeAdded) {
     if (trackingEvents[eventName] && canBeAdded) {
       events.push({
@@ -5652,10 +5760,33 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
   }
 
   function addQuartileEvents(progress) {
-    forEach(this.quartiles, function (quartileTime, eventName) {
-      //We only fire the quartile event if the progress is bigger than the quartile time by one second at most.
-      addTrackEvent(eventName, ONCE, progress >= quartileTime && progress <= (quartileTime + 1000));
-    });
+    var quartiles = this.quartiles;
+    var firstQuartile = this.quartiles.firstQuartile;
+    var midpoint = this.quartiles.midpoint;
+    var thirdQuartile = this.quartiles.thirdQuartile;
+
+    if (!firstQuartile.tracked) {
+      trackQuartile('firstQuartile', progress);
+    } else if (!midpoint.tracked) {
+      trackQuartile('midpoint', progress);
+    } else {
+      trackQuartile('thirdQuartile', progress);
+    }
+
+    /*** Local function ***/
+    function trackQuartile(quartileName, progress){
+      var quartile = quartiles[quartileName];
+      if(canBeTracked(quartile, progress)){
+        quartile.tracked = true;
+        addTrackEvent(quartileName, ONCE, true);
+      }
+    }
+  }
+
+  function canBeTracked(quartile, progress) {
+    var quartileTime = quartile.time;
+    //We only fire the quartile event if the progress is bigger than the quartile time by 5 seconds at most.
+    return progress >= quartileTime && progress <= (quartileTime + 5000);
   }
 
   function trackProgressEvents(progress) {
@@ -5684,21 +5815,13 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
 };
 
 [
-  'start',
   'rewind',
   'fullscreen',
   'exitFullscreen',
-  'complete',
   'pause',
   'resume',
-  'close',
-  'closeLinear',
-  'skip',
   'mute',
   'unmute',
-  'firstQuartile',
-  'midpoint',
-  'thirdQuartile',
   'acceptInvitation',
   'acceptInvitationLinear',
   'collapse',
@@ -5708,6 +5831,34 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgress) {
       this.trackEvent(eventName);
     };
   });
+
+[
+  'start',
+  'skip',
+  'close',
+  'closeLinear'
+].forEach(function (eventName) {
+    VASTTracker.prototype['track' + capitalize(eventName)] = function () {
+      this.trackEvent(eventName, true);
+    };
+  });
+
+[
+  'firstQuartile',
+  'midpoint',
+  'thirdQuartile'
+].forEach(function (quartile) {
+    VASTTracker.prototype['track' + capitalize(quartile)] = function () {
+      this.quartiles[quartile].tracked = true;
+      this.trackEvent(quartile, true);
+    };
+  });
+
+VASTTracker.prototype.trackComplete = function () {
+  if(this.quartiles.thirdQuartile.tracked){
+    this.trackEvent('complete', true);
+  }
+};
 
 VASTTracker.prototype.trackErrorWithCode = function trackErrorWithCode(errorcode) {
   if (isNumber(errorcode)) {
@@ -5840,15 +5991,15 @@ var vastUtil = {
 
     /*** local functions ***/
     function parseHoursToMs(hourStr) {
-      return parseInt(hourStr) * 60 * 60 * 1000;
+      return parseInt(hourStr, 10) * 60 * 60 * 1000;
     }
 
     function parseMinToMs(minStr) {
-      return parseInt(minStr) * 60 * 1000;
+      return parseInt(minStr, 10) * 60 * 1000;
     }
 
     function parseSecToMs(secStr) {
-      return parseInt(secStr) * 1000;
+      return parseInt(secStr, 10) * 1000;
     }
   },
 
