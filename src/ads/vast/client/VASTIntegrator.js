@@ -302,7 +302,6 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   /**** local functions ******/
   function playAd() {
-    player.play();
     playerUtils.once(player, ['playing', 'vast.adsCancel'], function (evt) {
       if(evt.type === 'vast.adsCancel'){
         return;
@@ -317,6 +316,7 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
         //NOTE: if the ads get cancel we do nothing
       });
     });
+    player.play();
   }
 };
 
