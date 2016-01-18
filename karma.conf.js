@@ -1,3 +1,9 @@
+var istanbul = require('browserify-istanbul');
+var config = require('./build/config');
+
+var defaultVersion = config.versions[0];
+var defaultVideoJs = config.versionsMap[defaultVersion] + 'video.js';
+
 module.exports = function (karma) {
   karma.set({
     /**
@@ -5,15 +11,30 @@ module.exports = function (karma) {
      */
     basePath: './',
 
+    files: [
+        defaultVideoJs,
+        'test/test-utils.css',
+        'test/**/*.spec.js'
+    ],
     /**
      * This is the list of file patterns to load into the browser during testing.
      */
-    files: [],
-    exclude: [],
-    frameworks: ['mocha', 'chai-sinon'],
+    frameworks: [ 'browserify', 'mocha', 'chai-sinon'],
 
-    preprocessors: {},
-
+    preprocessors: {
+      'test/**/*.js': [ 'browserify' ]
+    },
+    browserify: {
+      paths: ['src/scripts', 'bower_components'],
+      debug: true,
+      transform: [ ['babelify', {
+        presets: ["es2015"],
+        only: /VPAIDFLASHClient/
+        }],
+        istanbul({
+            ignore: ['**/node_modules/**', '**/test/**', '**/bower_components/**'],
+        }) ]
+    },
     logLevel: 'ERROR',
     /**
      * How to report, by default.
@@ -29,10 +50,10 @@ module.exports = function (karma) {
     urlRoot: '/',
 
     /**
-     * Disable file watching by default.
+     * Enable file watching by default.
      */
-    autoWatch: false,
-
+    autoWatch: true,
+    singleRun: false,
     /**
      * The list of browsers to launch to test on. This includes only "Firefox" by
      * default, but other browser names include:

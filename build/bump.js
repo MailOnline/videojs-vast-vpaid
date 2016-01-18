@@ -1,16 +1,20 @@
-var gulp = require('gulp');
-var path = require('path');
-var config = require('./config');
-var bump = require('gulp-bump');
+'use strict';
+
+var bump  = require('gulp-bump');
+var gulp  = require('gulp');
 var gutil = require('gulp-util');
-var git = require('gulp-git');
-var del = require('del');
+
+var config = require('./config');
 
 gulp.task('bump', function () {
-  var bumpType = config.options.type;
 
   return gulp.src(['./bower.json', './package.json'])
-    .pipe(bump({version: config.options.version}).on('error', gutil.log))
-    .pipe(bump({type: bumpType}).on('error', gutil.log))
+    .pipe(bump({
+      version: config.options.version
+      }).on('error', gutil.log))
+    .pipe(bump({
+      type: config.options.type
+      }).on('error', gutil.log))
     .pipe(gulp.dest('./'));
+
 });
