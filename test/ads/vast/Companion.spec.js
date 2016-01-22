@@ -14,7 +14,7 @@ describe("Companion", function(){
     it("must contain the static resource and mime type", function(){
       var companionXML = '<Companion><StaticResource creativeType="image/jpeg"><![CDATA[http://www.example.com/image.jpg]]></StaticResource></Companion>';
       var companion = new Companion(xml.toJXONTree(companionXML));
-      assert.equal(companion.creativeResource, "http://www.example.com/image.jpg");
+      assert.equal(companion.staticResource, "http://www.example.com/image.jpg");
       assert.equal(companion.creativeType, "image/jpeg");
     });
   });
