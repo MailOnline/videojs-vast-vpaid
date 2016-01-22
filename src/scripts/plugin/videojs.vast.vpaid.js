@@ -252,6 +252,7 @@ module.exports = function VASTPlugin(options) {
       preventManualProgress();
     }
 
+    player.vast.vastResponse = vastResponse;
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     /*** Local functions ****/
