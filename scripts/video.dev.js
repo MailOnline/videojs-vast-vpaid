@@ -80,7 +80,7 @@ vjs.ACCESS_PROTOCOL = ('https:' == document.location.protocol ? 'https://' : 'ht
 * Full player version
 * @type {string}
 */
-vjs['VERSION'] = '4.12.11';
+vjs['VERSION'] = '4.12.15';
 
 /**
  * Global Player instance options, surfaced from vjs.Player.prototype.options_
@@ -2568,14 +2568,14 @@ vjs.Component.prototype.triggerReady = function(){
 
   var readyQueue = this.readyQueue_;
 
+  // Reset Ready Queue
+  this.readyQueue_ = [];
+
   if (readyQueue && readyQueue.length > 0) {
 
     for (var i = 0, j = readyQueue.length; i < j; i++) {
       readyQueue[i].call(this);
     }
-
-    // Reset Ready Queue
-    this.readyQueue_ = [];
 
     // Allow for using event listeners also, in case you want to do something everytime a source is ready.
     this.trigger('ready');
@@ -6987,7 +6987,7 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
    * @param  {Function} handler  The source handler
    * @param  {Boolean}  first    Register it before any existing handlers
    */
-  Tech.registerSourceHandler = function(handler, index){
+  Tech['registerSourceHandler'] = function(handler, index){
     var handlers = Tech.sourceHandlers;
 
     if (!handlers) {
@@ -7014,7 +7014,7 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
         can;
 
     for (var i = 0; i < handlers.length; i++) {
-      can = handlers[i].canHandleSource(source);
+      can = handlers[i]['canHandleSource'](source);
 
       if (can) {
         return handlers[i];
@@ -7033,7 +7033,7 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
     var sh = Tech.selectSourceHandler(srcObj);
 
     if (sh) {
-      return sh.canHandleSource(srcObj);
+      return sh['canHandleSource'](srcObj);
     }
 
     return '';
@@ -7052,8 +7052,8 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
     if (!sh) {
       // Fall back to a native source hander when unsupported sources are
       // deliberately set
-      if (Tech.nativeSourceHandler) {
-        sh = Tech.nativeSourceHandler;
+      if (Tech['nativeSourceHandler']) {
+        sh = Tech['nativeSourceHandler'];
       } else {
         vjs.log.error('No source hander found for the current source.');
       }
@@ -7064,7 +7064,7 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
     this.off('dispose', this.disposeSourceHandler);
 
     this.currentSource_ = source;
-    this.sourceHandler_ = sh.handleSource(source, this);
+    this.sourceHandler_ = sh['handleSource'](source, this);
     this.on('dispose', this.disposeSourceHandler);
 
     return this;
@@ -7074,8 +7074,8 @@ vjs.MediaTechController.withSourceHandlers = function(Tech){
    * Clean up any existing source handler
    */
   Tech.prototype.disposeSourceHandler = function(){
-    if (this.sourceHandler_ && this.sourceHandler_.dispose) {
-      this.sourceHandler_.dispose();
+    if (this.sourceHandler_ && this.sourceHandler_['dispose']) {
+      this.sourceHandler_['dispose']();
     }
   };
 
@@ -7143,10 +7143,6 @@ vjs.Html5 = vjs.MediaTechController.extend({
       for (i=0; i<removeNodes.length; i++) {
         this.el_.removeChild(removeNodes[i]);
       }
-    }
-
-    if (this['featuresNativeTextTracks']) {
-      this.on('loadstart', vjs.bind(this, this.hideCaptions));
     }
 
     // Determine if native controls should be used
@@ -7249,25 +7245,6 @@ vjs.Html5.prototype.createEl = function(){
 
   return el;
   // jenniisawesome = true;
-};
-
-
-vjs.Html5.prototype.hideCaptions = function() {
-  var tracks = this.el_.querySelectorAll('track'),
-      track,
-      i = tracks.length,
-      kinds = {
-        'captions': 1,
-        'subtitles': 1
-      };
-
-  while (i--) {
-    track = tracks[i].track;
-    if ((track && track['kind'] in kinds) &&
-        (!tracks[i]['default'])) {
-      track.mode = 'disabled';
-    }
-  }
 };
 
 // Make video events trigger player events
@@ -7512,25 +7489,6 @@ vjs.Html5.prototype.addRemoteTextTrack = function(options) {
   }
 
   this.el().appendChild(track);
-
-  if (track.track['kind'] === 'metadata') {
-    track['track']['mode'] = 'hidden';
-  } else {
-    track['track']['mode'] = 'disabled';
-  }
-
-  track['onload'] = function() {
-    var tt = track['track'];
-    if (track.readyState >= 2) {
-      if (tt['kind'] === 'metadata' && tt['mode'] !== 'hidden') {
-        tt['mode'] = 'hidden';
-      } else if (tt['kind'] !== 'metadata' && tt['mode'] !== 'disabled') {
-        tt['mode'] = 'disabled';
-      }
-      track['onload'] = null;
-    }
-  };
-
   this.remoteTextTracks().addTrack_(track.track);
 
   return track;
@@ -7603,14 +7561,14 @@ vjs.MediaTechController.withSourceHandlers(vjs.Html5);
  * @param  {Object} source   The source object
  * @param  {vjs.Html5} tech  The instance of the HTML5 tech
  */
-vjs.Html5.nativeSourceHandler = {};
+vjs.Html5['nativeSourceHandler'] = {};
 
 /**
  * Check if the video element can handle the source natively
  * @param  {Object} source  The source object
  * @return {String}         'probably', 'maybe', or '' (empty string)
  */
-vjs.Html5.nativeSourceHandler.canHandleSource = function(source){
+vjs.Html5['nativeSourceHandler']['canHandleSource'] = function(source){
   var match, ext;
 
   function canPlayType(type){
@@ -7644,7 +7602,7 @@ vjs.Html5.nativeSourceHandler.canHandleSource = function(source){
  * @param  {Object} source    The source object
  * @param  {vjs.Html5} tech   The instance of the Html5 tech
  */
-vjs.Html5.nativeSourceHandler.handleSource = function(source, tech){
+vjs.Html5['nativeSourceHandler']['handleSource'] = function(source, tech){
   tech.setSrc(source.src);
 };
 
@@ -7652,10 +7610,10 @@ vjs.Html5.nativeSourceHandler.handleSource = function(source, tech){
  * Clean up the source handler when disposing the player or switching sources..
  * (no cleanup is needed when supporting the format natively)
  */
-vjs.Html5.nativeSourceHandler.dispose = function(){};
+vjs.Html5['nativeSourceHandler']['dispose'] = function(){};
 
 // Register the native source handler
-vjs.Html5.registerSourceHandler(vjs.Html5.nativeSourceHandler);
+vjs.Html5['registerSourceHandler'](vjs.Html5['nativeSourceHandler']);
 
 /**
  * Check if the volume can be changed in this browser/device.
@@ -7924,6 +7882,10 @@ vjs.Flash.prototype.dispose = function(){
 };
 
 vjs.Flash.prototype.play = function(){
+  if (this.ended()) {
+    this['setCurrentTime'](0);
+  }
+
   this.el_.vjs_play();
 };
 
@@ -8062,14 +8024,14 @@ vjs.MediaTechController.withSourceHandlers(vjs.Flash);
  * @param  {Object} source   The source object
  * @param  {vjs.Flash} tech  The instance of the Flash tech
  */
-vjs.Flash.nativeSourceHandler = {};
+vjs.Flash['nativeSourceHandler'] = {};
 
 /**
  * Check Flash can handle the source natively
  * @param  {Object} source  The source object
  * @return {String}         'probably', 'maybe', or '' (empty string)
  */
-vjs.Flash.nativeSourceHandler.canHandleSource = function(source){
+vjs.Flash['nativeSourceHandler']['canHandleSource'] = function(source){
   var type;
 
   if (!source.type) {
@@ -8093,7 +8055,7 @@ vjs.Flash.nativeSourceHandler.canHandleSource = function(source){
  * @param  {Object} source    The source object
  * @param  {vjs.Flash} tech   The instance of the Flash tech
  */
-vjs.Flash.nativeSourceHandler.handleSource = function(source, tech){
+vjs.Flash['nativeSourceHandler']['handleSource'] = function(source, tech){
   tech.setSrc(source.src);
 };
 
@@ -8101,10 +8063,10 @@ vjs.Flash.nativeSourceHandler.handleSource = function(source, tech){
  * Clean up the source handler when disposing the player or switching sources..
  * (no cleanup is needed when supporting the format natively)
  */
-vjs.Flash.nativeSourceHandler.dispose = function(){};
+vjs.Flash['nativeSourceHandler']['dispose'] = function(){};
 
 // Register the native source handler
-vjs.Flash.registerSourceHandler(vjs.Flash.nativeSourceHandler);
+vjs.Flash['registerSourceHandler'](vjs.Flash['nativeSourceHandler']);
 
 vjs.Flash.formats = {
   'video/flv': 'FLV',
@@ -8322,7 +8284,7 @@ vjs.Flash.rtmpSourceHandler = {};
  * @param  {Object} source  The source object
  * @return {String}         'probably', 'maybe', or '' (empty string)
  */
-vjs.Flash.rtmpSourceHandler.canHandleSource = function(source){
+vjs.Flash.rtmpSourceHandler['canHandleSource'] = function(source){
   if (vjs.Flash.isStreamingType(source.type) || vjs.Flash.isStreamingSrc(source.src)) {
     return 'maybe';
   }
@@ -8337,7 +8299,7 @@ vjs.Flash.rtmpSourceHandler.canHandleSource = function(source){
  * @param  {Object} source    The source object
  * @param  {vjs.Flash} tech   The instance of the Flash tech
  */
-vjs.Flash.rtmpSourceHandler.handleSource = function(source, tech){
+vjs.Flash.rtmpSourceHandler['handleSource'] = function(source, tech){
   var srcParts = vjs.Flash.streamToParts(source.src);
 
   tech['setRtmpConnection'](srcParts.connection);
@@ -8345,7 +8307,7 @@ vjs.Flash.rtmpSourceHandler.handleSource = function(source, tech){
 };
 
 // Register the native source handler
-vjs.Flash.registerSourceHandler(vjs.Flash.rtmpSourceHandler);
+vjs.Flash['registerSourceHandler'](vjs.Flash.rtmpSourceHandler);
 /**
  * The Media Loader is the component that decides which playback technology to load
  * when the player is initialized.
