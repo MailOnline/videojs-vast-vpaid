@@ -71,7 +71,7 @@
 
       // Enumerable properties only
       for (key in object) {
-        if (Object.prototype.hasOwnProperty.call(object, key)) {
+        if (object.hasOwnProperty(key)) {
           buffer.push(key);
         }
       }
