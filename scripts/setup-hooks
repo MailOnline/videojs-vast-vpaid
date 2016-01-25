@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #DON'T SETUP THE HOOKS IF YOU ARE IN CI
-if [ "$CONTINUOUS_INTEGRATION" != "true" ]; then
+if [ "$CONTINUOUS_INTEGRATION" != "true" ] && [ -d ".git" ]; then
   echo "Setting pre-commit hook"
   ln -f -s "$PWD/scripts/pre-commit" .git/hooks/pre-commit
 

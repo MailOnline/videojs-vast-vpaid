@@ -1,20 +1,35 @@
+var dom = require('utils/dom');
+var utilities = require('utils/utilityFunctions');
+var playerUtils = require('utils/playerUtils');
+
+var videoJsVersion = parseInt(videojs.VERSION.split('.')[0], 10);
+
+if(videoJsVersion === 4) {
+  require('plugin/components/ads-label_4');
+  require('plugin/components/black-poster_4');
+}
+if(videoJsVersion === 5) {
+  require('plugin/components/ads-label_5');
+  require('plugin/components/black-poster_5');
+}
+
+
 describe("playerUtils", function () {
   var testDiv, player, tech;
-
   beforeEach(function () {
     testDiv = document.createElement("div");
-    testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
+    testDiv.innerHTML = '<video id="playerVideoTestEl_playerUtils" class="video-js vjs-default-skin" ' +
       'controls preload="none" style="border:none"' +
-      'poster="http://video-js.zencoder.com/oceans-clip.png" >' +
-      '<source src="http://video-js.zencoder.com/oceans-clip.mp4" type="video/mp4"/>' +
-      '<source src="http://video-js.zencoder.com/oceans-clip.webm" type="video/webm"/>' +
-      '<source src="http://video-js.zencoder.com/oceans-clip.ogv" type="video/ogg"/>' +
+      'poster="http://vjs.zencdn.net/v/oceans.png" >' +
+      '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
+      '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs("#playerVideoTestEl_playerUtils");
     tech = player.el().querySelector('.vjs-tech');
   });
 
@@ -27,11 +42,11 @@ describe("playerUtils", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
       assert.deepEqual(snapshot, {
         ended: false,
-        src: "http://video-js.zencoder.com/oceans-clip.mp4",
+        src: "http://vjs.zencdn.net/v/oceans.mp4",
         currentTime: 0,
         type: 'video/mp4',
         suppressedTracks: [],
-        nativePoster: 'http://video-js.zencoder.com/oceans-clip.png',
+        nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none',
         playing: false
       });
@@ -42,7 +57,7 @@ describe("playerUtils", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
       assert.deepEqual(snapshot, {
         ended: false,
-        src: "http://video-js.zencoder.com/oceans-clip.mp4",
+        src: "http://vjs.zencdn.net/v/oceans.mp4",
         currentTime: 0,
         type: 'video/mp4',
         playing: false,
@@ -57,12 +72,12 @@ describe("playerUtils", function () {
       var snapshot = playerUtils.getPlayerSnapshot(player);
       assert.deepEqual(snapshot, {
         ended: false,
-        src: "http://video-js.zencoder.com/oceans-clip.mp4",
+        src: "http://vjs.zencdn.net/v/oceans.mp4",
         currentTime: 0,
         type: 'video/mp4',
         playing: true,
         suppressedTracks: [],
-        nativePoster: 'http://video-js.zencoder.com/oceans-clip.png',
+        nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none'
       });
     });
@@ -131,7 +146,7 @@ describe("playerUtils", function () {
     it("must restore the player poster", function () {
       tech.poster = '';
       playerUtils.restorePlayerSnapshot(player, snapshot);
-      assert.equal(snapshot.nativePoster, "http://video-js.zencoder.com/oceans-clip.png");
+      assert.equal(snapshot.nativePoster, "http://vjs.zencdn.net/v/oceans.png");
       assert.equal(tech.poster, snapshot.nativePoster);
     });
 
@@ -331,11 +346,11 @@ describe("playerUtils", function () {
 
 describe("playerUtils.prepareForAds", function () {
   beforeEach(function () {
-    sinon.stub(window, 'isIPhone').returns(false);
+    sinon.stub(utilities, 'isIPhone').returns(false);
   });
 
   afterEach(function () {
-    window.isIPhone.restore();
+    utilities.isIPhone.restore();
   });
 
   it("must add the blackPoster component to the player", function () {
@@ -350,6 +365,7 @@ describe("playerUtils.prepareForAds", function () {
     beforeEach(function () {
       player = videojs(document.createElement('video'), {});
       playerUtils.prepareForAds(player);
+
       blackPoster = player.getChild('blackPoster');
       sinon.stub(blackPoster, 'hide');
       sinon.stub(blackPoster, 'show');
@@ -395,11 +411,11 @@ describe("playerUtils.prepareForAds", function () {
 
           beforeEach(function () {
             player = videojs(document.createElement('video'), {});
-            sinon.stub(window, 'isMobile').returns(true);
+            sinon.stub(utilities, 'isMobile').returns(true);
           });
 
           afterEach(function () {
-            window.isMobile.restore();
+            utilities.isMobile.restore();
           });
 
           it("must mute the player when you first play the video (player's play method)", function () {
@@ -456,7 +472,7 @@ describe("playerUtils.prepareForAds", function () {
 
           describe("on iPhone", function () {
             it("must NOT set the currentTime to 0 on the first play", function () {
-              window.isIPhone.returns(true);
+              utilities.isIPhone.returns(true);
               var player = videojs(document.createElement('video'), {});
               sinon.stub(player, 'currentTime');
               sinon.assert.notCalled(player.currentTime);
@@ -467,7 +483,7 @@ describe("playerUtils.prepareForAds", function () {
             });
 
             it("must NOT restore the muted volume on  'vast.firstPlay' evt", function () {
-              window.isIPhone.returns(true);
+              utilities.isIPhone.returns(true);
               playerUtils.prepareForAds(player);
               player.volume(1);
               player.muted(false);
@@ -643,7 +659,7 @@ describe("playerUtils.prepareForAds", function () {
   });
 
   it("must not mute the video if it is on an iphone device", function () {
-    window.isIPhone.returns(true);
+    utilities.isIPhone.returns(true);
     var player = videojs(document.createElement('video'), {});
     playerUtils.prepareForAds(player);
     player.play();// First Play
@@ -714,16 +730,16 @@ describe("playerUtils.removeNativePoster", function () {
 
   beforeEach(function () {
     testDiv = document.createElement("div");
-    testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
+    testDiv.innerHTML = '<video id="playerVideoTestEl_removeNativePoster" class="video-js vjs-default-skin" ' +
       'controls preload="none" style="border:none"' +
-      'poster="http://video-js.zencoder.com/oceans-clip.png" >' +
-      '<source src="http://video-js.zencoder.com/oceans-clip.mp4" type="video/mp4"/>' +
+      'poster="http://vjs.zencdn.net/v/oceans.png" >' +
+      '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
       '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
       '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs("#playerVideoTestEl_removeNativePoster", {});
     tech = player.el().querySelector('.vjs-tech');
   });
 
@@ -732,7 +748,6 @@ describe("playerUtils.removeNativePoster", function () {
   });
 
   it("must remove the poster of the passed player", function () {
-    var tech = player.el().querySelector('.vjs-tech');
     playerUtils.removeNativePoster(player);
     assert.isNull(tech.getAttribute('poster'));
   });
