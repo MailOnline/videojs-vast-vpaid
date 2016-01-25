@@ -1,3 +1,5 @@
+var utilities = require('utils/utilityFunctions');
+
 function createMouseEvent(type) {
   var event = document.createEvent('MouseEvents');
   event.initEvent(type, true, false);
@@ -20,15 +22,15 @@ function stubAsyncStep(context, method, clock) {
   var stub = sinon.stub(context, method);
   function tick(millis) {
     if(clock) {
-      clock.tick(millis || 1)
+      clock.tick(millis || 1);
     }
   }
   return {
     flush: function() {
-      var args = arrayLikeObjToArray(arguments);
+      var args = utilities.arrayLikeObjToArray(arguments);
       var cb = lastArg(stub);
       cb.apply(null, args);
-      tick(1);
+      tick();
     },
     stub: function() {
       return stub;
@@ -95,7 +97,7 @@ function queryById(el, id) {
 
 
 function getCompByName(comp, name) {
-  return treeSearch(comp, function (comp) {
+  return utilities.treeSearch(comp, function (comp) {
     return comp.children();
   }, function (comp) {
     return comp.name() === name;
@@ -103,7 +105,7 @@ function getCompByName(comp, name) {
 }
 
 function getCompByFactory(comp, factory) {
-  return treeSearch(comp, function (comp) {
+  return utilities.treeSearch(comp, function (comp) {
     return comp.children();
   }, function (comp) {
     return comp instanceof factory;
@@ -111,7 +113,7 @@ function getCompByFactory(comp, factory) {
 }
 
 function isCompVisible(comp) {
-  return window.getComputedStyle(comp.el()).display !== "none"
+  return window.getComputedStyle(comp.el()).display !== "none";
 }
 
 function muteVideoJSErrorLogs() {
@@ -136,7 +138,7 @@ function muteVideoJSErrorLogs() {
 
       if (pattern instanceof RegExp && pattern.test(msg)) {
         return false;
-      } else if (isString(pattern) && pattern === msg) {
+      } else if (utilities.isString(pattern) && pattern === msg) {
         return false;
       }
     }
@@ -152,3 +154,24 @@ muteVideoJSErrorLogs.IGNORED_PATTERNS = [
 ];
 
 muteVideoJSErrorLogs();
+
+module.exports = {
+  createMouseEvent: createMouseEvent,
+  click: click,
+  assertEmptyArray: assertEmptyArray,
+  stubAsyncStep: stubAsyncStep,
+  isChrome: isChrome,
+  isFF: isFF,
+  firstArg: firstArg,
+  secondArg: secondArg,
+  thirdArg: thirdArg,
+  fourthArg: fourthArg,
+  lastArg: lastArg,
+  namespace: namespace,
+  spyOn: spyOn,
+  queryById: queryById,
+  getCompByName: getCompByName,
+  getCompByFactory: getCompByFactory,
+  isCompVisible: isCompVisible,
+  muteVideoJSErrorLogs: muteVideoJSErrorLogs
+};

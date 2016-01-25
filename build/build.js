@@ -1,109 +1,164 @@
-var gulp = require('gulp');
-var jshint = require('gulp-jshint');
-var runSequence = require('run-sequence');
-var config = require('./config');
-var path = require('path');
+'use strict';
+
+var babelify    = require('babelify');
+var browserify  = require('browserify');
+var buffer      = require('vinyl-buffer');
+var clone       = require('gulp-clone');
+var cssnano     = require('gulp-cssnano');
+var del         = require('del');
+var gulp        = require('gulp');
+var gulpif      = require('gulp-if');
+var jshint      = require('gulp-jshint');
+var lazypipe    = require('lazypipe');
 var mergeStream = require('merge-stream');
-var gulpif = require('gulp-if');
-var minifyCSS = require('gulp-minify-css');
-var concat = require('gulp-concat');
-var header = require('gulp-header');
-var footer = require('gulp-footer');
-var uglify = require("gulp-uglify");
-var flatten = require('gulp-flatten');
-var rename = require('gulp-rename');
-var del = require('del');
-var sourcemaps = require('gulp-sourcemaps');
+var path        = require('path');
+var rename      = require('gulp-rename');
+var runSequence = require('run-sequence');
+var sass        = require('gulp-sass');
+var size        = require('gulp-size');
+var source      = require('vinyl-source-stream');
+var sourcemaps  = require('gulp-sourcemaps');
+var uglify      = require('gulp-uglify');
+
+
 var BuildTaskDoc = require('./BuildTaskDoc');
+var config       = require('./config');
 
-gulp.task('build', function (callback) {
-  var tasks = [
+var devPath      = path.join(config.DEV, '/');
+var distPath     = path.join(config.DIST, '/');
+var isProduction = config.env === 'production';
+
+
+gulp.task('build', function (done) {
+  runSequence(
     'clean',
-    [
-      'build-scripts',
-      'build-styles',
-      'build-libraries',
-      'build-assets'
-    ]
-  ];
-
-  tasks.push(function (error) {
-    if (error) {
-      console.log(error.message.red);
-    }
-    console.log('BUILD FINISHED SUCCESSFULLY'.green);
-    callback();
-  });
-
-  runSequence.apply(this, tasks);
+    'lintjs',
+    'build-scripts',
+    'build-styles',
+    'build-assets',
+    function (error) {
+      if (error) {
+        console.log(error.message.red);
+      } else {
+        console.log('BUILD FINISHED SUCCESSFULLY'.green);
+      }
+      done(error);
+    });
 });
 
 
-gulp.task('clean', function (cb) {
+gulp.task('clean', function (done) {
   var cleanDirs = [config.DEV];
-  if(config.env === 'production'){
+  if(isProduction){
     cleanDirs.push(config.DIST);
   }
-  del(cleanDirs, {force: true}, cb);
+  del.sync(cleanDirs, {force: true});
+  done();
 });
 
-gulp.task('build-scripts', function () {
-  var scriptsDevPath = path.join(config.DEV, '/scripts');
-  var scriptsDistPath = path.join(config.DIST, '/');
-  var vendorScriptsStream = gulp.src(config.vendor.scripts);
-  var pluginScriptsStream = gulp.src(config.plugin.scripts)
+
+gulp.task('lintjs', function() {
+  return gulp.src([
+    'gulpfile.js',
+    'src/**/*.js',
+    'test/**/*.js',
+    'demo/**/*.js',
+    'build/**/*.js'
+  ])
     .pipe(jshint())
-    .pipe(jshint.reporter('default'));
-
-  return mergeStream(vendorScriptsStream, pluginScriptsStream)
-    .pipe(sourcemaps.init())
-    .pipe(concat(config.prodfile.scripts, {newLine: '\n;\n'}))
-    .pipe(header('(function (window, document, vjs, undefined) {'))
-    .pipe(footer('})(window, document, videojs);'))
-    .pipe(concat(config.prodfile.scripts, {newLine: '\n;\n'}))
-    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDevPath)))
-    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)))
-    .pipe(gulpif(config.env === 'production', uglify()))
-    .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
-    .pipe(gulp.dest(scriptsDevPath))
-    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)))
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(scriptsDevPath))
-    .pipe(gulpif(config.env === 'production', gulp.dest(scriptsDistPath)));
+    .pipe(jshint.reporter('jshint-stylish'));
 });
 
-gulp.task('build-assets', function () {
-  var assetsDevPath = path.join(config.DEV, '/');
-  var assetsDistPath = path.join(config.DIST, '/');
 
-  return gulp.src(config.vendor.assets)
-    .pipe(gulp.dest(assetsDevPath))
-    .pipe(gulpif(config.env === 'production', gulp.dest(assetsDistPath)));
+function buildProdJs() {
+  var cloneSink = clone.sink();
+
+  var process = lazypipe()
+    .pipe(buffer)
+    .pipe(function() {return cloneSink;})
+    .pipe(sourcemaps.init, {loadMaps: true})
+    .pipe(uglify, {compress: false}) // compress needs to be false otherwise it mess the sourcemaps
+    .pipe(rename, {suffix: '.min'})
+    .pipe(sourcemaps.write, './')
+    .pipe(cloneSink.tap)
+    .pipe(gulp.dest, distPath);
+
+  return process();
+}
+
+
+gulp.task('build-scripts', function() {
+
+  var buildProcesses = config.versions.map(function(version) {
+
+    var fileName  = 'videojs_' + version + '.vast.vpaid.js';
+    var entryFile = path.join('src/scripts', fileName);
+    var destPath  = path.join(devPath, 'scripts');
+
+    return browserify({
+        entries: entryFile,
+        debug: true,
+        paths: 'bower_components',
+        cache: {},
+        packageCache: {}
+      })
+      .transform(babelify, {
+        presets: ['es2015'],
+        sourceMaps: true,
+        only: /VPAIDFLASHClient/
+      })
+      .bundle()
+      .pipe(source(fileName))
+      .pipe(gulp.dest(destPath))
+      .pipe(gulpif(isProduction, buildProdJs()));
+
+  });
+
+  return mergeStream.apply(this, buildProcesses)
+    .pipe(size({showFiles: true, title: '[Scripts]'}));
 });
 
-gulp.task('build-libraries', function () {
-  var assetsDevPath = path.join(config.DEV, '/scripts');
-  var assetsDistPath = path.join(config.DIST, '/');
 
-  return gulp.src(config.vendor.libraries)
-    .pipe(gulp.dest(assetsDevPath))
-    .pipe(gulpif(config.env === 'production', gulp.dest(assetsDistPath)));
+function buildProdCss() {
+  var cloneSink = clone.sink();
 
-});
+  var process = lazypipe()
+    .pipe(function() {return cloneSink;})
+    .pipe(cssnano)
+    .pipe(rename, {suffix: '.min'})
+    .pipe(sourcemaps.write, './')
+    .pipe(cloneSink.tap)
+    .pipe(gulp.dest, distPath);
+
+  return process();
+}
 
 gulp.task('build-styles', function () {
-  var cssDevPath = path.join(config.DEV, 'styles');
-  var cssDistPath = path.join(config.DIST, '/');
 
-  return gulp.src(config.plugin.styles)
-    .pipe(flatten())
-    .pipe(gulpif(config.env === 'production', concat(config.prodfile.styles, {newLine: '\n\n'})))
-    .pipe(gulpif(config.env === 'production', gulp.dest(cssDevPath)))
-    .pipe(gulpif(config.env === 'production', gulp.dest(cssDistPath)))
-    .pipe(gulpif(config.env === 'production', minifyCSS({keepBreaks: false})))
-    .pipe(gulpif(config.env === 'production', rename({suffix: ".min"})))
-    .pipe(gulp.dest(cssDevPath))
-    .pipe(gulpif(config.env === 'production', gulp.dest(cssDistPath)));
+  var entryFile = path.join('src/styles', 'videojs.vast.vpaid.scss');
+  var destPath  = path.join(devPath, 'styles');
+
+  return gulp.src(entryFile)
+    .pipe(sourcemaps.init())
+    .pipe(sass()
+      .on('error', sass.logError))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest(destPath))
+    .pipe(gulpif(isProduction, buildProdCss()))
+    .pipe(size({showFiles: true, title: '[Styles]'}));
+
 });
 
-module.exports = new BuildTaskDoc("build", "This task builds the plugin", 4);
+
+gulp.task('build-assets', function () {
+
+  var destPath  = path.join(devPath, 'scripts');
+
+  return gulp.src(config.vendor)
+    .pipe(size({showFiles: true, title: '[Assets]'}))
+    .pipe(gulp.dest(destPath))
+    .pipe(gulpif(isProduction, gulp.dest(distPath)));
+});
+
+
+module.exports = new BuildTaskDoc('build', 'This task builds the plugin', 4);

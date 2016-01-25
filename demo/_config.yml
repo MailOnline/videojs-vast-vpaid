@@ -1,0 +1,6 @@
+# This is necessary to enable the redirection feature in gh-pages
+# For more info visit
+# https://help.github.com/articles/using-jekyll-with-pages/
+# https://help.github.com/articles/redirects-on-github-pages/
+gems:
+  - jekyll-redirect-from
