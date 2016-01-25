@@ -1,3 +1,5 @@
+var NODE_TYPE_ELEMENT = 1;
+
 function extend(obj) {
   var arg, i, k;
   for (i = 1; i < arguments.length; i++) {
@@ -68,6 +70,14 @@ function forEach(obj, iterator, context) {
 
 function isArray(array){
   return Object.prototype.toString.call( array ) === '[object Array]';
+}
+
+function isWindow(obj) {
+  return isObject(obj) && obj.window === obj;
+}
+
+function isUndefined(o){
+  return o === undefined;
 }
 
 function isArrayLike(obj) {
