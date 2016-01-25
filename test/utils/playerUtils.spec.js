@@ -1,9 +1,24 @@
+var dom = require('utils/dom');
+var utilities = require('utils/utilityFunctions');
+var playerUtils = require('utils/playerUtils');
+
+var videoJsVersion = parseInt(videojs.VERSION.split('.')[0], 10);
+
+if(videoJsVersion === 4) {
+  require('plugin/components/ads-label_4');
+  require('plugin/components/black-poster_4');
+}
+if(videoJsVersion === 5) {
+  require('plugin/components/ads-label_5');
+  require('plugin/components/black-poster_5');
+}
+
+
 describe("playerUtils", function () {
   var testDiv, player, tech;
-
   beforeEach(function () {
     testDiv = document.createElement("div");
-    testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
+    testDiv.innerHTML = '<video id="playerVideoTestEl_playerUtils" class="video-js vjs-default-skin" ' +
       'controls preload="none" style="border:none"' +
       'poster="http://vjs.zencdn.net/v/oceans.png" >' +
       '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
@@ -14,7 +29,7 @@ describe("playerUtils", function () {
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs("#playerVideoTestEl_playerUtils");
     tech = player.el().querySelector('.vjs-tech');
   });
 
@@ -33,8 +48,7 @@ describe("playerUtils", function () {
         suppressedTracks: [],
         nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none',
-        playing: false,
-        techName: 'Html5'
+        playing: false
       });
     });
 
@@ -47,8 +61,7 @@ describe("playerUtils", function () {
         currentTime: 0,
         type: 'video/mp4',
         playing: false,
-        suppressedTracks: [],
-        techName: 'Html5'
+        suppressedTracks: []
       });
 
       dom.addClass(tech, 'vjs-tech');
@@ -64,7 +77,6 @@ describe("playerUtils", function () {
         type: 'video/mp4',
         playing: true,
         suppressedTracks: [],
-        techName: 'Html5',
         nativePoster: 'http://vjs.zencdn.net/v/oceans.png',
         style: 'border:none'
       });
@@ -193,16 +205,6 @@ describe("playerUtils", function () {
         playerUtils.restorePlayerSnapshot(player, snapshot);
         assert.equal(player.src(), snapshot.src);
         assert.equal(player.currentType(), snapshot.type);
-      });
-
-      it("must restore the player tech if it changed", function () {
-        sinon.stub(player, 'loadTech');
-        var clonedSnapshot = JSON.parse(JSON.stringify(snapshot));
-        clonedSnapshot.techName = 'Flash';
-        playerUtils.restorePlayerSnapshot(player, clonedSnapshot);
-        sinon.assert.calledOnce(player.loadTech);
-        sinon.assert.calledWithExactly(player.loadTech, clonedSnapshot.techName);
-        player.loadTech.restore();
       });
 
       it("must load the restored src", function () {
@@ -344,11 +346,11 @@ describe("playerUtils", function () {
 
 describe("playerUtils.prepareForAds", function () {
   beforeEach(function () {
-    sinon.stub(window, 'isIPhone').returns(false);
+    sinon.stub(utilities, 'isIPhone').returns(false);
   });
 
   afterEach(function () {
-    window.isIPhone.restore();
+    utilities.isIPhone.restore();
   });
 
   it("must add the blackPoster component to the player", function () {
@@ -363,6 +365,7 @@ describe("playerUtils.prepareForAds", function () {
     beforeEach(function () {
       player = videojs(document.createElement('video'), {});
       playerUtils.prepareForAds(player);
+
       blackPoster = player.getChild('blackPoster');
       sinon.stub(blackPoster, 'hide');
       sinon.stub(blackPoster, 'show');
@@ -408,11 +411,11 @@ describe("playerUtils.prepareForAds", function () {
 
           beforeEach(function () {
             player = videojs(document.createElement('video'), {});
-            sinon.stub(window, 'isMobile').returns(true);
+            sinon.stub(utilities, 'isMobile').returns(true);
           });
 
           afterEach(function () {
-            window.isMobile.restore();
+            utilities.isMobile.restore();
           });
 
           it("must mute the player when you first play the video (player's play method)", function () {
@@ -469,7 +472,7 @@ describe("playerUtils.prepareForAds", function () {
 
           describe("on iPhone", function () {
             it("must NOT set the currentTime to 0 on the first play", function () {
-              window.isIPhone.returns(true);
+              utilities.isIPhone.returns(true);
               var player = videojs(document.createElement('video'), {});
               sinon.stub(player, 'currentTime');
               sinon.assert.notCalled(player.currentTime);
@@ -480,7 +483,7 @@ describe("playerUtils.prepareForAds", function () {
             });
 
             it("must NOT restore the muted volume on  'vast.firstPlay' evt", function () {
-              window.isIPhone.returns(true);
+              utilities.isIPhone.returns(true);
               playerUtils.prepareForAds(player);
               player.volume(1);
               player.muted(false);
@@ -656,7 +659,7 @@ describe("playerUtils.prepareForAds", function () {
   });
 
   it("must not mute the video if it is on an iphone device", function () {
-    window.isIPhone.returns(true);
+    utilities.isIPhone.returns(true);
     var player = videojs(document.createElement('video'), {});
     playerUtils.prepareForAds(player);
     player.play();// First Play
@@ -727,7 +730,7 @@ describe("playerUtils.removeNativePoster", function () {
 
   beforeEach(function () {
     testDiv = document.createElement("div");
-    testDiv.innerHTML = '<video id="playerVideoTestEl" class="video-js vjs-default-skin" ' +
+    testDiv.innerHTML = '<video id="playerVideoTestEl_removeNativePoster" class="video-js vjs-default-skin" ' +
       'controls preload="none" style="border:none"' +
       'poster="http://vjs.zencdn.net/v/oceans.png" >' +
       '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
@@ -736,7 +739,7 @@ describe("playerUtils.removeNativePoster", function () {
       '</p>' +
       '</video>';
     document.body.appendChild(testDiv);
-    player = videojs("#playerVideoTestEl", {});
+    player = videojs("#playerVideoTestEl_removeNativePoster", {});
     tech = player.el().querySelector('.vjs-tech');
   });
 
@@ -745,7 +748,6 @@ describe("playerUtils.removeNativePoster", function () {
   });
 
   it("must remove the poster of the passed player", function () {
-    var tech = player.el().querySelector('.vjs-tech');
     playerUtils.removeNativePoster(player);
     assert.isNull(tech.getAttribute('poster'));
   });

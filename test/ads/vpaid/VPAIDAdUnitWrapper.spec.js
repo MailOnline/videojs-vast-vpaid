@@ -1,20 +1,27 @@
+var VPAIDAdUnitWrapper = require('ads/vpaid/VPAIDAdUnitWrapper');
+var VASTError = require('ads/vast/VASTError');
+
+var utilities = require('utils/utilityFunctions');
+
+var testUtils = require('../../test-utils');
+
 describe("VPAIDAdUnitWrapper", function(){
   var vpaidAdUnit;
 
   beforeEach(function(){
     vpaidAdUnit = {
-      'handshakeVersion': noop,
-      'initAd': noop,
-      'startAd': noop,
-      'stopAd': noop,
-      'skipAd': noop,
-      'resizeAd': noop,
-      'pauseAd': noop,
-      'expandAd': noop,
-      'collapseAd': noop,
-      'subscribe': noop,
-      'unsubscribe': noop,
-      'unloadAdUnit': noop
+      'handshakeVersion': utilities.noop,
+      'initAd': utilities.noop,
+      'startAd': utilities.noop,
+      'stopAd': utilities.noop,
+      'skipAd': utilities.noop,
+      'resizeAd': utilities.noop,
+      'pauseAd': utilities.noop,
+      'expandAd': utilities.noop,
+      'collapseAd': utilities.noop,
+      'subscribe': utilities.noop,
+      'unsubscribe': utilities.noop,
+      'unloadAdUnit': utilities.noop
     };
   });
 
@@ -22,7 +29,7 @@ describe("VPAIDAdUnitWrapper", function(){
     it("must return false if you pass an obj that does not fully implements the VPAID interface", function(){
       assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface());
       assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(null));
-      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(noop));
+      assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface(utilities.noop));
       assert.isFalse(VPAIDAdUnitWrapper.checkVPAIDInterface('foo'));
     });
 
@@ -38,10 +45,10 @@ describe("VPAIDAdUnitWrapper", function(){
     it("must return true if there is a method to subscribe to events", function(){
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
       vpaidAdUnit.subscribe = undefined;
-      vpaidAdUnit.on = noop;
+      vpaidAdUnit.on = utilities.noop;
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
       vpaidAdUnit.on = undefined;
-      vpaidAdUnit.addEventListener = noop;
+      vpaidAdUnit.addEventListener = utilities.noop;
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
     });
 
@@ -53,29 +60,31 @@ describe("VPAIDAdUnitWrapper", function(){
     it("must return true if there is a method to unsubscribe from events", function(){
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
       vpaidAdUnit.unsubscribe = undefined;
-      vpaidAdUnit.off = noop;
+      vpaidAdUnit.off = utilities.noop;
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
       vpaidAdUnit.off = undefined;
-      vpaidAdUnit.removeEventListener = noop;
+      vpaidAdUnit.removeEventListener = utilities.noop;
       assert.isTrue(VPAIDAdUnitWrapper.checkVPAIDInterface(vpaidAdUnit));
     });
   });
 
   describe("constructor", function(){
     it("must return an instance of itself", function(){
-     assert.instanceOf(VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000}), VPAIDAdUnitWrapper);
+     assert.instanceOf(new VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000}), VPAIDAdUnitWrapper);
     });
 
     it("must throw a VASTError if the passed VPAIDAdUnit does not fully implement the VPAID api", function(){
-     [null, undefined, noop, 'foo', {}, []].forEach(function(invalidAdUnit) {
+     [null, undefined, utilities.noop, 'foo', {}, []].forEach(function(invalidAdUnit) {
        assert.throws(function () {
-         var adUnitWrapper = new VPAIDAdUnitWrapper(invalidAdUnit, {responseTimeout: 5000});
+        /*jshint unused:false*/
+        var adUnitWrapper = new VPAIDAdUnitWrapper(invalidAdUnit, {responseTimeout: 5000});
        }, VASTError, 'on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
      });
     });
 
     it("must complain if you pass an options that is not a hash", function(){
       assert.throws(function() {
+        /*jshint unused:false*/
         var adUnitWrapper = new VPAIDAdUnitWrapper(vpaidAdUnit, 'foo');
       }, VASTError, "on VPAIDAdUnitWrapper, expected options hash  but got 'foo'");
     });
@@ -104,7 +113,7 @@ describe("VPAIDAdUnitWrapper", function(){
 
       it("must complain if the method is not part of the adUnit", function(){
         assert.throws(function () {
-          wrapper.adUnitAsyncCall('foo', noop);
+          wrapper.adUnitAsyncCall('foo', utilities.noop);
         }, VASTError, "on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name");
       });
 
@@ -116,7 +125,7 @@ describe("VPAIDAdUnitWrapper", function(){
 
       it("must call the adUnit method", function(){
         sinon.spy(vpaidAdUnit, 'initAd');
-        wrapper.adUnitAsyncCall('initAd', noop);
+        wrapper.adUnitAsyncCall('initAd', utilities.noop);
         sinon.assert.calledOnce(vpaidAdUnit.initAd);
       });
 
@@ -125,7 +134,7 @@ describe("VPAIDAdUnitWrapper", function(){
         sinon.spy(vpaidAdUnit, 'initAd');
 
         wrapper.adUnitAsyncCall('initAd', cb);
-        var wrapperCb = firstArg(vpaidAdUnit.initAd);
+        var wrapperCb = testUtils.firstArg(vpaidAdUnit.initAd);
         sinon.assert.notCalled(cb);
         wrapperCb(null);
 
@@ -143,12 +152,12 @@ describe("VPAIDAdUnitWrapper", function(){
           sinon.spy(vpaidAdUnit, 'initAd');
 
           wrapper.adUnitAsyncCall('initAd', cb);
-          var wrapperCb = firstArg(vpaidAdUnit.initAd);
+          var wrapperCb = testUtils.firstArg(vpaidAdUnit.initAd);
           sinon.assert.notCalled(cb);
           this.clock.tick(wrapper.options.responseTimeout);
 
           sinon.assert.calledOnce(cb);
-          var error = firstArg(cb);
+          var error = testUtils.firstArg(cb);
           assert.instanceOf(error, VASTError);
           assert.equal(error.message, "VAST Error: on VPAIDAdUnitWrapper, timeout while waiting for a response on call 'initAd'");
 
@@ -165,8 +174,8 @@ describe("VPAIDAdUnitWrapper", function(){
         vpaidAdUnit.addEventListener = undefined;
         sinon.spy(vpaidAdUnit, 'subscribe');
 
-        wrapper.on('evtName', noop);
-        sinon.assert.calledWith(vpaidAdUnit.subscribe, 'evtName', noop);
+        wrapper.on('evtName', utilities.noop);
+        sinon.assert.calledWith(vpaidAdUnit.subscribe, 'evtName', utilities.noop);
       });
 
       it("must call the addEventListener method of the inner adunit", function(){
@@ -174,8 +183,8 @@ describe("VPAIDAdUnitWrapper", function(){
         vpaidAdUnit.on = undefined;
         vpaidAdUnit.addEventListener = sinon.spy();
 
-        wrapper.on('evtName', noop);
-        sinon.assert.calledWith(vpaidAdUnit.addEventListener, 'evtName', noop);
+        wrapper.on('evtName', utilities.noop);
+        sinon.assert.calledWith(vpaidAdUnit.addEventListener, 'evtName', utilities.noop);
       });
 
       it("must call the on method of the inner adunit", function(){
@@ -183,8 +192,8 @@ describe("VPAIDAdUnitWrapper", function(){
         vpaidAdUnit.addEventListener = undefined;
         vpaidAdUnit.on = sinon.spy();
 
-        wrapper.on('evtName', noop);
-        sinon.assert.calledWith(vpaidAdUnit.on, 'evtName', noop);
+        wrapper.on('evtName', utilities.noop);
+        sinon.assert.calledWith(vpaidAdUnit.on, 'evtName', utilities.noop);
       });
     });
 
@@ -194,8 +203,8 @@ describe("VPAIDAdUnitWrapper", function(){
         vpaidAdUnit.removeEventListener = undefined;
         sinon.spy(vpaidAdUnit, 'unsubscribe');
 
-        wrapper.off('evtName', noop);
-        sinon.assert.calledWith(vpaidAdUnit.unsubscribe, 'evtName', noop);
+        wrapper.off('evtName', utilities.noop);
+        sinon.assert.calledWith(vpaidAdUnit.unsubscribe, 'evtName', utilities.noop);
       });
 
       it("must call the removeEventListener method of the inner adunit", function(){
@@ -203,8 +212,8 @@ describe("VPAIDAdUnitWrapper", function(){
         vpaidAdUnit.on = undefined;
         vpaidAdUnit.removeEventListener = sinon.spy();
 
-        wrapper.off('evtName', noop);
-        sinon.assert.calledWith(vpaidAdUnit.removeEventListener, 'evtName', noop);
+        wrapper.off('evtName', utilities.noop);
+        sinon.assert.calledWith(vpaidAdUnit.removeEventListener, 'evtName', utilities.noop);
       });
 
       it("must call the off method of the inner adunit", function(){
@@ -212,8 +221,8 @@ describe("VPAIDAdUnitWrapper", function(){
         vpaidAdUnit.removeEventListener = undefined;
         vpaidAdUnit.off = sinon.spy();
 
-        wrapper.off('evtName', noop);
-        sinon.assert.calledWith(vpaidAdUnit.off, 'evtName', noop);
+        wrapper.off('evtName', utilities.noop);
+        sinon.assert.calledWith(vpaidAdUnit.off, 'evtName', utilities.noop);
       });
     });
 
@@ -243,7 +252,7 @@ describe("VPAIDAdUnitWrapper", function(){
           var listener;
           sinon.spy(wrapper, 'on');
           wrapper.waitForEvent('adInit', callback);
-          listener = secondArg(wrapper.on);
+          listener = testUtils.secondArg(wrapper.on);
 
           //We simulate the response
           var evt = {type: 'adInit'};
@@ -269,7 +278,7 @@ describe("VPAIDAdUnitWrapper", function(){
           wrapper.waitForEvent('adInit', callback);
           this.clock.tick(wrapper.options.responseTimeout);
           sinon.assert.calledOnce(callback);
-          error = firstArg(callback);
+          error = testUtils.firstArg(callback);
 
           assert.instanceOf(error, VASTError);
           assert.equal(error.message, "VAST Error: on VPAIDAdUnitWrapper.waitForEvent, timeout while waiting for event 'adInit'");
@@ -280,7 +289,7 @@ describe("VPAIDAdUnitWrapper", function(){
           var listener;
           sinon.spy(wrapper, 'on');
           wrapper.waitForEvent('adInit', callback);
-          listener = secondArg(wrapper.on);
+          listener = testUtils.secondArg(wrapper.on);
           this.clock.tick(wrapper.options.responseTimeout);
           sinon.assert.calledOnce(callback);
           listener('adInint');

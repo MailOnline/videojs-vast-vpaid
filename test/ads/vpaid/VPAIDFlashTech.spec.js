@@ -1,6 +1,14 @@
+var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
+var VASTError = require('ads/vast/VASTError');
+
+var dom = require('utils/dom');
+var utilities = require('utils/utilityFunctions');
+
+var testUtils = require('../../test-utils');
+
 describe("VPAIDFlashTech", function () {
   it("must return an instance of itself", function () {
-    assert.instanceOf(VPAIDFlashTech({src:'fakeSource'}), VPAIDFlashTech);
+    assert.instanceOf(new VPAIDFlashTech({src:'fakeSource'}), VPAIDFlashTech);
   });
 
   describe("supports", function () {
@@ -9,8 +17,8 @@ describe("VPAIDFlashTech", function () {
       var originalFlash;
 
       beforeEach(function() {
-        originalFlash = VPAIDFLASHClient;
-        VPAIDFLASHClient = {
+        originalFlash = VPAIDFlashTech.VPAIDFLASHClient;
+        VPAIDFlashTech.VPAIDFLASHClient = {
           isSupported: function() {
             return true;
           }
@@ -18,7 +26,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       afterEach(function() {
-        VPAIDFLASHClient = originalFlash;
+        VPAIDFlashTech.VPAIDFLASHClient = originalFlash;
       });
 
       it("must return true when you pass 'application/x-shockwave-flash' if the browser supports", function() {
@@ -26,7 +34,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must return false when you pass 'application/x-shockwave-flash' if the browser doesn't support it", function() {
-        sinon.stub(VPAIDFLASHClient, 'isSupported', function () {return false;});
+        sinon.stub(VPAIDFlashTech.VPAIDFLASHClient, 'isSupported', function () {return false;});
         assert.isFalse(VPAIDFlashTech.supports(FLASH_STRING));
       });
 
@@ -43,6 +51,7 @@ describe("VPAIDFlashTech", function () {
   it("must complain if you don't pass a valid media file", function(){
     [undefined, null, {}, []].forEach(function (invalidMediaFile) {
       assert.throws(function() {
+        /*jshint unused:false*/
         var tech = new VPAIDFlashTech(invalidMediaFile);
       }, VASTError, 'VAST Error: on VPAIDFlashTech, invalid MediaFile');
     });
@@ -91,25 +100,25 @@ describe("VPAIDFlashTech", function () {
 
       it("must not throw an error if pass valid arguments", function(){
         assert.doesNotThrow(function () {
-          vpaidFlashTech.loadAdUnit(testDiv, null, noop);
+          vpaidFlashTech.loadAdUnit(testDiv, null, utilities.noop);
         });
       });
 
       it("must publish the containerEl and the vpaidFlashToJs into the instance", function(){
         assert.isNull(vpaidFlashTech.containerEl);
         assert.isNull(vpaidFlashTech.vpaidFlashClient);
-        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, utilities.noop);
         assert.equal(vpaidFlashTech.containerEl, testDiv);
-        assert.instanceOf(vpaidFlashTech.vpaidFlashClient, VPAIDFLASHClient);
+        assert.instanceOf(vpaidFlashTech.vpaidFlashClient, VPAIDFlashTech.VPAIDFLASHClient);
       });
 
       it("must pass the vpaidFlashLoaderPath to the VPAIDFLASHClient constructor", function(){
-        sinon.stub(window, 'VPAIDFLASHClient');
-        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
-        sinon.assert.calledWith(VPAIDFLASHClient, testDiv, sinon.match.func, {
+        sinon.stub(VPAIDFlashTech, 'VPAIDFLASHClient');
+        vpaidFlashTech.loadAdUnit(testDiv, null, utilities.noop);
+        sinon.assert.calledWith(VPAIDFlashTech.VPAIDFLASHClient, testDiv, sinon.match.func, {
           data: settings.vpaidFlashLoaderPath
         });
-        window.VPAIDFLASHClient.restore();
+        VPAIDFlashTech.VPAIDFLASHClient.restore();
       });
 
       it("must pass an error to the callback if there is an error instantiating the VPAIDFLASHClient", function(){
@@ -117,13 +126,13 @@ describe("VPAIDFlashTech", function () {
           loadAdUnit: sinon.spy()
         };
         var callback = sinon.spy();
-        sinon.stub(window, 'VPAIDFLASHClient').returns(fakeVpaidClient);
+        sinon.stub(VPAIDFlashTech, 'VPAIDFLASHClient').returns(fakeVpaidClient);
         vpaidFlashTech.loadAdUnit(testDiv, null, callback);
-        var flushVPAIDClient = secondArg(VPAIDFLASHClient);
+        var flushVPAIDClient = testUtils.secondArg(VPAIDFlashTech.VPAIDFLASHClient);
         var fakeError = new Error('There was an error');
         flushVPAIDClient(fakeError);
         sinon.assert.calledWith(callback, fakeError);
-        window.VPAIDFLASHClient.restore();
+        VPAIDFlashTech.VPAIDFLASHClient.restore();
       });
 
       it("must call the loadAdUnit function of the VPAIDFLAHSClient and the callback", function(){
@@ -131,12 +140,13 @@ describe("VPAIDFlashTech", function () {
           loadAdUnit: sinon.spy()
         };
         var callback = sinon.spy();
-        sinon.stub(window, 'VPAIDFLASHClient').returns(fakeVpaidClient);
+
+        sinon.stub(VPAIDFlashTech, 'VPAIDFLASHClient').returns(fakeVpaidClient);
         vpaidFlashTech.loadAdUnit(testDiv, null, callback);
-        var flushVPAIDClient = secondArg(VPAIDFLASHClient);
+        var flushVPAIDClient = testUtils.secondArg(VPAIDFlashTech.VPAIDFLASHClient);
         flushVPAIDClient(null);
         sinon.assert.calledWith(fakeVpaidClient.loadAdUnit, vpaidFlashTech.mediaFile.src, callback);
-        window.VPAIDFLASHClient.restore();
+        VPAIDFlashTech.VPAIDFLASHClient.restore();
       });
     });
 
@@ -148,7 +158,7 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must unload the adUnit", function(){
-        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, utilities.noop);
         var vpaidFlashClient = vpaidFlashTech.vpaidFlashClient;
         vpaidFlashClient.destroy = sinon.spy();
 
@@ -159,9 +169,9 @@ describe("VPAIDFlashTech", function () {
 
       it("must remove the containerEl", function(){
         sinon.stub(dom, 'remove');
-        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, utilities.noop);
         //We mock destroy to prevent exception
-        vpaidFlashTech.vpaidFlashClient.destroy = noop;
+        vpaidFlashTech.vpaidFlashClient.destroy = utilities.noop;
         vpaidFlashTech.unloadAdUnit();
 
 
@@ -170,9 +180,9 @@ describe("VPAIDFlashTech", function () {
       });
 
       it("must set instance properties: containerEl and vpaidFlashClient to null", function(){
-        vpaidFlashTech.loadAdUnit(testDiv, null, noop);
+        vpaidFlashTech.loadAdUnit(testDiv, null, utilities.noop);
         //We mock destroy to prevent exception
-        vpaidFlashTech.vpaidFlashClient.destroy = noop;
+        vpaidFlashTech.vpaidFlashClient.destroy = utilities.noop;
 
         vpaidFlashTech.unloadAdUnit();
 
