@@ -119,7 +119,7 @@
       return function (O) {
         // 1. If Type(O) is not Object or Null throw a TypeError exception.
         if (typeof O != 'object') {
-          throw TypeError('Object prototype may only be an Object or null');
+          throw new TypeError('Object prototype may only be an Object or null');
         }
 
         // 2. Let obj be the result of creating a new object as if by the
@@ -149,7 +149,7 @@
       };
     })();
   }
-
+  /* jshint ignore:start */
   if ( typeof Object.getPrototypeOf !== "function" ) {
     if ( typeof "test".__proto__ === "object" ) {
       Object.getPrototypeOf = function(object){
@@ -162,5 +162,6 @@
       };
     }
   }
+  /* jshint ignore:end */
 })();
 
