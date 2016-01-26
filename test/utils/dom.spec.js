@@ -1,3 +1,6 @@
+var dom = require('utils/dom');
+var testUtils = require('../test-utils');
+
 describe("dom", function () {
   var testDiv;
 
@@ -200,7 +203,7 @@ describe("dom", function () {
       dom.addEventListener(el, 'mouseover', spy);
 
       assert.isFalse(spy.called);
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledOnce);
     });
 
@@ -211,9 +214,9 @@ describe("dom", function () {
       dom.addEventListener([el, el2], 'mouseover', spy);
 
       assert.isFalse(spy.called);
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledOnce);
-      dom.dispatchEvent(el2, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el2, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledTwice);
     });
 
@@ -224,13 +227,13 @@ describe("dom", function () {
       dom.addEventListener([el, el2], ['mouseover', 'mouseout'], spy);
 
       assert.isFalse(spy.called);
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledOnce);
-      dom.dispatchEvent(el2, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el2, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledTwice);
-      dom.dispatchEvent(el, createMouseEvent('mouseout'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseout'));
       assert.isTrue(spy.calledThrice);
-      dom.dispatchEvent(el2, createMouseEvent('mouseout'));
+      dom.dispatchEvent(el2, testUtils.createMouseEvent('mouseout'));
       assert.equal(spy.callCount, 4);
     });
   });
@@ -241,7 +244,7 @@ describe("dom", function () {
       var spy = sinon.spy();
       dom.addEventListener(el, 'mouseover', spy);
       dom.removeEventListener(el, 'mouseover', spy);
-      el.dispatchEvent(createMouseEvent('mouseover'));
+      el.dispatchEvent(testUtils.createMouseEvent('mouseover'));
       assert.isFalse(spy.called);
     });
 
@@ -251,7 +254,7 @@ describe("dom", function () {
       var spy = sinon.spy();
       dom.addEventListener([el, el2], 'mouseover', spy);
       dom.removeEventListener([el, el2], 'mouseover', spy);
-      el.dispatchEvent(createMouseEvent('mouseover'));
+      el.dispatchEvent(testUtils.createMouseEvent('mouseover'));
       assert.isFalse(spy.called);
     });
 
@@ -261,10 +264,10 @@ describe("dom", function () {
       var spy = sinon.spy();
       dom.addEventListener([el, el2], ['mouseover', 'mouseout'], spy);
       dom.removeEventListener([el, el2], ['mouseover', 'mouseout'], spy);
-      el.dispatchEvent(createMouseEvent('mouseover'));
-      el2.dispatchEvent(createMouseEvent('mouseover'));
-      el.dispatchEvent(createMouseEvent('mouseout'));
-      el2.dispatchEvent(createMouseEvent('mouseout'));
+      el.dispatchEvent(testUtils.createMouseEvent('mouseover'));
+      el2.dispatchEvent(testUtils.createMouseEvent('mouseover'));
+      el.dispatchEvent(testUtils.createMouseEvent('mouseout'));
+      el2.dispatchEvent(testUtils.createMouseEvent('mouseout'));
       assert.isFalse(spy.called);
     });
   });
@@ -275,7 +278,7 @@ describe("dom", function () {
       var spy = sinon.spy();
       dom.addEventListener(el, 'mouseover', spy);
 
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledOnce);
     });
   });
@@ -401,7 +404,7 @@ describe("dom", function () {
       dom.once(el, 'mouseover', spy);
 
       assert.isFalse(spy.called);
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
       assert.isTrue(spy.calledOnce);
     });
 
@@ -410,10 +413,10 @@ describe("dom", function () {
       var spy = sinon.spy();
       dom.once(el, 'mouseover', spy);
 
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
-      dom.dispatchEvent(el, createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
+      dom.dispatchEvent(el, testUtils.createMouseEvent('mouseover'));
       sinon.assert.calledOnce(spy);
     });
   });

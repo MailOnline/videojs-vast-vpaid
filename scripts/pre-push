@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Go up the directory tree until you arrive to the git root
 while [ ! -d .git ]
@@ -11,29 +11,14 @@ if [ "$TRAVIS" = "true" ]; then
    exit 0
 fi
 
-# It is not propertly finding the changed files.
-# TODO: Take a look to see why is failing
-#files=$(git diff --name-only --diff-filter=ACM | grep "^src/\|test/.*js$")
+echo -e "Running Unit Tests: \n"
 
-#if [ "$files" = "" ]; then
-#    exit 0
-#fi
+./node_modules/.bin/gulp test
 
-pass=true
-echo "\nRuning Unit Tests:\n"
-
-result="$(gulp test| grep "Error: 1")"
-
-if [ "$result" = "" ]; then
-     echo "\t\033[32mUnit Tests Passed\033[0m\n"
-else
-     echo "\t\033[31mUnit Tests Failed\033[0m\n"
-     pass=false
-fi
-
-if ! $pass; then
-    echo "\t\033[41mPUSH FAILED:\033[0m Your push contains failing tests. Please fix them and try again.\n"
+if [ $? -ne 0 ]; then
+    echo -e "\033[41mPUSH FAILED:\033[0m Your push contains failing tests. Please fix them and try again.\033[0m"
     exit 1
-else
-    echo "\t\033[42mPUSH SUCCEEDED\033[0m\n"
+else 
+	echo -e "\033[42mPUSH SUCCEEDED\033[0m"
+	exit 0
 fi

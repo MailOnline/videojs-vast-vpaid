@@ -1,3 +1,6 @@
+var async = require('utils/async');
+var utilities = require('utils/utilityFunctions');
+
 describe("async", function () {
   it("must be an object", function () {
     assert.isObject(async);
@@ -16,7 +19,7 @@ describe("async", function () {
       var spy = sinon.spy();
       async.setImmediate(spy);
       sinon.assert.notCalled(spy);
-      this.clock.tick(1);
+      this.clock.tick();
       sinon.assert.calledOnce(spy);
     });
   });
@@ -141,7 +144,7 @@ describe("async", function () {
 
   describe("when", function () {
     it("must return a function", function () {
-      assert.isFunction(async.when(false, noop));
+      assert.isFunction(async.when(false, utilities.noop));
     });
 
     it("must throw an exception if the second argument is not a callback", function () {
@@ -155,8 +158,8 @@ describe("async", function () {
         var spy = sinon.spy();
         var ifFn = async.when(true, spy);
 
-        ifFn("1", 2, null, noop);
-        sinon.assert.calledWithExactly(spy, "1", 2, null, noop);
+        ifFn("1", 2, null, utilities.noop);
+        sinon.assert.calledWithExactly(spy, "1", 2, null, utilities.noop);
       });
     });
 

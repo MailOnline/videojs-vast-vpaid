@@ -1,31 +1,35 @@
-var gulp = require('gulp');
-var runSequence = require('run-sequence');
-var path = require('path');
-var config = require('./config');
-var template = require('gulp-template');
-var globUtils = require('./globUtils');
-var flatten = require('gulp-flatten');
-var BuildTaskDoc = require('./BuildTaskDoc');
-var browserify = require('gulp-browserify');
-var rename = require('gulp-rename');
-var mergeStream = require('merge-stream');
+'use strict';
 
-gulp.task('build-demo', function (callback) {
+var browserify   = require('browserify');
+var gulp         = require('gulp');
+var mergeStream  = require('merge-stream');
+var path         = require('path');
+var rename       = require('gulp-rename');
+var runSequence  = require('run-sequence');
+var sass         = require('gulp-sass');
+var source       = require('vinyl-source-stream');
+var template     = require('gulp-template');
+
+var BuildTaskDoc = require('./BuildTaskDoc');
+var config       = require('./config');
+
+gulp.task('build-demo', function (done) {
   runSequence(
     'build',
-    'build-demo-page',
     [
+      'build-demo-page',
       'build-demo-scripts',
       'build-demo-styles',
-      'build-demo-fonts',
-      'build-demo-assets'
+      'build-demo-videojs',
+      'build-demo-config'
     ],
     function (error) {
       if (error) {
         console.log(error.message.red);
+      } else {
+        console.log('BUILD DEMO FINISHED SUCCESSFULLY'.green);
       }
-      console.log('BUILD DEMO FINISHED SUCCESSFULLY'.green);
-      callback();
+      done(error);
     });
 });
 
@@ -36,53 +40,68 @@ gulp.task('build-demo-styles', function () {
     .pipe(gulp.dest(stylesPath));
 });
 
-gulp.task('build-demo-fonts', function () {
-  var fontsPath = path.join(config.DEV, '/styles/font');
-
-  return gulp.src(config.demo.fonts)
-    .pipe(gulp.dest(fontsPath));
-});
-
-gulp.task('build-demo-assets', function () {
-  var assetsPath = path.join(config.DEV, '/assets');
-
-  return gulp.src(config.demo.assets)
-    .pipe(gulp.dest(assetsPath));
-});
-
 gulp.task('build-demo-page', function () {
-  var scripts = [path.join(config.DEV, '/scripts/*.js')];
-  var styles =  [path.join(config.DEV, '/styles/*.css')];
 
-  scripts = globUtils.syncGlobArray(scripts, {}, true, 'scripts');
+  var demoPage = path.join('demo/templates', 'index.html');
+  var buildProcesses = config.versions.map(function(version) {
 
-  styles = globUtils.syncGlobArray(styles, {}, true, 'styles');
+    return gulp.src(demoPage)
+      .pipe(template({
+        isDefault: config.versions.indexOf(version) === 0,
+        version: version,
+        otherVersions: config.versions.filter(function(v) { return v !== version;}),
+        demoAds: config.demoAds
+      }))
+      .pipe(rename('index_' + version + '.html'))
+      .pipe(gulp.dest(config.DEV));
+  });
 
-  return gulp.src(config.demo.pages)
-    .pipe(template({
-      scripts: scripts,
-      styles: styles
-    }))
-    .pipe(gulp.dest(config.DEV));
+  return mergeStream.apply(this, buildProcesses);
 });
 
 
 gulp.task('build-demo-scripts', function () {
-  var mainScript = path.join('demo/scripts', 'main.js');
-  var scriptsDistPath = path.join(config.DEV, '/scripts');
+  var mainScript = path.join('demo/scripts', 'demo.js');
+  var destPath = path.join(config.DEV, '/demo/scripts');
 
-  var dependencies_stream = gulp.src(config.demo.scripts)
-    .pipe(flatten());
-
-  var bundle_stream = gulp.src([mainScript])
-    .pipe(browserify({
-      insertGlobals : true,
+  return browserify({
+      entries: mainScript,
+      insertGlobals: true,
       debug : true
-    }))
-    .pipe(rename('demo_bundle.js'));
-
-  return mergeStream(dependencies_stream, bundle_stream)
-    .pipe(gulp.dest(scriptsDistPath));
+    }).bundle()
+    .pipe(source('demo.js'))
+    .pipe(gulp.dest(destPath));
 });
 
-module.exports = new BuildTaskDoc("build-demo", "Builds the demo", 5);
+gulp.task('build-demo-styles', function () {
+  var mainStyle = path.join('demo/styles', 'demo.scss');
+  var destPath = path.join(config.DEV, '/demo/styles');
+
+  return gulp.src(mainStyle)
+    .pipe(sass().on('error', sass.logError))
+    .pipe(gulp.dest(destPath));
+
+});
+
+gulp.task('build-demo-videojs', function () {
+  var assetsDistPath = path.join(config.DEV, '/demo');
+
+  var buildProcesses = config.versions.map(function(version) {
+    return gulp.src(config.versionsMap[version] + '**/*')
+      .pipe(gulp.dest(path.join(assetsDistPath, '/videojs_' + version + '/')));
+  });
+
+  return mergeStream.apply(this, buildProcesses);
+});
+
+gulp.task('build-demo-config', function () {
+  var configFile = path.join('demo', '_config.yml');
+  var destPath = path.join(config.DEV);
+
+  return gulp.src(configFile)
+    .pipe(gulp.dest(destPath));
+
+});
+
+
+module.exports = new BuildTaskDoc('build-demo', 'Builds the demo', 5);
