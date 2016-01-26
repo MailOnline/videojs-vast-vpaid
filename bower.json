@@ -38,6 +38,6 @@
     "videojs_5": "video.js#5",
     "videojs_4": "video.js#4",
     "VPAIDFLASHClient": "0.1.8",
-    "VPAIDHTML5Client": "https://github.com/MailOnline/VPAIDHTML5Client.git#master"
+    "VPAIDHTML5Client": "^0.1.12"
   }
 }
