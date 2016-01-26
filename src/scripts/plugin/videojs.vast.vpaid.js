@@ -272,18 +272,29 @@ module.exports = function VASTPlugin(options) {
       var previousTime = 0;
       var skipad_attempts = 0;
 
-      player.on('timeupdate', adTimeupdateHandler);
+      player.on('timeupdate', preventAdSeek);
+      player.on('ended', preventAdSkip);
+
       playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adError'], stopPreventManualProgress);
 
       /*** Local functions ***/
-      function adTimeupdateHandler() {
+      function preventAdSkip() {
+        // Ignore ended event if the Ad time was not 'near' the end
+        // and revert time to the previous 'valid' time
+        if ((player.duration() - previousTime) > PROGRESS_THRESHOLD) {
+          player.pause(true); // this reduce the video jitter if the IOS skip button is pressed
+          player.play(true); // we need to trigger the play to put the video element back in a valid state
+          player.currentTime(previousTime);
+        }
+      }
+
+      function preventAdSeek() {
         var currentTime = player.currentTime();
         var progressDelta = Math.abs(currentTime - previousTime);
-
         if (progressDelta > PROGRESS_THRESHOLD) {
           skipad_attempts += 1;
           if (skipad_attempts >= 2) {
-            player.pause();
+            player.pause(true);
           }
           player.currentTime(previousTime);
         } else {
@@ -292,7 +303,8 @@ module.exports = function VASTPlugin(options) {
       }
 
       function stopPreventManualProgress() {
-        player.off('timeupdate', adTimeupdateHandler);
+        player.off('timeupdate', preventAdSeek);
+        player.off('ended', preventAdSkip);
       }
     }
   }
