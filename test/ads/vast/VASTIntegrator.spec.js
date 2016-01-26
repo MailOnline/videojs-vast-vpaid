@@ -431,10 +431,22 @@ describe("VASTIntegrator", function () {
 
       it("must once the ad ended playing call the callback with the response and no error", function () {
         vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        sinon.stub(player, 'duration').returns(10);
+        sinon.stub(player, 'currentTime').returns(9);
         player.trigger('durationchange');
         player.trigger('playing');
         player.trigger('ended');
         sinon.assert.calledWithExactly(callback, null, response);
+      });
+
+      it("must NOT call the callback if the 'ended' event is triggered but the Ad isnt't yet finished", function () {
+        vastIntegrator._playSelectedAd(mediaFile, response, callback);
+        sinon.stub(player, 'duration').returns(10);
+        sinon.stub(player, 'currentTime').returns(1);
+        player.trigger('durationchange');
+        player.trigger('playing');
+        player.trigger('ended');
+        sinon.assert.notCalled(callback);
       });
 
       it("must on 'vast.adSkip' evt, call the callback with the response and no error", function () {
