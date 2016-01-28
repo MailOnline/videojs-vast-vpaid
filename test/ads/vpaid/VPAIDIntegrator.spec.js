@@ -7,6 +7,7 @@ var MediaFile = require('ads/vast/MediaFile');
 var VASTError = require('ads/vast/VASTError');
 var VASTResponse = require('ads/vast/VASTResponse');
 var VASTTracker = require('ads/vast/VASTTracker');
+var vastUtil = require('ads/vast/vastUtil');
 
 var dom = require('utils/dom');
 var utilities = require('utils/utilityFunctions');
@@ -140,6 +141,7 @@ describe("VPAIDIntegrator", function () {
       vastResponse = new VASTResponse();
       vastResponse._addMediaFiles([mediaFile]);
       this.clock = sinon.useFakeTimers();
+
     });
 
     afterEach(function () {
@@ -156,6 +158,8 @@ describe("VPAIDIntegrator", function () {
         loadAdUnit = testUtils.stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
         playAdUnit = testUtils.stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
         finishPlaying = testUtils.stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
+
+
       });
 
       afterEach(function () {
@@ -168,6 +172,20 @@ describe("VPAIDIntegrator", function () {
         var error = testUtils.firstArg(callback);
         assert.instanceOf(error, VASTError);
         assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse');
+      });
+
+      it("must trigger an error if could not find a supported mediaFile", function () {
+        sinon.stub(vastUtil, 'track');
+        vastResponse._addErrorTrackUrl(xml.toJXONTree('<Error><![CDATA[https://fakeErrorUrl&error_code=[ERRORCODE]]]></Error>'));
+
+        FakeTech.supports.returns(false);
+        vpaidIntegrator.playAd(vastResponse, callback);
+        sinon.assert.calledOnce(callback);
+        var error = testUtils.firstArg(callback);
+        assert.instanceOf(error, VASTError);
+        assert.equal(error.message, 'VAST Error: on VPAIDIntegrator.playAd, could not find a supported mediaFile');
+        sinon.assert.calledWithExactly(vastUtil.track, ["https://fakeErrorUrl&error_code=[ERRORCODE]"], { ERRORCODE: 403 });
+        vastUtil.track.restore();
       });
 
       it("must trigger a vpaid.adEnd evt on vast.adsCancel evt", function(){
