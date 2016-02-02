@@ -28,6 +28,8 @@ function VPAIDFlashTech(mediaFile, settings) {
 
 VPAIDFlashTech.VPAIDFLASHClient = VPAIDFLASHClient;
 
+VPAIDFLASHClient.runFlashTest(); // test async in the background if flash is supported or not
+
 VPAIDFlashTech.supports = function (type) {
   return type === 'application/x-shockwave-flash' && VPAIDFlashTech.VPAIDFLASHClient.isSupported();
 };
