@@ -15,7 +15,6 @@ var testTasks = [];
 config.versions.forEach(function(version) {
 
   var testTask = 'test-videojs_' + version;
-  var videoJs = config.versionsMap[version] + 'video.js';
 
   gulp.task(testTask, function (done) {
 
@@ -23,11 +22,7 @@ config.versions.forEach(function(version) {
 
     new Server({
       configFile: __dirname + '/../karma.conf.js',
-      files: [
-        videoJs,
-        'test/test-utils.css',
-        'test/**/*.spec.js'
-      ],
+      files: config.testFiles(version),
       autoWatch: autoWatch,
       singleRun: !autoWatch
     }, function (error) {

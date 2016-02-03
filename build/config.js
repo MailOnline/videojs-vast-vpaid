@@ -74,6 +74,24 @@ module.exports = {
     'bower_components/VPAIDFLASHClient/bin/VPAIDFlash.swf'
   ],
 
+  testFiles: function testFiles (videojsVersion){
+    var dependencies = [];
+    videojsVersion = videojsVersion || this.versions[0];
+
+    this.vendor.forEach(function(bundle){
+      dependencies.push({
+        pattern: bundle,
+        included: /\.js$/.test(bundle)
+      });
+    });
+    //We add videojs
+    dependencies.push(videoJsVersionsMap[videojsVersion] + 'video.js');
+    return dependencies.concat([
+      'test/test-utils.css',
+      'test/**/*.spec.js'
+    ]);
+  },
+
   demoAds: demoAds
 };
 
