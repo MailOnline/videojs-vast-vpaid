@@ -87,5 +87,11 @@ describe("MediaFile", function () {
       assert.equal(mediaFile.apiFramework, 'someApiFramework');
     });
 
+    describe("isSupported", function(){
+      it("must be a function", function(){
+        assert.isFunction(mediaFile.isSupported);
+      });
+    });
   });
+
 });

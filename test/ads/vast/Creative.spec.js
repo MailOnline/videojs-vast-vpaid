@@ -45,4 +45,43 @@ describe("Creative", function(){
     var creative = new Creative(xml.toJXONTree(creativeXML));
     assert.instanceOf(creative.linear, Linear);
   });
+
+  describe("isSupported", function(){
+    var creative;
+
+    beforeEach(function(){
+      var creativeXML = '<Creative apiFramework="fooFramework">' +
+        '<Linear>' +
+        '<Duration>00:00:58</Duration>' +
+        '<MediaFiles></MediaFiles>' +
+        '</Linear>'+
+        '</Creative>';
+      creative = new Creative(xml.toJXONTree(creativeXML));
+    });
+
+    it("must return true if the creative does not contain a linear", function(){
+      delete creative.linear;
+      assert.isTrue(creative.isSupported());
+    });
+
+    it("must returns false if it contains a non supported linear", function(){
+      creative.linear = {
+        isSupported: function(){
+          return false;
+        }
+      };
+      assert.isFalse(creative.isSupported());
+    });
+
+    it("must returns true if it contains a supported linear", function(){
+      creative.linear = {
+        isSupported: function(){
+          return true;
+        }
+      };
+      assert.isTrue(creative.isSupported());
+    });
+
+
+  });
 });

@@ -17,4 +17,15 @@ function Creative(creativeJTree) {
   }
 }
 
+/**
+ * Returns true if the browser supports at the creative.
+ */
+Creative.prototype.isSupported = function(){
+  if(this.linear) {
+    return this.linear.isSupported();
+  }
+
+  return true;
+};
+
 module.exports = Creative;

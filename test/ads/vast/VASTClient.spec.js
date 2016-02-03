@@ -110,6 +110,11 @@ describe("VASTClient", function () {
         sinon.assert.calledWith(vast._requestVASTXml, 'http://VASTAdTagURI.com');
         flushVASTXmlRequest(null, vastInLineXML('<Creatives><Creative><Linear>' +
         '<Duration>00:00:58</Duration>' +
+        '<MediaFiles>' +
+          '<MediaFile id="1" delivery="progressive" type="video/mp4" codec="video/mpeg-generic" bitrate="457" width="300" height="225">' +
+          '<![CDATA[http://gcdn.2mdn.net/MotifFiles/html/2215309/PID_914438_1235753019000_dcrmvideo.mp4]]>' +
+          '</MediaFile>'+
+          '</MediaFiles>' +
         '</Linear></Creative></Creatives>'));
 
         this.clock.tick(10);
@@ -562,9 +567,9 @@ describe("VASTClient", function () {
         //It must track the failed first error
         assertErrorTrack("on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad", 101, ['adChain1']);
 
-        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2.1"><InLine><Creatives><Creative><Linear>' +
+        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2.1"><InLine><Creatives><Creative><Companion>' +
           '<Duration>00:00:58</Duration>' +
-          '</Linear></Creative></Creatives></InLine></Ad>'));
+          '</Companion></Creative></Creatives></InLine></Ad>'));
         this.clock.tick();
 
         assert.isNull(testUtils.firstArg(callback));
@@ -604,10 +609,11 @@ describe("VASTClient", function () {
         //It must track the failed first error
         assertErrorTrack("on VASTClient.getVASTAd.validateAd, nor wrapper nor inline elements found on the Ad", 101, ['adChain1']);
 
-        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2.1"><InLine><Creatives><Creative><Linear>' +
+        requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2.1"><InLine><Creatives><Creative><Companion>' +
           '<Duration>00:00:58</Duration>' +
-          '</Linear></Creative></Creatives></InLine></Ad>'));
+          '</Companion></Creative></Creatives></InLine></Ad>'));
         this.clock.tick();
+
         assert.isNull(testUtils.firstArg(callback));
         var adChain = testUtils.secondArg(callback);
         assert.isArray(adChain);

@@ -44,13 +44,20 @@ function InLine(inlineJTree) {
 
 
 /**
- * Returns true if the browser is able to play at least one of the creatives.
+ * Returns true if the browser supports all the creatives.
  */
 InLine.prototype.isSupported = function(){
+  var i,len;
+
   if(this.creatives.length === 0) {
     return false;
   }
 
+  for(i = 0, len = this.creatives.length; i< len; i+=1){
+    if(!this.creatives[i].isSupported()){
+      return false;
+    }
+  }
   return true;
 };
 
