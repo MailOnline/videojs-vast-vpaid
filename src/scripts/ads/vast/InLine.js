@@ -42,4 +42,16 @@ function InLine(inlineJTree) {
   }
 }
 
+
+/**
+ * Returns true if the browser is able to play at least one of the creatives.
+ */
+InLine.prototype.isSupported = function(){
+  if(this.creatives.length === 0) {
+    return false;
+  }
+
+  return true;
+};
+
 module.exports = InLine;

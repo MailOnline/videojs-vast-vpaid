@@ -221,4 +221,17 @@ describe("InLine", function () {
       });
     });
   });
+
+  describe("isSupported", function(){
+    var inLine;
+
+    beforeEach(function(){
+      inLine = new InLine(xml.toJXONTree(inlineXML));
+    });
+
+    it("must return false if the inLine has no creatives", function(){
+      inLine.creatives.length = 0;
+      assert.isFalse(inLine.isSupported());
+    });
+  });
 });

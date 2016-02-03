@@ -530,8 +530,8 @@ describe("VASTClient", function () {
           '<VAST version="2.0"><Ad id="secondAd"><InLine></InLine></Ad></VAST>');
         this.clock.tick();
 
-        assertError(callback, "on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101);
-        assertErrorTrack("on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101, ['firstAd', 'secondAd']);
+        assertError(callback, "on VASTClient.getVASTAd.validateAd, could not find MediaFile that is supported by this video player", 403);
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, could not find MediaFile that is supported by this video player", 403, ['firstAd', 'secondAd']);
       });
 
       it("must return a 101 error to the callback and track it if one of the ads in the chain is a wrapper with no VASTAdTagURI", function(){
@@ -589,8 +589,8 @@ describe("VASTClient", function () {
         requests[1].respond(200, {"Content-Type": "text"}, vastXML('<Ad id="adChain2"><InLine><Creatives></Creatives></InLine></Ad>'));
         this.clock.tick();
 
-        assertError(callback, "on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101);
-        assertErrorTrack("on VASTClient.getVASTAd.validateAd, missing creative in InLine element", 101, ['adChain2', 'adChain2']);
+        assertError(callback, "on VASTClient.getVASTAd.validateAd, could not find MediaFile that is supported by this video player", 403);
+        assertErrorTrack("on VASTClient.getVASTAd.validateAd, could not find MediaFile that is supported by this video player", 403, ['adChain2', 'adChain2']);
       });
 
       it("must not pass an error to the callback if one of the adChains in the VAST waterfall returned a valid ad", function(){
