@@ -2,6 +2,8 @@
 
 var Creative = require('./Creative');
 var utilities = require('../../utils/utilityFunctions');
+var VPAIDHTML5Tech = require('../vpaid/VPAIDHTML5Tech');
+var VPAIDFlashTech = require('../vpaid/VPAIDFlashTech');
 
 var vastUtil = {
 
@@ -117,8 +119,8 @@ var vastUtil = {
     return utilities.toFixedDigits(hours, 2) + ':' + utilities.toFixedDigits(minutes, 2) + ':' + utilities.toFixedDigits(seconds, 2) + '.' + utilities.toFixedDigits(milliseconds, 3);
   },
 
-  parseOffset:   function parseOffset(offset, duration) {
-    if(isPercentage(offset)){
+  parseOffset: function parseOffset(offset, duration) {
+    if (isPercentage(offset)) {
       return calculatePercentage(offset, duration);
     }
     return vastUtil.parseDuration(offset);
@@ -130,19 +132,38 @@ var vastUtil = {
     }
 
     function calculatePercentage(percentStr, duration) {
-      if(duration) {
+      if (duration) {
         return calcPercent(duration, parseFloat(percentStr.replace('%', '')));
       }
       return null;
     }
 
-    function calcPercent(quantity, percent){
+    function calcPercent(quantity, percent) {
       return quantity * percent / 100;
     }
   },
 
+
+  //List of supported VPAID technologies
+  VPAID_techs: [
+    VPAIDFlashTech,
+    VPAIDHTML5Tech
+  ],
+
   isVPAID: function isVPAIDMediaFile(mediaFile) {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
+  },
+
+  findSupportedVPAIDTech: function findSupportedVPAIDTech(mimeType) {
+    var i, len, VPAIDTech;
+
+    for (i = 0, len = this.VPAID_techs.length; i < len; i += 1) {
+      VPAIDTech = this.VPAID_techs[i];
+      if (VPAIDTech.supports(mimeType)) {
+        return VPAIDTech;
+      }
+    }
+    return null;
   }
 };
 
