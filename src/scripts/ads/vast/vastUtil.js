@@ -159,8 +159,14 @@ var vastUtil = {
     return VPAIDFLASHClient.isSupported();
   },
 
-  runFlashTest: function runFlashTest(swfConfig) {
-    VPAIDFLASHClient.runFlashTest(swfConfig);
+  /**
+   * Necessary step for VPAIDFLAShClient to know if flash is supported and not blocked.
+   * IMPORTANT NOTE: This is an async test and needs to be run as soon as possible.
+   *
+   * @param vpaidFlashLoaderPath the path to the vpaidFlashLoader swf obj.
+   */
+  runFlashSupportCheck: function runFlashSupportCheck(vpaidFlashLoaderPath) {
+    VPAIDFLASHClient.runFlashTest({data: vpaidFlashLoaderPath});
   }
 
 };
