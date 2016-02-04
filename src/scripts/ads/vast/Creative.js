@@ -1,6 +1,7 @@
 'use strict';
 
 var Linear = require('./Linear');
+var utilities = require('../../utils/utilityFunctions');
 
 function Creative(creativeJTree) {
   if(!(this instanceof Creative)) {
@@ -26,6 +27,18 @@ Creative.prototype.isSupported = function(){
   }
 
   return true;
+};
+
+Creative.parseCreatives = function parseCreatives(creativesJTree) {
+  var creatives = [];
+  var creativesData;
+  if (utilities.isDefined(creativesJTree) && utilities.isDefined(creativesJTree.creative)) {
+    creativesData = utilities.isArray(creativesJTree.creative) ? creativesJTree.creative : [creativesJTree.creative];
+    creativesData.forEach(function (creative) {
+      creatives.push(new Creative(creative));
+    });
+  }
+  return creatives;
 };
 
 module.exports = Creative;

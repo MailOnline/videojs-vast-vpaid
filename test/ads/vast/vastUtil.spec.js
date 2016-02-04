@@ -1,4 +1,3 @@
-var Creative = require('ads/vast/Creative');
 var vastUtil = require('ads/vast/vastUtil');
 var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
 var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
@@ -166,40 +165,6 @@ describe("vastUtil", function () {
         'http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif',
         'http://ad.doubleclick.net/ad/N270.Process_Other/B3473145;sz=1x1;ord=6212269?'
       ]);
-    });
-  });
-
-  describe("parseCreatives", function () {
-    var parseCreatives;
-
-    beforeEach(function () {
-      parseCreatives = vastUtil.parseCreatives;
-    });
-
-    it("must return an empty array if you pass no creativesJTree", function () {
-      testUtils.assertEmptyArray(parseCreatives());
-    });
-
-    it("must return an empty array if there is no real creatives", function () {
-      var inlineXML = '<InLine><Creatives></Creatives></InLine>';
-      testUtils.assertEmptyArray(parseCreatives(xml.toJXONTree(inlineXML).creatives));
-    });
-
-
-    it("must be an array or creatives", function () {
-      var inlineXML = '<InLine>' +
-        '<Creatives>' +
-        '<Creative id="8454" sequence="1"></Creative>' +
-        '<Creative id="8455" sequence="2"></Creative>' +
-        '</Creatives>' +
-        '</InLine>';
-      var creativesJTree = xml.toJXONTree(inlineXML).creatives;
-      var creatives = parseCreatives(creativesJTree);
-      assert.isArray(creatives);
-      assert.instanceOf(creatives[0], Creative);
-      assert.equal(creatives[0].id, 8454);
-      assert.instanceOf(creatives[1], Creative);
-      assert.equal(creatives[1].id, 8455);
     });
   });
 

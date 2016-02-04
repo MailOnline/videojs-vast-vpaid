@@ -1,7 +1,7 @@
 'use strict';
 
 var xml = require('../../utils/xml');
-//var vastUtil = require('./vastUtil');
+// var vastUtil = require('./vastUtil');
 
 var attributesList = [
   //Required attributes

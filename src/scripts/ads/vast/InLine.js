@@ -1,6 +1,7 @@
 'use strict';
 
 var vastUtil = require('./vastUtil');
+var Creative = require('./Creative');
 
 var utilities = require('../../utils/utilityFunctions');
 var xml = require('../../utils/xml');
@@ -14,7 +15,7 @@ function InLine(inlineJTree) {
   this.adTitle = xml.keyValue(inlineJTree.adTitle);
   this.adSystem = xml.keyValue(inlineJTree.adSystem);
   this.impressions = vastUtil.parseImpressions(inlineJTree.impression);
-  this.creatives = vastUtil.parseCreatives(inlineJTree.creatives);
+  this.creatives = Creative.parseCreatives(inlineJTree.creatives);
 
   //Optional Fields
   this.description = xml.keyValue(inlineJTree.description);

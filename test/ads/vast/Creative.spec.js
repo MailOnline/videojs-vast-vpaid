@@ -1,4 +1,5 @@
 'use strict';
+var testUtils = require('../../test-utils');
 
 describe("Creative", function(){
 
@@ -83,5 +84,38 @@ describe("Creative", function(){
     });
 
 
+  });
+
+  describe("parseCreatives", function () {
+    var parseCreatives;
+
+    beforeEach(function () {
+      parseCreatives = Creative.parseCreatives;
+    });
+
+    it("must return an empty array if you pass no creativesJTree", function () {
+      testUtils.assertEmptyArray(parseCreatives());
+    });
+
+    it("must return an empty array if there is no real creatives", function () {
+      var inlineXML = '<InLine><Creatives></Creatives></InLine>';
+      testUtils.assertEmptyArray(parseCreatives(xml.toJXONTree(inlineXML).creatives));
+    });
+
+    it("must be an array or creatives", function () {
+      var inlineXML = '<InLine>' +
+        '<Creatives>' +
+          '<Creative id="8454" sequence="1"></Creative>' +
+            '<Creative id="8455" sequence="2"></Creative>' +
+              '</Creatives>' +
+                '</InLine>';
+                var creativesJTree = xml.toJXONTree(inlineXML).creatives;
+                var creatives = parseCreatives(creativesJTree);
+                assert.isArray(creatives);
+                assert.instanceOf(creatives[0], Creative);
+                assert.equal(creatives[0].id, 8454);
+                assert.instanceOf(creatives[1], Creative);
+                assert.equal(creatives[1].id, 8455);
+    });
   });
 });

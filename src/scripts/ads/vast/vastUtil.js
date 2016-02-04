@@ -1,6 +1,5 @@
 'use strict';
 
-var Creative = require('./Creative');
 var utilities = require('../../utils/utilityFunctions');
 var VPAIDHTML5Tech = require('../vpaid/VPAIDHTML5Tech');
 var VPAIDFlashTech = require('../vpaid/VPAIDFlashTech');
@@ -94,17 +93,6 @@ var vastUtil = {
     return [];
   },
 
-  parseCreatives: function parseCreatives(creativesJTree) {
-    var creatives = [];
-    var creativesData;
-    if (utilities.isDefined(creativesJTree) && utilities.isDefined(creativesJTree.creative)) {
-      creativesData = utilities.isArray(creativesJTree.creative) ? creativesJTree.creative : [creativesJTree.creative];
-      creativesData.forEach(function (creative) {
-        creatives.push(new Creative(creative));
-      });
-    }
-    return creatives;
-  },
 
   //We assume that the progress is going to arrive in milliseconds
   formatProgress: function formatProgress(progress) {
@@ -166,6 +154,5 @@ var vastUtil = {
     return null;
   }
 };
-
 
 module.exports = vastUtil;
