@@ -157,6 +157,10 @@ var vastUtil = {
 
   isFlashSupported: function isFlashSupported() {
     return VPAIDFLASHClient.isSupported();
+  },
+
+  runFlashTest: function runFlashTest(swfConfig) {
+    VPAIDFLASHClient.runFlashTest(swfConfig);
   }
 
 };
