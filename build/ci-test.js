@@ -15,17 +15,12 @@ var testTasks = [];
 config.versions.forEach(function(version) {
 
   var testTask = 'ci-test-videojs_' + version;
-  var videoJs = config.versionsMap[version] + 'video.js';
 
   gulp.task(testTask, function (done) {
 
     new Server({
       configFile: __dirname + '/../karma.conf.js',
-      files: [
-        videoJs,
-        'test/test-utils.css',
-        'test/**/*.spec.js'
-      ],
+      files: config.testFiles(version),
       autoWatch: false,
       singleRun: true,
       browsers: ['Chrome_travis_ci'],

@@ -6,8 +6,6 @@ var VASTTracker = require('../vast/VASTTracker');
 var vastUtil = require('../vast/vastUtil');
 
 var VPAIDAdUnitWrapper = require('./VPAIDAdUnitWrapper');
-var VPAIDHTML5Tech = require('./VPAIDHTML5Tech');
-var VPAIDFlashTech = require('./VPAIDFlashTech');
 
 var async = require('../../utils/async');
 var dom = require('../../utils/dom');
@@ -42,12 +40,6 @@ function VPAIDIntegrator(player, settings) {
 
   }
 }
-
-//List of supported VPAID technologies
-VPAIDIntegrator.techs = [
-  VPAIDFlashTech,
-  VPAIDHTML5Tech
-];
 
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
   if (!(vastResponse instanceof VASTResponse)) {
@@ -137,25 +129,12 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 
   for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
     mediaFile = vpaidMediaFiles[i];
-    VPAIDTech = findSupportedTech(mediaFile);
+    VPAIDTech = vastUtil.findSupportedVPAIDTech(mediaFile.type);
     if (VPAIDTech) {
       return new VPAIDTech(mediaFile, settings);
     }
   }
   return null;
-
-  /*** Local functions ***/
-  function findSupportedTech(mediafile) {
-    var type = mediafile.type;
-    var i, len, VPAIDTech;
-    for (i = 0, len = VPAIDIntegrator.techs.length; i < len; i += 1) {
-      VPAIDTech = VPAIDIntegrator.techs[i];
-      if (VPAIDTech.supports(type)) {
-        return VPAIDTech;
-      }
-    }
-    return null;
-  }
 };
 
 VPAIDIntegrator.prototype._createVPAIDAdUnitWrapper = function(adUnit, src, responseTimeout) {

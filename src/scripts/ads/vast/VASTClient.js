@@ -183,13 +183,15 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
       return new VASTError(errMsgPrefix + "nor wrapper nor inline elements found on the Ad", 101);
     }
 
-    if (inLine && inLine.creatives.length === 0) {
-      return new VASTError(errMsgPrefix + "missing creative in InLine element", 101);
+    if (inLine && !inLine.isSupported()) {
+      return new VASTError(errMsgPrefix + "could not find MediaFile that is supported by this video player", 403);
     }
 
     if (wrapper && !wrapper.VASTAdTagURI) {
       return new VASTError(errMsgPrefix + "missing 'VASTAdTagURI' in wrapper", 101);
     }
+
+    return null;
   }
 
   function requestVASTAd(adTagUrl, callback) {
