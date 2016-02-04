@@ -248,8 +248,7 @@ describe("vastUtil", function () {
     });
   });
 
-  // TODO add a way to override isSupported
-  describe.skip("isFlashSupported", function() {
+  describe("isFlashSupported", function() {
       beforeEach(function () {
         sinon.stub(VPAIDFLASHClient, 'isSupported');
       });
