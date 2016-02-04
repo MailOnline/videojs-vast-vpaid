@@ -1,4 +1,5 @@
 var vastUtil = require('ads/vast/vastUtil');
+var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
 var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
 var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 
@@ -247,5 +248,18 @@ describe("vastUtil", function () {
     });
   });
 
+  // TODO add a way to override isSupported
+  describe.skip("isFlashSupported", function() {
+      beforeEach(function () {
+        sinon.stub(VPAIDFLASHClient, 'isSupported');
+      });
 
+      it("must delegate in VPAIDFLASHClient.isSupported", function() {
+        VPAIDFLASHClient.isSupported.returns(false);
+        assert.isFalse(vastUtil.isFlashSupported());
+
+        VPAIDFLASHClient.isSupported.returns(true);
+        assert.isTrue(vastUtil.isFlashSupported());
+      });
+  });
 });

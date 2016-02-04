@@ -1,7 +1,7 @@
 'use strict';
 
 var xml = require('../../utils/xml');
-// var vastUtil = require('./vastUtil');
+var vastUtil = require('./vastUtil');
 
 var attributesList = [
   //Required attributes
@@ -35,11 +35,13 @@ function MediaFile(mediaFileJTree) {
 }
 
 MediaFile.prototype.isSupported = function(){
-  //if(vastUtil.isVPAID(this)){
-    //check if there is a valid tech
-  //} else {
-    //check if the browser supports the mediaFile type
-  //}
+  if(vastUtil.isVPAID(this)) {
+    return !!vastUtil.findSupportedVPAIDTech(this.type);
+  }
+
+  if (this.type === 'video/x-flv') {
+    return vastUtil.isFlashSupported();
+  }
 
   return true;
 };

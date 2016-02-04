@@ -3,6 +3,7 @@
 var utilities = require('../../utils/utilityFunctions');
 var VPAIDHTML5Tech = require('../vpaid/VPAIDHTML5Tech');
 var VPAIDFlashTech = require('../vpaid/VPAIDFlashTech');
+var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
 
 var vastUtil = {
 
@@ -152,7 +153,12 @@ var vastUtil = {
       }
     }
     return null;
+  },
+
+  isFlashSupported: function isFlashSupported() {
+    return VPAIDFLASHClient.isSupported();
   }
+
 };
 
 module.exports = vastUtil;
