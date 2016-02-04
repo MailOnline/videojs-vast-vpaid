@@ -1,6 +1,7 @@
 'use strict';
 
 var xml = require('../../utils/xml');
+var vastUtil = require('./vastUtil');
 
 var attributesList = [
   //Required attributes
@@ -32,5 +33,17 @@ function MediaFile(mediaFileJTree) {
     this[attribute] = mediaFileJTree.attr(attribute);
   }
 }
+
+MediaFile.prototype.isSupported = function(){
+  if(vastUtil.isVPAID(this)) {
+    return !!vastUtil.findSupportedVPAIDTech(this.type);
+  }
+
+  if (this.type === 'video/x-flv') {
+    return vastUtil.isFlashSupported();
+  }
+
+  return true;
+};
 
 module.exports = MediaFile;

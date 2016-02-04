@@ -1,9 +1,6 @@
 var istanbul = require('browserify-istanbul');
 var config = require('./build/config');
 
-var defaultVersion = config.versions[0];
-var defaultVideoJs = config.versionsMap[defaultVersion] + 'video.js';
-
 module.exports = function (karma) {
   karma.set({
     /**
@@ -11,11 +8,8 @@ module.exports = function (karma) {
      */
     basePath: './',
 
-    files: [
-        defaultVideoJs,
-        'test/test-utils.css',
-        'test/**/*.spec.js'
-    ],
+    files: config.testFiles(),
+
     /**
      * This is the list of file patterns to load into the browser during testing.
      */
@@ -32,6 +26,7 @@ module.exports = function (karma) {
         only: /VPAIDFLASHClient/
         }],
         istanbul({
+            //NOTE: Once we got full ES6 there is a problem in Karma/Istanbul please look https://github.com/karma-runner/karma-coverage/issues/157#issuecomment-160555004
             ignore: ['**/node_modules/**', '**/test/**', '**/bower_components/**'],
         }) ]
     },

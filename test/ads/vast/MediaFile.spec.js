@@ -5,6 +5,7 @@ describe("MediaFile", function () {
   var MediaFile = require('ads/vast/MediaFile');
 
   var xml = require('utils/xml');
+  var vastUtil = require('ads/vast/vastUtil');
 
   var mediaFileXML;
 
@@ -87,5 +88,63 @@ describe("MediaFile", function () {
       assert.equal(mediaFile.apiFramework, 'someApiFramework');
     });
 
+    describe("isSupported", function(){
+      var mediaFile;
+
+      beforeEach(function () {
+        mediaFile = new MediaFile(xml.toJXONTree('<MediaFile apiFramework="someApiFramework"></MediaFile>'));
+      });
+
+      it("must be a function", function(){
+        assert.isFunction(mediaFile.isSupported);
+      });
+
+      describe("VPAID mediafile", function() {
+
+        beforeEach(function() {
+          mediaFile.apiFramework = 'VPAID';
+        });
+
+        it("must return true if there is a supported VPAIDtech", function () {
+          mediaFile.type = 'application/javascript'; // type of VPAIDHTML5Tech
+          assert.isTrue(mediaFile.isSupported());
+        });
+
+        it("must return false if there is a supported VPAIDtech", function () {
+          mediaFile.type = 'application/nonSupported';
+          assert.isFalse(mediaFile.isSupported());
+        });
+      });
+
+      describe("VAST mediafile", function() {
+
+        beforeEach(function() {
+          sinon.stub(vastUtil, 'isFlashSupported');
+        });
+
+        afterEach(function () {
+          vastUtil.isFlashSupported.restore();
+        });
+
+        it("must return true if mime type is video/x-flv and flash is supported", function () {
+          mediaFile.type = 'video/x-flv';
+          vastUtil.isFlashSupported.returns(true);
+          assert.isTrue(mediaFile.isSupported());
+        });
+
+        it("must return false if mime type is video/x-flv and flash is not supported", function () {
+          mediaFile.type = 'video/x-flv';
+          vastUtil.isFlashSupported.returns(false);
+          assert.isFalse(mediaFile.isSupported());
+        });
+
+        it("must return true if mime type is not video/x-flv", function () {
+          mediaFile.type = 'video/volkswagen';
+          vastUtil.isFlashSupported.returns(false);
+          assert.isTrue(mediaFile.isSupported());
+        });
+      });
+    });
   });
+
 });

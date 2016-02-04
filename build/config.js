@@ -16,10 +16,6 @@ var videoJsVersionsMap = {
 
 var demoAds = [
   {
-  url:'http://bs.serving-sys.com/BurstingPipe/adServer.bs?cn=is&c=23&pl=VAST&pli=13569296&PluID=0&pos=1886&ord=%%CACHEBUSTER%%&cim=1',
-  label:'VAST serving-sys Preroll Linear'
-  },
-  {
   url:'http://servedby.flashtalking.com/imp/1/31714;812030;208;xml;DailyMail;640x360VASTHTML5/?cachebuster=%%CACHEBUSTER%%',
   label:'VAST flashtalking Preroll Linear'
   },
@@ -73,6 +69,24 @@ module.exports = {
     'bower_components/swfobject/swfobject/src/swfobject.js',
     'bower_components/VPAIDFLASHClient/bin/VPAIDFlash.swf'
   ],
+
+  testFiles: function testFiles (videojsVersion){
+    var dependencies = [];
+    videojsVersion = videojsVersion || this.versions[0];
+
+    this.vendor.forEach(function(bundle){
+      dependencies.push({
+        pattern: bundle,
+        included: /\.js$/.test(bundle)
+      });
+    });
+    //We add videojs
+    dependencies.push(videoJsVersionsMap[videojsVersion] + 'video.js');
+    return dependencies.concat([
+      'test/test-utils.css',
+      'test/**/*.spec.js'
+    ]);
+  },
 
   demoAds: demoAds
 };

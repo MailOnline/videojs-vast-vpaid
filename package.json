@@ -1,6 +1,6 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
@@ -27,7 +27,8 @@
     "test": "gulp ci-test",
     "prepare-hooks": "chmod u+x scripts/*",
     "setup-hooks": "./scripts/setup-hooks",
-    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s"
+    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s",
+    "postinstall": "bower install"
   },
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"

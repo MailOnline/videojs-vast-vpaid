@@ -1,6 +1,7 @@
 'use strict';
 
 var vastUtil = require('./vastUtil');
+var Creative = require('./Creative');
 
 var utilities = require('../../utils/utilityFunctions');
 var xml = require('../../utils/xml');
@@ -14,7 +15,7 @@ function InLine(inlineJTree) {
   this.adTitle = xml.keyValue(inlineJTree.adTitle);
   this.adSystem = xml.keyValue(inlineJTree.adSystem);
   this.impressions = vastUtil.parseImpressions(inlineJTree.impression);
-  this.creatives = vastUtil.parseCreatives(inlineJTree.creatives);
+  this.creatives = Creative.parseCreatives(inlineJTree.creatives);
 
   //Optional Fields
   this.description = xml.keyValue(inlineJTree.description);
@@ -41,5 +42,24 @@ function InLine(inlineJTree) {
     return [];
   }
 }
+
+
+/**
+ * Returns true if the browser supports all the creatives.
+ */
+InLine.prototype.isSupported = function(){
+  var i,len;
+
+  if(this.creatives.length === 0) {
+    return false;
+  }
+
+  for(i = 0, len = this.creatives.length; i< len; i+=1){
+    if(!this.creatives[i].isSupported()){
+      return false;
+    }
+  }
+  return true;
+};
 
 module.exports = InLine;
