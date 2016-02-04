@@ -1,7 +1,6 @@
 var VPAIDAdUnitWrapper = require('ads/vpaid/VPAIDAdUnitWrapper');
 var VPAIDIntegrator = require('ads/vpaid/VPAIDIntegrator');
 var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
-var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 
 var MediaFile = require('ads/vast/MediaFile');
 var VASTError = require('ads/vast/VASTError');
@@ -106,13 +105,6 @@ describe("VPAIDIntegrator", function () {
     assert.instanceOf(new VPAIDIntegrator(player), VPAIDIntegrator);
   });
 
-  it("must support Flash and HTML vpaid", function () {
-    assert.equal(VPAIDIntegrator.techs.length, 2);
-    assert.include(VPAIDIntegrator.techs, VPAIDFlashTech, 'should support flash');
-
-    assert.include(VPAIDIntegrator.techs, VPAIDHTML5Tech, 'should support html');
-  });
-
   describe("instance", function () {
     var vpaidIntegrator, callback, FakeTech, vastResponse;
 
@@ -153,17 +145,15 @@ describe("VPAIDIntegrator", function () {
 
       beforeEach(function () {
         FakeTech.supports.returns(true);
-        VPAIDIntegrator.techs.unshift(FakeTech);
+        vastUtil.VPAID_techs.unshift(FakeTech);
 
         loadAdUnit = testUtils.stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
         playAdUnit = testUtils.stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
         finishPlaying = testUtils.stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
-
-
       });
 
       afterEach(function () {
-        VPAIDIntegrator.techs.shift();
+        vastUtil.VPAID_techs.shift();
       });
 
       it("must complain if you don't pass a VASTResponse", function () {
@@ -825,7 +815,7 @@ describe("VPAIDIntegrator", function () {
     });
 
     describe("findSupportedTech", function () {
-      var FLASH_STRING = 'application/x-shockwave-flash';
+      var FLASH_APP_MIME = 'application/x-shockwave-flash';
       var originalFlash;
 
       beforeEach(function() {
@@ -857,7 +847,7 @@ describe("VPAIDIntegrator", function () {
 
       it("must return null if the tech is not supported", function () {
         var vastResponse = new VASTResponse();
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
 
         sinon.stub(VPAIDFlashTech.VPAIDFLASHClient, 'isSupported', function () {return false;});
 
@@ -867,7 +857,7 @@ describe("VPAIDIntegrator", function () {
       it("must return an instance of the supported tech", function () {
         var vastResponse = new VASTResponse();
 
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
 
         assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse), VPAIDFlashTech);
       });
@@ -875,7 +865,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass the settings to the to the created tech", function(){
         var settings = {vpaidFlashLoaderPath: '/VPAIDFlash.swf'};
         var vastResponse = new VASTResponse();
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
         var flashTech = vpaidIntegrator._findSupportedTech(vastResponse, settings);
         assert.deepEqual(flashTech.settings, settings);
       });

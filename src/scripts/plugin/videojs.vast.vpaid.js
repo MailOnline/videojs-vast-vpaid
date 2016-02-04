@@ -66,6 +66,8 @@ module.exports = function VASTPlugin(options) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
 
+  vastUtil.runFlashSupportCheck(settings.vpaidFlashLoaderPath);// Necessary step for VPAIDFLASHClient to work.
+
   playerUtils.prepareForAds(player);
 
   if (settings.playAdAlways) {
