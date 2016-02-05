@@ -11,7 +11,7 @@ videojs.addLanguage("nl",{
  "Fullscreen": "Volledig scherm",
  "Non-Fullscreen": "Geen volledig scherm",
  "Mute": "Geluid uit",
- "Unmuted": "Geluid aan",
+ "Unmute": "Geluid aan",
  "Playback Rate": "Weergavesnelheid",
  "Subtitles": "Ondertiteling",
  "subtitles off": "Ondertiteling uit",

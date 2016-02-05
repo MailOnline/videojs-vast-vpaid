@@ -1,6 +1,6 @@
 /**
  * @license
- * Video.js 5.6.0 <http://videojs.com/>
+ * Video.js 5.7.0 <http://videojs.com/>
  * Copyright Brightcove, Inc. <https://www.brightcove.com/>
  * Available under Apache License Version 2.0
  * <https://github.com/videojs/video.js/blob/master/LICENSE>
@@ -3504,12 +3504,14 @@ var Component = (function () {
    *
    * @param {String|Component} child The class name or instance of a child to add
    * @param {Object=} options Options, including options to be passed to children of the child.
+   * @param {Number} index into our children array to attempt to add the child
    * @return {Component} The child component (created by this process if a string was used)
    * @method addChild
    */
 
   Component.prototype.addChild = function addChild(child) {
     var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var index = arguments.length <= 2 || arguments[2] === undefined ? this.children_.length : arguments[2];
 
     var component = undefined;
     var componentName = undefined;
@@ -3559,7 +3561,7 @@ var Component = (function () {
         component = child;
       }
 
-    this.children_.push(component);
+    this.children_.splice(index, 0, component);
 
     if (typeof component.id === 'function') {
       this.childIndex_[component.id()] = component;
@@ -3576,7 +3578,9 @@ var Component = (function () {
     // Add the UI object's element to the container div (box)
     // Having an element is not required
     if (typeof component.el === 'function' && component.el()) {
-      this.contentEl().appendChild(component.el());
+      var childNodes = this.contentEl().children;
+      var refNode = childNodes[index] || null;
+      this.contentEl().insertBefore(component.el(), refNode);
     }
 
     // Return so it can stored on parent object if desired.
@@ -9650,7 +9654,12 @@ var Player = (function (_Component) {
     if (tag.parentNode) {
       tag.parentNode.insertBefore(el, tag);
     }
+
+    // insert the tag as the first child of the player element
+    // then manually add it to the children array so that this.addChild
+    // will work properly for other components
     Dom.insertElFirst(tag, el); // Breaks iPhone, fixed in HTML5 setup.
+    this.children_.unshift(tag);
 
     this.el_ = el;
 
@@ -16881,6 +16890,9 @@ TextTrackList.prototype.removeTrack_ = function (rtrack) {
   for (var i = 0, l = this.length; i < l; i++) {
     if (this[i] === rtrack) {
       track = this[i];
+      if (track.off) {
+        track.off();
+      }
 
       this.tracks_.splice(i, 1);
 
@@ -17596,10 +17608,14 @@ var appleWebkitVersion = webkitVersionMap ? parseFloat(webkitVersionMap.pop()) :
  * @constant
  * @private
  */
-var IS_IPHONE = /iPhone/i.test(USER_AGENT);
-exports.IS_IPHONE = IS_IPHONE;
 var IS_IPAD = /iPad/i.test(USER_AGENT);
+
 exports.IS_IPAD = IS_IPAD;
+// The Facebook app's UIWebView identifies as both an iPhone and iPad, so
+// to identify iPhones, we need to exclude iPads.
+// http://artsy.github.io/blog/2012/10/18/the-perils-of-ios-user-agent-sniffing/
+var IS_IPHONE = /iPhone/i.test(USER_AGENT) && !IS_IPAD;
+exports.IS_IPHONE = IS_IPHONE;
 var IS_IPOD = /iPod/i.test(USER_AGENT);
 exports.IS_IPOD = IS_IPOD;
 var IS_IOS = IS_IPHONE || IS_IPAD || IS_IPOD;
@@ -19650,7 +19666,7 @@ setup.autoSetupTimeout(1, videojs);
  *
  * @type {String}
  */
-videojs.VERSION = '5.6.0';
+videojs.VERSION = '5.7.0';
 
 /**
  * The global options object. These are the settings that take effect

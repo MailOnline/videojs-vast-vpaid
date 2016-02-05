@@ -11,7 +11,7 @@ videojs.addLanguage("de",{
  "Fullscreen": "Vollbild",
  "Non-Fullscreen": "Kein Vollbild",
  "Mute": "Ton aus",
- "Unmuted": "Ton ein",
+ "Unmute": "Ton ein",
  "Playback Rate": "Wiedergabegeschwindigkeit",
  "Subtitles": "Untertitel",
  "subtitles off": "Untertitel aus",
