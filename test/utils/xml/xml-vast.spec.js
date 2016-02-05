@@ -1,3 +1,6 @@
+var xml = require('utils/xml');
+
+/*jslint maxlen: 800 */
 describe("VAST XML", function(){
   var sampleVastXmlStr = '<?xml version="1.0" encoding="UTF-8"?>'+
   '<VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">'+
@@ -81,7 +84,7 @@ describe("VAST XML", function(){
     });
 
     it("must contain inLine", function(){
-      assert.isObject(ad.inLine)
+      assert.isObject(ad.inLine);
     });
 
     describe("inLine", function(){
@@ -128,7 +131,7 @@ describe("VAST XML", function(){
           });
 
           it("must have one linear", function(){
-            assert.isObject(creative.linear)
+            assert.isObject(creative.linear);
           });
 
           describe("linear", function(){
@@ -144,7 +147,7 @@ describe("VAST XML", function(){
 
             it("must contain tracking events", function(){
               assert.isArray(linear.trackingEvents.tracking);
-              assert.equal(linear.trackingEvents.tracking.length, 18)
+              assert.equal(linear.trackingEvents.tracking.length, 18);
             });
 
             describe("trackingEvents", function(){

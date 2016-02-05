@@ -115,16 +115,16 @@ dom.onReady = (function () {
   }
 
   return function documentOnReady(handler, context) {
-    var context = context || window;
+    context = context || window;
 
     if (_.isFunction(handler)) {
       if (readyFired) {
         setTimeout(function () {
-          callback(context);
+          handler.bind(context);
         }, 0);
-        return;
+      } else {
+        readyHandlers.push(handler.bind(context));
       }
-      readyHandlers.push(handler.bind(context));
     }
   };
 

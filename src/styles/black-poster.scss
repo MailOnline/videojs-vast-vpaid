@@ -1,0 +1,23 @@
+.vjs-black-poster {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: contain;
+  cursor: pointer;
+  background-color: #000;
+}
+
+.vjs-has-started .vjs-black-poster.vjs-hidden {
+  display: none;
+}
+
+// if we use native controls we don't need black poster
+.vjs-using-native-controls .vjs-black-poster {
+    display: none;
+}

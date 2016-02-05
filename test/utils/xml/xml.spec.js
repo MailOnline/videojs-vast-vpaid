@@ -1,3 +1,5 @@
+var xml = require('utils/xml');
+
 describe("xml", function () {
   it("must be an object", function () {
     assert.isObject(xml);

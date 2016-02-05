@@ -1,3 +1,19 @@
+var VPAIDAdUnitWrapper = require('ads/vpaid/VPAIDAdUnitWrapper');
+var VPAIDIntegrator = require('ads/vpaid/VPAIDIntegrator');
+var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
+
+var MediaFile = require('ads/vast/MediaFile');
+var VASTError = require('ads/vast/VASTError');
+var VASTResponse = require('ads/vast/VASTResponse');
+var VASTTracker = require('ads/vast/VASTTracker');
+var vastUtil = require('ads/vast/vastUtil');
+
+var dom = require('utils/dom');
+var utilities = require('utils/utilityFunctions');
+var xml = require('utils/xml');
+
+var testUtils = require('../../test-utils');
+
 describe("VPAIDIntegrator", function () {
   var player, vpaidAdUnit, adUnitWrapper, testDiv;
 
@@ -39,12 +55,12 @@ describe("VPAIDIntegrator", function () {
     };
 
     this.trigger = function() {
-      var args = arrayLikeObjToArray(arguments);
+      var args = utilities.arrayLikeObjToArray(arguments);
       var evtName = args.shift();
       var handlers = events[evtName];
 
       if(handlers){
-        forEach(handlers, function(handler) {
+        handlers.forEach(function(handler) {
           handler.apply(null, args);
         });
       }
@@ -64,18 +80,18 @@ describe("VPAIDIntegrator", function () {
     player = videojs(videoEl, {});
     dom.addClass(player.el(), 'vjs-test-player');
     vpaidAdUnit = {
-      'handshakeVersion': noop,
-      'initAd': noop,
-      'startAd': noop,
-      'stopAd': noop,
-      'skipAd': noop,
-      'resizeAd': noop,
-      'pauseAd': noop,
-      'expandAd': noop,
-      'collapseAd': noop,
-      'subscribe': noop,
-      'unsubscribe': noop,
-      'unloadAdUnit': noop,
+      'handshakeVersion': utilities.noop,
+      'initAd': utilities.noop,
+      'startAd': utilities.noop,
+      'stopAd': utilities.noop,
+      'skipAd': utilities.noop,
+      'resizeAd': utilities.noop,
+      'pauseAd': utilities.noop,
+      'expandAd': utilities.noop,
+      'collapseAd': utilities.noop,
+      'subscribe': utilities.noop,
+      'unsubscribe': utilities.noop,
+      'unloadAdUnit': utilities.noop,
       'on': sinon.spy()
     };
     adUnitWrapper = new VPAIDAdUnitWrapper(vpaidAdUnit, {responseTimeout: 5000});
@@ -86,13 +102,7 @@ describe("VPAIDIntegrator", function () {
   });
 
   it("must return an instance of itself", function () {
-    assert.instanceOf(VPAIDIntegrator(player), VPAIDIntegrator);
-  });
-
-  it("must support Flash and HTML vpaid", function () {
-    assert.equal(VPAIDIntegrator.techs.length, 2);
-    assert.include(VPAIDIntegrator.techs, VPAIDFlashTech, 'should support flash');
-    assert.include(VPAIDIntegrator.techs, VPAIDHTML5Tech, 'should support html');
+    assert.instanceOf(new VPAIDIntegrator(player), VPAIDIntegrator);
   });
 
   describe("instance", function () {
@@ -123,6 +133,7 @@ describe("VPAIDIntegrator", function () {
       vastResponse = new VASTResponse();
       vastResponse._addMediaFiles([mediaFile]);
       this.clock = sinon.useFakeTimers();
+
     });
 
     afterEach(function () {
@@ -134,23 +145,37 @@ describe("VPAIDIntegrator", function () {
 
       beforeEach(function () {
         FakeTech.supports.returns(true);
-        VPAIDIntegrator.techs.unshift(FakeTech);
+        vastUtil.VPAID_techs.unshift(FakeTech);
 
-        loadAdUnit = stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
-        playAdUnit = stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
-        finishPlaying = stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
+        loadAdUnit = testUtils.stubAsyncStep(vpaidIntegrator, '_loadAdUnit', this.clock);
+        playAdUnit = testUtils.stubAsyncStep(vpaidIntegrator, '_playAdUnit', this.clock);
+        finishPlaying = testUtils.stubAsyncStep(vpaidIntegrator, '_finishPlaying', this.clock);
       });
 
       afterEach(function () {
-        VPAIDIntegrator.techs.shift();
+        vastUtil.VPAID_techs.shift();
       });
 
       it("must complain if you don't pass a VASTResponse", function () {
         vpaidIntegrator.playAd(null, callback);
         sinon.assert.calledOnce(callback);
-        var error = firstArg(callback);
+        var error = testUtils.firstArg(callback);
         assert.instanceOf(error, VASTError);
         assert.equal(error.message, 'VAST Error: on VASTIntegrator.playAd, missing required VASTResponse');
+      });
+
+      it("must trigger an error if could not find a supported mediaFile", function () {
+        sinon.stub(vastUtil, 'track');
+        vastResponse._addErrorTrackUrl(xml.toJXONTree('<Error><![CDATA[https://fakeErrorUrl&error_code=[ERRORCODE]]]></Error>'));
+
+        FakeTech.supports.returns(false);
+        vpaidIntegrator.playAd(vastResponse, callback);
+        sinon.assert.calledOnce(callback);
+        var error = testUtils.firstArg(callback);
+        assert.instanceOf(error, VASTError);
+        assert.equal(error.message, 'VAST Error: on VPAIDIntegrator.playAd, could not find a supported mediaFile');
+        sinon.assert.calledWithExactly(vastUtil.track, ["https://fakeErrorUrl&error_code=[ERRORCODE]"], { ERRORCODE: 403 });
+        vastUtil.track.restore();
       });
 
       it("must trigger a vpaid.adEnd evt on vast.adsCancel evt", function(){
@@ -178,7 +203,7 @@ describe("VPAIDIntegrator", function () {
 
       it("must remove 'vjs-vpaid-ad' class once the adUnit finish playing", function () {
         vpaidIntegrator.playAd(vastResponse, callback);
-        this.clock.tick(1);
+        this.clock.tick();
 
         loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
         playAdUnit.flush(null, vpaidAdUnit, vastResponse);
@@ -191,21 +216,21 @@ describe("VPAIDIntegrator", function () {
         it("must remove 'vjs-vpaid-ad' class if there is  an '"+evt+"' event", function () {
           vpaidIntegrator.playAd(vastResponse, callback);
           player.trigger(evt);
-          this.clock.tick(1);
+          this.clock.tick();
           assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-ad'));
         });
 
         it("must unload the adUnit if there is an '"+evt+"' event", function () {
           vpaidIntegrator.playAd(vastResponse, callback);
           player.trigger(evt);
-          this.clock.tick(1);
+          this.clock.tick();
           sinon.assert.calledOnce(FakeTech.prototype.unloadAdUnit);
         });
       });
 
       it("must unload the adUnit if the ad finishes playing", function () {
         vpaidIntegrator.playAd(vastResponse, callback);
-        this.clock.tick(1);
+        this.clock.tick();
         loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
         playAdUnit.flush(null, vpaidAdUnit, vastResponse);
         finishPlaying.flush(null, vpaidAdUnit, vastResponse);
@@ -214,8 +239,8 @@ describe("VPAIDIntegrator", function () {
 
       it("must trigger 'vpaid.adEnd'", function () {
         player.on('vpaid.adEnd', callback);
-        vpaidIntegrator.playAd(vastResponse, noop);
-        this.clock.tick(1);
+        vpaidIntegrator.playAd(vastResponse, utilities.noop);
+        this.clock.tick();
         loadAdUnit.flush(null, vpaidAdUnit, vastResponse);
         playAdUnit.flush(null, vpaidAdUnit, vastResponse);
         finishPlaying.flush(null, vpaidAdUnit, vastResponse);
@@ -225,12 +250,12 @@ describe("VPAIDIntegrator", function () {
 
       describe("return obj", function(){
         it("must have the type VPAID", function(){
-          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit = vpaidIntegrator.playAd(vastResponse, utilities.noop);
           assert.equal(adUnit.type, 'VPAID');
         });
 
         it("must trigger the vpaid.pauseAd evt", function(){
-          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit = vpaidIntegrator.playAd(vastResponse, utilities.noop);
           var spy = sinon.spy();
           sinon.stub(player, 'pause');
           player.on('vpaid.pauseAd', spy);
@@ -241,7 +266,7 @@ describe("VPAIDIntegrator", function () {
         });
 
         it("must trigger the vpaid.resumeAd evt", function(){
-          var adUnit =vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit =vpaidIntegrator.playAd(vastResponse, utilities.noop);
           var spy = sinon.spy();
           player.on('vpaid.resumeAd', spy);
           adUnit.resumeAd();
@@ -249,14 +274,14 @@ describe("VPAIDIntegrator", function () {
         });
 
         it("must know if it is paused", function(){
-          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit = vpaidIntegrator.playAd(vastResponse, utilities.noop);
           assert(adUnit.isPaused());
           adUnit._paused = false;
           assert(!adUnit.isPaused());
         });
 
         it("must be able to return the source of the ad", function(){
-          var adUnit = vpaidIntegrator.playAd(vastResponse, noop);
+          var adUnit = vpaidIntegrator.playAd(vastResponse, utilities.noop);
           assert.equal(adUnit.getSrc(), FakeTech.prototype.mediaFile);
         });
       });
@@ -272,7 +297,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass the error if there is an error loading the ad unit", function(){
         var testTech = new FakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
+        var techLoadAdUnitCb = testUtils.thirdArg(testTech.loadAdUnit);
         var fakeTechNativeError = new Error('error loading the ad unit.');
         techLoadAdUnitCb(fakeTechNativeError, undefined);
         sinon.assert.calledWithExactly(callback, fakeTechNativeError, undefined, vastResponse);
@@ -281,7 +306,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass the error, a wrapped adUnit and the vast response to the callback", function () {
         var testTech = new FakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
+        var techLoadAdUnitCb = testUtils.thirdArg(testTech.loadAdUnit);
         techLoadAdUnitCb(null, vpaidAdUnit);
         sinon.assert.calledWithExactly(callback, null, sinon.match.instanceOf(VPAIDAdUnitWrapper), vastResponse);
       });
@@ -289,22 +314,22 @@ describe("VPAIDIntegrator", function () {
       it("must pass the error if there is a problem creating the VPAIDAdUnitWrapper", function(){
         var testTech = new FakeTech();
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
+        var techLoadAdUnitCb = testUtils.thirdArg(testTech.loadAdUnit);
         //We make the adUnit invalid
         vpaidAdUnit.initAd = undefined;
 
         techLoadAdUnitCb(null, vpaidAdUnit);
         sinon.assert.calledWithExactly(callback, sinon.match.instanceOf(VASTError), vpaidAdUnit, vastResponse);
-        var error = firstArg(callback);
+        var error = testUtils.firstArg(callback);
         assert.equal(error.message, 'VAST Error: on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
       });
 
       it("must add the tech class to the player and remove it on 'vpaid.adEnd' event",function(){
         var testTech = new FakeTech();
         var fakeAdUnit = {};
-        sinon.stub(window, 'VPAIDAdUnitWrapper').returns(fakeAdUnit);
+        sinon.stub(VPAIDIntegrator.prototype, '_createVPAIDAdUnitWrapper').returns(fakeAdUnit);
         vpaidIntegrator._loadAdUnit(testTech, vastResponse, callback);
-        var techLoadAdUnitCb = thirdArg(testTech.loadAdUnit);
+        var techLoadAdUnitCb = testUtils.thirdArg(testTech.loadAdUnit);
         //We make the adUnit invalid
         vpaidAdUnit.initAd = undefined;
 
@@ -313,7 +338,7 @@ describe("VPAIDIntegrator", function () {
         assert.isTrue(dom.hasClass(player.el(), 'vjs-vpaid-fake-ad'));
         player.trigger('vpaid.adEnd');
         assert.isFalse(dom.hasClass(player.el(), 'vjs-vpaid-fake-ad'));
-        VPAIDAdUnitWrapper.restore();
+        VPAIDIntegrator.prototype._createVPAIDAdUnitWrapper.restore();
       });
     });
 
@@ -321,15 +346,15 @@ describe("VPAIDIntegrator", function () {
       var initAd, setupEvents, startAd, handshake;
 
       beforeEach(function () {
-        handshake = stubAsyncStep(vpaidIntegrator, '_handshake', this.clock);
-        initAd = stubAsyncStep(vpaidIntegrator, '_initAd', this.clock);
-        setupEvents = stubAsyncStep(vpaidIntegrator, '_setupEvents', this.clock);
-        startAd = stubAsyncStep(vpaidIntegrator, '_startAd', this.clock);
+        handshake = testUtils.stubAsyncStep(vpaidIntegrator, '_handshake', this.clock);
+        initAd = testUtils.stubAsyncStep(vpaidIntegrator, '_initAd', this.clock);
+        setupEvents = testUtils.stubAsyncStep(vpaidIntegrator, '_setupEvents', this.clock);
+        startAd = testUtils.stubAsyncStep(vpaidIntegrator, '_startAd', this.clock);
       });
 
       it("must exec the steps to play the adUnit", function () {
         vpaidIntegrator._playAdUnit(vpaidAdUnit, vastResponse, callback);
-        this.clock.tick(1);
+        this.clock.tick();
         handshake.flush(null, vpaidAdUnit, vastResponse);
         initAd.flush(null, vpaidAdUnit, vastResponse);
         setupEvents.flush(null, vpaidAdUnit, vastResponse);
@@ -343,7 +368,7 @@ describe("VPAIDIntegrator", function () {
 
       it("must call the adUnit with the error, adUnit and vastResponse", function () {
         vpaidIntegrator._playAdUnit(vpaidAdUnit, vastResponse, callback);
-        this.clock.tick(1);
+        this.clock.tick();
         handshake.flush(null, vpaidAdUnit, vastResponse);
         initAd.flush(null, vpaidAdUnit, vastResponse);
         setupEvents.flush(null, vpaidAdUnit, vastResponse);
@@ -365,10 +390,10 @@ describe("VPAIDIntegrator", function () {
       it("must pass an error to the callback if the VPAID version is smaller than 1.0", function () {
         vpaidIntegrator._handshake(adUnitWrapper, response, next);
         sinon.assert.calledWith(vpaidAdUnit.handshakeVersion, '2.0');
-        var respond = secondArg(vpaidAdUnit.handshakeVersion);
+        var respond = testUtils.secondArg(vpaidAdUnit.handshakeVersion);
         respond(null, '0.0.0');
         sinon.assert.calledOnce(next);
-        var error = firstArg(next);
+        var error = testUtils.firstArg(next);
         assert.instanceOf(error, VASTError);
         assert.equal(error.message, 'VAST Error: on VPAIDIntegrator._handshake, unsupported version "0.0.0"');
       });
@@ -376,10 +401,10 @@ describe("VPAIDIntegrator", function () {
       it("must pass an error to the callback if the VPAID version is bigger than 2.x.x", function () {
         vpaidIntegrator._handshake(adUnitWrapper, response, next);
         sinon.assert.calledWith(vpaidAdUnit.handshakeVersion, '2.0');
-        var respond = secondArg(vpaidAdUnit.handshakeVersion);
+        var respond = testUtils.secondArg(vpaidAdUnit.handshakeVersion);
         respond(null, '3.0.0');
         sinon.assert.calledOnce(next);
-        var error = firstArg(next);
+        var error = testUtils.firstArg(next);
         assert.instanceOf(error, VASTError);
         assert.equal(error.message, 'VAST Error: on VPAIDIntegrator._handshake, unsupported version "3.0.0"');
       });
@@ -387,7 +412,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass an error to the callback if the handshake returns an error", function () {
         vpaidIntegrator._handshake(adUnitWrapper, response, next);
         sinon.assert.calledWith(vpaidAdUnit.handshakeVersion, '2.0');
-        var respond = secondArg(vpaidAdUnit.handshakeVersion);
+        var respond = testUtils.secondArg(vpaidAdUnit.handshakeVersion);
         var fakeError = new Error();
         respond(fakeError);
         sinon.assert.calledWith(next, fakeError);
@@ -396,7 +421,7 @@ describe("VPAIDIntegrator", function () {
       it("must call the callback with null and the adUnit and the VASTResponse if the version is supported", function () {
         vpaidIntegrator._handshake(adUnitWrapper, response, next);
         sinon.assert.calledWith(vpaidAdUnit.handshakeVersion, '2.0');
-        var respond = secondArg(vpaidAdUnit.handshakeVersion);
+        var respond = testUtils.secondArg(vpaidAdUnit.handshakeVersion);
         respond(null, '2.0');
         sinon.assert.calledOnce(next);
         sinon.assert.calledWithExactly(next, null, adUnitWrapper, response);
@@ -438,7 +463,7 @@ describe("VPAIDIntegrator", function () {
         var next = sinon.spy();
         var fakeError = new Error();
         vpaidIntegrator._initAd(adUnitWrapper, response, next);
-        var respond = lastArg(adUnitWrapper.initAd);
+        var respond = testUtils.lastArg(adUnitWrapper.initAd);
         respond(fakeError);
         sinon.assert.calledWith(next, fakeError, adUnitWrapper, response);
       });
@@ -449,7 +474,9 @@ describe("VPAIDIntegrator", function () {
 
       beforeEach(function(){
         tracker = sinon.createStubInstance(VASTTracker);
-        sinon.stub(window, 'VASTTracker').returns(tracker);
+        sinon.stub(VPAIDIntegrator.prototype, '_createVASTTracker', function() {
+          return tracker;
+        });
         adUnit = new FakeAdUnit();
         vastResponse = new VASTResponse();
         next = sinon.spy();
@@ -457,7 +484,7 @@ describe("VPAIDIntegrator", function () {
       });
 
       afterEach(function(){
-        VASTTracker.restore();
+        VPAIDIntegrator.prototype._createVASTTracker.restore();
       });
 
       it("must call next with no error and the passed adUnit and vastResponse", function(){
@@ -465,7 +492,7 @@ describe("VPAIDIntegrator", function () {
       });
 
       it("must create a tracker passing the adUnit src and the vast response", function(){
-        sinon.assert.calledWithExactly(VASTTracker, adUnit.options.src, vastResponse);
+        sinon.assert.calledWithExactly(VPAIDIntegrator.prototype._createVASTTracker, adUnit.options.src, vastResponse);
       });
 
       it("must propagate adUnit events prepending the prefix 'vpaid.' to the evt type", function(){
@@ -509,7 +536,7 @@ describe("VPAIDIntegrator", function () {
         var playSpy = sinon.spy();
         player.on('play', playSpy);
         vpaidIntegrator._adUnit = {
-          isPaused: echoFn(true)
+          isPaused: utilities.echoFn(true)
         };
         adUnit.trigger('AdVideoStart');
         sinon.assert.calledOnce(tracker.trackStart);
@@ -522,7 +549,7 @@ describe("VPAIDIntegrator", function () {
         var playSpy = sinon.spy();
         player.on('play', playSpy);
         vpaidIntegrator._adUnit = {
-          isPaused: echoFn(true)
+          isPaused: utilities.echoFn(true)
         };
         adUnit.trigger('AdStarted');
         sinon.assert.calledOnce(tracker.trackCreativeView);
@@ -623,7 +650,7 @@ describe("VPAIDIntegrator", function () {
           var playSpy = sinon.spy();
           player.on('play', playSpy);
           vpaidIntegrator._adUnit = {
-            isPaused: echoFn(true)
+            isPaused: utilities.echoFn(true)
           };
           adUnit.trigger('AdPlaying');
           sinon.assert.calledOnce(tracker.trackResume);
@@ -646,7 +673,7 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(10);
           adUnit.setVolume(0);
           adUnit.trigger('AdVolumeChange');
-          this.clock.tick(1);
+          this.clock.tick();
           sinon.assert.calledOnce(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 0);
@@ -656,7 +683,7 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(0);
           adUnit.setVolume(0);
           adUnit.trigger('AdVolumeChange');
-          this.clock.tick(1);
+          this.clock.tick();
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 0);
@@ -666,7 +693,7 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(0);
           adUnit.setVolume(10);
           adUnit.trigger('AdVolumeChange');
-          this.clock.tick(1);
+          this.clock.tick();
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.calledOnce(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 10);
@@ -675,7 +702,7 @@ describe("VPAIDIntegrator", function () {
           player.volume.returns(5);
           adUnit.setVolume(10);
           adUnit.trigger('AdVolumeChange');
-          this.clock.tick(1);
+          this.clock.tick();
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
           sinon.assert.calledWithExactly(player.volume, 10);
@@ -724,7 +751,7 @@ describe("VPAIDIntegrator", function () {
         it("must add the skip button if the adUnit is skippable", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
 
           assert.isNotNull(player.el().querySelector('.vast-skip-button'));
         });
@@ -732,13 +759,13 @@ describe("VPAIDIntegrator", function () {
         it("must only add one skip button no matter how many 'AdSkippableStateChange' evts we receive while the adUnit is skippable", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
 
           assert.equal(player.el().querySelectorAll('.vast-skip-button').length, 1);
         });
@@ -746,10 +773,10 @@ describe("VPAIDIntegrator", function () {
         it("must remove the skip button if the adUnit is no longer skippable", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           adUnit.isSkippable = false;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           assert.isNull(player.el().querySelector('.vast-skip-button'));
 
         });
@@ -757,30 +784,30 @@ describe("VPAIDIntegrator", function () {
         it("must remove the adUnit when you click on the skip button", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
 
           var skipButton = player.el().querySelector('.vast-skip-button');
-          click(skipButton);
+          testUtils.click(skipButton);
           sinon.assert.calledOnce(adUnit.skipAd);
         });
 
         it("must remove the adUnit on 'vast.adEnd' event", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           adUnit.isSkippable = false;
           player.trigger('vast.adEnd');
-          this.clock.tick(1);
+          this.clock.tick();
           assert.isNull(player.el().querySelector('.vast-skip-button'));
         });
 
         it("must remove the adUnit on 'vast.adsCancel' event", function(){
           adUnit.isSkippable = true;
           adUnit.trigger('AdSkippableStateChange');
-          this.clock.tick(1);
+          this.clock.tick();
           adUnit.isSkippable = false;
           player.trigger('vast.adsCancel');
-          this.clock.tick(1);
+          this.clock.tick();
           assert.isNull(player.el().querySelector('.vast-skip-button'));
         });
       });
@@ -788,12 +815,12 @@ describe("VPAIDIntegrator", function () {
     });
 
     describe("findSupportedTech", function () {
-      var FLASH_STRING = 'application/x-shockwave-flash';
+      var FLASH_APP_MIME = 'application/x-shockwave-flash';
       var originalFlash;
 
       beforeEach(function() {
-        originalFlash = VPAIDFLASHClient;
-        VPAIDFLASHClient = {
+        originalFlash = VPAIDFlashTech.VPAIDFLASHClient;
+        VPAIDFlashTech.VPAIDFLASHClient = {
           isSupported: function() {
             return true;
           }
@@ -801,7 +828,7 @@ describe("VPAIDIntegrator", function () {
       });
 
       afterEach(function() {
-        VPAIDFLASHClient = originalFlash;
+        VPAIDFlashTech.VPAIDFLASHClient = originalFlash;
       });
 
       it("must return null if you pass a wrong vastREsponse", function () {
@@ -820,9 +847,9 @@ describe("VPAIDIntegrator", function () {
 
       it("must return null if the tech is not supported", function () {
         var vastResponse = new VASTResponse();
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
 
-        sinon.stub(VPAIDFLASHClient, 'isSupported', function () {return false;});
+        sinon.stub(VPAIDFlashTech.VPAIDFLASHClient, 'isSupported', function () {return false;});
 
         assert.isNull(vpaidIntegrator._findSupportedTech(vastResponse));
       });
@@ -830,7 +857,7 @@ describe("VPAIDIntegrator", function () {
       it("must return an instance of the supported tech", function () {
         var vastResponse = new VASTResponse();
 
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
 
         assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse), VPAIDFlashTech);
       });
@@ -838,7 +865,7 @@ describe("VPAIDIntegrator", function () {
       it("must pass the settings to the to the created tech", function(){
         var settings = {vpaidFlashLoaderPath: '/VPAIDFlash.swf'};
         var vastResponse = new VASTResponse();
-        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_STRING)]);
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
         var flashTech = vpaidIntegrator._findSupportedTech(vastResponse, settings);
         assert.deepEqual(flashTech.settings, settings);
       });
@@ -873,9 +900,9 @@ describe("VPAIDIntegrator", function () {
 
         it("must update the player volume on 'AdVolumeChange'", function () {
           vpaidIntegrator._linkPlayerControls(adUnitWrapper, vastResponse, callback);
-          var triggerAdVolumeChange = lastArg(adUnitWrapper.on);
+          var triggerAdVolumeChange = testUtils.lastArg(adUnitWrapper.on);
           triggerAdVolumeChange();
-          var getAdVolumeHandler = lastArg(adUnitWrapper.getAdVolume);
+          var getAdVolumeHandler = testUtils.lastArg(adUnitWrapper.getAdVolume);
           getAdVolumeHandler(null, 0.1);
           sinon.assert.calledWith(player.volume, 0.1);
         });
@@ -921,7 +948,7 @@ describe("VPAIDIntegrator", function () {
 
         sinon.assert.calledOnce(adUnitWrapper.startAd);
 
-        var startAdCb = lastArg(adUnitWrapper.startAd);
+        var startAdCb = testUtils.lastArg(adUnitWrapper.startAd);
         startAdCb(null);
 
         sinon.assert.calledWithExactly(callback, null, adUnitWrapper, vastResponse);
@@ -929,11 +956,11 @@ describe("VPAIDIntegrator", function () {
 
       it("must trigger 'vast.adStart'", function () {
         sinon.stub(adUnitWrapper, 'startAd');
-        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, noop);
+        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, utilities.noop);
         sinon.assert.calledOnce(adUnitWrapper.startAd);
 
         player.on('vast.adStart', callback);
-        var startAdCb = lastArg(adUnitWrapper.startAd);
+        var startAdCb = testUtils.lastArg(adUnitWrapper.startAd);
         startAdCb(null);
 
         sinon.assert.calledOnce(callback);
@@ -941,11 +968,11 @@ describe("VPAIDIntegrator", function () {
 
       it("must not trigger 'vast.adStart' if there is an error on startAd", function () {
         sinon.stub(adUnitWrapper, 'startAd');
-        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, noop);
+        vpaidIntegrator._startAd(adUnitWrapper, vastResponse, utilities.noop);
         sinon.assert.calledOnce(adUnitWrapper.startAd);
 
         player.on('vast.adStart', callback);
-        var startAdCb = lastArg(adUnitWrapper.startAd);
+        var startAdCb = testUtils.lastArg(adUnitWrapper.startAd);
         startAdCb(new Error());
 
         sinon.assert.notCalled(callback);
@@ -957,7 +984,7 @@ describe("VPAIDIntegrator", function () {
     it("must handle window resize", function() {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
-      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), utilities.noop);
       dom.dispatchEvent(window, new Event('resize'));
       assert(adUnit.resizeAd.calledOnce);
     });
@@ -965,7 +992,7 @@ describe("VPAIDIntegrator", function () {
     it("must handle window orientation change", function() {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
-      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), utilities.noop);
       dom.dispatchEvent(window, new Event('orientationchange'));
       assert(adUnit.resizeAd.calledOnce);
     });
@@ -973,7 +1000,7 @@ describe("VPAIDIntegrator", function () {
     it("must handle vast.resize", function() {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
-      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), utilities.noop);
       player.trigger('vast.resize');
       assert(adUnit.resizeAd.calledOnce);
     });
@@ -981,7 +1008,7 @@ describe("VPAIDIntegrator", function () {
     it("must ignore resize and orientation change when the flag is off", function() {
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: false});
       var adUnit = new FakeAdUnit();
-      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), utilities.noop);
       dom.dispatchEvent(window, new Event('orientationchange'));
       dom.dispatchEvent(window, new Event('resize'));
       assert.equal(adUnit.resizeAd.callCount, 0);
@@ -990,7 +1017,7 @@ describe("VPAIDIntegrator", function () {
     it("must not handle vast.resize after 'vpaid.adEnd' events", function(){
       var vpaidIntegrator = new VPAIDIntegrator(player, {autoResize: true});
       var adUnit = new FakeAdUnit();
-      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), noop);
+      vpaidIntegrator._setupEvents(adUnit, new VASTResponse(), utilities.noop);
       player.trigger('vpaid.adEnd');
       player.trigger('vast.resize');
       assert(adUnit.resizeAd.notCalled);
