@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Go up the directory tree until you arrive to the git root
 while [ ! -d .git ]
@@ -7,7 +7,7 @@ do
 done
 
 
-files=$(git diff --cached --name-only --diff-filter=ACM | grep "^src/\|test/.*js$")
+files=$(git diff --cached --name-only --diff-filter=ACM | grep "^[src/|test/].*\.js$")
 
 if [ "$files" = "" ]; then
     exit 0
@@ -15,23 +15,22 @@ fi
 
 pass=true
 
-echo "\nValidating JavaScript:\n"
+echo -e "Validating JavaScript: \c"
 
 for file in ${files}; do
-    result=$(jshint ${file})
-    if [ "$result" = "" ]; then
-        echo "\t\033[32mJSHint Passed: ${file}\033[0m"
-    else
-        echo "\t\033[31mJSHint Failed: ${result}\033[0m"
+    echo -e "Validating:\033[34m ${file}\033[0m\c"
+    ./node_modules/.bin/jshint --verbose --reporter=node_modules/jshint-stylish ${file}
+
+    if [ $? -ne 0 ]; then
         pass=false
     fi
 done
 
-echo "\nJavaScript validation complete\n"
+echo -e "JavaScript validation complete"
 
 if ! $pass; then
-    echo "\033[41mCOMMIT FAILED:\033[0m Your commit contains files that should pass JSHint but do not. Please fix the JSHint errors and try again.\n"
+    echo -e "\033[41mCOMMIT FAILED:\033[0m Your commit contains files that should pass JSHint but do not. Please fix the JSHint errors and try again."
     exit 1
 else
-    echo "\033[42mCOMMIT SUCCEEDED\033[0m\n"
+    echo -e "\033[42mCOMMIT SUCCEEDED\033[0m"
 fi

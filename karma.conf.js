@@ -1,3 +1,6 @@
+var istanbul = require('browserify-istanbul');
+var config = require('./build/config');
+
 module.exports = function (karma) {
   karma.set({
     /**
@@ -5,22 +8,33 @@ module.exports = function (karma) {
      */
     basePath: './',
 
+    files: config.testFiles(),
+
     /**
      * This is the list of file patterns to load into the browser during testing.
      */
-    files: [],
-    exclude: [],
-    frameworks: ['mocha', 'chai-sinon'],
-    plugins: [
-      'karma-*'
-    ],
-    preprocessors: {},
+    frameworks: [ 'browserify', 'mocha', 'chai-sinon'],
 
+    preprocessors: {
+      'test/**/*.js': [ 'browserify' ]
+    },
+    browserify: {
+      paths: ['src/scripts', 'bower_components'],
+      debug: true,
+      transform: [ ['babelify', {
+        presets: ["es2015"],
+        only: /VPAIDFLASHClient/
+        }],
+        istanbul({
+            //NOTE: Once we got full ES6 there is a problem in Karma/Istanbul please look https://github.com/karma-runner/karma-coverage/issues/157#issuecomment-160555004
+            ignore: ['**/node_modules/**', '**/test/**', '**/bower_components/**'],
+        }) ]
+    },
     logLevel: 'ERROR',
     /**
      * How to report, by default.
      */
-    reporters: ['dots'],
+    reporters: ['progress'],
 
     /**
      * On which port should the browser connect, on which port is the test runner
@@ -31,10 +45,10 @@ module.exports = function (karma) {
     urlRoot: '/',
 
     /**
-     * Disable file watching by default.
+     * Enable file watching by default.
      */
-    autoWatch: false,
-
+    autoWatch: true,
+    singleRun: false,
     /**
      * The list of browsers to launch to test on. This includes only "Firefox" by
      * default, but other browser names include:
@@ -55,4 +69,3 @@ module.exports = function (karma) {
     ]
   });
 };
-

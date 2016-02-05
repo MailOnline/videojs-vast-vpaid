@@ -1,13 +1,11 @@
+var xml = require('utils/xml');
+
 describe("xml", function () {
   it("must be an object", function () {
     assert.isObject(xml);
   });
 
   describe("strToXMLDoc", function(){
-    it("must be a function", function(){
-      assert.isFunction(xml.strToXMLDoc);
-    });
-
     it("must throw an exception if it encounters a problem parsing the xml", function(){
       assert.throws(function () {
         xml.strToXMLDoc('');
@@ -42,11 +40,6 @@ describe("xml", function () {
   });
 
   describe("parseText", function () {
-
-    it("must be a function", function () {
-      assert.isFunction(xml.parseText);
-    });
-
     it("must return null if you pass an empty string or a string full of spaces", function () {
       assert.equal(xml.parseText(''), null);
       assert.equal(xml.parseText('   '), null);
@@ -223,20 +216,12 @@ describe("xml", function () {
   });
 
   describe("encode", function(){
-    it("must be a function", function(){
-      assert.isFunction(xml.encode);
-    });
-
     it("must encode &, \", ', < and >", function(){
       assert.equal(xml.encode("<br/> \"'"), '&lt;br/&gt; &quot;&apos;' );
     });
   });
 
   describe("decode", function(){
-    it("must be a function", function(){
-      assert.isFunction(xml.decode);
-    });
-
     it("must edcode a previously encoded xml", function(){
       assert.equal(xml.decode('&lt;br/&gt; &quot;&apos;'), "<br/> \"'");
     });

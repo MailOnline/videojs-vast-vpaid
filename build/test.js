@@ -1,29 +1,50 @@
-var gulp = require('gulp');
-var karma = require('karma').server;
-var config = require('./config');
+'use strict';
+
+var gulp        = require('gulp');
+var Server      = require('karma').Server;
+var runSequence = require('run-sequence');
+
+var config       = require('./config');
 var BuildTaskDoc = require('./BuildTaskDoc');
-var TASK_NAME = 'test';
 
 /**
  * Run test once and exit
  */
-gulp.task(TASK_NAME, function (done) {
-  var files = config.demo.scripts
-    .concat(config.vendor.scripts)
-    .concat(config.plugin.scripts)
-    .concat(config.plugin.tests.unit);
 
-  var autoWatch = !!config.options['watch'];
+var testTasks = [];
+config.versions.forEach(function(version) {
 
-  karma.start({
-    configFile: __dirname + '/../karma.conf.js',
-    files: files,
-    autoWatch: autoWatch,
-    singleRun: !autoWatch,
-    // There is an error on karma gulp so we need to wrap done. Please see https://stackoverflow.com/questions/26614738/issue-running-karma-task-from-gulp/26958997#26958997
-  }, function (error) {
-    done(error);
+  var testTask = 'test-videojs_' + version;
+
+  gulp.task(testTask, function (done) {
+
+    var autoWatch = !!config.options['watch'];
+
+    new Server({
+      configFile: __dirname + '/../karma.conf.js',
+      files: config.testFiles(version),
+      autoWatch: autoWatch,
+      singleRun: !autoWatch
+    }, function (error) {
+      done(error);
+    }).start();
   });
+  testTasks.push(testTask);
 });
 
-module.exports = new BuildTaskDoc(TASK_NAME, "Starts karma on 'autowatch' mode with all the libs, \nsources and tests of the player", 6.1);
+gulp.task('test', function(done) {
+
+  testTasks.push(function (error) {
+      if(error){
+        console.log(error.message.red);
+      } else{
+        console.log('TEST FINISHED SUCCESSFULLY'.green);
+      }
+      done(error);
+    });
+
+  runSequence.apply(this,testTasks);
+
+});
+
+module.exports = new BuildTaskDoc('test', 'Starts karma and test the player', 6.1);

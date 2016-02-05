@@ -1,43 +1,37 @@
-var gulp = require('gulp');
-var karma = require('karma').server;
-var config = require('./config');
+'use strict';
+
+var gulp        = require('gulp');
+var Server      = require('karma').Server;
+var runSequence = require('run-sequence');
+
+var config       = require('./config');
 var BuildTaskDoc = require('./BuildTaskDoc');
-var TASK_NAME = 'ci-test';
 
 /**
  * Run test once and exit
  */
-gulp.task(TASK_NAME, function (done) {
-  var files = config.demo.scripts
-    .concat(config.vendor.scripts)
-    .concat(config.plugin.scripts)
-    .concat(config.plugin.tests.unit);
 
-  karma.start({
-    configFile: __dirname + '/../karma.conf.js',
-    files: files,
-    autoWatch: false,
-    singleRun: true,
-    browsers: ['Chrome_travis_ci'],
-    //browsers: ['Firefox'],
-    reporters: ['spec', 'coverage'],
-    customLaunchers: {
-      Chrome_travis_ci: {
-        base: 'Chrome',
-        flags: ['--no-sandbox']
-      }
-    },
+var testTasks = [];
+config.versions.forEach(function(version) {
 
-    preprocessors: {
-      // source files, that you wanna generate coverage for
-      // do not include tests or libraries
-      // (these files will be instrumented by Istanbul)
-      'src/**/*.js': ['coverage']
-    },
+  var testTask = 'ci-test-videojs_' + version;
 
-    // The HTML reporter seems to be busted right now, so we're just using text in the meantime
-    // along with the summary after the test run.
-    coverageReporter: {
+  gulp.task(testTask, function (done) {
+
+    new Server({
+      configFile: __dirname + '/../karma.conf.js',
+      files: config.testFiles(version),
+      autoWatch: false,
+      singleRun: true,
+      browsers: ['Chrome_travis_ci'],
+      reporters: ['spec', 'coverage'],
+      customLaunchers: {
+        Chrome_travis_ci: {
+          base: 'Chrome',
+          flags: ['--no-sandbox']
+        }
+      },
+      coverageReporter: {
       reporters: [
         {
           type: 'text',
@@ -56,10 +50,26 @@ gulp.task(TASK_NAME, function (done) {
         {type: 'text-summary'}
       ]
     }
-    // There is an error on karma gulp so we need to wrap done. Please see https://stackoverflow.com/questions/26614738/issue-running-karma-task-from-gulp/26958997#26958997
-  }, function (error) {
-    done(error);
+    }, function (error) {
+      done(error);
+    }).start();
   });
+  testTasks.push(testTask);
 });
 
-module.exports = new BuildTaskDoc(TASK_NAME, "Starts karma test and generates test code coverage, to be used by CI Server", 6.1);
+
+gulp.task('ci-test', function(done) {
+
+  testTasks.push(function (error) {
+      if(error){
+        console.log(error.message.red);
+      } else{
+        console.log('TEST FINISHED SUCCESSFULLY'.green);
+      }
+      done(error);
+    });
+  runSequence.apply(this,testTasks);
+
+});
+
+module.exports = new BuildTaskDoc('ci-test', 'Starts karma test and generates test code coverage, to be used by CI Server', 6.1);

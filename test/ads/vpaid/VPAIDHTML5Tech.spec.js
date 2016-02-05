@@ -1,27 +1,34 @@
+var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
+var VASTError = require('ads/vast/VASTError');
+
+var dom = require('utils/dom');
+var utilities = require('utils/utilityFunctions');
+
 var VAST_ERROR_PREFIX = 'VAST Error: ';
 
 describe("VPAIDHTML5Tech", function() {
   it("must return an instance of itself", function() {
-    assert.instanceOf(VPAIDHTML5Tech({src: 'fakeSource'}), VPAIDHTML5Tech);
+    assert.instanceOf(new VPAIDHTML5Tech({src: 'fakeSource'}), VPAIDHTML5Tech);
   });
 
   it("must implement supports", function () {
-    sinon.stub(window, 'isOldIE').returns(false);
+    sinon.stub(utilities, 'isOldIE').returns(false);
     assert.isFunction(VPAIDHTML5Tech.supports);
     assert(!VPAIDHTML5Tech.supports('application/x-shockwave-flash'));
     assert(VPAIDHTML5Tech.supports('application/javascript'));
 
     //Must return false for old IE (IE9 and below)
-    window.isOldIE.returns(9);
+    utilities.isOldIE.returns(9);
     assert(!VPAIDHTML5Tech.supports('application/javascript'));
 
-    window.isOldIE.restore();
+    utilities.isOldIE.restore();
   });
 
   it("must complain if you don't pass a valid media file", function () {
       [undefined, null, {}, []].forEach(function(invalidMediaFile) {
           assert.throws(function () {
-              new VPAIDHTML5Tech(invalidMediaFile);
+            /*jshint unused:false*/
+            var vpaidTech = new VPAIDHTML5Tech(invalidMediaFile);
           }, VASTError, VAST_ERROR_PREFIX + VPAIDHTML5Tech.INVALID_MEDIA_FILE);
       });
   });
@@ -73,7 +80,7 @@ describe("VPAIDHTML5Tech", function() {
 
       it("must not throw an error if pass valid arguments", function(){
         assert.doesNotThrow(function () {
-          vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+          vpaidTech.loadAdUnit(testDiv, testVideo, utilities.noop);
         });
       });
 
@@ -81,11 +88,11 @@ describe("VPAIDHTML5Tech", function() {
         assert.isNull(vpaidTech.containerEl);
         assert.isNull(vpaidTech.vpaidHTMLClient);
 
-        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+        vpaidTech.loadAdUnit(testDiv, testVideo, utilities.noop);
 
         assert.equal(vpaidTech.containerEl, testDiv);
         assert.equal(vpaidTech.videoEl, testVideo);
-        assert.instanceOf(vpaidTech.vpaidHTMLClient, VPAIDHTML5Client);
+        assert.instanceOf(vpaidTech.vpaidHTMLClient, VPAIDHTML5Tech.VPAIDHTML5Client);
       });
 
     });
@@ -98,7 +105,7 @@ describe("VPAIDHTML5Tech", function() {
       });
 
       it("must unload the adUnit", function() {
-        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+        vpaidTech.loadAdUnit(testDiv, testVideo, utilities.noop);
 
         var vpaidClient = vpaidTech.vpaidHTMLClient;
         vpaidClient.destroy = sinon.spy();
@@ -110,9 +117,9 @@ describe("VPAIDHTML5Tech", function() {
 
       it("must remove the containerEl", function() {
         sinon.stub(dom, 'remove');
-        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+        vpaidTech.loadAdUnit(testDiv, testVideo, utilities.noop);
 
-        vpaidTech.vpaidHTMLClient.destroy = noop;
+        vpaidTech.vpaidHTMLClient.destroy = utilities.noop;
         vpaidTech.unloadAdUnit();
 
         assert(dom.remove.calledWithExactly(testDiv));
@@ -120,7 +127,7 @@ describe("VPAIDHTML5Tech", function() {
       });
 
       it("must set instance properties: to null", function() {
-        vpaidTech.loadAdUnit(testDiv, testVideo, noop);
+        vpaidTech.loadAdUnit(testDiv, testVideo, utilities.noop);
 
         vpaidTech.unloadAdUnit();
 
