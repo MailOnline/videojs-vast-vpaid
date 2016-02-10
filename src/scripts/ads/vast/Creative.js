@@ -21,11 +21,12 @@ function Creative(creativeJTree) {
   if (creativeJTree.companionAds) {
     var companions = [];
     var companionAds = creativeJTree.companionAds && creativeJTree.companionAds.companion;
-    companionAds = utilities.isArray(companionAds) ? companionAds : [companionAds];
-    companionAds.forEach(function (companionData) {
-      companions.push(new Companion(companionData));
-    });
-
+    if (utilities.isDefined(companionAds)) {
+      companionAds = utilities.isArray(companionAds) ? companionAds : [companionAds];
+      companionAds.forEach(function (companionData) {
+        companions.push(new Companion(companionData));
+      });
+    }
     this.companionAds = companions;
   }
 }
