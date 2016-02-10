@@ -47,6 +47,20 @@ describe("Creative", function(){
     assert.instanceOf(creative.linear, Linear);
   });
 
+  describe("companionAds", function() {
+    var creativeXML = '<Creative sequence="1">' +
+      '<CompanionAds>' +
+      '</CompanionAds>' +
+      '</Creative>';
+
+    it('must handle when no companionAds', function() {
+      function newCreative() {
+        return new Creative(xml.toJXONTree(creativeXML));
+      }
+      assert.doesNotThrow(newCreative);
+    });
+  });
+
   describe("isSupported", function(){
     var creative;
 
