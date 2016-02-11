@@ -33,11 +33,12 @@
     "build",
     "frontend/demo/*"
   ],
-  "dependencies": { },
+  "dependencies": {
+    "VPAIDFLASHClient": "^0.1.12",
+    "VPAIDHTML5Client": "^0.1.12"
+  },
   "devDependencies": {
     "videojs_5": "video.js#5",
-    "videojs_4": "video.js#4",
-    "VPAIDFLASHClient": "^0.1.11",
-    "VPAIDHTML5Client": "^0.1.12"
+    "videojs_4": "video.js#4"
   }
 }
