@@ -1,6 +1,6 @@
 /**
  * @license
- * Video.js 5.7.0 <http://videojs.com/>
+ * Video.js 5.7.1 <http://videojs.com/>
  * Copyright Brightcove, Inc. <https://www.brightcove.com/>
  * Available under Apache License Version 2.0
  * <https://github.com/videojs/video.js/blob/master/LICENSE>
@@ -16284,7 +16284,7 @@ var _globalDocument2 = _interopRequireDefault(_globalDocument);
  * };
  */
 
-var TextTrackCueList = function TextTrackCueList(cues) {
+function TextTrackCueList(cues) {
   var list = this;
 
   if (browser.IS_IE8) {
@@ -16308,7 +16308,7 @@ var TextTrackCueList = function TextTrackCueList(cues) {
   if (browser.IS_IE8) {
     return list;
   }
-};
+}
 
 TextTrackCueList.prototype.setCues_ = function (cues) {
   var oldLength = this.length || 0;
@@ -16794,7 +16794,7 @@ var _globalDocument2 = _interopRequireDefault(_globalDocument);
  *   attribute EventHandler onremovetrack;
  * };
  */
-var TextTrackList = function TextTrackList(tracks) {
+function TextTrackList(tracks) {
   var list = this;
 
   if (browser.IS_IE8) {
@@ -16823,7 +16823,7 @@ var TextTrackList = function TextTrackList(tracks) {
   if (browser.IS_IE8) {
     return list;
   }
-};
+}
 
 TextTrackList.prototype = Object.create(_eventTarget2['default'].prototype);
 TextTrackList.prototype.constructor = TextTrackList;
@@ -17287,7 +17287,7 @@ var _xhr2 = _interopRequireDefault(_xhr);
  *   attribute EventHandler oncuechange;
  * };
  */
-var TextTrack = function TextTrack() {
+function TextTrack() {
   var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
   if (!options.tech) {
@@ -17442,7 +17442,7 @@ var TextTrack = function TextTrack() {
   if (browser.IS_IE8) {
     return tt;
   }
-};
+}
 
 TextTrack.prototype = Object.create(_eventTarget2['default'].prototype);
 TextTrack.prototype.constructor = TextTrack;
@@ -19662,7 +19662,7 @@ setup.autoSetupTimeout(1, videojs);
  *
  * @type {String}
  */
-videojs.VERSION = '5.7.0';
+videojs.VERSION = '5.7.1';
 
 /**
  * The global options object. These are the settings that take effect
