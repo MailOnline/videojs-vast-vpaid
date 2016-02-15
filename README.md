@@ -29,10 +29,9 @@ or
 <script src="http://vjs.zencdn.net/5.4.6/video.js"></script>
 ```
 
-**3- After videoJs add the plugin script stylesheet and swfobject (if you want to support flashvpaid) to your page**
+**3- After videoJs add the plugin script stylesheet**
 ```html
 <!-- Common -->
-<script src="/path/to/swfobject.js"></script>
 <link href="/path/to/videojs.vast.vpaid.min.css" rel="stylesheet">
 ```
 and the videojs version specific plugin
