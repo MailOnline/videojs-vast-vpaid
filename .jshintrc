@@ -1,6 +1,5 @@
 {
   "bitwise": true,
-  "boss": true,
   "browser": true,
   "browserify": true,
   "devel": true,
