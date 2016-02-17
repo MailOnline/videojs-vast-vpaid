@@ -14,7 +14,7 @@ Currently we support VAST and VPAID [Flash](https://github.com/MailOnline/VPAIDF
 ## Integration with video.js 4 and 5
 To integrate the plugin with videoJs you need to:
 
-**1- Add [all files from bin][MailOnline/videojs-vast-vpaid/RELEASE/bin] to some path in your server**
+**1- Add [all files from MailOnline/videojs-vast-vpaid/RELEASE/bin](https://github.com/MailOnline/videojs-vast-vpaid/tree/RELEASE/bin) to some path in your server**
 
 **2- If you don't have videoJs, add it's scripts and stylesheet to your page**
 ```html
