@@ -33,7 +33,15 @@ function debug ()
         return;
     }
 
-    handleMsg (console.debug, arguments);
+    if (typeof console.debug === 'undefined')
+    {
+        // IE 10 doesn't have a console.debug() function
+        handleMsg (console.log, arguments);
+    }
+    else
+    {
+        handleMsg (console.debug, arguments);
+    }
 }
 
 function log ()
