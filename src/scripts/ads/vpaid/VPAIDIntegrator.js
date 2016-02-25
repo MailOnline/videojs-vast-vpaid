@@ -338,15 +338,17 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     player.trigger('vpaid.AdVolumeChange');
     var lastVolume = player.volume();
     adUnit.getAdVolume(function (error, currentVolume) {
-      if (currentVolume === 0 && lastVolume > 0) {
-        tracker.trackMute();
-      }
+      if (lastVolume !== currentVolume) {
+        if (currentVolume === 0 && lastVolume > 0) {
+          tracker.trackMute();
+        }
 
-      if (currentVolume > 0 && lastVolume === 0) {
-        tracker.trackUnmute();
-      }
+        if (currentVolume > 0 && lastVolume === 0) {
+          tracker.trackUnmute();
+        }
 
-      player.volume(currentVolume);
+        player.volume(currentVolume);
+      }
     });
   });
 
@@ -466,11 +468,14 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     function updatePlayerVolume() {
       player.trigger('vpaid.AdVolumeChange');
+      var lastVolume = player.volume();
       adUnit.getAdVolume(function (error, vol) {
         if (error) {
           logError(error);
         } else {
-          player.volume(vol);
+          if (lastVolume !== vol) {
+            player.volume(vol);
+          }
         }
       });
     }
