@@ -124,16 +124,37 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
     return null;
   }
 
+  var preferredMapping = {
+    html5: 'application/javascript',
+    flash: 'application/x-shockwave-flash'
+  };
+
   var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
+  var preferredTech = settings && settings.preferredTech;
+  var skippedSupportTechs = [];
   var i, len, mediaFile, VPAIDTech;
 
   for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
     mediaFile = vpaidMediaFiles[i];
     VPAIDTech = vastUtil.findSupportedVPAIDTech(mediaFile.type);
     if (VPAIDTech) {
-      return new VPAIDTech(mediaFile, settings);
+      if (preferredTech) {
+        if (mediaFile.type === preferredTech || mediaFile.type === preferredMapping[preferredTech]) {
+          return new VPAIDTech(mediaFile, settings);
+        } else {
+          skippedSupportTechs.push({ mediaFile: mediaFile, tech: VPAIDTech });
+        }
+      } else {
+        return new VPAIDTech(mediaFile, settings);
+      }
     }
   }
+
+  if (skippedSupportTechs.length) {
+    var firstTech = skippedSupportTechs[0];
+    return new firstTech.tech(firstTech.mediaFile, settings);
+  }
+
   return null;
 };
 

@@ -203,6 +203,19 @@ Flag to enable resize of the adUnit on window's `resize` and `orientationchange`
 Path to the vpaidFlashloader swf file.
 ```Defaults to '/VPAIDFlash.swf'```
 
+#### preferredTech
+Option to tell the plugin what type of mediaFile to open first. By default, the plugin will load the first supported mediaFile. This is a way to ensure HTML5 is loaded even if a .swf is the first option in the MediaFiles array (good for mobile).
+```Defaults to undefined```
+
+Available Options:
+
+```flash``` which will attempt ```application/x-shockwave-flash``` -or-
+
+```html5``` or ```application/javascript```
+
+You can also pass in the mimeType itself if you'd like to be more explicit.
+
+
 ---
 
 ## Returned object
