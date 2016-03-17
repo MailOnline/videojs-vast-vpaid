@@ -209,9 +209,9 @@ Option to tell the plugin what type of mediaFile to open first. By default, the 
 
 Available Options:
 
-```flash``` which will attempt ```application/x-shockwave-flash``` -or-
+```flash``` which will attempt to load available ```application/x-shockwave-flash``` -or-
 
-```html5``` or ```application/javascript```
+```html5``` which will attempt to load available ```application/javascript```
 
 You can also pass in the mimeType itself if you'd like to be more explicit.
 
