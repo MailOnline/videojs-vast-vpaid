@@ -1,11 +1,11 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.0.0",
+  "version": "1.2.3",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
   "description": "VAST plugin to use with video.js",
-  "main": "bin",
+  "main": "bin/videojs_4.vast.vpaid.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/MailOnline/videojs-vast-vpaid"
