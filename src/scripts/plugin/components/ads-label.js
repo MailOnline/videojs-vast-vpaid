@@ -9,7 +9,7 @@ element.innerHTML = 'Advertisement';
 var AdsLabelFactory = function(baseComponent) {
   return {
     /** @constructor */
-    init: function init(player, options) {
+    constructor: function init(player, options) {
       options.el = element;
       baseComponent.call(this, player, options);
 
