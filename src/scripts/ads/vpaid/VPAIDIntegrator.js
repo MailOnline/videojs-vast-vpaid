@@ -125,8 +125,23 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
   }
 
   var preferredMapping = {
-    html5: 'application/javascript',
-    flash: 'application/x-shockwave-flash'
+    html5: [
+      'text/javascript',
+      'text/javascript1.0',
+      'text/javascript1.2',
+      'text/javascript1.4',
+      'text/jscript',
+      'application/javascript',
+      'application/x-javascript',
+      'text/ecmascript',
+      'text/ecmascript1.0',
+      'text/ecmascript1.2',
+      'text/ecmascript1.4',
+      'text/livescript',
+      'application/ecmascript',
+      'application/x-ecmascript',
+    ],
+    flash: ['application/x-shockwave-flash']
   };
 
   var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
@@ -139,7 +154,13 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
     VPAIDTech = vastUtil.findSupportedVPAIDTech(mediaFile.type);
     if (VPAIDTech) {
       if (preferredTech) {
-        if (mediaFile.type === preferredTech || mediaFile.type === preferredMapping[preferredTech]) {
+        if (
+          mediaFile.type === preferredTech ||
+          (
+            preferredMapping[preferredTech] &&
+            preferredMapping[preferredTech].indexOf(mediaFile.type) > -1
+          )
+        ) {
           return new VPAIDTech(mediaFile, settings);
         } else {
           skippedSupportTechs.push({ mediaFile: mediaFile, tech: VPAIDTech });
