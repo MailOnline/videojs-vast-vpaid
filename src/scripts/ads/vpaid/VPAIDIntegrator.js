@@ -147,28 +147,26 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
   var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
   var preferredTech = settings && settings.preferredTech;
   var skippedSupportTechs = [];
-  var i, len, mediaFile, VPAIDTech;
+  var i, len, mediaFile, VPAIDTech, isPreferedTech;
 
   for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
     mediaFile = vpaidMediaFiles[i];
     VPAIDTech = vastUtil.findSupportedVPAIDTech(mediaFile.type);
-    if (VPAIDTech) {
-      if (preferredTech) {
-        if (
-          mediaFile.type === preferredTech ||
-          (
-            preferredMapping[preferredTech] &&
-            preferredMapping[preferredTech].indexOf(mediaFile.type) > -1
-          )
-        ) {
-          return new VPAIDTech(mediaFile, settings);
-        } else {
-          skippedSupportTechs.push({ mediaFile: mediaFile, tech: VPAIDTech });
-        }
-      } else {
-        return new VPAIDTech(mediaFile, settings);
-      }
+
+    // no supported VPAID tech found, skip mediafile
+    if (!VPAIDTech) { continue; }
+
+    // do we have a prefered tech, does it play this media file ?
+    isPreferedTech = preferredTech ?
+      (mediaFile.type === preferredTech || (preferredMapping[preferredTech] && preferredMapping[preferredTech].indexOf(mediaFile.type) > -1 )) :
+      false;
+
+    // our prefered tech can read this mediafile, defaulting to it.
+    if (isPreferedTech) {
+      return new VPAIDTech(mediaFile, settings);
     }
+
+    skippedSupportTechs.push({ mediaFile: mediaFile, tech: VPAIDTech });
   }
 
   if (skippedSupportTechs.length) {
