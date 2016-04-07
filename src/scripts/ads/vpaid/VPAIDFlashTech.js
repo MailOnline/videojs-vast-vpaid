@@ -1,5 +1,7 @@
 'use strict';
 
+var MimeTypes = require('../../utils/mimetypes');
+
 var VASTError = require('../vast/VASTError');
 
 var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
@@ -29,7 +31,7 @@ function VPAIDFlashTech(mediaFile, settings) {
 VPAIDFlashTech.VPAIDFLASHClient = VPAIDFLASHClient;
 
 VPAIDFlashTech.supports = function (type) {
-  return type === 'application/x-shockwave-flash' && VPAIDFlashTech.VPAIDFLASHClient.isSupported();
+  return (MimeTypes.flash.indexOf(type) > -1) && VPAIDFlashTech.VPAIDFLASHClient.isSupported();
 };
 
 VPAIDFlashTech.prototype.loadAdUnit = function loadFlashCreative(containerEl, objectEl, callback) {

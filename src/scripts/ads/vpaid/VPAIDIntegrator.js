@@ -1,5 +1,6 @@
 'use strict';
 
+var MimeTypes = require('../../utils/mimetypes');
 var VASTError = require('../vast/VASTError');
 var VASTResponse = require('../vast/VASTResponse');
 var VASTTracker = require('../vast/VASTTracker');
@@ -124,26 +125,6 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
     return null;
   }
 
-  var preferredMapping = {
-    html5: [
-      'text/javascript',
-      'text/javascript1.0',
-      'text/javascript1.2',
-      'text/javascript1.4',
-      'text/jscript',
-      'application/javascript',
-      'application/x-javascript',
-      'text/ecmascript',
-      'text/ecmascript1.0',
-      'text/ecmascript1.2',
-      'text/ecmascript1.4',
-      'text/livescript',
-      'application/ecmascript',
-      'application/x-ecmascript',
-    ],
-    flash: ['application/x-shockwave-flash']
-  };
-
   var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
   var preferredTech = settings && settings.preferredTech;
   var skippedSupportTechs = [];
@@ -158,7 +139,7 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
 
     // do we have a prefered tech, does it play this media file ?
     isPreferedTech = preferredTech ?
-      (mediaFile.type === preferredTech || (preferredMapping[preferredTech] && preferredMapping[preferredTech].indexOf(mediaFile.type) > -1 )) :
+      (mediaFile.type === preferredTech || (MimeTypes[preferredTech] && MimeTypes[preferredTech].indexOf(mediaFile.type) > -1 )) :
       false;
 
     // our prefered tech can read this mediafile, defaulting to it.
