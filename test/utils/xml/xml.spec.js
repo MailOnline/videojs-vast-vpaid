@@ -216,12 +216,22 @@ describe("xml", function () {
   });
 
   describe("encode", function(){
+    it("must return undefined when is not passed a string", function() {
+      assert.isUndefined(xml.encode());
+      assert.isUndefined(xml.encode({}));
+    });
+
     it("must encode &, \", ', < and >", function(){
       assert.equal(xml.encode("<br/> \"'"), '&lt;br/&gt; &quot;&apos;' );
     });
   });
 
   describe("decode", function(){
+    it("must return undefined when is not passed a string", function() {
+      assert.isUndefined(xml.decode());
+      assert.isUndefined(xml.decode({}));
+    });
+
     it("must edcode a previously encoded xml", function(){
       assert.equal(xml.decode('&lt;br/&gt; &quot;&apos;'), "<br/> \"'");
     });
