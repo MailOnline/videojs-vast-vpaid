@@ -1,5 +1,5 @@
 var vastUtil = require('ads/vast/vastUtil');
-var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
+var VPAIDFLASHClient = require('vpaid-flash-client');
 var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
 var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 
