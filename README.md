@@ -203,6 +203,17 @@ Flag to enable resize of the adUnit on window's `resize` and `orientationchange`
 Path to the vpaidFlashloader swf file.
 ```Defaults to '/VPAIDFlash.swf'```
 
+#### verbosity
+verbosity of console logging;
+```Defaults to 0```
+
+- 0 - error
+- 1 - error, warn
+- 2 - error, warn, info
+- 3 - error, warn, info, log
+- 4 - error, warn, info, log, debug
+
+
 ---
 
 ## Returned object

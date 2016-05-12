@@ -12,6 +12,8 @@ var dom = require('../../utils/dom');
 var playerUtils = require('../../utils/playerUtils');
 var utilities = require('../../utils/utilityFunctions');
 
+var logger = require ('../../utils/consoleLogger');
+
 function VPAIDIntegrator(player, settings) {
   if (!(this instanceof VPAIDIntegrator)) {
     return new VPAIDIntegrator(player);
@@ -48,6 +50,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
 
   var that = this;
   var player = this.player;
+  logger.debug ("<VPAIDIntegrator.playAd> looking for supported tech...");
   var tech = this._findSupportedTech(vastResponse, this.settings);
 
   callback = callback || utilities.noop;
@@ -63,6 +66,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   });
 
   if (tech) {
+    logger.info ("<VPAIDIntegrator.playAd> found tech: ", tech);
+
     async.waterfall([
       function (next) {
         next(null, tech, vastResponse);
@@ -92,6 +97,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
     };
 
   } else {
+    logger.debug ("<VPAIDIntegrator.playAd> could not find suitable tech");
     var error = new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile', 403);
     adComplete(error, this._adUnit, vastResponse);
   }
@@ -528,8 +534,8 @@ function resizeAd(player, adUnit, VIEW_MODE) {
 }
 
 function logError(error) {
-  if (error && console && console.log) {
-    console.log('ERROR: ' + error.message, error);
+  if (error) {
+    logger.error ('ERROR: ' + error.message, error);
   }
 }
 
