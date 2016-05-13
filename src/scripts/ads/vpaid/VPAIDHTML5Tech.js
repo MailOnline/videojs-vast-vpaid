@@ -1,5 +1,7 @@
 'use strict';
 
+var MimeTypes = require('../../utils/mimetypes');
+
 var VASTError = require('../vast/VASTError');
 
 var VPAIDHTML5Client = require('VPAIDHTML5Client/js/VPAIDHTML5Client');
@@ -34,7 +36,7 @@ function VPAIDHTML5Tech(mediaFile) {
 VPAIDHTML5Tech.VPAIDHTML5Client = VPAIDHTML5Client;
 
 VPAIDHTML5Tech.supports = function (type) {
-  return !utilities.isOldIE() && type === 'application/javascript';
+  return !utilities.isOldIE() && MimeTypes.html5.indexOf(type) > -1;
 };
 
 VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
