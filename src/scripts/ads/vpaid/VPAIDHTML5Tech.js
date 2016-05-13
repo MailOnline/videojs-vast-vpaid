@@ -7,6 +7,8 @@ var VPAIDHTML5Client = require('VPAIDHTML5Client/js/VPAIDHTML5Client');
 var utilities = require('../../utils/utilityFunctions');
 var dom = require('../../utils/dom');
 
+var logger = require ('../../utils/consoleLogger');
+
 function VPAIDHTML5Tech(mediaFile) {
 
   if(!(this instanceof VPAIDHTML5Tech)) {
@@ -63,9 +65,7 @@ VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
     try {
       this.vpaidHTMLClient.destroy();
     } catch(e) {
-      if (console && utilities.isFunction(console.log)) {
-        console.log('VAST ERROR: trying to unload the VPAID adunit');
-      }
+      logger.error ('VAST ERROR: trying to unload the VPAID adunit');
     }
 
     this.vpaidHTMLClient = null;
