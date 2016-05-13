@@ -12,6 +12,8 @@ var dom = require('../utils/dom');
 var playerUtils = require('../utils/playerUtils');
 var utilities = require('../utils/utilityFunctions');
 
+var logger = require ('../utils/consoleLogger');
+
 module.exports = function VASTPlugin(options) {
   var snapshot;
   var player = this;
@@ -45,7 +47,15 @@ module.exports = function VASTPlugin(options) {
     autoResize: true,
 
     // Path to the VPAID flash ad's loader
-    vpaidFlashLoaderPath: '/VPAIDFlash.swf'
+    vpaidFlashLoaderPath: '/VPAIDFlash.swf',
+
+    // verbosity of console logging:
+    // 0 - error
+    // 1 - error, warn
+    // 2 - error, warn, info
+    // 3 - error, warn, info, log
+    // 4 - error, warn, info, log, debug
+    verbosity: 0
   };
 
   var settings = utilities.extend({}, defaultOpts, options || {});
@@ -65,6 +75,8 @@ module.exports = function VASTPlugin(options) {
   if (!utilities.isDefined(settings.adTagUrl) && !utilities.isFunction(settings.adTagXML)) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
+
+  logger.setVerbosity (settings.verbosity);
 
   vastUtil.runFlashSupportCheck(settings.vpaidFlashLoaderPath);// Necessary step for VPAIDFLASHClient to work.
 
@@ -263,6 +275,7 @@ module.exports = function VASTPlugin(options) {
     }
 
     player.vast.vastResponse = vastResponse;
+    logger.debug ("calling adIntegrator.playAd() with vastResponse:", vastResponse);
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     /*** Local functions ****/
@@ -325,9 +338,7 @@ module.exports = function VASTPlugin(options) {
   function trackAdError(error, vastResponse) {
     player.trigger({type: 'vast.adError', error: error});
     cancelAds();
-    if (console && console.log) {
-      console.log('AD ERROR:', error.message, error, vastResponse);
-    }
+    logger.error ('AD ERROR:', error.message, error, vastResponse);
   }
 
   function isVPAID(vastResponse) {

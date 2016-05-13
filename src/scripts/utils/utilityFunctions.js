@@ -57,7 +57,7 @@ function isArrayLike(obj) {
     typeof length === 'number' && length > 0 && (length - 1) in obj;
 }
 
-function isString(str){
+function isString(str) {
   return typeof str === 'string';
 }
 

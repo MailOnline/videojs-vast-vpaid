@@ -10,6 +10,8 @@ var http = require('../../utils/http').http;
 var utilities = require('../../utils/utilityFunctions');
 var xml = require('../../utils/xml');
 
+var logger = require ('../../utils/consoleLogger');
+
 function VASTClient(options) {
   if (!(this instanceof VASTClient)) {
     return new VASTClient(options);
@@ -101,6 +103,7 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     var vastTree;
     try {
       vastTree = xml.toJXONTree(xmlStr);
+      logger.debug ("built JXONTree from VAST response:", vastTree);
 
       if(utilities.isArray(vastTree.ad)) {
         vastTree.ads = vastTree.ad;
@@ -214,6 +217,7 @@ VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callbac
     if (utilities.isFunction(adTagUrl)) {
       adTagUrl(requestHandler);
     } else {
+      logger.info ("requesting adTagUrl: " + adTagUrl);
       http.get(adTagUrl, requestHandler, {
         withCredentials: true
       });
