@@ -2,5 +2,6 @@
 # For more info visit
 # https://help.github.com/articles/using-jekyll-with-pages/
 # https://help.github.com/articles/redirects-on-github-pages/
+baseurl: /videojs-vast-vpaid
 gems:
   - jekyll-redirect-from
