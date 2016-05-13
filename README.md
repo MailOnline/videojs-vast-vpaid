@@ -215,6 +215,16 @@ Available Options:
 
 You can also pass in the mimeType itself if you'd like to be more explicit.
 
+#### verbosity
+verbosity of console logging;
+```Defaults to 0```
+
+- 0 - error
+- 1 - error, warn
+- 2 - error, warn, info
+- 3 - error, warn, info, log
+- 4 - error, warn, info, log, debug
+
 
 ---
 

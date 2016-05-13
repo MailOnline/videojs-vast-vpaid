@@ -687,7 +687,6 @@ describe("VPAIDIntegrator", function () {
           this.clock.tick();
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
-          sinon.assert.calledWithExactly(player.volume, 0);
         });
 
         it("must tack unmute if the volume was 0 and changes to not cero", function(){
