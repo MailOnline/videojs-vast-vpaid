@@ -1,5 +1,6 @@
 'use strict';
 
+var MimeTypes = require('../../utils/mimetypes');
 var VASTError = require('../vast/VASTError');
 var VASTResponse = require('../vast/VASTResponse');
 var VASTTracker = require('../vast/VASTTracker');
@@ -131,15 +132,35 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
   }
 
   var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
-  var i, len, mediaFile, VPAIDTech;
+  var preferredTech = settings && settings.preferredTech;
+  var skippedSupportTechs = [];
+  var i, len, mediaFile, VPAIDTech, isPreferedTech;
 
   for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
     mediaFile = vpaidMediaFiles[i];
     VPAIDTech = vastUtil.findSupportedVPAIDTech(mediaFile.type);
-    if (VPAIDTech) {
+
+    // no supported VPAID tech found, skip mediafile
+    if (!VPAIDTech) { continue; }
+
+    // do we have a prefered tech, does it play this media file ?
+    isPreferedTech = preferredTech ?
+      (mediaFile.type === preferredTech || (MimeTypes[preferredTech] && MimeTypes[preferredTech].indexOf(mediaFile.type) > -1 )) :
+      false;
+
+    // our prefered tech can read this mediafile, defaulting to it.
+    if (isPreferedTech) {
       return new VPAIDTech(mediaFile, settings);
     }
+
+    skippedSupportTechs.push({ mediaFile: mediaFile, tech: VPAIDTech });
   }
+
+  if (skippedSupportTechs.length) {
+    var firstTech = skippedSupportTechs[0];
+    return new firstTech.tech(firstTech.mediaFile, settings);
+  }
+
   return null;
 };
 
