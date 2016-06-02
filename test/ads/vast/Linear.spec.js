@@ -138,6 +138,19 @@ describe("Linear", function () {
   });
 
   describe("AdParameters", function () {
+    it("must handle when no parameters is passed", function () {
+
+      [true, false].map(function(xmlEncoded) {
+        return '<AdParameters xmlEncoded="' + xmlEncoded + '"><![CDATA[ ]]></AdParameters>';
+      }).forEach(function (adParametersString) {
+
+        var linearXML = '<Linear skipoffset="10%">' + adParametersString + '</Linear>';
+        assert.doesNotThrow(function () {
+          return new Linear(xml.toJXONTree(linearXML));
+        });
+      });
+    });
+
     it("must be added to the linear", function () {
       var encodedAdParameters = xml.encode('<some>data</some>');
 

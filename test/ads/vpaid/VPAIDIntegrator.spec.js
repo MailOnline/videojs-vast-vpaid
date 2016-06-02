@@ -1,6 +1,7 @@
 var VPAIDAdUnitWrapper = require('ads/vpaid/VPAIDAdUnitWrapper');
 var VPAIDIntegrator = require('ads/vpaid/VPAIDIntegrator');
 var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
+var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 
 var MediaFile = require('ads/vast/MediaFile');
 var VASTError = require('ads/vast/VASTError');
@@ -686,7 +687,6 @@ describe("VPAIDIntegrator", function () {
           this.clock.tick();
           sinon.assert.notCalled(tracker.trackMute);
           sinon.assert.notCalled(tracker.trackUnmute);
-          sinon.assert.calledWithExactly(player.volume, 0);
         });
 
         it("must tack unmute if the volume was 0 and changes to not cero", function(){
@@ -816,11 +816,19 @@ describe("VPAIDIntegrator", function () {
 
     describe("findSupportedTech", function () {
       var FLASH_APP_MIME = 'application/x-shockwave-flash';
-      var originalFlash;
+      var JS_APP_MIME = 'application/javascript';
+      var originalFlash, originalHtml5;
 
       beforeEach(function() {
         originalFlash = VPAIDFlashTech.VPAIDFLASHClient;
+        originalHtml5 = VPAIDHTML5Tech.VPAIDHTML5Client;
         VPAIDFlashTech.VPAIDFLASHClient = {
+          isSupported: function() {
+            return true;
+          }
+        };
+
+        VPAIDHTML5Tech.VPAIDHTML5Client = {
           isSupported: function() {
             return true;
           }
@@ -829,6 +837,7 @@ describe("VPAIDIntegrator", function () {
 
       afterEach(function() {
         VPAIDFlashTech.VPAIDFLASHClient = originalFlash;
+        VPAIDHTML5Tech.VPAIDHTML5Client = originalHtml5;
       });
 
       it("must return null if you pass a wrong vastREsponse", function () {
@@ -868,6 +877,41 @@ describe("VPAIDIntegrator", function () {
         vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
         var flashTech = vpaidIntegrator._findSupportedTech(vastResponse, settings);
         assert.deepEqual(flashTech.settings, settings);
+      });
+
+      it("must return preferred tech if supported and available", function () {
+        var settings = {preferredTech: 'html5'};
+        var vastResponse = new VASTResponse();
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME), createMediaFile('http://anotherFakeVideoFile', JS_APP_MIME)]);
+        assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse, settings), VPAIDHTML5Tech);
+      });
+
+      it("must return preferred tech if supported and available", function () {
+        var settings = {preferredTech: 'flash'};
+        var vastResponse = new VASTResponse();
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME), createMediaFile('http://anotherFakeVideoFile', JS_APP_MIME)]);
+        assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse, settings), VPAIDFlashTech);
+      });
+
+      it("must return supported tech even if preferred tech is not available", function () {
+        var settings = {preferredTech: 'html5'};
+        var vastResponse = new VASTResponse();
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME)]);
+        assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse, settings), VPAIDFlashTech);
+      });
+
+      it("must return available, supported tech if preferred tech is not supported", function () {
+        var settings = {preferredTech: 'flash'};
+
+        VPAIDFlashTech.VPAIDFLASHClient = {
+          isSupported: function() {
+            return false;
+          }
+        };
+
+        var vastResponse = new VASTResponse();
+        vastResponse._addMediaFiles([createMediaFile('http://fakeVideoFile', FLASH_APP_MIME), createMediaFile('http://anotherFakeVideoFile', JS_APP_MIME)]);
+        assert.instanceOf(vpaidIntegrator._findSupportedTech(vastResponse, settings), VPAIDHTML5Tech);
       });
     });
 

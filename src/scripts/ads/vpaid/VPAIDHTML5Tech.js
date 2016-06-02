@@ -1,11 +1,15 @@
 'use strict';
 
+var MimeTypes = require('../../utils/mimetypes');
+
 var VASTError = require('../vast/VASTError');
 
 var VPAIDHTML5Client = require('VPAIDHTML5Client/js/VPAIDHTML5Client');
 
 var utilities = require('../../utils/utilityFunctions');
 var dom = require('../../utils/dom');
+
+var logger = require ('../../utils/consoleLogger');
 
 function VPAIDHTML5Tech(mediaFile) {
 
@@ -32,7 +36,7 @@ function VPAIDHTML5Tech(mediaFile) {
 VPAIDHTML5Tech.VPAIDHTML5Client = VPAIDHTML5Client;
 
 VPAIDHTML5Tech.supports = function (type) {
-  return !utilities.isOldIE() && type === 'application/javascript';
+  return !utilities.isOldIE() && MimeTypes.html5.indexOf(type) > -1;
 };
 
 VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
@@ -63,9 +67,7 @@ VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
     try {
       this.vpaidHTMLClient.destroy();
     } catch(e) {
-      if (console && utilities.isFunction(console.log)) {
-        console.log('VAST ERROR: trying to unload the VPAID adunit');
-      }
+      logger.error ('VAST ERROR: trying to unload the VPAID adunit');
     }
 
     this.vpaidHTMLClient = null;

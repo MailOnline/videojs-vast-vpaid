@@ -128,6 +128,8 @@ xml.attr = function getAttrValue(xmlObj, attr) {
 };
 
 xml.encode = function encodeXML(str) {
+  if (!utilities.isString(str)) return undefined;
+
   return str.replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -136,6 +138,8 @@ xml.encode = function encodeXML(str) {
 };
 
 xml.decode = function decodeXML(str) {
+  if (!utilities.isString(str)) return undefined;
+
   return str.replace(/&apos;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&gt;/g, '>')

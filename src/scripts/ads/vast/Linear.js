@@ -30,7 +30,7 @@ function Linear(linearJTree) {
   if(linearJTree.adParameters) {
     this.adParameters = xml.keyValue(linearJTree.adParameters);
 
-    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')){
+    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')) {
       this.adParameters = xml.decode(this.adParameters);
     }
   }
