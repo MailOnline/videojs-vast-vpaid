@@ -10,6 +10,8 @@ var http = require('../../utils/http').http;
 var utilities = require('../../utils/utilityFunctions');
 var xml = require('../../utils/xml');
 
+var logger = require ('../../utils/consoleLogger');
+
 function VASTClient(options) {
   if (!(this instanceof VASTClient)) {
     return new VASTClient(options);
@@ -101,6 +103,7 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     var vastTree;
     try {
       vastTree = xml.toJXONTree(xmlStr);
+      logger.debug ("built JXONTree from VAST response:", vastTree);
 
       if(utilities.isArray(vastTree.ad)) {
         vastTree.ads = vastTree.ad;
@@ -183,13 +186,15 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
       return new VASTError(errMsgPrefix + "nor wrapper nor inline elements found on the Ad", 101);
     }
 
-    if (inLine && inLine.creatives.length === 0) {
-      return new VASTError(errMsgPrefix + "missing creative in InLine element", 101);
+    if (inLine && !inLine.isSupported()) {
+      return new VASTError(errMsgPrefix + "could not find MediaFile that is supported by this video player", 403);
     }
 
     if (wrapper && !wrapper.VASTAdTagURI) {
       return new VASTError(errMsgPrefix + "missing 'VASTAdTagURI' in wrapper", 101);
     }
+
+    return null;
   }
 
   function requestVASTAd(adTagUrl, callback) {
@@ -212,6 +217,7 @@ VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callbac
     if (utilities.isFunction(adTagUrl)) {
       adTagUrl(requestHandler);
     } else {
+      logger.info ("requesting adTagUrl: " + adTagUrl);
       http.get(adTagUrl, requestHandler, {
         withCredentials: true
       });

@@ -7,7 +7,7 @@ do
 done
 
 
-files=$(git diff --cached --name-only --diff-filter=ACM | grep "^[src/|test/].*\.js$")
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E "^(src|build|test)/.*\.js$")
 
 if [ "$files" = "" ]; then
     exit 0

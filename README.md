@@ -14,7 +14,7 @@ Currently we support VAST and VPAID [Flash](https://github.com/MailOnline/VPAIDF
 ## Integration with video.js 4 and 5
 To integrate the plugin with videoJs you need to:
 
-**1- Add [all files from bin][MailOnline/videojs-vast-vpaid/RELEASE/bin] to some path in your server**
+**1- Add [all files from MailOnline/videojs-vast-vpaid/RELEASE/bin](https://github.com/MailOnline/videojs-vast-vpaid/tree/RELEASE/bin) to some path in your server**
 
 **2- If you don't have videoJs, add it's scripts and stylesheet to your page**
 ```html
@@ -29,10 +29,9 @@ or
 <script src="http://vjs.zencdn.net/5.4.6/video.js"></script>
 ```
 
-**3- After videoJs add the plugin script stylesheet and swfobject (if you want to support flashvpaid) to your page**
+**3- After videoJs add the plugin script stylesheet**
 ```html
 <!-- Common -->
-<script src="/path/to/swfobject.js"></script>
 <link href="/path/to/videojs.vast.vpaid.min.css" rel="stylesheet">
 ```
 and the videojs version specific plugin
@@ -203,6 +202,29 @@ Flag to enable resize of the adUnit on window's `resize` and `orientationchange`
 #### vpaidFlashLoaderPath
 Path to the vpaidFlashloader swf file.
 ```Defaults to '/VPAIDFlash.swf'```
+
+#### preferredTech
+Option to tell the plugin what type of mediaFile to open first. By default, the plugin will load the first supported mediaFile. This is a way to ensure HTML5 is loaded even if a .swf is the first option in the MediaFiles array.
+```Defaults to undefined```
+
+Available Options:
+
+```flash``` which will attempt to load available ```application/x-shockwave-flash``` -or-
+
+```html5``` which will attempt to load available ```application/javascript```
+
+You can also pass in the mimeType itself if you'd like to be more explicit.
+
+#### verbosity
+verbosity of console logging;
+```Defaults to 0```
+
+- 0 - error
+- 1 - error, warn
+- 2 - error, warn, info
+- 3 - error, warn, info, log
+- 4 - error, warn, info, log, debug
+
 
 ---
 

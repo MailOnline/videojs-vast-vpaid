@@ -33,11 +33,12 @@
     "build",
     "frontend/demo/*"
   ],
-  "dependencies": { },
+  "dependencies": {
+    "VPAIDFLASHClient": "^1.0.2",
+    "VPAIDHTML5Client": "^0.1.14"
+  },
   "devDependencies": {
     "videojs_5": "video.js#5",
-    "videojs_4": "video.js#4",
-    "VPAIDFLASHClient": "0.1.8",
-    "VPAIDHTML5Client": "https://github.com/MailOnline/VPAIDHTML5Client.git#master"
+    "videojs_4": "video.js#4"
   }
 }

@@ -137,51 +137,49 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
    * to be ready to apply the rest of the state
    */
   function tryToResume() {
-    if (playerUtils.isReadyToResume(tech)) {
-      // if some period of the video is seekable, resume playback
-      return resume();
-    }
 
-    // delay a bit and then check again unless we're out of attempts
-    if (attempts--) {
+    // if some period of the video is seekable, resume playback
+    // otherwise delay a bit and then check again unless we're out of attempts
+
+    if (!playerUtils.isReadyToResume(player) && attempts--) {
       setTimeout(tryToResume, 50);
     } else {
-      (function () {
-        try {
-          resume();
-        } catch (e) {
-          videojs.log.warn('Failed to resume the content after an advertisement', e);
+      try {
+        if(player.currentTime() !== snapshot.currentTime) {
+          if (snapshot.playing) { // if needed restore playing status after seek completes
+            player.one('seeked', function() {
+              player.play();
+            });
+          }
+          player.currentTime(snapshot.currentTime);
+
+        } else if (snapshot.playing) {
+          // if needed and no seek has been performed, restore playing status immediately
+          player.play();
         }
-      })();
-    }
 
-
-    /*** Local functions ***/
-    function resume() {
-      player.currentTime(snapshot.currentTime);
-
-      if (snapshot.playing) {
-        player.play();
+      } catch (e) {
+        videojs.log.warn('Failed to resume the content after an advertisement', e);
       }
     }
-
   }
 };
 
-playerUtils.isReadyToResume = function (tech) {
-  if (tech.readyState > 1) {
+playerUtils.isReadyToResume = function (player) {
+
+  if (player.readyState() > 1) {
     // some browsers and media aren't "seekable".
     // readyState greater than 1 allows for seeking without exceptions
     return true;
   }
 
-  if (tech.seekable === undefined) {
-    // if the tech doesn't expose the seekable time ranges, try to
+  if (player.seekable() === undefined) {
+    // if the player doesn't expose the seekable time ranges, try to
     // resume playback immediately
     return true;
   }
 
-  if (tech.seekable.length > 0) {
+  if (player.seekable().length > 0) {
     // if some period of the video is seekable, resume playback
     return true;
   }

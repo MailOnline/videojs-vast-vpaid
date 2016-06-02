@@ -30,7 +30,7 @@ function Linear(linearJTree) {
   if(linearJTree.adParameters) {
     this.adParameters = xml.keyValue(linearJTree.adParameters);
 
-    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')){
+    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')) {
       this.adParameters = xml.decode(this.adParameters);
     }
   }
@@ -59,5 +59,19 @@ function Linear(linearJTree) {
     return mediaFiles;
   }
 }
+
+/**
+ * Must return true if at least one of the MediaFiles' type is supported
+ */
+Linear.prototype.isSupported = function () {
+  var i, len;
+  for(i=0, len=this.mediaFiles.length; i<len; i+=1) {
+    if(this.mediaFiles[i].isSupported()) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 module.exports = Linear;

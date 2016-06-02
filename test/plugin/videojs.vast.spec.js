@@ -559,6 +559,55 @@ describe("videojs.vast plugin", function () {
       sinon.assert.calledWithExactly(player.currentTime, 1);
     });
 
+    it("must prevent ad skip if 'ended' event is triggered but ad wasn't finished", function(){
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      sinon.stub(player, 'duration').returns(10);
+      sinon.stub(player, 'currentTime').returns(1);
+      callback(null, response);
+      this.clock.tick();
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.trigger('ended');
+      this.clock.tick();
+      sinon.assert.calledWithExactly(player.currentTime, 1);
+    });
+
+    it("must NOT prevent ad skip if 'ended' event is triggered and Ad is finished", function(){
+      var response = new VASTResponse();
+      response._addMediaFiles([
+        createMediaFile('http://fakeVideoFile', 'video/mp4')
+      ]);
+      sinon.stub(player, 'duration').returns(10);
+      sinon.stub(player, 'currentTime').returns(1);
+      callback(null, response);
+      this.clock.tick();
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.currentTime.returns(3);
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.currentTime.returns(5);
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.currentTime.returns(7);
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.currentTime.returns(9);
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.currentTime.returns(10);
+      player.trigger('timeupdate');
+      this.clock.tick();
+      player.trigger('ended');
+      this.clock.tick();
+      // we expect player.currentTime to have never been called with params
+      sinon.assert.neverCalledWith(player.currentTime, sinon.match.defined);
+    });
+
+
     it("must pause the play if the user tries to skip the ad manually twice", function(){
       var response = new VASTResponse();
       response._addMediaFiles([

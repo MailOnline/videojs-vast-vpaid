@@ -1,7 +1,9 @@
 'use strict';
 
-var Creative = require('./Creative');
 var utilities = require('../../utils/utilityFunctions');
+var VPAIDHTML5Tech = require('../vpaid/VPAIDHTML5Tech');
+var VPAIDFlashTech = require('../vpaid/VPAIDFlashTech');
+var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
 
 var vastUtil = {
 
@@ -92,17 +94,6 @@ var vastUtil = {
     return [];
   },
 
-  parseCreatives: function parseCreatives(creativesJTree) {
-    var creatives = [];
-    var creativesData;
-    if (utilities.isDefined(creativesJTree) && utilities.isDefined(creativesJTree.creative)) {
-      creativesData = utilities.isArray(creativesJTree.creative) ? creativesJTree.creative : [creativesJTree.creative];
-      creativesData.forEach(function (creative) {
-        creatives.push(new Creative(creative));
-      });
-    }
-    return creatives;
-  },
 
   //We assume that the progress is going to arrive in milliseconds
   formatProgress: function formatProgress(progress) {
@@ -117,8 +108,8 @@ var vastUtil = {
     return utilities.toFixedDigits(hours, 2) + ':' + utilities.toFixedDigits(minutes, 2) + ':' + utilities.toFixedDigits(seconds, 2) + '.' + utilities.toFixedDigits(milliseconds, 3);
   },
 
-  parseOffset:   function parseOffset(offset, duration) {
-    if(isPercentage(offset)){
+  parseOffset: function parseOffset(offset, duration) {
+    if (isPercentage(offset)) {
       return calculatePercentage(offset, duration);
     }
     return vastUtil.parseDuration(offset);
@@ -130,21 +121,54 @@ var vastUtil = {
     }
 
     function calculatePercentage(percentStr, duration) {
-      if(duration) {
+      if (duration) {
         return calcPercent(duration, parseFloat(percentStr.replace('%', '')));
       }
       return null;
     }
 
-    function calcPercent(quantity, percent){
+    function calcPercent(quantity, percent) {
       return quantity * percent / 100;
     }
   },
 
+
+  //List of supported VPAID technologies
+  VPAID_techs: [
+    VPAIDFlashTech,
+    VPAIDHTML5Tech
+  ],
+
   isVPAID: function isVPAIDMediaFile(mediaFile) {
     return !!mediaFile && mediaFile.apiFramework === 'VPAID';
-  }
-};
+  },
 
+  findSupportedVPAIDTech: function findSupportedVPAIDTech(mimeType) {
+    var i, len, VPAIDTech;
+
+    for (i = 0, len = this.VPAID_techs.length; i < len; i += 1) {
+      VPAIDTech = this.VPAID_techs[i];
+      if (VPAIDTech.supports(mimeType)) {
+        return VPAIDTech;
+      }
+    }
+    return null;
+  },
+
+  isFlashSupported: function isFlashSupported() {
+    return VPAIDFLASHClient.isSupported();
+  },
+
+  /**
+   * Necessary step for VPAIDFLAShClient to know if flash is supported and not blocked.
+   * IMPORTANT NOTE: This is an async test and needs to be run as soon as possible.
+   *
+   * @param vpaidFlashLoaderPath the path to the vpaidFlashLoader swf obj.
+   */
+  runFlashSupportCheck: function runFlashSupportCheck(vpaidFlashLoaderPath) {
+    VPAIDFLASHClient.runFlashTest({data: vpaidFlashLoaderPath});
+  }
+
+};
 
 module.exports = vastUtil;

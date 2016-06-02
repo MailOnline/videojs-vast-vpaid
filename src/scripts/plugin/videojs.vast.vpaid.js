@@ -12,6 +12,8 @@ var dom = require('../utils/dom');
 var playerUtils = require('../utils/playerUtils');
 var utilities = require('../utils/utilityFunctions');
 
+var logger = require ('../utils/consoleLogger');
+
 module.exports = function VASTPlugin(options) {
   var snapshot;
   var player = this;
@@ -45,7 +47,15 @@ module.exports = function VASTPlugin(options) {
     autoResize: true,
 
     // Path to the VPAID flash ad's loader
-    vpaidFlashLoaderPath: '/VPAIDFlash.swf'
+    vpaidFlashLoaderPath: '/VPAIDFlash.swf',
+
+    // verbosity of console logging:
+    // 0 - error
+    // 1 - error, warn
+    // 2 - error, warn, info
+    // 3 - error, warn, info, log
+    // 4 - error, warn, info, log, debug
+    verbosity: 0
   };
 
   var settings = utilities.extend({}, defaultOpts, options || {});
@@ -65,6 +75,10 @@ module.exports = function VASTPlugin(options) {
   if (!utilities.isDefined(settings.adTagUrl) && !utilities.isFunction(settings.adTagXML)) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
   }
+
+  logger.setVerbosity (settings.verbosity);
+
+  vastUtil.runFlashSupportCheck(settings.vpaidFlashLoaderPath);// Necessary step for VPAIDFLASHClient to work.
 
   playerUtils.prepareForAds(player);
 
@@ -114,6 +128,7 @@ module.exports = function VASTPlugin(options) {
     async.waterfall([
       checkAdsEnabled,
       preparePlayerForAd,
+      startAdCancelTimeout,
       playPrerollAd
     ], function (error, response) {
       if (error) {
@@ -167,8 +182,15 @@ module.exports = function VASTPlugin(options) {
         snapshot = playerUtils.getPlayerSnapshot(player);
         player.pause();
         addSpinnerIcon();
-        startAdCancelTimeout();
-        next(null);
+
+        if(player.paused()) {
+          next(null);
+        } else {
+          playerUtils.once(player, ['playing'], function() {
+            player.pause();
+            next(null);
+          });
+        }
       } else {
         next(new VASTError('video content has been playing before preroll ad'));
       }
@@ -178,7 +200,7 @@ module.exports = function VASTPlugin(options) {
       return !utilities.isIPhone() || player.currentTime() <= settings.iosPrerollCancelTimeout;
     }
 
-    function startAdCancelTimeout() {
+    function startAdCancelTimeout(next) {
       var adCancelTimeoutId;
       adsCanceled = false;
 
@@ -195,6 +217,8 @@ module.exports = function VASTPlugin(options) {
           adCancelTimeoutId = null;
         }
       }
+
+      next(null);
     }
 
     function addSpinnerIcon() {
@@ -250,6 +274,8 @@ module.exports = function VASTPlugin(options) {
       preventManualProgress();
     }
 
+    player.vast.vastResponse = vastResponse;
+    logger.debug ("calling adIntegrator.playAd() with vastResponse:", vastResponse);
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
     /*** Local functions ****/
@@ -272,18 +298,29 @@ module.exports = function VASTPlugin(options) {
       var previousTime = 0;
       var skipad_attempts = 0;
 
-      player.on('timeupdate', adTimeupdateHandler);
+      player.on('timeupdate', preventAdSeek);
+      player.on('ended', preventAdSkip);
+
       playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adError'], stopPreventManualProgress);
 
       /*** Local functions ***/
-      function adTimeupdateHandler() {
+      function preventAdSkip() {
+        // Ignore ended event if the Ad time was not 'near' the end
+        // and revert time to the previous 'valid' time
+        if ((player.duration() - previousTime) > PROGRESS_THRESHOLD) {
+          player.pause(true); // this reduce the video jitter if the IOS skip button is pressed
+          player.play(true); // we need to trigger the play to put the video element back in a valid state
+          player.currentTime(previousTime);
+        }
+      }
+
+      function preventAdSeek() {
         var currentTime = player.currentTime();
         var progressDelta = Math.abs(currentTime - previousTime);
-
         if (progressDelta > PROGRESS_THRESHOLD) {
           skipad_attempts += 1;
           if (skipad_attempts >= 2) {
-            player.pause();
+            player.pause(true);
           }
           player.currentTime(previousTime);
         } else {
@@ -292,7 +329,8 @@ module.exports = function VASTPlugin(options) {
       }
 
       function stopPreventManualProgress() {
-        player.off('timeupdate', adTimeupdateHandler);
+        player.off('timeupdate', preventAdSeek);
+        player.off('ended', preventAdSkip);
       }
     }
   }
@@ -300,9 +338,7 @@ module.exports = function VASTPlugin(options) {
   function trackAdError(error, vastResponse) {
     player.trigger({type: 'vast.adError', error: error});
     cancelAds();
-    if (console && console.log) {
-      console.log('AD ERROR:', error.message, error, vastResponse);
-    }
+    logger.error ('AD ERROR:', error.message, error, vastResponse);
   }
 
   function isVPAID(vastResponse) {

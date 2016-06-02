@@ -45,7 +45,8 @@ var $Array = Array;
 var ArrayPrototype = $Array.prototype;
 var $Object = Object;
 var ObjectPrototype = $Object.prototype;
-var FunctionPrototype = Function.prototype;
+var $Function = Function;
+var FunctionPrototype = $Function.prototype;
 var $String = String;
 var StringPrototype = $String.prototype;
 var $Number = Number;
@@ -55,6 +56,7 @@ var array_splice = ArrayPrototype.splice;
 var array_push = ArrayPrototype.push;
 var array_unshift = ArrayPrototype.unshift;
 var array_concat = ArrayPrototype.concat;
+var array_join = ArrayPrototype.join;
 var call = FunctionPrototype.call;
 var apply = FunctionPrototype.apply;
 var max = Math.max;
@@ -63,10 +65,14 @@ var min = Math.min;
 // Having a toString local variable name breaks in Opera so use to_string.
 var to_string = ObjectPrototype.toString;
 
+/* global Symbol */
+/* eslint-disable one-var-declaration-per-line, no-redeclare */
 var hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
-var isCallable; /* inlined from https://npmjs.com/is-callable */ var fnToStr = Function.prototype.toString, tryFunctionObject = function tryFunctionObject(value) { try { fnToStr.call(value); return true; } catch (e) { return false; } }, fnClass = '[object Function]', genClass = '[object GeneratorFunction]'; isCallable = function isCallable(value) { if (typeof value !== 'function') { return false; } if (hasToStringTag) { return tryFunctionObject(value); } var strClass = to_string.call(value); return strClass === fnClass || strClass === genClass; };
+var isCallable; /* inlined from https://npmjs.com/is-callable */ var fnToStr = Function.prototype.toString, constructorRegex = /^\s*class /, isES6ClassFn = function isES6ClassFn(value) { try { var fnStr = fnToStr.call(value); var singleStripped = fnStr.replace(/\/\/.*\n/g, ''); var multiStripped = singleStripped.replace(/\/\*[.\s\S]*\*\//g, ''); var spaceStripped = multiStripped.replace(/\n/mg, ' ').replace(/ {2}/g, ' '); return constructorRegex.test(spaceStripped); } catch (e) { return false; /* not a function */ } }, tryFunctionObject = function tryFunctionObject(value) { try { if (isES6ClassFn(value)) { return false; } fnToStr.call(value); return true; } catch (e) { return false; } }, fnClass = '[object Function]', genClass = '[object GeneratorFunction]', isCallable = function isCallable(value) { if (!value) { return false; } if (typeof value !== 'function' && typeof value !== 'object') { return false; } if (hasToStringTag) { return tryFunctionObject(value); } if (isES6ClassFn(value)) { return false; } var strClass = to_string.call(value); return strClass === fnClass || strClass === genClass; };
+
 var isRegex; /* inlined from https://npmjs.com/is-regex */ var regexExec = RegExp.prototype.exec, tryRegexExec = function tryRegexExec(value) { try { regexExec.call(value); return true; } catch (e) { return false; } }, regexClass = '[object RegExp]'; isRegex = function isRegex(value) { if (typeof value !== 'object') { return false; } return hasToStringTag ? tryRegexExec(value) : to_string.call(value) === regexClass; };
 var isString; /* inlined from https://npmjs.com/is-string */ var strValue = String.prototype.valueOf, tryStringObject = function tryStringObject(value) { try { strValue.call(value); return true; } catch (e) { return false; } }, stringClass = '[object String]'; isString = function isString(value) { if (typeof value === 'string') { return true; } if (typeof value !== 'object') { return false; } return hasToStringTag ? tryStringObject(value) : to_string.call(value) === stringClass; };
+/* eslint-enable one-var-declaration-per-line, no-redeclare */
 
 /* inlined from http://npmjs.com/define-properties */
 var supportsDescriptors = $Object.defineProperty && (function () {
@@ -226,7 +232,8 @@ defineProperties(FunctionPrototype, {
                 // 5. Return the result of calling the [[Construct]] internal
                 //   method of target providing args as the arguments.
 
-                var result = target.apply(
+                var result = apply.call(
+                    target,
                     this,
                     array_concat.call(args, array_slice.call(arguments))
                 );
@@ -255,7 +262,8 @@ defineProperties(FunctionPrototype, {
                 //   providing args as the arguments.
 
                 // equiv: target.call(this, ...boundArgs, ...args)
-                return target.apply(
+                return apply.call(
+                    target,
                     that,
                     array_concat.call(args, array_slice.call(arguments))
                 );
@@ -285,7 +293,7 @@ defineProperties(FunctionPrototype, {
         // for ex.) all use of eval or Function costructor throws an exception.
         // However in all of these environments Function.prototype.bind exists
         // and so this code will never be executed.
-        bound = Function('binder', 'return function (' + boundArgs.join(',') + '){ return binder.apply(this, arguments); }')(binder);
+        bound = $Function('binder', 'return function (' + array_join.call(boundArgs, ',') + '){ return binder.apply(this, arguments); }')(binder);
 
         if (target.prototype) {
             Empty.prototype = target.prototype;
@@ -328,7 +336,7 @@ var arraySliceApply = apply.bind(array_slice);
 var strSlice = call.bind(StringPrototype.slice);
 var strSplit = call.bind(StringPrototype.split);
 var strIndexOf = call.bind(StringPrototype.indexOf);
-var push = call.bind(array_push);
+var pushCall = call.bind(array_push);
 var isEnum = call.bind(ObjectPrototype.propertyIsEnumerable);
 var arraySort = call.bind(ArrayPrototype.sort);
 
@@ -384,18 +392,23 @@ var properlyBoxesContext = function properlyBoxed(method) {
     // Check node 0.6.21 bug where third parameter is not boxed
     var properlyBoxesNonStrict = true;
     var properlyBoxesStrict = true;
+    var threwException = false;
     if (method) {
-        method.call('foo', function (_, __, context) {
-            if (typeof context !== 'object') { properlyBoxesNonStrict = false; }
-        });
+        try {
+            method.call('foo', function (_, __, context) {
+                if (typeof context !== 'object') { properlyBoxesNonStrict = false; }
+            });
 
-        method.call([1], function () {
-            'use strict';
+            method.call([1], function () {
+                'use strict';
 
-            properlyBoxesStrict = typeof this === 'string';
-        }, 'x');
+                properlyBoxesStrict = typeof this === 'string';
+            }, 'x');
+        } catch (e) {
+            threwException = true;
+        }
     }
-    return !!method && properlyBoxesNonStrict && properlyBoxesStrict;
+    return !!method && !threwException && properlyBoxesNonStrict && properlyBoxesStrict;
 };
 
 defineProperties(ArrayPrototype, {
@@ -484,7 +497,7 @@ defineProperties(ArrayPrototype, {
             if (i in self) {
                 value = self[i];
                 if (typeof T === 'undefined' ? callbackfn(value, i, object) : callbackfn.call(T, value, i, object)) {
-                    push(result, value);
+                    pushCall(result, value);
                 }
             }
         }
@@ -739,7 +752,7 @@ defineProperties(ArrayPrototype, {
         if (arguments.length > 0 && typeof deleteCount !== 'number') {
             args = arraySlice(arguments);
             if (args.length < 2) {
-                push(args, this.length - start);
+                pushCall(args, this.length - start);
             } else {
                 args[1] = ES.ToInteger(deleteCount);
             }
@@ -791,7 +804,8 @@ defineProperties(ArrayPrototype, {
         var to;
         if (itemCount < actualDeleteCount) {
             k = actualStart;
-            while (k < (len - actualDeleteCount)) {
+            var maxK = len - actualDeleteCount;
+            while (k < maxK) {
                 from = $String(k + actualDeleteCount);
                 to = $String(k + itemCount);
                 if (owns(O, from)) {
@@ -802,7 +816,8 @@ defineProperties(ArrayPrototype, {
                 k += 1;
             }
             k = len;
-            while (k > (len - actualDeleteCount + itemCount)) {
+            var minK = len - actualDeleteCount + itemCount;
+            while (k > minK) {
                 delete O[k - 1];
                 k -= 1;
             }
@@ -1027,14 +1042,14 @@ defineProperties($Object, {
         var skipProto = hasProtoEnumBug && isFn;
         if ((isStr && hasStringEnumBug) || isArgs) {
             for (var i = 0; i < object.length; ++i) {
-                push(theKeys, $String(i));
+                pushCall(theKeys, $String(i));
             }
         }
 
         if (!isArgs) {
             for (var name in object) {
                 if (!(skipProto && name === 'prototype') && owns(object, name)) {
-                    push(theKeys, $String(name));
+                    pushCall(theKeys, $String(name));
                 }
             }
         }
@@ -1044,7 +1059,7 @@ defineProperties($Object, {
             for (var j = 0; j < dontEnumsLength; j++) {
                 var dontEnum = dontEnums[j];
                 if (!(skipConstructor && dontEnum === 'constructor') && owns(object, dontEnum)) {
-                    push(theKeys, dontEnum);
+                    pushCall(theKeys, dontEnum);
                 }
             }
         }
@@ -1076,6 +1091,190 @@ defineProperties($Object, {
 // ====
 //
 
+var hasNegativeMonthYearBug = new Date(-3509827329600292).getUTCMonth() !== 0;
+var aNegativeTestDate = new Date(-1509842289600292);
+var aPositiveTestDate = new Date(1449662400000);
+var hasToUTCStringFormatBug = aNegativeTestDate.toUTCString() !== 'Mon, 01 Jan -45875 11:59:59 GMT';
+var hasToDateStringFormatBug;
+var hasToStringFormatBug;
+var timeZoneOffset = aNegativeTestDate.getTimezoneOffset();
+if (timeZoneOffset < -720) {
+    hasToDateStringFormatBug = aNegativeTestDate.toDateString() !== 'Tue Jan 02 -45875';
+    hasToStringFormatBug = !(/^Thu Dec 10 2015 \d\d:\d\d:\d\d GMT[-\+]\d\d\d\d(?: |$)/).test(aPositiveTestDate.toString());
+} else {
+    hasToDateStringFormatBug = aNegativeTestDate.toDateString() !== 'Mon Jan 01 -45875';
+    hasToStringFormatBug = !(/^Wed Dec 09 2015 \d\d:\d\d:\d\d GMT[-\+]\d\d\d\d(?: |$)/).test(aPositiveTestDate.toString());
+}
+
+var originalGetFullYear = call.bind(Date.prototype.getFullYear);
+var originalGetMonth = call.bind(Date.prototype.getMonth);
+var originalGetDate = call.bind(Date.prototype.getDate);
+var originalGetUTCFullYear = call.bind(Date.prototype.getUTCFullYear);
+var originalGetUTCMonth = call.bind(Date.prototype.getUTCMonth);
+var originalGetUTCDate = call.bind(Date.prototype.getUTCDate);
+var originalGetUTCDay = call.bind(Date.prototype.getUTCDay);
+var originalGetUTCHours = call.bind(Date.prototype.getUTCHours);
+var originalGetUTCMinutes = call.bind(Date.prototype.getUTCMinutes);
+var originalGetUTCSeconds = call.bind(Date.prototype.getUTCSeconds);
+var originalGetUTCMilliseconds = call.bind(Date.prototype.getUTCMilliseconds);
+var dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var daysInMonth = function daysInMonth(month, year) {
+    return originalGetDate(new Date(year, month, 0));
+};
+
+defineProperties(Date.prototype, {
+    getFullYear: function getFullYear() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var year = originalGetFullYear(this);
+        if (year < 0 && originalGetMonth(this) > 11) {
+            return year + 1;
+        }
+        return year;
+    },
+    getMonth: function getMonth() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var year = originalGetFullYear(this);
+        var month = originalGetMonth(this);
+        if (year < 0 && month > 11) {
+            return 0;
+        }
+        return month;
+    },
+    getDate: function getDate() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var year = originalGetFullYear(this);
+        var month = originalGetMonth(this);
+        var date = originalGetDate(this);
+        if (year < 0 && month > 11) {
+            if (month === 12) {
+                return date;
+            }
+            var days = daysInMonth(0, year + 1);
+            return (days - date) + 1;
+        }
+        return date;
+    },
+    getUTCFullYear: function getUTCFullYear() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var year = originalGetUTCFullYear(this);
+        if (year < 0 && originalGetUTCMonth(this) > 11) {
+            return year + 1;
+        }
+        return year;
+    },
+    getUTCMonth: function getUTCMonth() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var year = originalGetUTCFullYear(this);
+        var month = originalGetUTCMonth(this);
+        if (year < 0 && month > 11) {
+            return 0;
+        }
+        return month;
+    },
+    getUTCDate: function getUTCDate() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var year = originalGetUTCFullYear(this);
+        var month = originalGetUTCMonth(this);
+        var date = originalGetUTCDate(this);
+        if (year < 0 && month > 11) {
+            if (month === 12) {
+                return date;
+            }
+            var days = daysInMonth(0, year + 1);
+            return (days - date) + 1;
+        }
+        return date;
+    }
+}, hasNegativeMonthYearBug);
+
+defineProperties(Date.prototype, {
+    toUTCString: function toUTCString() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var day = originalGetUTCDay(this);
+        var date = originalGetUTCDate(this);
+        var month = originalGetUTCMonth(this);
+        var year = originalGetUTCFullYear(this);
+        var hour = originalGetUTCHours(this);
+        var minute = originalGetUTCMinutes(this);
+        var second = originalGetUTCSeconds(this);
+        return dayName[day] + ', ' +
+            (date < 10 ? '0' + date : date) + ' ' +
+            monthName[month] + ' ' +
+            year + ' ' +
+            (hour < 10 ? '0' + hour : hour) + ':' +
+            (minute < 10 ? '0' + minute : minute) + ':' +
+            (second < 10 ? '0' + second : second) + ' GMT';
+    }
+}, hasNegativeMonthYearBug || hasToUTCStringFormatBug);
+
+// Opera 12 has `,`
+defineProperties(Date.prototype, {
+    toDateString: function toDateString() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var day = this.getDay();
+        var date = this.getDate();
+        var month = this.getMonth();
+        var year = this.getFullYear();
+        return dayName[day] + ' ' +
+            monthName[month] + ' ' +
+            (date < 10 ? '0' + date : date) + ' ' +
+            year;
+    }
+}, hasNegativeMonthYearBug || hasToDateStringFormatBug);
+
+// can't use defineProperties here because of toString enumeration issue in IE <= 8
+if (hasNegativeMonthYearBug || hasToStringFormatBug) {
+    Date.prototype.toString = function toString() {
+        if (!this || !(this instanceof Date)) {
+            throw new TypeError('this is not a Date object.');
+        }
+        var day = this.getDay();
+        var date = this.getDate();
+        var month = this.getMonth();
+        var year = this.getFullYear();
+        var hour = this.getHours();
+        var minute = this.getMinutes();
+        var second = this.getSeconds();
+        var timezoneOffset = this.getTimezoneOffset();
+        var hoursOffset = Math.floor(Math.abs(timezoneOffset) / 60);
+        var minutesOffset = Math.floor(Math.abs(timezoneOffset) % 60);
+        return dayName[day] + ' ' +
+            monthName[month] + ' ' +
+            (date < 10 ? '0' + date : date) + ' ' +
+            year + ' ' +
+            (hour < 10 ? '0' + hour : hour) + ':' +
+            (minute < 10 ? '0' + minute : minute) + ':' +
+            (second < 10 ? '0' + second : second) + ' GMT' +
+            (timezoneOffset > 0 ? '-' : '+') +
+            (hoursOffset < 10 ? '0' + hoursOffset : hoursOffset) +
+            (minutesOffset < 10 ? '0' + minutesOffset : minutesOffset);
+    };
+    if (supportsDescriptors) {
+        $Object.defineProperty(Date.prototype, 'toString', {
+            configurable: true,
+            enumerable: false,
+            writable: true
+        });
+    }
+}
+
 // ES5 15.9.5.43
 // http://es5.github.com/#x15.9.5.43
 // This function returns a String value represent the instance in time
@@ -1088,41 +1287,38 @@ var negativeYearString = '-000001';
 var hasNegativeDateBug = Date.prototype.toISOString && new Date(negativeDate).toISOString().indexOf(negativeYearString) === -1;
 var hasSafari51DateBug = Date.prototype.toISOString && new Date(-1).toISOString() !== '1969-12-31T23:59:59.999Z';
 
+var getTime = call.bind(Date.prototype.getTime);
+
 defineProperties(Date.prototype, {
     toISOString: function toISOString() {
-        var result, length, value, year, month;
-        if (!isFinite(this)) {
+        if (!isFinite(this) || !isFinite(getTime(this))) {
+            // Adope Photoshop requires the second check.
             throw new RangeError('Date.prototype.toISOString called on non-finite value.');
         }
 
-        year = this.getUTCFullYear();
+        var year = originalGetUTCFullYear(this);
 
-        month = this.getUTCMonth();
+        var month = originalGetUTCMonth(this);
         // see https://github.com/es-shims/es5-shim/issues/111
         year += Math.floor(month / 12);
         month = (month % 12 + 12) % 12;
 
         // the date time string format is specified in 15.9.1.15.
-        result = [month + 1, this.getUTCDate(), this.getUTCHours(), this.getUTCMinutes(), this.getUTCSeconds()];
+        var result = [month + 1, originalGetUTCDate(this), originalGetUTCHours(this), originalGetUTCMinutes(this), originalGetUTCSeconds(this)];
         year = (
             (year < 0 ? '-' : (year > 9999 ? '+' : '')) +
             strSlice('00000' + Math.abs(year), (0 <= year && year <= 9999) ? -4 : -6)
         );
 
-        length = result.length;
-        while (length--) {
-            value = result[length];
-            // pad months, days, hours, minutes, and seconds to have two
-            // digits.
-            if (value < 10) {
-                result[length] = '0' + value;
-            }
+        for (var i = 0; i < result.length; ++i) {
+          // pad months, days, hours, minutes, and seconds to have two digits.
+          result[i] = strSlice('00' + result[i], -2);
         }
         // pad milliseconds to have three digits.
         return (
             year + '-' + arraySlice(result, 0, 2).join('-') +
             'T' + arraySlice(result, 2).join(':') + '.' +
-            strSlice('000' + this.getUTCMilliseconds(), -3) + 'Z'
+            strSlice('000' + originalGetUTCMilliseconds(this), -3) + 'Z'
         );
     }
 }, hasNegativeDateBug || hasSafari51DateBug);
@@ -1193,7 +1389,9 @@ if (doesNotParseY2KNewYear || acceptsInvalidDates || !supportsExtendedYears) {
     /* eslint-disable no-undef */
     var maxSafeUnsigned32Bit = Math.pow(2, 31) - 1;
     var hasSafariSignedIntBug = isActualNaN(new Date(1970, 0, 1, 0, 0, 0, maxSafeUnsigned32Bit + 1).getTime());
+    /* eslint-disable no-implicit-globals */
     Date = (function (NativeDate) {
+    /* eslint-enable no-implicit-globals */
     /* eslint-enable no-undef */
         // Date.length === 7
         var DateShim = function Date(Y, M, D, h, m, s, ms) {
@@ -1220,7 +1418,7 @@ if (doesNotParseY2KNewYear || acceptsInvalidDates || !supportsExtendedYears) {
                     length >= 4 ? new NativeDate(Y, M, D, h) :
                     length >= 3 ? new NativeDate(Y, M, D) :
                     length >= 2 ? new NativeDate(Y, M) :
-                    length >= 1 ? new NativeDate(Y) :
+                    length >= 1 ? new NativeDate(Y instanceof NativeDate ? +Y : Y) :
                                   new NativeDate();
             } else {
                 date = NativeDate.apply(this, arguments);
@@ -1392,7 +1590,8 @@ var toFixedHelpers = {
       }
   },
   divide: function divide(n) {
-      var i = toFixedHelpers.size, c = 0;
+      var i = toFixedHelpers.size;
+      var c = 0;
       while (--i >= 0) {
           c += toFixedHelpers.data[i];
           toFixedHelpers.data[i] = Math.floor(c / n);
@@ -1600,7 +1799,7 @@ if (
                 // `separatorCopy.lastIndex` is not reliable cross-browser
                 lastIndex = match.index + match[0].length;
                 if (lastIndex > lastLastIndex) {
-                    push(output, strSlice(string, lastLastIndex, match.index));
+                    pushCall(output, strSlice(string, lastLastIndex, match.index));
                     // Fix browsers whose `exec` methods don't consistently return `undefined` for
                     // nonparticipating capturing groups
                     if (!compliantExecNpcg && match.length > 1) {
@@ -1630,12 +1829,12 @@ if (
             }
             if (lastLastIndex === string.length) {
                 if (lastLength || !separatorCopy.test('')) {
-                    push(output, '');
+                    pushCall(output, '');
                 }
             } else {
-                push(output, strSlice(string, lastLastIndex));
+                pushCall(output, strSlice(string, lastLastIndex));
             }
-            return output.length > splitLimit ? strSlice(output, 0, splitLimit) : output;
+            return output.length > splitLimit ? arraySlice(output, 0, splitLimit) : output;
         };
     }());
 
@@ -1656,7 +1855,7 @@ var str_replace = StringPrototype.replace;
 var replaceReportsGroupsCorrectly = (function () {
     var groups = [];
     'x'.replace(/x(.)?/g, function (match, group) {
-        push(groups, group);
+        pushCall(groups, group);
     });
     return groups.length === 1 && typeof groups[0] === 'undefined';
 }());
@@ -1674,7 +1873,7 @@ if (!replaceReportsGroupsCorrectly) {
                 searchValue.lastIndex = 0;
                 var args = searchValue.exec(match) || [];
                 searchValue.lastIndex = originalLastIndex;
-                push(args, arguments[length - 2], arguments[length - 1]);
+                pushCall(args, arguments[length - 2], arguments[length - 1]);
                 return replaceValue.apply(this, args);
             };
             return str_replace.call(this, searchValue, wrappedReplaceValue);
@@ -1719,6 +1918,7 @@ defineProperties(StringPrototype, {
         return $String(this).replace(trimBeginRegexp, '').replace(trimEndRegexp, '');
     }
 }, hasTrimWhitespaceBug);
+var trim = call.bind(String.prototype.trim);
 
 var hasLastIndexBug = StringPrototype.lastIndexOf && 'abcあい'.lastIndexOf('あい', 2) !== -1;
 defineProperties(StringPrototype, {
@@ -1759,11 +1959,23 @@ if (parseInt(ws + '08') !== 8 || parseInt(ws + '0x16') !== 22) {
     parseInt = (function (origParseInt) {
         var hexRegex = /^[\-+]?0[xX]/;
         return function parseInt(str, radix) {
-            var string = $String(str).trim();
+            var string = trim(str);
             var defaultedRadix = $Number(radix) || (hexRegex.test(string) ? 16 : 10);
             return origParseInt(string, defaultedRadix);
         };
     }(parseInt));
+}
+
+// https://es5.github.io/#x15.1.2.3
+if (1 / parseFloat('-0') !== -Infinity) {
+    /* global parseFloat: true */
+    parseFloat = (function (origParseFloat) {
+        return function parseFloat(string) {
+            var inputString = trim(string);
+            var result = origParseFloat(inputString);
+            return result === 0 && strSlice(inputString, 0, 1) === '-' ? -0 : result;
+        };
+    }(parseFloat));
 }
 
 if (String(new RangeError('test')) !== 'RangeError: test') {

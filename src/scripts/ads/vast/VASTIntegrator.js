@@ -19,6 +19,8 @@ var dom = require('../../utils/dom');
 var playerUtils = require('../../utils/playerUtils');
 var utilities = require('../../utils/utilityFunctions');
 
+var logger = require ('../../utils/consoleLogger');
+
 function VASTIntegrator(player) {
   if (!(this instanceof VASTIntegrator)) {
     return new VASTIntegrator(player);
@@ -88,6 +90,7 @@ VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, cal
   source = this.player.selectSource(response.mediaFiles).source;
 
   if (source) {
+    logger.info ("selected source: ", source);
     if (this._adUnit) {
       this._adUnit._src = source;
     }
@@ -305,8 +308,11 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
   player.preload("auto"); //without preload=auto the durationchange event is never fired
   player.src(source);
 
+  logger.debug ("<VASTIntegrator._playSelectedAd> waiting for durationchange to play the ad...");
+
   playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
     if (evt.type === 'durationchange') {
+      logger.debug ("<VASTIntegrator._playSelectedAd> got durationchange; calling playAd()");
       playAd();
     } else if(evt.type === 'error') {
       callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
@@ -316,21 +322,42 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
 
   /**** local functions ******/
   function playAd() {
-    player.play();
+
     playerUtils.once(player, ['playing', 'vast.adsCancel'], function (evt) {
       if(evt.type === 'vast.adsCancel'){
         return;
       }
 
+      logger.debug ("<VASTIntegrator._playSelectedAd/playAd> got playing event; triggering vast.adStart...");
+
       player.trigger('vast.adStart');
 
-      playerUtils.once(player, ['ended', 'vast.adsCancel', 'vast.adSkip'], function (evt) {
+      player.on('ended', proceed);
+      player.on('vast.adsCancel', proceed);
+      player.on('vast.adSkip', proceed);
+
+      function proceed(evt) {
+
+        if(evt.type === 'ended' && (player.duration() - player.currentTime()) > 3 ) {
+          // Ignore ended event if the Ad time was not 'near' the end
+          // avoids issues where IOS controls could skip the Ad
+          return;
+        }
+
+        player.off('ended', proceed);
+        player.off('vast.adsCancel', proceed);
+        player.off('vast.adSkip', proceed);
+
+        //NOTE: if the ads get cancel we do nothing apart removing the listners
         if(evt.type === 'ended' || evt.type === 'vast.adSkip'){
           callback(null, response);
         }
-        //NOTE: if the ads get cancel we do nothing
-      });
+      }
     });
+
+    logger.debug ("<VASTIntegrator._playSelectedAd/playAd> calling player.play()...");
+
+    player.play();
   }
 };
 

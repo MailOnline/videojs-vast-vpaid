@@ -1,18 +1,19 @@
 'use strict';
 
+var MimeTypes = require('../../utils/mimetypes');
 var VASTError = require('../vast/VASTError');
 var VASTResponse = require('../vast/VASTResponse');
 var VASTTracker = require('../vast/VASTTracker');
 var vastUtil = require('../vast/vastUtil');
 
 var VPAIDAdUnitWrapper = require('./VPAIDAdUnitWrapper');
-var VPAIDHTML5Tech = require('./VPAIDHTML5Tech');
-var VPAIDFlashTech = require('./VPAIDFlashTech');
 
 var async = require('../../utils/async');
 var dom = require('../../utils/dom');
 var playerUtils = require('../../utils/playerUtils');
 var utilities = require('../../utils/utilityFunctions');
+
+var logger = require ('../../utils/consoleLogger');
 
 function VPAIDIntegrator(player, settings) {
   if (!(this instanceof VPAIDIntegrator)) {
@@ -43,23 +44,20 @@ function VPAIDIntegrator(player, settings) {
   }
 }
 
-//List of supported VPAID technologies
-VPAIDIntegrator.techs = [
-  VPAIDFlashTech,
-  VPAIDHTML5Tech
-];
-
 VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) {
-  var that = this;
-  var tech;
-  var player = this.player;
-
-  callback = callback || utilities.noop;
   if (!(vastResponse instanceof VASTResponse)) {
     return callback(new VASTError('on VASTIntegrator.playAd, missing required VASTResponse'));
   }
 
-  tech = this._findSupportedTech(vastResponse, this.settings);
+  var that = this;
+  var player = this.player;
+  logger.debug ("<VPAIDIntegrator.playAd> looking for supported tech...");
+  var tech = this._findSupportedTech(vastResponse, this.settings);
+
+  callback = callback || utilities.noop;
+
+  this._adUnit = null;
+
   dom.addClass(player.el(), 'vjs-vpaid-ad');
 
   player.on('vast.adsCancel', triggerVpaidAdEnd);
@@ -69,6 +67,8 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
   });
 
   if (tech) {
+    logger.info ("<VPAIDIntegrator.playAd> found tech: ", tech);
+
     async.waterfall([
       function (next) {
         next(null, tech, vastResponse);
@@ -77,13 +77,7 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       this._playAdUnit.bind(this),
       this._finishPlaying.bind(this)
 
-    ], function (error, adUnit, vastResponse) {
-      if (error) {
-        that._trackError(vastResponse);
-      }
-      player.trigger('vpaid.adEnd');
-      callback(error, vastResponse);
-    });
+    ], adComplete);
 
     this._adUnit = {
       _paused: true,
@@ -103,13 +97,23 @@ VPAIDIntegrator.prototype.playAd = function playVPaidAd(vastResponse, callback) 
       }
     };
 
-    return this._adUnit;
+  } else {
+    logger.debug ("<VPAIDIntegrator.playAd> could not find suitable tech");
+    var error = new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile', 403);
+    adComplete(error, this._adUnit, vastResponse);
   }
 
-  callback(new VASTError('on VPAIDIntegrator.playAd, could not find a supported mediaFile'));
+  return this._adUnit;
 
-  return null;
   /*** Local functions ***/
+  function adComplete(error, adUnit, vastResponse) {
+    if (error && vastResponse) {
+      that._trackError(vastResponse, error.code);
+    }
+    player.trigger('vpaid.adEnd');
+    callback(error, vastResponse);
+  }
+
   function triggerVpaidAdEnd(){
     player.trigger('vpaid.adEnd');
   }
@@ -128,29 +132,36 @@ VPAIDIntegrator.prototype._findSupportedTech = function (vastResponse, settings)
   }
 
   var vpaidMediaFiles = vastResponse.mediaFiles.filter(vastUtil.isVPAID);
-  var i, len, mediaFile, VPAIDTech;
+  var preferredTech = settings && settings.preferredTech;
+  var skippedSupportTechs = [];
+  var i, len, mediaFile, VPAIDTech, isPreferedTech;
 
   for (i = 0, len = vpaidMediaFiles.length; i < len; i += 1) {
     mediaFile = vpaidMediaFiles[i];
-    VPAIDTech = findSupportedTech(mediaFile);
-    if (VPAIDTech) {
+    VPAIDTech = vastUtil.findSupportedVPAIDTech(mediaFile.type);
+
+    // no supported VPAID tech found, skip mediafile
+    if (!VPAIDTech) { continue; }
+
+    // do we have a prefered tech, does it play this media file ?
+    isPreferedTech = preferredTech ?
+      (mediaFile.type === preferredTech || (MimeTypes[preferredTech] && MimeTypes[preferredTech].indexOf(mediaFile.type) > -1 )) :
+      false;
+
+    // our prefered tech can read this mediafile, defaulting to it.
+    if (isPreferedTech) {
       return new VPAIDTech(mediaFile, settings);
     }
-  }
-  return null;
 
-  /*** Local functions ***/
-  function findSupportedTech(mediafile) {
-    var type = mediafile.type;
-    var i, len, VPAIDTech;
-    for (i = 0, len = VPAIDIntegrator.techs.length; i < len; i += 1) {
-      VPAIDTech = VPAIDIntegrator.techs[i];
-      if (VPAIDTech.supports(type)) {
-        return VPAIDTech;
-      }
-    }
-    return null;
+    skippedSupportTechs.push({ mediaFile: mediaFile, tech: VPAIDTech });
   }
+
+  if (skippedSupportTechs.length) {
+    var firstTech = skippedSupportTechs[0];
+    return new firstTech.tech(firstTech.mediaFile, settings);
+  }
+
+  return null;
 };
 
 VPAIDIntegrator.prototype._createVPAIDAdUnitWrapper = function(adUnit, src, responseTimeout) {
@@ -354,15 +365,17 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
     player.trigger('vpaid.AdVolumeChange');
     var lastVolume = player.volume();
     adUnit.getAdVolume(function (error, currentVolume) {
-      if (currentVolume === 0 && lastVolume > 0) {
-        tracker.trackMute();
-      }
+      if (lastVolume !== currentVolume) {
+        if (currentVolume === 0 && lastVolume > 0) {
+          tracker.trackMute();
+        }
 
-      if (currentVolume > 0 && lastVolume === 0) {
-        tracker.trackUnmute();
-      }
+        if (currentVolume > 0 && lastVolume === 0) {
+          tracker.trackUnmute();
+        }
 
-      player.volume(currentVolume);
+        player.volume(currentVolume);
+      }
     });
   });
 
@@ -482,11 +495,14 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
 
     function updatePlayerVolume() {
       player.trigger('vpaid.AdVolumeChange');
+      var lastVolume = player.volume();
       adUnit.getAdVolume(function (error, vol) {
         if (error) {
           logError(error);
         } else {
-          player.volume(vol);
+          if (lastVolume !== vol) {
+            player.volume(vol);
+          }
         }
       });
     }
@@ -532,8 +548,8 @@ VPAIDIntegrator.prototype._finishPlaying = function (adUnit, vastResponse, next)
   }
 };
 
-VPAIDIntegrator.prototype._trackError = function trackError(response) {
-  vastUtil.track(response.errorURLMacros, {ERRORCODE: 901});
+VPAIDIntegrator.prototype._trackError = function trackError(response, errorCode) {
+  vastUtil.track(response.errorURLMacros, {ERRORCODE: errorCode || 901});
 };
 
 function resizeAd(player, adUnit, VIEW_MODE) {
@@ -544,8 +560,8 @@ function resizeAd(player, adUnit, VIEW_MODE) {
 }
 
 function logError(error) {
-  if (error && console && console.log) {
-    console.log('ERROR: ' + error.message, error);
+  if (error) {
+    logger.error ('ERROR: ' + error.message, error);
   }
 }
 

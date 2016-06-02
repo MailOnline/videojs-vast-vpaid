@@ -1,5 +1,7 @@
-var Creative = require('ads/vast/Creative');
 var vastUtil = require('ads/vast/vastUtil');
+var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
+var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
+var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 
 var xml = require('utils/xml');
 
@@ -23,10 +25,10 @@ describe("vastUtil", function () {
     });
   });
 
-  describe("parseURLMacro", function(){
+  describe("parseURLMacro", function () {
     var parseURLMacro;
 
-    beforeEach(function(){
+    beforeEach(function () {
       parseURLMacro = vastUtil.parseURLMacro;
     });
 
@@ -119,10 +121,10 @@ describe("vastUtil", function () {
     });
   });
 
-  describe("parseImpressions", function(){
+  describe("parseImpressions", function () {
     var parseImpressions;
 
-    beforeEach(function(){
+    beforeEach(function () {
       parseImpressions = vastUtil.parseImpressions;
     });
 
@@ -132,118 +134,131 @@ describe("vastUtil", function () {
 
     it("must return an empty array if there is no real impression", function () {
       var inlineXML = '<InLine>' +
-      '<Impression><![CDATA[]]></Impression>' +
-      '</InLine>';
+        '<Impression><![CDATA[]]></Impression>' +
+        '</InLine>';
       testUtils.assertEmptyArray(parseImpressions(xml.toJXONTree(inlineXML).impression));
     });
 
     it("must return an array with the passed impressions formatted", function () {
       var inlineXML = '<InLine>' +
-      '<Impression id="DART">' +
-      '<![CDATA[http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif]]>' +
-      '</Impression>' +
-      '</InLine>';
+        '<Impression id="DART">' +
+        '<![CDATA[http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif]]>' +
+        '</Impression>' +
+        '</InLine>';
       var impressionJTree = xml.toJXONTree(inlineXML).impression;
 
       assert.deepEqual(parseImpressions(impressionJTree), [
         'http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif'
-        ]);
+      ]);
     });
 
     it("must add all the passed impressions to the returned array", function () {
       var inlineXML = '<InLine>' +
-      '<Impression id="DART">' +
-      '<![CDATA[http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif]]>' +
-      '</Impression>' +
-      '<Impression id="ThirdParty"><![CDATA[http://ad.doubleclick.net/ad/N270.Process_Other/B3473145;sz=1x1;ord=6212269?]]></Impression>' +
-      '<Impression><![CDATA[]]></Impression>' +
-      '</InLine>';
+        '<Impression id="DART">' +
+        '<![CDATA[http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif]]>' +
+        '</Impression>' +
+        '<Impression id="ThirdParty"><![CDATA[http://ad.doubleclick.net/ad/N270.Process_Other/B3473145;sz=1x1;ord=6212269?]]></Impression>' +
+        '<Impression><![CDATA[]]></Impression>' +
+        '</InLine>';
       var impressionJTree = xml.toJXONTree(inlineXML).impression;
 
       assert.deepEqual(parseImpressions(impressionJTree), [
         'http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif',
         'http://ad.doubleclick.net/ad/N270.Process_Other/B3473145;sz=1x1;ord=6212269?'
-        ]);
+      ]);
     });
   });
 
-  describe("parseCreatives", function(){
-    var parseCreatives;
-
-    beforeEach(function(){
-      parseCreatives = vastUtil.parseCreatives;
-    });
-
-    it("must return an empty array if you pass no creativesJTree", function () {
-      testUtils.assertEmptyArray(parseCreatives());
-    });
-
-    it("must return an empty array if there is no real creatives", function () {
-      var inlineXML = '<InLine><Creatives></Creatives></InLine>';
-      testUtils.assertEmptyArray(parseCreatives(xml.toJXONTree(inlineXML).creatives));
-    });
-
-
-    it("must be an array or creatives", function () {
-      var inlineXML = '<InLine>' +
-      '<Creatives>' +
-      '<Creative id="8454" sequence="1"></Creative>' +
-      '<Creative id="8455" sequence="2"></Creative>' +
-      '</Creatives>' +
-      '</InLine>';
-      var creativesJTree = xml.toJXONTree(inlineXML).creatives;
-      var creatives = parseCreatives(creativesJTree);
-      assert.isArray(creatives);
-      assert.instanceOf(creatives[0], Creative);
-      assert.equal(creatives[0].id, 8454);
-      assert.instanceOf(creatives[1], Creative);
-      assert.equal(creatives[1].id, 8455);
-    });
-  });
-
-  describe("formatProgress", function(){
-    it("must return the formatted progress", function(){
+  describe("formatProgress", function () {
+    it("must return the formatted progress", function () {
       assert.equal(vastUtil.formatProgress(12345000), "03:25:45.000");
       assert.equal(vastUtil.formatProgress(123000), "00:02:03.000");
       assert.equal(vastUtil.formatProgress(123545978), "34:19:05.978");
     });
   });
 
-  describe("parseOffset", function(){
+  describe("parseOffset", function () {
     var parseOffset;
 
-    beforeEach(function(){
+    beforeEach(function () {
       parseOffset = vastUtil.parseOffset;
     });
 
-    it("must return the passed offset string in ms", function(){
+    it("must return the passed offset string in ms", function () {
       assert.equal(parseOffset('00:00:05.000'), 5000);
     });
 
-    it("must be possible pass the offset as a percentage", function(){
+    it("must be possible pass the offset as a percentage", function () {
       assert.equal(parseOffset('10%', 1000), 100);
       assert.equal(parseOffset('10.5%', 1000), 105);
     });
 
-    it("with a percentage offset and no duration must return null", function(){
+    it("with a percentage offset and no duration must return null", function () {
       assert.isNull(parseOffset('10.5%'));
     });
 
-    it("must return null if you don't pass an offset", function(){
+    it("must return null if you don't pass an offset", function () {
       assert.isNull(parseOffset());
       assert.isNull(parseOffset(undefined, 123));
     });
   });
 
-  describe("isVPAID", function(){
-    it("must return true if the passed mediaFile apiFramework attr is VPAID and false otherwiser", function(){
+  describe("isVPAID", function () {
+    it("must return true if the passed mediaFile apiFramework attr is VPAID and false otherwiser", function () {
       assert.isFunction(vastUtil.isVPAID);
-      [undefined, false, '', {}, []].forEach(function(wrongMediaFile) {
+      [undefined, false, '', {}, []].forEach(function (wrongMediaFile) {
         assert.isFalse(vastUtil.isVPAID(wrongMediaFile));
       });
 
       assert.isFalse(vastUtil.isVPAID({apiFramework: 'JS'}));
       assert.isTrue(vastUtil.isVPAID({apiFramework: 'VPAID'}));
     });
+  });
+
+  describe("findSupportedVPAIDTech", function () {
+    var FLASH_APP_MIME = 'application/x-shockwave-flash';
+    var HTML5_APP_MIME = 'application/javascript';
+
+    beforeEach(function () {
+      sinon.stub(VPAIDFlashTech, 'supports');
+      sinon.stub(VPAIDHTML5Tech, 'supports');
+    });
+
+    afterEach(function () {
+      VPAIDFlashTech.supports.restore();
+      VPAIDHTML5Tech.supports.restore();
+    });
+
+    it("must return Flash tech if it supports the passed mime type", function () {
+      VPAIDFlashTech.supports.returns(true);
+      VPAIDHTML5Tech.supports.returns(false);
+      assert.equal(vastUtil.findSupportedVPAIDTech(FLASH_APP_MIME), VPAIDFlashTech);
+    });
+
+    it("must return HTML tech if it supports the passed mime type", function () {
+      VPAIDFlashTech.supports.returns(false);
+      VPAIDHTML5Tech.supports.returns(true);
+      assert.equal(vastUtil.findSupportedVPAIDTech(HTML5_APP_MIME), VPAIDHTML5Tech);
+    });
+
+    it("must return null if no supported tech is found", function () {
+      VPAIDFlashTech.supports.returns(false);
+      VPAIDHTML5Tech.supports.returns(false);
+      assert.isNull(vastUtil.findSupportedVPAIDTech(HTML5_APP_MIME));
+    });
+  });
+
+  describe("isFlashSupported", function() {
+      beforeEach(function () {
+        sinon.stub(VPAIDFLASHClient, 'isSupported');
+      });
+
+      it("must delegate in VPAIDFLASHClient.isSupported", function() {
+        VPAIDFLASHClient.isSupported.returns(false);
+        assert.isFalse(vastUtil.isFlashSupported());
+
+        VPAIDFLASHClient.isSupported.returns(true);
+        assert.isTrue(vastUtil.isFlashSupported());
+      });
   });
 });
