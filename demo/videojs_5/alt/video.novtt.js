@@ -1,6 +1,6 @@
 /**
  * @license
- * Video.js 5.10.2 <http://videojs.com/>
+ * Video.js 5.10.4 <http://videojs.com/>
  * Copyright Brightcove, Inc. <https://www.brightcove.com/>
  * Available under Apache License Version 2.0
  * <https://github.com/videojs/video.js/blob/master/LICENSE>
@@ -17137,6 +17137,7 @@ Tech.withSourceHandlers = function (_Tech) {
       this.off(this.el_, 'loadstart', _Tech.prototype.firstLoadStartListener_);
       this.off(this.el_, 'loadstart', _Tech.prototype.successiveLoadStartListener_);
       this.sourceHandler_.dispose();
+      this.sourceHandler_ = null;
     }
   };
 };
@@ -21711,7 +21712,7 @@ setup.autoSetupTimeout(1, videojs);
  *
  * @type {String}
  */
-videojs.VERSION = '5.10.2';
+videojs.VERSION = '5.10.4';
 
 /**
  * The global options object. These are the settings that take effect
