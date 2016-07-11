@@ -469,7 +469,7 @@ describe("videojs.vast plugin", function () {
     });
   });
 
-  describe("playPrerollAd", function () {
+  describe("playRollAd", function () {
     var getVASTResponse, callback, old_UA;
 
     beforeEach(function () {
@@ -825,6 +825,7 @@ describe("videojs.vast plugin", function () {
       player.trigger('vast.adStart');
       assert.equal(player.vast.adUnit.type, 'VAST');
     });
+
   });
 
   describe("on iPhone", function(){
