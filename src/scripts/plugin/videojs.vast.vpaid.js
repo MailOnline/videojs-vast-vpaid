@@ -103,7 +103,7 @@ module.exports = function VASTPlugin(options) {
 
   if (settings.preroll && utilities.isBool(settings.preroll)) {
     player.on('vast.firstPlay', function () {
-      tryToPlayRollAd('pre');
+      tryToPlayRollAd();
     });
   }
 
@@ -114,7 +114,7 @@ module.exports = function VASTPlugin(options) {
   if (settings.postroll && utilities.isBool(settings.postroll)) {
     player.on('vast.contentEnd', function () {
       if (player.currentTime() > player.duration() - 1) {
-        tryToPlayRollAd('post'); 
+        tryToPlayRollAd(); 
       }
     });
   }
@@ -133,7 +133,7 @@ module.exports = function VASTPlugin(options) {
 
       if (player.currentTime() < settings.midrolls[currentMidrollIndex] && 
           player.currentTime() > settings.midrolls[currentMidrollIndex]-lookAhead) {
-        tryToPlayRollAd('mid');
+        tryToPlayRollAd();
         midrollsPlayed++;
       }
     }
