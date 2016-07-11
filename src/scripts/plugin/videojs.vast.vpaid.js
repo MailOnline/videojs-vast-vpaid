@@ -101,7 +101,7 @@ module.exports = function VASTPlugin(options) {
     });
   }
 
-  if (settings.preroll) {
+  if (settings.preroll && utilities.isBool(settings.preroll)) {
     player.on('vast.firstPlay', function () {
       tryToPlayRollAd('pre');
     });
@@ -111,7 +111,7 @@ module.exports = function VASTPlugin(options) {
     adIsPlaying = false;
   });
 
-  if (settings.postroll) {
+  if (settings.postroll && utilities.isBool(settings.postroll)) {
     player.on('vast.contentEnd', function () {
       if (player.currentTime() > player.duration() - 1) {
         tryToPlayRollAd('post'); 
