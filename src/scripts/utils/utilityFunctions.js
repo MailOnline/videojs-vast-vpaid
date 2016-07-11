@@ -14,6 +14,10 @@ function isNull(o) {
   return o === null;
 }
 
+function isBool(bool){
+  return typeof bool === 'boolean';
+}
+
 function isDefined(o){
   return o !== undefined;
 }
@@ -291,6 +295,7 @@ var utilities = {
   _UA: navigator.userAgent,
   noop: noop,
   isNull: isNull,
+  isBool: isBool,
   isDefined: isDefined,
   isUndefined: isUndefined,
   isObject: isObject,
