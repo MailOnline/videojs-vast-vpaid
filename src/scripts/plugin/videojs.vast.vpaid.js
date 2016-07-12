@@ -65,8 +65,7 @@ module.exports = function VASTPlugin(options) {
 
   var settings = utilities.extend({}, defaultOpts, options || {});
 
-
-  var totalMidrolls = settings.midrolls.length;
+  var totalMidrolls = utilities.isArray(settings.midrolls) ? settings.midrolls.length : 0;
   var midrollsPlayed = -1;
   var adIsPlaying = false;
 
@@ -119,8 +118,30 @@ module.exports = function VASTPlugin(options) {
     });
   }
 
+  function validateMidrolls(midrolls) {
+    
+    // it should be an array
+    if (!utilities.isArray(midrolls)) {
+      return false;
+    }
+
+    // the array should use numbers as values
+    for (var i=0,l=midrolls.length; i<l; i++) {
+      if (!utilities.isNumber(midrolls[i])) {
+        return false;
+      }
+
+      if (midrolls[i] >= player.duration()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+
   function timeupdateWatcher() {
-    if (settings.midrolls && settings.midrolls.length > 0) {  
+    if (utilities.isArray(settings.midrolls) && settings.midrolls.length > 0) {  
       var currentMidrollIndex;
 
       if (midrollsPlayed < totalMidrolls) {
@@ -144,7 +165,7 @@ module.exports = function VASTPlugin(options) {
   });
 
   player.on('vast.contentStart', function () {
-    if (player.currentTime() < player.duration()) {
+    if (player.currentTime() < player.duration() && validateMidrolls(settings.midrolls)) {
       player.on('timeupdate', timeupdateWatcher);
     }
   });
