@@ -99,7 +99,7 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
 
   /**
    * Sometimes firefox does not trigger the 'canplay' evt.
-   * This code ensure that it always gets triggered triggered.
+   * This code ensures that it always gets triggered.
    */
   function ensureCanplayEvtGetsFired() {
     var timeoutId = setTimeout(function() {
