@@ -256,8 +256,7 @@ module.exports = function VASTPlugin(options) {
 
   return player.vast;
 
-  function tryToPlayRollAd(rollType) {
-    console.log('tryToPlayRollAd ', rollType);
+  function tryToPlayRollAd() {
     // stop listening for timeupdate, we only do that for content
     player.off('timeupdate', timeupdateWatcher);
     // set flag
