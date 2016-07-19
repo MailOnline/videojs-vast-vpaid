@@ -5,7 +5,7 @@
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
   "description": "VAST plugin to use with video.js",
-  "main": "src/scripts/videojs_4.vast.vpaid.js",
+  "main": "src/scripts/videojs.vast.vpaid.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/MailOnline/videojs-vast-vpaid"
