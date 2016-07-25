@@ -80,9 +80,6 @@ module.exports = function VASTPlugin(options) {
   // will be 'duped' between ad and content
   var adIsPlaying = false;
 
-  
-
-
   if (utilities.isUndefined(settings.adTagUrl) && utilities.isDefined(settings.url)){
     settings.adTagUrl = settings.url;
   }
@@ -136,8 +133,6 @@ module.exports = function VASTPlugin(options) {
     });
   }
 
-
-
   player.on('vast.contentStart', function () {
     adIsPlaying = false;
   });
@@ -168,20 +163,6 @@ module.exports = function VASTPlugin(options) {
       }
     });
   }
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
 
   function validateMidrolls(midrolls) {
     
