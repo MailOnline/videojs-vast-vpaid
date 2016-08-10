@@ -60,7 +60,11 @@ VASTTracker.prototype.trackEvent = function trackEvent(eventName, trackOnce) {
     if (trackingEvents) {
       uris = [];
       trackingEvents.forEach(function (event) {
-        uris.push(event.uri);
+          if (!event.uri) {
+              return;
+          }
+
+          uris.push(event.uri);
       });
     }
     return uris;
