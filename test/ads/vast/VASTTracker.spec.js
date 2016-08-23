@@ -80,6 +80,7 @@ describe("VASTTracker", function () {
       response._addDuration(10000);
       var tracker = new VASTTracker(ASSET_URI, response);
       assert.deepEqual(tracker.quartiles, {
+        start:  { tracked: false, time: 0},
         firstQuartile: { tracked: false, time: 2500},
         midpoint:{ tracked: false, time: 5000 },
         thirdQuartile: { tracked: false, time: 7500 }
@@ -163,6 +164,50 @@ describe("VASTTracker", function () {
       });
     });
 
+    describe("trackEventCallback", function () {
+      var tracker, progressEvent, progressEvent2, triggered;
+
+      beforeEach(function () {
+        progressEvent = createTrackEvent('progress', 'http://progress.track.url');
+        progressEvent.offset = 100;
+        progressEvent2 = createTrackEvent('progress', 'http://progress2.track.url');
+        progressEvent2.offset = 150;
+        response._addTrackingEvents([
+          createTrackEvent('start', 'http://start.track.url'),
+          createTrackEvent('rewind', 'http://rewind.track.url'),
+          createTrackEvent('firstQuartile', 'http://firstQuartile.track.url'),
+          createTrackEvent('midpoint', 'http://midpoint.track.url'),
+          createTrackEvent('thirdQuartile', 'http://thirdQuartile.track.url'),
+          progressEvent,
+          progressEvent2
+        ]);
+        triggered = [];
+        tracker = new VASTTracker(ASSET_URI, response, {
+          trigger: function(type) {
+            triggered.push(type);
+          }
+        });
+        sinon.spy(tracker, 'trackEvent');
+        sinon.spy(tracker, 'trackURLs');
+      });
+
+      it("verify trigger of vast.quarties", function() {
+        tracker.trackEvent.reset();
+
+        tracker.trackProgress(4000);
+        assert.deepEqual(triggered, [ 'vast.start' ]);
+
+        tracker.trackProgress(29000);
+        assert.deepEqual(triggered, [ 'vast.start', 'vast.firstQuartile' ]);
+
+        tracker.trackProgress(50000);
+        assert.deepEqual(triggered, [ 'vast.start', 'vast.firstQuartile', 'vast.midpoint' ]);
+
+        tracker.trackProgress(78500);
+        assert.deepEqual(triggered, [ 'vast.start', 'vast.firstQuartile', 'vast.midpoint', 'vast.thirdQuartile' ]);
+      });
+    });
+
     describe("trackProgress", function () {
       var tracker, progressEvent, progressEvent2;
 
@@ -223,6 +268,11 @@ describe("VASTTracker", function () {
       it("must track the quartile on the proper order", function () {
         tracker.trackEvent.reset();
 
+        //start
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'start', true);
+        tracker.trackProgress(0);// <== 0 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'start', true);
+
         //FirstQuartile
         tracker.trackProgress(10000);// <== 10 seconds
         sinon.assert.neverCalledWith(tracker.trackEvent, 'firstQuartile', true);
@@ -247,14 +297,22 @@ describe("VASTTracker", function () {
 
         tracker.trackProgress(75500);//<== 75.5 seconds
         tracker.trackProgress(50000);//<== 50 seconds
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'start', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'firstQuartile', true);
-        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
+
+        tracker.trackProgress(4000);//<== 4 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'start', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'firstQuartile', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
 
         tracker.trackProgress(29000);//<== 25 seconds
+        sinon.assert.calledWithExactly(tracker.trackEvent, 'start', true);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
-        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
+        sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
 
         tracker.trackProgress(50000);//<== 25 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);

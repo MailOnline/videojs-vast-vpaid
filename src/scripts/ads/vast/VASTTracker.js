@@ -5,34 +5,41 @@ var VASTResponse = require('./VASTResponse');
 var vastUtil = require('./vastUtil');
 var utilities = require('../../utils/utilityFunctions');
 
-function VASTTracker(assetURI, vastResponse) {
+function VASTTracker(assetURI, vastResponse, triggerable) {
   if (!(this instanceof VASTTracker)) {
-    return new VASTTracker(assetURI, vastResponse);
+    return new VASTTracker(assetURI, vastResponse, triggerable);
   }
-
-  this.sanityCheck(assetURI, vastResponse);
-  this.initialize(assetURI, vastResponse);
+  if (utilities.isUndefined(triggerable)) {
+      triggerable = { trigger: utilities.noop };
+  }
+  this.sanityCheck(assetURI, vastResponse, triggerable);
+  this.initialize(assetURI, vastResponse, triggerable);
 
 }
 
-VASTTracker.prototype.initialize = function(assetURI, vastResponse) {
+VASTTracker.prototype.initialize = function(assetURI, vastResponse, triggerable) {
   this.response = vastResponse;
   this.assetURI = assetURI;
   this.progress = 0;
   this.quartiles = {
+    start: {tracked: false, time: 0.0},
     firstQuartile: {tracked: false, time: Math.round(25 * vastResponse.duration) / 100},
     midpoint: {tracked: false, time: Math.round(50 * vastResponse.duration) / 100},
     thirdQuartile: {tracked: false, time: Math.round(75 * vastResponse.duration) / 100}
   };
+  this.triggerable = triggerable;
 };
 
-VASTTracker.prototype.sanityCheck = function(assetURI, vastResponse) {
+VASTTracker.prototype.sanityCheck = function(assetURI, vastResponse, triggerable) {
   if (!utilities.isString(assetURI) || utilities.isEmptyString(assetURI)) {
     throw new VASTError('on VASTTracker constructor, missing required the URI of the ad asset being played');
   }
 
   if (!(vastResponse instanceof VASTResponse)) {
     throw new VASTError('on VASTTracker constructor, missing required VAST response');
+  }
+  if (!utilities.isFunction(triggerable.trigger)) {
+      throw new VASTError('on VASTTracker constructor, missing triggerable');
   }
 };
 
@@ -77,9 +84,10 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   var ONCE = true;
   var ALWAYS = false;
   var trackingEvents = this.response.trackingEvents;
-
+  var triggerable = this.triggerable;
+  
   if (utilities.isNumber(newProgressInMs)) {
-    addTrackEvent('start', ONCE, newProgressInMs > 0);
+    // addTrackEvent('start', ONCE, newProgressInMs > 0);
     addTrackEvent('rewind', ALWAYS, hasRewound(this.progress, newProgressInMs));
     addQuartileEvents(newProgressInMs);
     trackProgressEvents(newProgressInMs);
@@ -94,6 +102,9 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   }
 
   function addTrackEvent(eventName, trackOnce, canBeAdded) {
+    if (canBeAdded) {
+      triggerable.trigger('vast.'+eventName);
+    }
     if (trackingEvents[eventName] && canBeAdded) {
       events.push({
         name: eventName,
@@ -104,11 +115,14 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
 
   function addQuartileEvents(progress) {
     var quartiles = that.quartiles;
+    var start = that.quartiles.start;
     var firstQuartile = that.quartiles.firstQuartile;
     var midpoint = that.quartiles.midpoint;
     var thirdQuartile = that.quartiles.thirdQuartile;
 
-    if (!firstQuartile.tracked) {
+    if (!start.tracked) {
+      trackQuartile('start', progress);
+    } else if (!firstQuartile.tracked) {
       trackQuartile('firstQuartile', progress);
     } else if (!midpoint.tracked) {
       trackQuartile('midpoint', progress);
@@ -175,7 +189,6 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   });
 
 [
-  'start',
   'skip',
   'close',
   'closeLinear'
@@ -186,6 +199,7 @@ VASTTracker.prototype.trackProgress = function trackProgress(newProgressInMs) {
   });
 
 [
+  'start',
   'firstQuartile',
   'midpoint',
   'thirdQuartile'
