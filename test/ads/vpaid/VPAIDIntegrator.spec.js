@@ -754,6 +754,7 @@ describe("VPAIDIntegrator", function () {
           this.clock.tick();
 
           assert.isNotNull(player.el().querySelector('.vast-skip-button'));
+          assert.isNull(player.el().querySelector('.vast-skip-button-thumb'));
         });
 
         it("must only add one skip button no matter how many 'AdSkippableStateChange' evts we receive while the adUnit is skippable", function(){
@@ -768,6 +769,7 @@ describe("VPAIDIntegrator", function () {
           this.clock.tick();
 
           assert.equal(player.el().querySelectorAll('.vast-skip-button').length, 1);
+          assert.equal(player.el().querySelectorAll('.vast-skip-button-thumb').length, 0);
         });
 
         it("must remove the skip button if the adUnit is no longer skippable", function(){
@@ -778,6 +780,7 @@ describe("VPAIDIntegrator", function () {
           adUnit.trigger('AdSkippableStateChange');
           this.clock.tick();
           assert.isNull(player.el().querySelector('.vast-skip-button'));
+          assert.isNull(player.el().querySelector('.vast-skip-button-thumb'));
 
         });
 
@@ -809,6 +812,62 @@ describe("VPAIDIntegrator", function () {
           player.trigger('vast.adsCancel');
           this.clock.tick();
           assert.isNull(player.el().querySelector('.vast-skip-button'));
+        });
+      });
+
+    });
+
+    describe("addSkipButtonWithThumb", function(){
+      var adUnit, vastResponse, next, vpaidIntegratorWithThumb;
+
+      beforeEach(function(){
+        this.clock = sinon.useFakeTimers();
+        adUnit = new FakeAdUnit();
+        vastResponse = new VASTResponse();
+        next = sinon.spy();
+        vpaidIntegratorWithThumb = new VPAIDIntegrator(player, {autoResize: true, skipAdVideoThumbnail: 'http://foo.com/foo.jpg'});
+        vpaidIntegratorWithThumb._addSkipButton(adUnit, vastResponse, next);
+      });
+
+      afterEach(function(){
+        this.clock.restore();
+      });
+
+      describe("on 'AdSkippableStateChange'", function(){
+        it("must add the skip button if the adUnit is skippable", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+
+          assert.isNotNull(player.el().querySelector('.vast-skip-button'));
+          assert.isNotNull(player.el().querySelector('.vast-skip-button-thumb'));
+        });
+
+        it("must only add one skip button no matter how many 'AdSkippableStateChange' evts we receive while the adUnit is skippable", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+
+          assert.equal(player.el().querySelectorAll('.vast-skip-button').length, 1);
+          assert.equal(player.el().querySelectorAll('.vast-skip-button-thumb').length, 1);
+        });
+
+        it("must remove the skip button if the adUnit is no longer skippable", function(){
+          adUnit.isSkippable = true;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+          adUnit.isSkippable = false;
+          adUnit.trigger('AdSkippableStateChange');
+          this.clock.tick();
+          assert.isNull(player.el().querySelector('.vast-skip-button'));
+          assert.isNull(player.el().querySelector('.vast-skip-button-thumb'));
+
         });
       });
 

@@ -416,8 +416,9 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
 };
 
 VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next) {
-  var skipButton;
+  var skipButtonContainer;
   var player = this.player;
+  var settings = this.settings;
 
   adUnit.on('AdSkippableStateChange', updateSkipButtonState);
 
@@ -430,8 +431,8 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
     player.trigger('vpaid.AdSkippableStateChange');
     adUnit.getAdSkippableState(function (error, isSkippable) {
       if (isSkippable) {
-        if (!skipButton) {
-          addSkipButton(player);
+        if (!skipButtonContainer) {
+          addSkipButton(player, settings.skipAdVideoThumbnail);
         }
       } else {
         removeSkipButton(player);
@@ -439,17 +440,20 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
     });
   }
 
-  function addSkipButton(player) {
-    skipButton = createSkipButton(player);
-    player.el().appendChild(skipButton);
+  function addSkipButton(player, thumbnailUrl) {
+    skipButtonContainer = createSkipButton(player, thumbnailUrl);
+    player.el().appendChild(skipButtonContainer);
   }
 
   function removeSkipButton() {
-    dom.remove(skipButton);
-    skipButton = null;
+    dom.remove(skipButtonContainer);
+    skipButtonContainer = null;
   }
 
-  function createSkipButton() {
+  function createSkipButton(player, thumbnailUrl) {
+    var skipButtonContainer = window.document.createElement("div");
+    dom.addClass(skipButtonContainer, "vast-skip-button-container");
+
     var skipButton = window.document.createElement("div");
     dom.addClass(skipButton, "vast-skip-button");
     dom.addClass(skipButton, "enabled");
@@ -466,7 +470,19 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
       }
     };
 
-    return skipButton;
+    skipButtonContainer.appendChild(skipButton);
+
+    if(thumbnailUrl !== undefined && thumbnailUrl !== '')
+    {
+      dom.addClass(skipButtonContainer, "has-thumbnail");
+
+      var skipButtonThumb = window.document.createElement("img");
+      skipButtonThumb.src = thumbnailUrl;
+      dom.addClass(skipButtonThumb, "vast-skip-button-thumb");
+      skipButtonContainer.appendChild(skipButtonThumb);
+    }
+
+    return skipButtonContainer;
   }
 };
 
