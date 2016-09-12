@@ -125,6 +125,7 @@ describe("VASTTracker", function () {
       beforeEach(function () {
         response._addTrackingEvents([
           createTrackEvent('start', 'http://start.trackEvent.url'),
+          createTrackEvent('pause', ''),
           createTrackEvent('close', 'http://close.trackEvent.url'),
           createTrackEvent('firstQuartile', 'http://firstQuartile.trackEvent.url')
         ]);
@@ -142,6 +143,11 @@ describe("VASTTracker", function () {
 
       it("must not track anything if the tracker is not tracking the passed event", function () {
         tracker.trackEvent('fooEvent');
+        sinon.assert.notCalled(vastUtil.track);
+      });
+
+      it("must not track anything if the tracking event has undefined url", function () {
+        tracker.trackEvent('pause');
         sinon.assert.notCalled(vastUtil.track);
       });
 
