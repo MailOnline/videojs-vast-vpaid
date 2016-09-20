@@ -194,7 +194,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
 
   /*** Local function ***/
   function addSkipButtonToPlayer(player, settings, skipOffset) {
-    var skipButtonContainer = createSkipButton(player, settings.skipAdVideoThumbnail);
+    var skipButtonContainer = createSkipButton(player, skipOffset, settings.skipAdVideoThumbnail);
     var updateSkipButton = updateSkipButtonState.bind(that, skipButtonContainer, skipOffset, player);
 
     player.el().appendChild(skipButtonContainer);
@@ -208,7 +208,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     }
   }
 
-  function createSkipButton(player, thumbnailUrl) {
+  function createSkipButton(player, skipOffset, thumbnailUrl) {
     var skipButtonContainer = window.document.createElement("div");
     dom.addClass(skipButtonContainer, "vast-skip-button-container");
 
@@ -234,7 +234,7 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
     if(thumbnailUrl !== undefined && thumbnailUrl !== '')
     {
       dom.addClass(skipButtonContainer,'has-thumbnail');
-
+      skipButton.innerHTML = "Skip in " + utilities.toFixedDigits(skipOffset, 2) + "...";
       var skipButtonThumb = window.document.createElement("img");
       skipButtonThumb.src = thumbnailUrl;
       dom.addClass(skipButtonThumb, "vast-skip-button-thumb");
