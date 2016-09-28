@@ -225,6 +225,22 @@ verbosity of console logging;
 - 3 - error, warn, info, log
 - 4 - error, warn, info, log, debug
 
+#### preroll
+
+Flag to enable/disable whether a preroll is shown. 
+```Defaults to true```
+
+#### midrolls
+
+An array of start points for when to show midrolls.
+The midroll array will be validated for conformance. It checks that it is an array, and that each value in the array is a number as well as each value also being less than the duration of the current video.
+```Defaults to []```
+
+#### postroll
+Flag to enable/disable whether a postroll is shown. 
+```Defaults to false```
+
+
 
 ---
 
