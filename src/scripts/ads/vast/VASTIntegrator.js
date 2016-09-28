@@ -102,8 +102,9 @@ VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, cal
 };
 
 VASTIntegrator.prototype._createVASTTracker = function createVASTTracker(adMediaFile, response, callback) {
+  var player = this.player;
   try {
-    callback(null, adMediaFile, new VASTTracker(adMediaFile.src, response), response);
+    callback(null, adMediaFile, new VASTTracker(adMediaFile.src, response, player), response);
   } catch (e) {
     callback(e, response);
   }
@@ -122,6 +123,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adSkip'], function(evt){
     if(evt.type === 'vast.adEnd'){
       tracker.trackComplete();
+      player.trigger('vast.complete');
     }
   });
 
@@ -139,8 +141,10 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   function trackFullscreenChange() {
     if (player.isFullscreen()) {
       tracker.trackFullscreen();
+      player.trigger('vast.exitFullscreen');
     } else {
       tracker.trackExitFullscreen();
+      player.trigger('vast.fullscreen');
     }
   }
 
@@ -153,9 +157,11 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
     }
 
     tracker.trackPause();
+    player.trigger('vast.pause');
     playerUtils.once(player, ['play', 'vast.adEnd', 'vast.adsCancel'], function (evt) {
       if(evt.type === 'play'){
         tracker.trackResume();
+        player.trigger('vast.resume');
       }
     });
   }
@@ -167,15 +173,19 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
 
   function trackImpressions() {
     tracker.trackImpressions();
+    player.trigger('vast.impression');
     tracker.trackCreativeView();
+    player.trigger('vast.creativeView');
   }
 
   function trackVolumeChange() {
     var muted = player.muted();
     if (muted) {
       tracker.trackMute();
+      player.trigger('vast.mute');
     } else if (previouslyMuted) {
       tracker.trackUnmute();
+      player.trigger('vast.unmute');
     }
     previouslyMuted = muted;
   }
