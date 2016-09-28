@@ -84,7 +84,7 @@ You can also configure the vast plugin using the data-setup attribute
       "plugins": {
       "vastClient": {
         "adTagUrl": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
-        "adsCancelTimeout": 5000,
+        "adCancelTimeout": 5000,
         "adsEnabled": true
         }
       }
