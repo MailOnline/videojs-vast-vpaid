@@ -49,6 +49,9 @@ module.exports = function VASTPlugin(options) {
     // Path to the VPAID flash ad's loader
     vpaidFlashLoaderPath: '/VPAIDFlash.swf',
 
+    // Path to the thumb to show next to the skip ad button
+    skipAdVideoThumbnail: '',
+
     // verbosity of console logging:
     // 0 - error
     // 1 - error, warn
@@ -259,7 +262,7 @@ module.exports = function VASTPlugin(options) {
       return;
     }
 
-    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player);
+    var adIntegrator = isVPAID(vastResponse) ? new VPAIDIntegrator(player, settings) : new VASTIntegrator(player, settings);
     var adFinished = false;
 
     playerUtils.once(player, ['vast.adStart', 'vast.adsCancel'], function (evt) {

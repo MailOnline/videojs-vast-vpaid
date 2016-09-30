@@ -215,6 +215,10 @@ Available Options:
 
 You can also pass in the mimeType itself if you'd like to be more explicit.
 
+#### skipAdVideoThumbnail
+URL of the thumbnail to display next to the ad cancel button.
+```Defaults to ''```
+
 #### verbosity
 verbosity of console logging;
 ```Defaults to 0```

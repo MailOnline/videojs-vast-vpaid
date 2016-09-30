@@ -12,22 +12,42 @@
 .vjs-ad-playing .vjs-play-progress {
   background-color: #ffe400 !important;
 }
-
-div.vast-skip-button {
+div.vast-skip-button-container {
   display: block;
   position: absolute;
   bottom: 20%;
   right: 0;
-  background-color: #000;
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  width: auto;
-  padding: 8px;
-  z-index: 2;
   border: 1px solid white;
   border-right: none;
+  background-color: #000;
+  color: white;
+
+  div.vast-skip-button {
+    font-size: 15px;
+    font-weight: bold;
+    width: auto;
+    padding: 8px;
+    z-index: 2;
+    float:left;
+  }
 }
+div.vast-skip-button-container.has-thumbnail{
+  height: 55px;
+
+  div.vast-skip-button {
+    padding: 16px 8px;
+  }
+
+  .vast-skip-button-thumb {
+    width: 98px;
+    height: 53px;
+  }
+
+  .vast-skip-button-thumb.hide {
+    display: none;
+  }
+}
+
 
 .vast-skip-button.enabled {
   cursor: pointer;

@@ -21,12 +21,13 @@ var utilities = require('../../utils/utilityFunctions');
 
 var logger = require ('../../utils/consoleLogger');
 
-function VASTIntegrator(player) {
+function VASTIntegrator(player, settings) {
   if (!(this instanceof VASTIntegrator)) {
-    return new VASTIntegrator(player);
+    return new VASTIntegrator(player, settings);
   }
 
   this.player = player;
+  this.settings = settings;
 }
 
 VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
@@ -187,27 +188,30 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
 
   if (utilities.isNumber(response.skipoffset)) {
     skipOffsetInSec = response.skipoffset / 1000;
-    addSkipButtonToPlayer(this.player, skipOffsetInSec);
+    addSkipButtonToPlayer(this.player, this.settings, skipOffsetInSec);
   }
   callback(null, source, tracker, response);
 
   /*** Local function ***/
-  function addSkipButtonToPlayer(player, skipOffset) {
-    var skipButton = createSkipButton(player);
-    var updateSkipButton = updateSkipButtonState.bind(that, skipButton, skipOffset, player);
+  function addSkipButtonToPlayer(player, settings, skipOffset) {
+    var skipButtonContainer = createSkipButton(player, skipOffset, settings.skipAdVideoThumbnail);
+    var updateSkipButton = updateSkipButtonState.bind(that, skipButtonContainer, skipOffset, player);
 
-    player.el().appendChild(skipButton);
+    player.el().appendChild(skipButtonContainer);
     player.on('timeupdate', updateSkipButton);
 
     playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
 
     function removeSkipButton() {
       player.off('timeupdate', updateSkipButton);
-      dom.remove(skipButton);
+      dom.remove(skipButtonContainer);
     }
   }
 
-  function createSkipButton(player) {
+  function createSkipButton(player, skipOffset, thumbnailUrl) {
+    var skipButtonContainer = window.document.createElement("div");
+    dom.addClass(skipButtonContainer, "vast-skip-button-container");
+
     var skipButton = window.document.createElement("div");
     dom.addClass(skipButton, "vast-skip-button");
 
@@ -225,17 +229,36 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
       }
     };
 
-    return skipButton;
+    skipButtonContainer.appendChild(skipButton);
+
+    if(thumbnailUrl !== undefined && thumbnailUrl !== '')
+    {
+      dom.addClass(skipButtonContainer,'has-thumbnail');
+      skipButton.innerHTML = "Skip in " + utilities.toFixedDigits(skipOffset, 2) + "...";
+      var skipButtonThumb = window.document.createElement("img");
+      skipButtonThumb.src = thumbnailUrl;
+      dom.addClass(skipButtonThumb, "vast-skip-button-thumb");
+      skipButtonContainer.appendChild(skipButtonThumb);
+    }
+
+    return skipButtonContainer;
   }
 
-  function updateSkipButtonState(skipButton, skipOffset, player) {
+  function updateSkipButtonState(skipButtonContainer, skipOffset, player) {
     var timeLeft = Math.ceil(skipOffset - player.currentTime());
+    var skipButton = skipButtonContainer.getElementsByClassName('vast-skip-button')[0];
+    var skipButtonThumb = skipButtonContainer.getElementsByClassName('vast-skip-button-thumb')[0];
+
     if (timeLeft > 0) {
       skipButton.innerHTML = "Skip in " + utilities.toFixedDigits(timeLeft, 2) + "...";
     } else {
       if (!dom.hasClass(skipButton, 'enabled')) {
         dom.addClass(skipButton, 'enabled');
+        if(skipButtonThumb != null) {
+          dom.addClass(skipButtonThumb, 'hide');
+        }
         skipButton.innerHTML = "Skip ad";
+
       }
     }
   }

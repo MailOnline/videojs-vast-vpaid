@@ -39,6 +39,10 @@ describe("VASTIntegrator", function () {
     return player.el().querySelector('.vast-skip-button');
   }
 
+  function skipButtonThumb(player) {
+    return player.el().querySelector('.vast-skip-button-thumb');
+  }
+
   function clickThroughAnchor(player) {
     return player.el().querySelector('.vast-blocker');
   }
@@ -54,7 +58,7 @@ describe("VASTIntegrator", function () {
     beforeEach(function () {
       sinon.stub(vastUtil, 'track', utilities.noop);
       player = videojs(document.createElement('video'), {});
-      vastIntegrator = new VASTIntegrator(player);
+      vastIntegrator = new VASTIntegrator(player,{});
       callback = sinon.spy();
     });
 
@@ -99,6 +103,7 @@ describe("VASTIntegrator", function () {
         vastIntegrator.playAd(response, callback);
         this.clock.tick();
         assert.isNotNull(skipButton(player));
+        assert.isNull(skipButtonThumb(player));
         assert.isNotNull(clickThroughAnchor(player));
         player.trigger('durationchange');
         player.trigger('playing');
@@ -528,6 +533,16 @@ describe("VASTIntegrator", function () {
         it("must add the skipButton to the player", function () {
           vastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
           assert.isNotNull(skipButton(player));
+        });
+
+        it("must show thumb in case of being defined",function(){
+          var thumbUrl = 'http://foo.com/foo.jpeg';
+          var thumbVastIntegrator = new VASTIntegrator(player,{skipAdVideoThumbnail: thumbUrl});
+          thumbVastIntegrator._addSkipButton(mediaFile, tracker, response, callback);
+          assert.isNotNull(skipButton(player));
+          var skipButThumb = skipButtonThumb(player);
+          assert.isNotNull(skipButThumb);
+          assert.equal(thumbUrl,skipButThumb.src);
         });
 
         it("must remove the skip button once the ad finish playing", function () {
