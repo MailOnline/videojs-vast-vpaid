@@ -277,6 +277,7 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
       }
 
       player.pause();
+      player.trigger('vast.adclick');
       tracker.trackClick();
     };
 
