@@ -20,11 +20,6 @@
     "iab"
   ],
   "scripts": {
-    "test": "gulp ci-test",
-    "prepare-hooks": "chmod u+x scripts/*",
-    "setup-hooks": "./scripts/setup-hooks",
-    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s",
-    "postinstall": "bower install",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "author": [
