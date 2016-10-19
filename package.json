@@ -1,6 +1,5 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.0.0",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
@@ -25,7 +24,8 @@
     "prepare-hooks": "chmod u+x scripts/*",
     "setup-hooks": "./scripts/setup-hooks",
     "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s",
-    "postinstall": "bower install"
+    "postinstall": "bower install",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
@@ -82,6 +82,7 @@
     "sinon-chai": "^2.8.0",
     "uglifyify": "^3.0.1",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0",
+    "semantic-release": "^4.3.5"
   }
 }
