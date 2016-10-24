@@ -2,7 +2,7 @@
   "name": "videojs-vast-vpaid",
   "version": "0.0.0-semantically-released",
   "description": "VAST plugin to use with video.js",
-  "main": "src/videojs_5.vast.vpaid.js",
+  "main": "./src/scripts/videojs_5.vast.vpaid.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/MailOnline/videojs-vast-vpaid"
@@ -32,7 +32,10 @@
   "dependencies": {
     "babel-preset-es2015": "> 6",
     "babel-preset-stage-2": "> 6",
-    "babelify": "^7.3.0"
+    "babelify": "^7.3.0",
+    "swfobject": "^2.2.1",
+    "vpaid-flash-client": "^1.0.2",
+    "vpaid-html5-client": "^0.1.14"
   },
   "devDependencies": {
     "async": "^1.2.1",
