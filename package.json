@@ -20,8 +20,8 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "npm-run-all --parallel build:*",
-    "build:umd": "webpack --output-filename index.umd.js",
-    "build:umd.min": "webpack --output-filename index.umd.min.js -p",
+    "build:umd": "webpack --config ./webpack.config.dev.babel.js",
+    "build:umd.min": "webpack --config ./webpack.config.prod.babel.js",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "files": [
