@@ -1,14 +1,17 @@
 import { join } from 'path';
 import { main, name } from './package.json';
-import webpack from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import webpack from 'webpack';
 
 export default {
-  entry: main,
+  entry: {
+    'videojs-vast-vpaid': main,
+    'videojs-vast-vpaid.min': main
+  },
   output: {
     path: join(__dirname, 'dist'),
     libraryTarget: 'umd',
-    filename: `${name}.umd.min.js`
+    filename: '[name].js'
   },
   devtool: 'source-map',
   module: {
@@ -35,12 +38,7 @@ export default {
                 modules: true,
                 importLoaders: 1,
                 localIdentName: '[name]__[local]___[hash:base64:5]',
-                minimize: true,
-                autoprefixer: false,
-                zindex: false,
-                mergeIdents: false,
-                reduceIdents: false,
-                discardUnused: false
+                minimize: false
               }
             },
             {
@@ -66,13 +64,22 @@ export default {
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({
-      compressor: {
+      include: /\.min\./,
+      sourceMap: true,
+      compress: {
         // eslint-disable-next-line id-match
-        screw_ie8: true,
+        screw_ie8: false,
         warnings: false
+      },
+      mangle: {
+        // eslint-disable-next-line id-match
+        screw_ie8: false
+      },
+      output: {
+        // eslint-disable-next-line id-match
+        screw_ie8: false
       }
     }),
-    new ExtractTextPlugin(`${name}.min.css`)
+    new ExtractTextPlugin('[name].css')
   ]
-
-}
+};

@@ -52,33 +52,30 @@ div.vast-skip-button {
   bottom: 0;
 }
 
-.vast-skip-button.enabled:after {
+.vast-skip-button.enabled::after {
   content: ">>";
   position: relative;
   top: 1px;
   margin-left: 8px;
 }
+
 /* Ad loading */
 .vjs-ad-playing.vjs-vast-ad-loading .vjs-loading-spinner {
   display: block;
   z-index: 10;
 
   /* only animate when showing because it can be processor heavy */
-  /* animation */
-  -webkit-animation: spin 1.5s infinite linear;
-  -moz-animation: spin 1.5s infinite linear;
-  -o-animation: spin 1.5s infinite linear;
   animation: spin 1.5s infinite linear;
 }
 
 .vjs-vast-ad-loading div.vjs-big-play-button {
-  display: none!important;
+  display: none !important;
 }
 
-.vjs-ad-playing .vjs-slider-handle:before{
+.vjs-ad-playing .vjs-slider-handle::before {
   display: none;
 }
 
-.vjs-ad-playing  .vjs-live-controls{
+.vjs-ad-playing .vjs-live-controls {
   display: none;
 }

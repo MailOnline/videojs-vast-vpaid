@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { main, name } from './package.json';
+import webpack from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
 
 export default {
@@ -7,15 +8,15 @@ export default {
   output: {
     path: join(__dirname, 'dist'),
     libraryTarget: 'umd',
-    filename: `${name}.umd.js`
+    filename: `${name}.umd.min.js`
   },
-  devtool: 'cheap-module-eval-source-map',
+  devtool: 'source-map',
   module: {
     loaders: [
       {
         test: /\.js$/,
         loader: 'babel',
-        include:[
+        include: [
           join(__dirname, 'src'),
           join(__dirname, 'node_modules/vpaid-flash-client/js'),
           join(__dirname, 'node_modules/vpaid-html5-client/js')
@@ -30,11 +31,16 @@ export default {
           loader: [
             {
               loader: 'css',
-              query:  {
+              query: {
                 modules: true,
                 importLoaders: 1,
                 localIdentName: '[name]__[local]___[hash:base64:5]',
-                minimize: false
+                minimize: true,
+                autoprefixer: false,
+                zindex: false,
+                mergeIdents: false,
+                reduceIdents: false,
+                discardUnused: false
               }
             },
             {
@@ -57,6 +63,25 @@ export default {
     ]
   },
   plugins: [
-    new ExtractTextPlugin(`${name}.css`)
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true,
+      compress: {
+        // eslint-disable-next-line id-match
+        screw_ie8: false,
+        warnings: false
+      },
+      mangle: {
+        // eslint-disable-next-line id-match
+        screw_ie8: false
+      },
+      output: {
+        // eslint-disable-next-line id-match
+        screw_ie8: false
+      }
+    }),
+    new ExtractTextPlugin(`${name}.min.css`)
   ]
-};
+
+}
