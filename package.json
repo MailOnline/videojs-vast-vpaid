@@ -25,7 +25,8 @@
     "lint": "npm-run-all lint:*",
     "lint:scss": "stylelint './src/**/*.{scss,sass,css}'",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post",
-    "postinstall": "bower install"
+    "postinstall": "bower install",
+    "precommit": "npm run lint"
   },
   "files": [
     "dist",
