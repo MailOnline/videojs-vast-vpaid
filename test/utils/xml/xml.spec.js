@@ -1,4 +1,4 @@
-var xml = require('utils/xml');
+var xml = require('../../../src/scripts/utils/xml');
 
 describe("xml", function () {
   it("must be an object", function () {

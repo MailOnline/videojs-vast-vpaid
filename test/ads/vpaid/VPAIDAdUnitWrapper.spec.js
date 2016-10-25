@@ -1,7 +1,7 @@
-var VPAIDAdUnitWrapper = require('ads/vpaid/VPAIDAdUnitWrapper');
-var VASTError = require('ads/vast/VASTError');
+var VPAIDAdUnitWrapper = require('../../../src/scripts/ads/vpaid/VPAIDAdUnitWrapper');
+var VASTError = require('../../../src/scripts/ads/vast/VASTError');
 
-var utilities = require('utils/utilityFunctions');
+var utilities = require('../../../src/scripts/utils/utilityFunctions');
 
 var testUtils = require('../../test-utils');
 

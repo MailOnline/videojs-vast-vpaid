@@ -1,7 +1,7 @@
-var Companion = require('ads/vast/Companion');
-var TrackingEvent = require('ads/vast/TrackingEvent');
+var Companion = require('../../../src/scripts/ads/vast/Companion');
+var TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
 
-var xml = require('utils/xml');
+var xml = require('../../../src/scripts/utils/xml');
 
 describe("Companion", function(){
   it("must return an instance of Companion", function(){

@@ -2,10 +2,10 @@
 
 describe("MediaFile", function () {
 
-  var MediaFile = require('ads/vast/MediaFile');
+  var MediaFile = require('../../../src/scripts/ads/vast/MediaFile');
 
-  var xml = require('utils/xml');
-  var vastUtil = require('ads/vast/vastUtil');
+  var xml = require('../../../src/scripts/utils/xml');
+  var vastUtil = require('../../../src/scripts/ads/vast/vastUtil');
 
   var mediaFileXML;
 

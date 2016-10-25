@@ -1,4 +1,4 @@
-var utilities = require('utils/utilityFunctions');
+var utilities = require('../src/scripts/utils/utilityFunctions');
 
 function createMouseEvent(type) {
   var event = document.createEvent('MouseEvents');

@@ -1,7 +1,7 @@
-var Wrapper = require('ads/vast/Wrapper');
-var Creative = require('ads/vast/Creative');
+var Wrapper = require('../../../src/scripts/ads/vast/Wrapper');
+var Creative = require('../../../src/scripts/ads/vast/Creative');
 
-var xml = require('utils/xml');
+var xml = require('../../../src/scripts/utils/xml');
 
 describe("Wrapper", function () {
   it("must return an instance of Wrapper", function () {

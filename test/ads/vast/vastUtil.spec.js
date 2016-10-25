@@ -1,9 +1,9 @@
-var vastUtil = require('ads/vast/vastUtil');
-var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
-var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
-var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
+var vastUtil = require('../../../src/scripts/ads/vast/vastUtil');
+var VPAIDFLASHClient = require('vpaid-flash-client/js/VPAIDFLASHClient');
+var VPAIDFlashTech = require('../../../src/scripts/ads/vpaid/VPAIDFlashTech');
+var VPAIDHTML5Tech = require('../../../src/scripts/ads/vpaid/VPAIDHTML5Tech');
 
-var xml = require('utils/xml');
+var xml = require('../../../src/scripts/utils/xml');
 
 var testUtils = require('../../test-utils');
 

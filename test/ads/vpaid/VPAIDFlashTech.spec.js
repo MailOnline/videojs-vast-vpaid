@@ -1,8 +1,8 @@
-var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
-var VASTError = require('ads/vast/VASTError');
+var VPAIDFlashTech = require('../../../src/scripts/ads/vpaid/VPAIDFlashTech');
+var VASTError = require('../../../src/scripts/ads/vast/VASTError');
 
-var dom = require('utils/dom');
-var utilities = require('utils/utilityFunctions');
+var dom = require('../../../src/scripts/utils/dom');
+var utilities = require('../../../src/scripts/utils/utilityFunctions');
 
 var testUtils = require('../../test-utils');
 

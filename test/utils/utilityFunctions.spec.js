@@ -1,5 +1,5 @@
-var dom = require('utils/dom');
-var utilities = require('utils/utilityFunctions');
+var dom = require('../../src/scripts/utils/dom');
+var utilities = require('../../src/scripts/utils/utilityFunctions');
 
 describe("utilities.noop", function () {
   it("must return undefined", function () {

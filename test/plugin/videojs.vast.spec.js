@@ -1,24 +1,24 @@
-var MediaFile = require('ads/vast/MediaFile');
-var VASTClient = require('ads/vast/VASTClient');
-var VASTError = require('ads/vast/VASTError');
-var VASTIntegrator = require('ads/vast/VASTIntegrator');
-var VASTResponse = require('ads/vast/VASTResponse');
-var vastUtil = require('ads/vast/vastUtil');
+var MediaFile = require('../../src/scripts/ads/vast/MediaFile');
+var VASTClient = require('../../src/scripts/ads/vast/VASTClient');
+var VASTError = require('../../src/scripts/ads/vast/VASTError');
+var VASTIntegrator = require('../../src/scripts/ads/vast/VASTIntegrator');
+var VASTResponse = require('../../src/scripts/ads/vast/VASTResponse');
+var vastUtil = require('../../src/scripts/ads/vast/vastUtil');
 
-var dom = require('utils/dom');
-var playerUtils = require('utils/playerUtils');
-var utilities = require('utils/utilityFunctions');
-var xml = require('utils/xml');
+var dom = require('../../src/scripts/utils/dom');
+var playerUtils = require('../../src/scripts/utils/playerUtils');
+var utilities = require('../../src/scripts/utils/utilityFunctions');
+var xml = require('../../src/scripts/utils/xml');
 
 var testUtils = require('../test-utils');
 
 var videoJsVersion = parseInt(videojs.VERSION.split('.')[0], 10);
 
 if(videoJsVersion === 4) {
-  require('videojs_4.vast.vpaid');
+  require('../../src/scripts/videojs_4.vast.vpaid');
 }
 if(videoJsVersion === 5) {
-  require('videojs_5.vast.vpaid');
+  require('../../src/scripts/videojs_5.vast.vpaid');
 }
 
 describe("videojs.vast plugin", function () {

@@ -1,6 +1,6 @@
-var VideoClicks = require('ads/vast/VideoClicks');
+var VideoClicks = require('../../../src/scripts/ads/vast/VideoClicks');
 
-var xml = require('utils/xml');
+var xml = require('../../../src/scripts/utils/xml');
 
 describe("VideoClicks", function () {
   var videoClicks, videoClicksXML;

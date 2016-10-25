@@ -1,4 +1,4 @@
-var xml = require('utils/xml');
+var xml = require('../../../src/scripts/utils/xml');
 
 /*jslint maxlen: 800 */
 describe("VAST XML", function(){

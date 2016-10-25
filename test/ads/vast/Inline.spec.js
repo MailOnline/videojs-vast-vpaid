@@ -2,10 +2,10 @@
 
 describe("InLine", function () {
 
-  var Creative = require('ads/vast/Creative');
-  var InLine = require('ads/vast/InLine');
+  var Creative = require('../../../src/scripts/ads/vast/Creative');
+  var InLine = require('../../../src/scripts/ads/vast/InLine');
 
-  var xml = require('utils/xml');
+  var xml = require('../../../src/scripts/utils/xml');
 
   var inlineXML;
 

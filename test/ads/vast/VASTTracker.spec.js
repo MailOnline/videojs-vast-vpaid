@@ -2,14 +2,14 @@
 
 describe("VASTTracker", function () {
 
-  var TrackingEvent = require('ads/vast/TrackingEvent');
-  var VASTError = require('ads/vast/VASTError');
-  var VASTTracker = require('ads/vast/VASTTracker');
-  var VASTResponse = require('ads/vast/VASTResponse');
-  var vastUtil = require('ads/vast/vastUtil');
+  var TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
+  var VASTError = require('../../../src/scripts/ads/vast/VASTError');
+  var VASTTracker = require('../../../src/scripts/ads/vast/VASTTracker');
+  var VASTResponse = require('../../../src/scripts/ads/vast/VASTResponse');
+  var vastUtil = require('../../../src/scripts/ads/vast/vastUtil');
 
-  var utilities = require('utils/utilityFunctions');
-  var xml = require('utils/xml');
+  var utilities = require('../../../src/scripts/utils/utilityFunctions');
+  var xml = require('../../../src/scripts/utils/xml');
 
   var response, ASSET_URI;
 

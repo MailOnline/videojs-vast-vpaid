@@ -2,12 +2,12 @@
 
 describe("Linear", function () {
 
-  var Linear = require('ads/vast/Linear');
-  var MediaFile = require('ads/vast/MediaFile');
-  var TrackingEvent = require('ads/vast/TrackingEvent');
-  var VideoClicks = require('ads/vast/VideoClicks');
+  var Linear = require('../../../src/scripts/ads/vast/Linear');
+  var MediaFile = require('../../../src/scripts/ads/vast/MediaFile');
+  var TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
+  var VideoClicks = require('../../../src/scripts/ads/vast/VideoClicks');
 
-  var xml = require('utils/xml');
+  var xml = require('../../../src/scripts/utils/xml');
 
   it("must return an instance of Linear", function () {
     var linear = new Linear(xml.toJXONTree('<Linear></Linear>'));

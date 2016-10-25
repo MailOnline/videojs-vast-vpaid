@@ -1,8 +1,8 @@
-var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
-var VASTError = require('ads/vast/VASTError');
+var VPAIDHTML5Tech = require('../../../src/scripts/ads/vpaid/VPAIDHTML5Tech');
+var VASTError = require('../../../src/scripts/ads/vast/VASTError');
 
-var dom = require('utils/dom');
-var utilities = require('utils/utilityFunctions');
+var dom = require('../../../src/scripts/utils/dom');
+var utilities = require('../../../src/scripts/utils/utilityFunctions');
 
 var VAST_ERROR_PREFIX = 'VAST Error: ';
 

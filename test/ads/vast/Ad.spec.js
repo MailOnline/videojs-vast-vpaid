@@ -2,11 +2,11 @@
 
 describe("Ad", function () {
 
-  var Ad = require('ads/vast/Ad');
-  var InLine = require('ads/vast/InLine');
-  var Wrapper = require('ads/vast/Wrapper');
+  var Ad = require('../../../src/scripts/ads/vast/Ad');
+  var InLine = require('../../../src/scripts/ads/vast/InLine');
+  var Wrapper = require('../../../src/scripts/ads/vast/Wrapper');
 
-  var xml = require('utils/xml');
+  var xml = require('../../../src/scripts/utils/xml');
 
   it("must be a constructor function", function () {
     assert.isFunction(Ad);

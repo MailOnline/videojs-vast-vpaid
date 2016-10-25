@@ -3,15 +3,15 @@
 /*jslint maxlen: 700 */
 describe("VASTClient", function () {
 
-  var Ad = require('ads/vast/Ad');
-  var TrackingEvent = require('ads/vast/TrackingEvent');
-  var VASTClient = require('ads/vast/VASTClient');
-  var VASTError = require('ads/vast/VASTError');
-  var VASTResponse = require('ads/vast/VASTResponse');
-  var vastUtil = require('ads/vast/vastUtil');
+  var Ad = require('../../../src/scripts/ads/vast/Ad');
+  var TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
+  var VASTClient = require('../../../src/scripts/ads/vast/VASTClient');
+  var VASTError = require('../../../src/scripts/ads/vast/VASTError');
+  var VASTResponse = require('../../../src/scripts/ads/vast/VASTResponse');
+  var vastUtil = require('../../../src/scripts/ads/vast/vastUtil');
 
-  var utilities = require('utils/utilityFunctions');
-  var xml = require('utils/xml');
+  var utilities = require('../../../src/scripts/utils/utilityFunctions');
+  var xml = require('../../../src/scripts/utils/xml');
 
   var testUtils = require('../../test-utils');
 

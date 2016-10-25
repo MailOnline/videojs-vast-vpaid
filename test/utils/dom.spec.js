@@ -1,4 +1,4 @@
-var dom = require('utils/dom');
+var dom = require('../../src/scripts/utils/dom');
 var testUtils = require('../test-utils');
 
 describe("dom", function () {

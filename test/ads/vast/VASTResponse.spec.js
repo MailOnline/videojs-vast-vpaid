@@ -2,16 +2,16 @@
 
 describe("VASTResponse", function () {
 
-  var Ad = require('ads/vast/Ad');
-  var InLine = require('ads/vast/InLine');
-  var Linear = require('ads/vast/Linear');
-  var TrackingEvent = require('ads/vast/TrackingEvent');
-  var VASTResponse = require('ads/vast/VASTResponse');
-  var VideoClicks = require('ads/vast/VideoClicks');
-  var Wrapper = require('ads/vast/Wrapper');
+  var Ad = require('../../../src/scripts/ads/vast/Ad');
+  var InLine = require('../../../src/scripts/ads/vast/InLine');
+  var Linear = require('../../../src/scripts/ads/vast/Linear');
+  var TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
+  var VASTResponse = require('../../../src/scripts/ads/vast/VASTResponse');
+  var VideoClicks = require('../../../src/scripts/ads/vast/VideoClicks');
+  var Wrapper = require('../../../src/scripts/ads/vast/Wrapper');
 
-  var xml = require('utils/xml');
-  var utilities = require('utils/utilityFunctions');
+  var xml = require('../../../src/scripts/utils/xml');
+  var utilities = require('../../../src/scripts/utils/utilityFunctions');
 
   var testUtils = require('../../test-utils');
 

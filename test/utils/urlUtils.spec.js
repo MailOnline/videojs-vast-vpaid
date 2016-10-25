@@ -1,6 +1,6 @@
 'use strict';
 
-var urlUtils = require('utils/urlUtils');
+var urlUtils = require('../../src/scripts/utils/urlUtils');
 
 describe('urlUtils.urlParts', function () {
   it('must normalize a relative url', function () {

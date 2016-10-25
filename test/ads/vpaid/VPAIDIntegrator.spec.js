@@ -1,17 +1,17 @@
-var VPAIDAdUnitWrapper = require('ads/vpaid/VPAIDAdUnitWrapper');
-var VPAIDIntegrator = require('ads/vpaid/VPAIDIntegrator');
-var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
-var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
+var VPAIDAdUnitWrapper = require('../../../src/scripts/ads/vpaid/VPAIDAdUnitWrapper');
+var VPAIDIntegrator = require('../../../src/scripts/ads/vpaid/VPAIDIntegrator');
+var VPAIDFlashTech = require('../../../src/scripts/ads/vpaid/VPAIDFlashTech');
+var VPAIDHTML5Tech = require('../../../src/scripts/ads/vpaid/VPAIDHTML5Tech');
 
-var MediaFile = require('ads/vast/MediaFile');
-var VASTError = require('ads/vast/VASTError');
-var VASTResponse = require('ads/vast/VASTResponse');
-var VASTTracker = require('ads/vast/VASTTracker');
-var vastUtil = require('ads/vast/vastUtil');
+var MediaFile = require('../../../src/scripts/ads/vast/MediaFile');
+var VASTError = require('../../../src/scripts/ads/vast/VASTError');
+var VASTResponse = require('../../../src/scripts/ads/vast/VASTResponse');
+var VASTTracker = require('../../../src/scripts/ads/vast/VASTTracker');
+var vastUtil = require('../../../src/scripts/ads/vast/vastUtil');
 
-var dom = require('utils/dom');
-var utilities = require('utils/utilityFunctions');
-var xml = require('utils/xml');
+var dom = require('../../../src/scripts/utils/dom');
+var utilities = require('../../../src/scripts/utils/utilityFunctions');
+var xml = require('../../../src/scripts/utils/xml');
 
 var testUtils = require('../../test-utils');
 

@@ -2,9 +2,9 @@
 
 describe("TrackingEvent", function () {
 
-  var TrackingEvent = require('ads/vast/TrackingEvent');
+  var TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
 
-  var xml = require('utils/xml');
+  var xml = require('../../../src/scripts/utils/xml');
 
   var tracking, trackingXML;
   /*jshint maxlen: 500 */

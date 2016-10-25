@@ -3,10 +3,10 @@ var testUtils = require('../../test-utils');
 
 describe("Creative", function(){
 
-  var Creative = require('ads/vast/Creative');
-  var Linear = require('ads/vast/Linear');
+  var Creative = require('../../../src/scripts/ads/vast/Creative');
+  var Linear = require('../../../src/scripts/ads/vast/Linear');
 
-  var xml = require('utils/xml');
+  var xml = require('../../../src/scripts/utils/xml');
 
   it("must return an instance of Creative", function(){
     assert.instanceOf(new Creative(xml.toJXONTree('<Creative id="8455"></Creative>')), Creative);

@@ -1,5 +1,5 @@
-var async = require('utils/async');
-var utilities = require('utils/utilityFunctions');
+var async = require('../../src/scripts/utils/async');
+var utilities = require('../../src/scripts/utils/utilityFunctions');
 
 describe("async", function () {
   it("must be an object", function () {

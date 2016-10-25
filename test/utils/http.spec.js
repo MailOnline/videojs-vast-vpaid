@@ -1,6 +1,6 @@
-var HttpRequest = require('utils/http').HttpRequest;
-var HttpRequestError = require('utils/http').HttpRequestError;
-var utilities = require('utils/utilityFunctions');
+var HttpRequest = require('../../src/scripts/utils/http').HttpRequest;
+var HttpRequestError = require('../../src/scripts/utils/http').HttpRequestError;
+var utilities = require('../../src/scripts/utils/utilityFunctions');
 
 var testUtils = require('../test-utils');
 
