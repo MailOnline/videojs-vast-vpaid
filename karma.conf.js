@@ -32,6 +32,7 @@ function karmaconf (karma) {
     },
 
     logLevel: 'ERROR',
+
     /**
      * How to report, by default.
      */
@@ -50,6 +51,7 @@ function karmaconf (karma) {
      */
     autoWatch: true,
     singleRun: false,
+
     /**
      * The list of browsers to launch to test on. This includes only "Firefox" by
      * default, but other browser names include:
@@ -64,8 +66,6 @@ function karmaconf (karma) {
      * the aesthetic advantage of not launching a browser every time you save.
      */
     browsers: [
-      //'Safari',
-      'Firefox',
       'Chrome'
     ]
   });

@@ -1,16 +1,13 @@
-'use strict';
-
-var Ad = require('./Ad');
-var VideoClicks = require('./VideoClicks');
-var Linear = require('./Linear');
-var InLine = require('./InLine');
-var Wrapper = require('./Wrapper');
-
-var utilities = require('../../utils/utilityFunctions');
-var xml = require('../../utils/xml');
+const utilities = require('../../utils/utilityFunctions');
+const xml = require('../../utils/xml');
+const VideoClicks = require('./VideoClicks');
+const Linear = require('./Linear');
+const InLine = require('./InLine');
+const Ad = require('./Ad');
+const Wrapper = require('./Wrapper');
 
 window.InLine__A = InLine;
-function VASTResponse() {
+function VASTResponse () {
   if (!(this instanceof VASTResponse)) {
     return new VASTResponse();
   }
@@ -30,7 +27,8 @@ function VASTResponse() {
 }
 
 VASTResponse.prototype.addAd = function (ad) {
-  var inLine, wrapper;
+  let inLine, wrapper;
+
   if (ad instanceof Ad) {
     inLine = ad.inLine;
     wrapper = ad.wrapper;
@@ -48,14 +46,17 @@ VASTResponse.prototype.addAd = function (ad) {
 };
 
 VASTResponse.prototype._addErrorTrackUrl = function (error) {
-  var errorURL = error instanceof xml.JXONTree ? xml.keyValue(error) : error;
+  const errorURL = error instanceof xml.JXONTree ? xml.keyValue(error) : error;
+
   if (errorURL) {
     this.errorURLMacros.push(errorURL);
   }
 };
 
 VASTResponse.prototype._addImpressions = function (impressions) {
-  utilities.isArray(impressions) && appendToArray(this.impressions, impressions);
+  if (Array.isArray(impressions)) {
+    appendToArray(this.impressions, impressions);
+  }
 };
 
 VASTResponse.prototype._addClickThrough = function (clickThrough) {
@@ -65,19 +66,23 @@ VASTResponse.prototype._addClickThrough = function (clickThrough) {
 };
 
 VASTResponse.prototype._addClickTrackings = function (clickTrackings) {
-  utilities.isArray(clickTrackings) && appendToArray(this.clickTrackings, clickTrackings);
+  if (Array.isArray(clickTrackings)) {
+    appendToArray(this.clickTrackings, clickTrackings);
+  }
 };
 
 VASTResponse.prototype._addCustomClicks = function (customClicks) {
-  utilities.isArray(customClicks) && appendToArray(this.customClicks, customClicks);
+  if (Array.isArray(customClicks)) {
+    appendToArray(this.customClicks, customClicks);
+  }
 };
 
 VASTResponse.prototype._addTrackingEvents = function (trackingEvents) {
-  var eventsMap = this.trackingEvents;
+  const eventsMap = this.trackingEvents;
 
   if (trackingEvents) {
     trackingEvents = utilities.isArray(trackingEvents) ? trackingEvents : [trackingEvents];
-    trackingEvents.forEach(function (trackingEvent) {
+    trackingEvents.forEach((trackingEvent) => {
       if (!eventsMap[trackingEvent.name]) {
         eventsMap[trackingEvent.name] = [];
       }
@@ -107,7 +112,9 @@ VASTResponse.prototype._addVideoClicks = function (videoClicks) {
 };
 
 VASTResponse.prototype._addMediaFiles = function (mediaFiles) {
-  utilities.isArray(mediaFiles) && appendToArray(this.mediaFiles, mediaFiles);
+  if (Array.isArray(mediaFiles)) {
+    appendToArray(this.mediaFiles, mediaFiles);
+  }
 };
 
 VASTResponse.prototype._addSkipoffset = function (offset) {
@@ -135,14 +142,14 @@ VASTResponse.prototype._addLinear = function (linear) {
 };
 
 VASTResponse.prototype._addInLine = function (inLine) {
-  var that = this;
+  const that = this;
 
   if (inLine instanceof InLine) {
     this._addTitle(inLine.adTitle);
     this._addErrorTrackUrl(inLine.error);
     this._addImpressions(inLine.impressions);
 
-    inLine.creatives.forEach(function (creative) {
+    inLine.creatives.forEach((creative) => {
       if (creative.linear) {
         that._addLinear(creative.linear);
       }
@@ -151,29 +158,30 @@ VASTResponse.prototype._addInLine = function (inLine) {
 };
 
 VASTResponse.prototype._addWrapper = function (wrapper) {
-  var that = this;
+  const that = this;
 
   if (wrapper instanceof Wrapper) {
     this._addErrorTrackUrl(wrapper.error);
     this._addImpressions(wrapper.impressions);
 
-    wrapper.creatives.forEach(function (creative) {
-      var linear = creative.linear;
+    wrapper.creatives.forEach((creative) => {
+      const linear = creative.linear;
+
       if (linear) {
         that._addVideoClicks(linear.videoClicks);
-        that.clickThrough = undefined;//We ensure that no clickThrough has been added
+        that.clickThrough = undefined;// We ensure that no clickThrough has been added
         that._addTrackingEvents(linear.trackingEvents);
       }
     });
   }
 };
 
-VASTResponse.prototype.hasLinear = function(){
+VASTResponse.prototype.hasLinear = function () {
   return this._linearAdded;
 };
 
-function appendToArray(array, items) {
-  items.forEach(function (item) {
+function appendToArray (array, items) {
+  items.forEach((item) => {
     array.push(item);
   });
 }

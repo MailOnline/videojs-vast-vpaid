@@ -1,6 +1,6 @@
-import { join } from 'path';
-import { main, name } from './package.json';
+import {join} from 'path';
 import webpack from 'webpack';
+import {main, name} from './package';
 
 export default {
   entry: {

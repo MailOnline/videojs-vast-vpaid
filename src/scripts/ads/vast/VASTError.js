@@ -1,6 +1,6 @@
-'use strict';
 
-function VASTError(message, code) {
+
+function VASTError (message, code) {
   this.message = 'VAST Error: ' + (message || '');
   if (code) {
     this.code = code;
@@ -8,6 +8,6 @@ function VASTError(message, code) {
 }
 
 VASTError.prototype = new Error();
-VASTError.prototype.name = "VAST Error";
+VASTError.prototype.name = 'VAST Error';
 
 module.exports = VASTError;

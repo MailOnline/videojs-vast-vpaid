@@ -1,102 +1,102 @@
-/*jshint unused:false */
-"use strict";
+/* jshint unused:false */
 
-var _verbosity = 0;
-var _prefix = "[videojs-vast-vpaid] ";
+
+let _verbosity = 0;
+const _prefix = '[videojs-vast-vpaid] ';
 
 function setVerbosity (v)
 {
-    _verbosity = v;
+  _verbosity = v;
 }
 
 function handleMsg (method, args)
 {
-    if ((args.length) > 0 && (typeof args[0] === 'string'))
+  if (args.length > 0 && typeof args[0] === 'string')
     {
-        args[0] = _prefix + args[0];
-    }
+    args[0] = _prefix + args[0];
+  }
 
-    if (method.apply)
+  if (method.apply)
     {
-        method.apply (console, Array.prototype.slice.call(args));
-    }
-    else
+    method.apply(console, Array.prototype.slice.call(args));
+  }
+  else
     {
-        method (Array.prototype.slice.call(args));
-    }
+    method(Array.prototype.slice.call(args));
+  }
 }
 
 function debug ()
 {
-    if (_verbosity < 4)
+  if (_verbosity < 4)
     {
-        return;
-    }
+    return;
+  }
 
-    if (typeof console.debug === 'undefined')
+  if (typeof console.debug === 'undefined')
     {
         // IE 10 doesn't have a console.debug() function
-        handleMsg (console.log, arguments);
-    }
-    else
+    handleMsg(console.log, arguments);
+  }
+  else
     {
-        handleMsg (console.debug, arguments);
-    }
+    handleMsg(console.debug, arguments);
+  }
 }
 
 function log ()
 {
-    if (_verbosity < 3)
+  if (_verbosity < 3)
     {
-        return;
-    }
+    return;
+  }
 
-    handleMsg (console.log, arguments);
+  handleMsg(console.log, arguments);
 }
 
 function info ()
 {
-    if (_verbosity < 2)
+  if (_verbosity < 2)
     {
-        return;
-    }
+    return;
+  }
 
-    handleMsg (console.info, arguments);
+  handleMsg(console.info, arguments);
 }
 
 
 function warn ()
 {
-    if (_verbosity < 1)
+  if (_verbosity < 1)
     {
-        return;
-    }
+    return;
+  }
 
-    handleMsg (console.warn, arguments);
+  handleMsg(console.warn, arguments);
 }
 
 function error ()
 {
-    handleMsg (console.error, arguments);
+  handleMsg(console.error, arguments);
 }
 
-var consoleLogger = {
-    setVerbosity: setVerbosity,
-    debug: debug,
-    log: log,
-    info: info,
-    warn: warn,
-    error: error
+const consoleLogger = {
+  setVerbosity: setVerbosity,
+  debug: debug,
+  log: log,
+  info: info,
+  warn: warn,
+  error: error
 };
 
-if ((typeof (console) === 'undefined') || !console.log)
+if (typeof console === 'undefined' || !console.log)
 {
     // no console available; make functions no-op
-    consoleLogger.debug = function () {};
-    consoleLogger.log = function () {};
-    consoleLogger.info = function () {};
-    consoleLogger.warn = function () {};
-    consoleLogger.error = function () {};
+  consoleLogger.debug = function () {};
+  consoleLogger.log = function () {};
+  consoleLogger.info = function () {};
+  consoleLogger.warn = function () {};
+  consoleLogger.error = function () {};
 }
 
 module.exports = consoleLogger;
