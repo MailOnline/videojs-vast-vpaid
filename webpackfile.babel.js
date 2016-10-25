@@ -1,14 +1,16 @@
 import { join } from 'path';
 import { main, name } from './package.json';
 import webpack from 'webpack';
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
 
 export default {
-  entry: main,
+  entry: {
+    [name]: main,
+    [name + '.min']: main
+  },
   output: {
     path: join(__dirname, 'dist'),
     libraryTarget: 'umd',
-    filename: `${name}.umd.min.js`
+    filename: '[name].js'
   },
   devtool: 'source-map',
   module: {
@@ -27,38 +29,31 @@ export default {
       },
       {
         test: /\.scss$/,
-        loaders: ExtractTextPlugin.extract({
-          loader: [
-            {
-              loader: 'css',
-              query: {
-                modules: true,
-                importLoaders: 1,
-                localIdentName: '[name]__[local]___[hash:base64:5]',
-                minimize: true,
-                autoprefixer: false,
-                zindex: false,
-                mergeIdents: false,
-                reduceIdents: false,
-                discardUnused: false
-              }
-            },
-            {
-              loader: 'autoprefixer-loader',
-              query: {
-                browsers: [
-                  '> 1%',
-                  'last 3 versions',
-                  'iOS > 6',
-                  'ie > 9'
-                ],
-                cascade: false
-              }
-            },
-            'resolve-url',
-            'sass'
-          ]
-        })
+        loaders: [
+          {
+            loader: 'css',
+            query: {
+              modules: true,
+              importLoaders: 1,
+              localIdentName: '[name]__[local]___[hash:base64:5]',
+              minimize: false
+            }
+          },
+          {
+            loader: 'autoprefixer-loader',
+            query: {
+              browsers: [
+                '> 1%',
+                'last 3 versions',
+                'iOS > 6',
+                'ie > 9'
+              ],
+              cascade: false
+            }
+          },
+          'resolve-url',
+          'sass'
+        ]
       }
     ]
   },
@@ -66,6 +61,7 @@ export default {
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({
+      include: /\.min\.js/,
       sourceMap: true,
       compress: {
         // eslint-disable-next-line id-match
@@ -80,8 +76,6 @@ export default {
         // eslint-disable-next-line id-match
         screw_ie8: false
       }
-    }),
-    new ExtractTextPlugin(`${name}.min.css`)
+    })
   ]
-
-}
+};

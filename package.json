@@ -19,9 +19,7 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "npm-run-all --parallel build:*",
-    "build:dev": "webpack --config ./webpackfile.dev.babel.js",
-    "build:prod": "webpack --config ./webpackfile.prod.babel.js",
+    "build": "webpack --config ./webpackfile.babel.js",
     "lint": "npm-run-all lint:*",
     "lint:scss": "stylelint './src/**/*.{scss,sass,css}'",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
@@ -47,7 +45,6 @@
     "chai": "^3.4.1",
     "css-loader": "^0.25.0",
     "express": "^4.13.3",
-    "extract-text-webpack-plugin": "^2.0.0-beta.4",
     "karma": "^0.13.19",
     "karma-chai-sinon": "0.1.5",
     "karma-chrome-launcher": "^0.2.2",
