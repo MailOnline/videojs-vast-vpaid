@@ -1,6 +1,5 @@
 const path = require('path');
 const gulp = require('gulp');
-const runSequence = require('run-sequence');
 const ghPages = require('gulp-gh-pages');
 
 // eslint-disable-next-line no-process-env
@@ -19,18 +18,4 @@ gulp.task('prepare-demo-statics', () => {
     'demo/_config.yml'
   ])
   .pipe(gulp.dest('dist'));
-});
-
-gulp.task('deploy-demo', (done) => {
-  runSequence(
-    'prepare-demo-statics',
-    'update-gh-pages',
-    (error) => {
-      if (error) {
-        console.log(error.message);
-      } else {
-        console.log('BUILD FINISHED SUCCESSFULLY');
-      }
-      done(error);
-    });
 });
