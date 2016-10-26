@@ -15,9 +15,7 @@ export default {
         test: /\.js$/,
         loader: 'babel',
         include: [
-          path.join(__dirname, 'src'),
-          path.join(__dirname, 'node_modules/vpaid-flash-client/js'),
-          path.join(__dirname, 'node_modules/vpaid-html5-client/js')
+          path.join(__dirname, 'demo')
         ],
         query: {
           presets: ['es2015']
@@ -26,12 +24,12 @@ export default {
       {
         test: /\.scss$/,
         loaders: [
+          'style',
           {
             loader: 'css',
             query: {
-              modules: true,
+              modules: false,
               importLoaders: 1,
-              localIdentName: '[name]__[local]___[hash:base64:5]',
               minimize: false
             }
           },

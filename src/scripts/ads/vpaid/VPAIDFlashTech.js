@@ -1,3 +1,4 @@
+require('vpaid-flash-client/bin/VPAIDFlash.swf');
 const VPAIDFLASHClient = require('vpaid-flash-client/js/VPAIDFLASHClient');
 const MimeTypes = require('../../utils/mimetypes');
 const VASTError = require('../vast/VASTError');

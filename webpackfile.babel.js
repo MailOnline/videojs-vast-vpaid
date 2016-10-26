@@ -1,27 +1,32 @@
-import {join} from 'path';
+import path from 'path';
 import webpack from 'webpack';
-import {main, name} from './package';
 
 export default {
   entry: {
-    [name]: main,
-    [name + '.min']: main
+    'videojs_4.vast.vpaid.js': path.join(__dirname, './src/scripts/videojs_4.vast.vpaid.js'),
+    'videojs_4.vast.vpaid.min.js': path.join(__dirname, './src/scripts/videojs_4.vast.vpaid.js'),
+    'videojs_5.vast.vpaid.js': path.join(__dirname, './src/scripts/videojs_5.vast.vpaid.js'),
+    'videojs_5.vast.vpaid.min.js': path.join(__dirname, './src/scripts/videojs_5.vast.vpaid.js')
   },
   output: {
-    path: join(__dirname, 'dist'),
+    path: path.join(__dirname, 'dist'),
     libraryTarget: 'umd',
-    filename: '[name].js'
+    filename: '[name]'
   },
   devtool: 'source-map',
   module: {
     loaders: [
       {
+        test: /\.swf$/,
+        loader: 'file?name=[name].[ext]'
+      },
+      {
         test: /\.js$/,
         loader: 'babel',
         include: [
-          join(__dirname, 'src'),
-          join(__dirname, 'node_modules/vpaid-flash-client/js'),
-          join(__dirname, 'node_modules/vpaid-html5-client/js')
+          path.join(__dirname, 'node_modules/vpaid-flash-client/js'),
+          path.join(__dirname, 'src'),
+          path.join(__dirname, 'node_modules/vpaid-html5-client/js')
         ],
         query: {
           presets: ['es2015']
@@ -30,12 +35,12 @@ export default {
       {
         test: /\.scss$/,
         loaders: [
+          'style',
           {
             loader: 'css',
             query: {
-              modules: true,
+              modules: false,
               importLoaders: 1,
-              localIdentName: '[name]__[local]___[hash:base64:5]',
               minimize: false
             }
           },

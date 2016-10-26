@@ -10,7 +10,7 @@ module.exports = function molVastSetup (opts) {
     playAdAlways: true,
     adCancelTimeout: options.adCancelTimeout || 3000,
     adsEnabled: Boolean(options.adsEnabled),
-    vpaidFlashLoaderPath: './scripts/VPAIDFlash.swf'
+    vpaidFlashLoaderPath: '/VPAIDFlash.swf'
   };
 
   if (options.adTagUrl) {
