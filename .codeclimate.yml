@@ -5,7 +5,7 @@ languages:
   Python: false
 exclude_paths:
 - "demo/*"
-- "bin/*"
+- "dist/*"
 - "build/*"
 - "lib/*"
 - "src/utils/pollyfill.js"
