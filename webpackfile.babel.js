@@ -26,6 +26,7 @@ export default {
         include: [
           path.join(__dirname, 'node_modules/vpaid-flash-client/js'),
           path.join(__dirname, 'src'),
+          path.join(__dirname, 'test'),
           path.join(__dirname, 'node_modules/vpaid-html5-client/js')
         ],
         query: {

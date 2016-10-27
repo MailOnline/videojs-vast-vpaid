@@ -3,7 +3,7 @@ require('babel-core/register');
 const webpack = require('./webpackfile.babel').default;
 
 function karmaconf (karma) {
-  karma.set({
+  const config = {
     /**
      * From where to look for files, starting with the location of this file.
      */
@@ -11,7 +11,6 @@ function karmaconf (karma) {
 
     files: [
       'bower_components/videojs_4/dist/video-js/video.js',
-      'bower_components/VPAIDFLASHClient/bin/VPAIDFlash.swf',
       'test/test-utils.css',
       'test/**/*.spec.js'
     ],
@@ -52,6 +51,13 @@ function karmaconf (karma) {
     autoWatch: true,
     singleRun: false,
 
+    customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    },
+
     /**
      * The list of browsers to launch to test on. This includes only "Firefox" by
      * default, but other browser names include:
@@ -68,7 +74,14 @@ function karmaconf (karma) {
     browsers: [
       'Chrome'
     ]
-  });
+  };
+
+  // eslint-disable-next-line no-process-env
+  if (process.env.TRAVIS) {
+    config.browsers = ['Chrome_travis_ci'];
+  }
+
+  karma.set(config);
 }
 
 module.exports = karmaconf;

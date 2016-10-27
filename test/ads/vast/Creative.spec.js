@@ -1,8 +1,6 @@
-
-
 const testUtils = require('../../test-utils');
 
-describe('Creative', () => {
+describe.skip('Creative', () => {
   const Creative = require('../../../src/scripts/ads/vast/Creative');
   const Linear = require('../../../src/scripts/ads/vast/Linear');
 

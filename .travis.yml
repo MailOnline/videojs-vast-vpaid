@@ -1,4 +1,5 @@
-sudo: false
+sudo: required
+dist: trusty
 language: node_js
 cache:
   directories:
@@ -8,7 +9,19 @@ notifications:
 node_js:
   - '6'
 before_install:
-  - npm i -g npm@^3.10.3
+
+before_install:
+  - export CHROME_BIN=/usr/bin/google-chrome
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sudo apt-get update
+  - sudo apt-get install -y libappindicator1 fonts-liberation
+  - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  - sudo dpkg -i google-chrome*.deb
+  - npm i -g npm
+  - npm install -g codeclimate-test-reporter
+install:
+  - npm install
 before_script:
   - npm prune
 after_success:
@@ -17,3 +30,10 @@ after_success:
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
+addons:
+  firefox: "49.0"
+  code_climate:
+    repo_token:
+      secure: Fng7h8a5o8ti8w0lRjCjmpdI/YYQK1qRMfUFmev6oKzOGOATyMP4yJ7V3yuf+QPP5kAO23/gHkoQvKsbL7IyvHlwAqo4fHbwWHMF6ktURtxkRcs59P5kJunRht/C4Hyx9ZSmahHxv0WsmbxRGQ2dQJrgF2m71H7KrBXLwv+s+YVVAtEc6jGqVlVaalmrS4g2lWUQtRLcxSmFvqjigBDo4h5H2vqH1P0Qk1Xm8h7NTp3dq3c86l2hnzQFgfNJL0PjJPm/UKslwGoo35OQxejGvffVN9KV8ZgA0Ql52Zu3/UvdEvbzRv6QNxU6rJwjbfgKYD0oNGmKxRPo68aETtefRAju/sgY53HZP7Z0oZTGHQsBMrfQ2cJSopIetPWPw6sfd5WvFS4W0MPoAEVw8zcvUvBA4HZAHUP4y/k8FvYWDC/8G2YYXTeTEb1ATym0l7a67e8eWgvFC6fuOXLcVc49RftQOksbDTpnqOaqtWJxtw9WVkNFCSE1jXFCibxtaKAAIU05TCdypk4ita30dDJ2FFPP4wp/wmXaogj4rhCXlCPQx3em+Mpqr3yqEnt73dNQRMFEyfxubDMopodyUMbCdHv0CUqDpu173494wkO6wVg7rBnJqqAHXEJMI6bh5QtBa6MtmgOqVESaNcnxTaRAJ22hlhnIbVwp9Pl6uP0tMv8=
+after_script:
+  - codeclimate-test-reporter < coverage/lcov.infovi
