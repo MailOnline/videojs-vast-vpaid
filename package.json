@@ -70,6 +70,7 @@
     "karma-spec-reporter": "^0.0.23",
     "karma-webpack": "^1.8.0",
     "mocha": "^2.2.5",
+    "mol-conventional-changelog": "^1.1.0",
     "node-sass": "^3.10.1",
     "npm-run-all": "^3.1.1",
     "resolve-url-loader": "^1.6.0",
@@ -88,5 +89,10 @@
       "es2015",
       "stage-2"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/mol-conventional-changelog"
+    }
   }
 }
