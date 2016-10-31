@@ -5182,10 +5182,10 @@ function VASTClient(options) {
   this.errorURLMacros = [];
 }
 
-VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callback) {
+VASTClient.prototype.getVASTResponse = function getVASTResponse(adTag, callback) {
   var that = this;
 
-  var error = sanityCheck(adTagUrl, callback);
+  var error = sanityCheck(adTag, callback);
 
   if (error) {
     if (utilities.isFunction(callback)) {
@@ -5194,7 +5194,7 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callba
     throw error;
   }
 
-  async.waterfall([this._getVASTAd.bind(this, adTagUrl), buildVASTResponse], callback);
+  async.waterfall([this._getVASTAd.bind(this, adTag), buildVASTResponse], callback);
 
   /** * Local functions ***/
   function buildVASTResponse(adsChain, cb) {
@@ -5207,8 +5207,8 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callba
     }
   }
 
-  function sanityCheck(adTagUrl, cb) {
-    if (!adTagUrl) {
+  function sanityCheck(adTag, cb) {
+    if (!adTag) {
       return new VASTError('on VASTClient.getVASTResponse, missing ad tag URL');
     }
 
@@ -5218,10 +5218,10 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse(adTagUrl, callba
   }
 };
 
-VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
+VASTClient.prototype._getVASTAd = function (adTag, callback) {
   var that = this;
 
-  getAdWaterfall(adTagUrl, function (error, vastTree) {
+  getAdWaterfall(adTag, function (error, vastTree) {
     var waterfallAds = vastTree && utilities.isArray(vastTree.ads) ? vastTree.ads : null;
 
     if (error) {
@@ -5248,8 +5248,8 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   });
 
   /** * Local functions ***/
-  function getAdWaterfall(adTagUrl, callback) {
-    var requestVastXML = that._requestVASTXml.bind(that, adTagUrl);
+  function getAdWaterfall(adTag, callback) {
+    var requestVastXML = that._requestVASTXml.bind(that, adTag);
 
     async.waterfall([requestVastXML, buildVastWaterfall], callback);
   }
@@ -5288,16 +5288,16 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     return null;
   }
 
-  function getAd(adTagUrl, adChain, callback) {
+  function getAd(adTag, adChain, callback) {
     if (adChain.length >= that.WRAPPER_LIMIT) {
       return callback(new VASTError('on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is ' + that.WRAPPER_LIMIT + ')', 302), adChain);
     }
 
     async.waterfall([function (next) {
-      if (utilities.isString(adTagUrl)) {
-        requestVASTAd(adTagUrl, next);
+      if (utilities.isString(adTag)) {
+        requestVASTAd(adTag, next);
       } else {
-        next(null, adTagUrl);
+        next(null, adTag);
       }
     }, buildAd], function (error, ad) {
       if (ad) {
@@ -5350,8 +5350,8 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     return null;
   }
 
-  function requestVASTAd(adTagUrl, callback) {
-    that._requestVASTXml(adTagUrl, function (error, xmlStr) {
+  function requestVASTAd(adTag, callback) {
+    that._requestVASTXml(adTag, function (error, xmlStr) {
       if (error) {
         return callback(error);
       }
@@ -5366,13 +5366,13 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   }
 };
 
-VASTClient.prototype._requestVASTXml = function requestVASTXml(adTagUrl, callback) {
+VASTClient.prototype._requestVASTXml = function requestVASTXml(adTag, callback) {
   try {
-    if (utilities.isFunction(adTagUrl)) {
-      adTagUrl(requestHandler);
+    if (utilities.isFunction(adTag)) {
+      adTag(requestHandler);
     } else {
-      logger.info('requesting adTagUrl: ' + adTagUrl);
-      http.get(adTagUrl, requestHandler, {
+      logger.info('requesting adTag: ' + adTag);
+      http.get(adTag, requestHandler, {
         withCredentials: true
       });
     }
