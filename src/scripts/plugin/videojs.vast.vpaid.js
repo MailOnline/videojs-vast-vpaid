@@ -54,20 +54,16 @@ module.exports = function VASTPlugin (options) {
 
   const settings = utilities.extend({}, defaultOpts, options || {});
 
-  if (utilities.isUndefined(settings.adTagUrl) && utilities.isDefined(settings.url)) {
-    settings.adTagUrl = settings.url;
-  }
-
-  if (utilities.isString(settings.adTagUrl)) {
-    settings.adTagUrl = utilities.echoFn(settings.adTagUrl);
+  if (utilities.isUndefined(settings.getAdTag) && utilities.isDefined(settings.adTag)) {
+    settings.getAdTag = (callback) => callback(null, settings.adTag);
   }
 
   if (utilities.isDefined(settings.adTagXML) && !utilities.isFunction(settings.adTagXML)) {
     return trackAdError(new VASTError('on VideoJS VAST plugin, the passed adTagXML option does not contain a function'));
   }
 
-  if (!utilities.isDefined(settings.adTagUrl) && !utilities.isFunction(settings.adTagXML)) {
-    return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTagUrl on options object'));
+  if (!utilities.isFunction(settings.adTagXML) && !utilities.isFunction(settings.getAdTag)) {
+    return trackAdError(new VASTError('on VideoJS VAST plugin, missing adTag on options object'));
   }
 
   logger.setVerbosity(settings.verbosity);
@@ -243,7 +239,17 @@ module.exports = function VASTPlugin (options) {
   }
 
   function getVastResponse (callback) {
-    vast.getVASTResponse(settings.adTagUrl ? settings.adTagUrl() : settings.adTagXML, callback);
+    if (settings.getAdTag) {
+      return settings.getAdTag((error, adTag) => {
+        if (error) {
+          return trackAdError(error);
+        }
+
+        return vast.getVASTResponse(adTag, callback);
+      });
+    }
+
+    vast.getVASTResponse(settings.adTagXML, callback);
   }
 
   function playAd (vastResponse, callback) {

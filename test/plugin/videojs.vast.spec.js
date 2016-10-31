@@ -92,15 +92,15 @@ describe('videojs.vast plugin', () => {
     player.on('vast.adError', spy);
     player.vastClient();
     sinon.assert.calledOnce(spy);
-    assertError(spy, 'on VideoJS VAST plugin, missing adTagUrl on options object');
+    assertError(spy, 'on VideoJS VAST plugin, missing adTag on options object');
   });
 
-  it('must not trigger \'vast.adError\' if the adTagUrl is passed as part of the options', () => {
+  it('must not trigger \'vast.adError\' if the adTag is passed as part of the options', () => {
     const vastErrorSpy = sinon.spy();
     const player = videojs(document.createElement('video'), {});
 
     player.on('vast.adError', vastErrorSpy);
-    player.vastClient({adTagUrl: 'http://fake.ad.url'});
+    player.vastClient({adTag: 'http://fake.ad.url'});
     sinon.assert.notCalled(vastErrorSpy);
   });
 
@@ -128,7 +128,7 @@ describe('videojs.vast plugin', () => {
     const player = videojs(document.createElement('video'), {});
 
     player.on('vast.adsCancel', spy);
-    player.vastClient({adTagUrl: 'http://fake.ad.url'});
+    player.vastClient({adTag: 'http://fake.ad.url'});
     player.trigger('vast.reset');
     sinon.assert.calledOnce(spy);
   });
@@ -149,7 +149,7 @@ describe('videojs.vast plugin', () => {
 
     it('set to true, must reset plugin \'vast.firstPlay\' event', function () {
       player.vastClient({
-        adTagUrl: utilities.echoFn('/fake.ad.url'),
+        getAdTag: (cb) => cb(null, '/fake.ad.url'),
         playAdAlways: true
       });
       player.on('vast.reset', resetSpy);
@@ -162,7 +162,7 @@ describe('videojs.vast plugin', () => {
 
     it('set to false, must try not play a new ad every time the user replays the ad', function () {
       player.vastClient({
-        adTagUrl: utilities.echoFn('/fake.ad.url'),
+        getAdTag: (cb) => cb(null, '/fake.ad.url'),
         playAdAlways: false
       });
 
@@ -180,7 +180,7 @@ describe('videojs.vast plugin', () => {
 
     beforeEach(() => {
       player = videojs(document.createElement('video'), {});
-      vastAd = player.vastClient({adTagUrl: 'http://fake.ad.url'});
+      vastAd = player.vastClient({adTag: 'http://fake.ad.url'});
     });
 
     it('must be equal to the object returned by the plugin', () => {
@@ -217,7 +217,7 @@ describe('videojs.vast plugin', () => {
       clock = sinon.useFakeTimers();
       player = videojs(document.createElement('video'), {});
       player.vastClient({
-        adTagUrl: utilities.echoFn('/fake.ad.url'),
+        getAdTag: (cb) => cb(null, '/fake.ad.url'),
         playAdAlways: true
       });
     });
@@ -297,7 +297,7 @@ describe('videojs.vast plugin', () => {
       describe('loading spinner', () => {
         beforeEach(() => {
           player = videojs(document.createElement('video'), {});
-          player.vastClient({adTagUrl: utilities.echoFn('/fake.ad.url')});
+          player.vastClient({getAdTag: (cb) => cb(null, '/fake.ad.url')});
         });
 
         it('must be added while we retrieve the ad', () => {
@@ -328,7 +328,7 @@ describe('videojs.vast plugin', () => {
       it('must pause the video if it is not paused', () => {
         player = videojs(document.createElement('video'), {});
         player.vastClient({
-          adTagUrl: utilities.echoFn('/fake.ad.url'),
+          getAdTag: (cb) => cb(null, '/fake.ad.url'),
           adCancelTimeout: 5000
         });
         sinon.spy(player, 'pause');
@@ -340,7 +340,7 @@ describe('videojs.vast plugin', () => {
       it('must cancel the ads if there it takes too much time (adCancelTimeout) to start the ad', () => {
         player = videojs(document.createElement('video'), {});
         player.vastClient({
-          adTagUrl: utilities.echoFn('/fake.ad.url'),
+          getAdTag: (cb) => cb(null, '/fake.ad.url'),
           adCancelTimeout: 3000
         });
 
@@ -355,7 +355,7 @@ describe('videojs.vast plugin', () => {
 
         player = videojs(document.createElement('video'), {});
         player.vastClient({
-          adTagUrl: utilities.echoFn('/fake.ad.url'),
+          getAdTag: (cb) => cb(null, '/fake.ad.url'),
           adCancelTimeout: 3000
         });
         player.on('vast.adsCancel', adsCancelSpy);
@@ -502,7 +502,7 @@ describe('videojs.vast plugin', () => {
       sinon.stub(vastUtil, 'track').returns(null);
       sinon.spy(VASTIntegrator.prototype, 'playAd');
       player = videojs(document.createElement('video'), {});
-      player.vastClient({adTagUrl: utilities.echoFn('/fake.ad.url')});
+      player.vastClient({getAdTag: (cb) => cb(null, '/fake.ad.url')});
       getVASTResponse = sinon.spy(VASTClient.prototype, 'getVASTResponse');
       player.trigger('vast.firstPlay');
       this.clock.tick();
@@ -895,7 +895,7 @@ describe('videojs.vast plugin', () => {
       player.on('vast.adError', errorSpy);
 
       player.vastClient({
-        adTagUrl: 'http://fake.ad.url',
+        adTag: 'http://fake.ad.url',
         iosPrerollCancelTimeout: 1000
       });
       player.trigger('vast.firstPlay');
@@ -911,7 +911,7 @@ describe('videojs.vast plugin', () => {
       sinon.stub(player, 'currentTime').returns(500);
       player.on('vast.adError', errorSpy);
       player.vastClient({
-        adTagUrl: 'http://fake.ad.url',
+        adTag: 'http://fake.ad.url',
         iosPrerollCancelTimeout: 1000
       });
       player.trigger('vast.firstPlay');
