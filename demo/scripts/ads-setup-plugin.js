@@ -13,8 +13,8 @@ module.exports = function molVastSetup (opts) {
     vpaidFlashLoaderPath: '/VPAIDFlash.swf'
   };
 
-  if (options.adTagUrl) {
-    pluginSettings.adTagUrl = options.adTagUrl;
+  if (options.adTag) {
+    pluginSettings.adTag = options.adTag;
   }
 
   if (options.adTagXML) {

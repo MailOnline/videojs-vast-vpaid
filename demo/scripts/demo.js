@@ -92,9 +92,9 @@ dom.onReady(() => {
         };
 
         if (mode === 'TAG') {
-          adPluginOpts.plugins['ads-setup'].adTagUrl = tagEl.value;
+          adPluginOpts.plugins['ads-setup'].adTag = tagEl.value;
         } else if (mode === 'XML') {
-          adPluginOpts.plugins['ads-setup'].adTagUrl = xmlEl.value;
+          adPluginOpts.plugins['ads-setup'].adTag = xmlEl.value;
         } else {
           adPluginOpts.plugins['ads-setup'].adTagXML = (done) => {
             setTimeout(() => {
