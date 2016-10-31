@@ -152,7 +152,7 @@ describe('VASTClient', () => {
         assertError(callback, 'on VASTClient.getVASTAd.validateVASTTree, not supported VAST version "1"', 102);
       });
 
-      it('must complain if you don\'t pass a proper adTagUrl', () => {
+      it('must complain if you don\'t pass a proper adTag', () => {
         assert.throws(() => {
           vast.getVASTResponse();
         }, VASTError, 'on VASTClient.getVASTResponse, missing ad tag URL');
@@ -255,10 +255,10 @@ describe('VASTClient', () => {
     });
 
     describe('_requestVASTXml', () => {
-      let xhr, requests, adTagUrl;
+      let xhr, requests, adTag;
 
       beforeEach(() => {
-        adTagUrl = 'http://foo.bar';
+        adTag = 'http://foo.bar';
         xhr = sinon.useFakeXMLHttpRequest();
         requests = [];
         xhr.onCreate = function (xhr) {
@@ -270,8 +270,8 @@ describe('VASTClient', () => {
         xhr.restore();
       });
 
-      it('must request the VAST response using the passed adTagUrl', () => {
-        vast._requestVASTXml(adTagUrl, utilities.noop);
+      it('must request the VAST response using the passed adTag', () => {
+        vast._requestVASTXml(adTag, utilities.noop);
         assert.equal(1, requests.length);
         assert.equal('http://foo.bar/', requests[0].url);
       });
@@ -283,7 +283,7 @@ describe('VASTClient', () => {
           throw new Error('Error creating xhr');
         };
 
-        vast._requestVASTXml(adTagUrl, callback);
+        vast._requestVASTXml(adTag, callback);
 
         sinon.assert.calledWithExactly(callback, sinon.match(Error));
         assert.equal(testUtils.firstArg(callback).message, 'Error creating xhr');
@@ -293,7 +293,7 @@ describe('VASTClient', () => {
         it('must call the callback with an explanatory error and the VASTResponse', () => {
           const callback = sinon.spy();
 
-          vast._requestVASTXml(adTagUrl, callback);
+          vast._requestVASTXml(adTag, callback);
           requests[0].respond(404, {'Content-Type': 'application/json'}, '404 Not found');
 
           assertError(callback, 'on VASTClient.requestVastXML, HTTP request error with status \'404\'', 301);
@@ -304,14 +304,14 @@ describe('VASTClient', () => {
         it('must pass the response and the data object to the callback', () => {
           const callback = sinon.spy();
 
-          vast._requestVASTXml(adTagUrl, callback);
+          vast._requestVASTXml(adTag, callback);
           requests[0].respond(200, {'Content-Type': 'application/json'}, vastAdXML());
           sinon.assert.calledWithExactly(callback, null, vastAdXML());
         });
       });
 
-      describe('with adTagUrl fn', () => {
-        it('must request the XML using the passed adTagUrl function', () => {
+      describe('with adTag fn', () => {
+        it('must request the XML using the passed adTag function', () => {
           const spy = sinon.spy();
 
           vast._requestVASTXml(spy, utilities.noop);
@@ -373,19 +373,19 @@ describe('VASTClient', () => {
         vast._trackError.restore();
       });
 
-      it('must request the ad tree with passed adTagUrl', function () {
-        const adTagUrl = 'http://foo.bar/';
+      it('must request the ad tree with passed adTag', function () {
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, utilities.noop);
+        vast._getVASTAd(adTag, utilities.noop);
         this.clock.tick();
         assert.equal(1, requests.length);
-        assert.equal(adTagUrl, requests[0].url);
+        assert.equal(adTag, requests[0].url);
       });
 
       it('must pass a 301 error to the callback if there was an error with the request', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
         requests[0].respond(404, {'Content-Type': 'text'}, '404 Not found');
         this.clock.tick();
@@ -393,9 +393,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a 100 error to the callback if there was an error parsing the XML', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
         requests[0].respond(200, {'Content-Type': 'application/xml'}, 'wrong xml');
         this.clock.tick();
@@ -404,9 +404,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a 303 error to the callback if there was no ad on the returned VAST XML', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
         requests[0].respond(200, {'Content-Type': 'application/xml'}, vastXML());
         this.clock.tick();
@@ -415,9 +415,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a 102 error to the callback and track it if the returned vast ad version is not supported', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
           '<VAST version="1.0"><Ad></Ad></VAST>');
@@ -427,9 +427,9 @@ describe('VASTClient', () => {
       });
 
       it('must request the next ad if the adTree returned a wrapper', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
           '<VAST version="2.0"><Ad><Wrapper><VASTAdTagURI><![CDATA[http://vastadtaguri.com]]></VASTAdTagURI><Error><![CDATA[http://t3.liverail.com/?metric=error&erc=[ERRORCODE]]]></Error></Wrapper></Ad></VAST>');
@@ -439,9 +439,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a 301 error to the callback and track it if there was an error with the request of the next ad in the chain', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -456,9 +456,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a a 100 error to the callback and track it if there was an error parsing the next ad in the chain', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -473,9 +473,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a a 100 error to the callback and track it if there was an error building the next ad in the chain', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -494,9 +494,9 @@ describe('VASTClient', () => {
 
       it('must pass a 302 error to the callback and track it if the adChain reached the configured WRAPPER_LIMIT', function () {
         vast.WRAPPER_LIMIT = 3;
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -516,9 +516,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a 101 error to the callback and track it if one of the ads on the adChain returned an inline and a wrapper on the same ad', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -534,9 +534,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass a 101 error to the callback and track it if the ad in the chain had neither a wrapper nor an inline', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -552,9 +552,9 @@ describe('VASTClient', () => {
       });
 
       it('must return a 101 error to the callback and track it if one of the ads in the chain contains an inline with no creative', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -570,9 +570,9 @@ describe('VASTClient', () => {
       });
 
       it('must return a 101 error to the callback and track it if one of the ads in the chain is a wrapper with no VASTAdTagURI', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -588,9 +588,9 @@ describe('VASTClient', () => {
       });
 
       it('must request the next ad in the waterfall if the previous ad chain returned an error', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -615,9 +615,9 @@ describe('VASTClient', () => {
       });
 
       it('must pass the latest error from the adChain to the callback but it must track all the errors from all the adchains in the VAST waterfall', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +
@@ -635,9 +635,9 @@ describe('VASTClient', () => {
       });
 
       it('must not pass an error to the callback if one of the adChains in the VAST waterfall returned a valid ad', function () {
-        const adTagUrl = 'http://foo.bar/';
+        const adTag = 'http://foo.bar/';
 
-        vast._getVASTAd(adTagUrl, callback);
+        vast._getVASTAd(adTag, callback);
         this.clock.tick();
 
         requests[0].respond(200, {'Content-Type': 'application/xml'}, '<?xml version="1.0" encoding="utf-8"?>' +

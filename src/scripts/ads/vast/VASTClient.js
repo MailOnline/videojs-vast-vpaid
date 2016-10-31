@@ -21,10 +21,10 @@ function VASTClient (options) {
   this.errorURLMacros = [];
 }
 
-VASTClient.prototype.getVASTResponse = function getVASTResponse (adTagUrl, callback) {
+VASTClient.prototype.getVASTResponse = function getVASTResponse (adTag, callback) {
   const that = this;
 
-  const error = sanityCheck(adTagUrl, callback);
+  const error = sanityCheck(adTag, callback);
 
   if (error) {
     if (utilities.isFunction(callback)) {
@@ -34,7 +34,7 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse (adTagUrl, callb
   }
 
   async.waterfall([
-    this._getVASTAd.bind(this, adTagUrl),
+    this._getVASTAd.bind(this, adTag),
     buildVASTResponse
   ],
     callback);
@@ -50,8 +50,8 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse (adTagUrl, callb
     }
   }
 
-  function sanityCheck (adTagUrl, cb) {
-    if (!adTagUrl) {
+  function sanityCheck (adTag, cb) {
+    if (!adTag) {
       return new VASTError('on VASTClient.getVASTResponse, missing ad tag URL');
     }
 
@@ -61,10 +61,10 @@ VASTClient.prototype.getVASTResponse = function getVASTResponse (adTagUrl, callb
   }
 };
 
-VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
+VASTClient.prototype._getVASTAd = function (adTag, callback) {
   const that = this;
 
-  getAdWaterfall(adTagUrl, (error, vastTree) => {
+  getAdWaterfall(adTag, (error, vastTree) => {
     const waterfallAds = vastTree && utilities.isArray(vastTree.ads) ? vastTree.ads : null;
 
     if (error) {
@@ -91,8 +91,8 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   });
 
   /** * Local functions ***/
-  function getAdWaterfall (adTagUrl, callback) {
-    const requestVastXML = that._requestVASTXml.bind(that, adTagUrl);
+  function getAdWaterfall (adTag, callback) {
+    const requestVastXML = that._requestVASTXml.bind(that, adTag);
 
     async.waterfall([
       requestVastXML,
@@ -134,17 +134,17 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     return null;
   }
 
-  function getAd (adTagUrl, adChain, callback) {
+  function getAd (adTag, adChain, callback) {
     if (adChain.length >= that.WRAPPER_LIMIT) {
       return callback(new VASTError('on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is ' + that.WRAPPER_LIMIT + ')', 302), adChain);
     }
 
     async.waterfall([
       function (next) {
-        if (utilities.isString(adTagUrl)) {
-          requestVASTAd(adTagUrl, next);
+        if (utilities.isString(adTag)) {
+          requestVASTAd(adTag, next);
         } else {
-          next(null, adTagUrl);
+          next(null, adTag);
         }
       },
       buildAd
@@ -199,8 +199,8 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     return null;
   }
 
-  function requestVASTAd (adTagUrl, callback) {
-    that._requestVASTXml(adTagUrl, (error, xmlStr) => {
+  function requestVASTAd (adTag, callback) {
+    that._requestVASTXml(adTag, (error, xmlStr) => {
       if (error) {
         return callback(error);
       }
@@ -215,13 +215,13 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   }
 };
 
-VASTClient.prototype._requestVASTXml = function requestVASTXml (adTagUrl, callback) {
+VASTClient.prototype._requestVASTXml = function requestVASTXml (adTag, callback) {
   try {
-    if (utilities.isFunction(adTagUrl)) {
-      adTagUrl(requestHandler);
+    if (utilities.isFunction(adTag)) {
+      adTag(requestHandler);
     } else {
-      logger.info('requesting adTagUrl: ' + adTagUrl);
-      http.get(adTagUrl, requestHandler, {
+      logger.info('requesting adTag: ' + adTag);
+      http.get(adTag, requestHandler, {
         withCredentials: true
       });
     }
