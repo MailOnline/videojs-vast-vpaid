@@ -457,8 +457,8 @@ module.exports = function molVastSetup(opts) {
     vpaidFlashLoaderPath: '/VPAIDFlash.swf'
   };
 
-  if (options.adTagUrl) {
-    pluginSettings.adTagUrl = options.adTagUrl;
+  if (options.adTag) {
+    pluginSettings.adTag = options.adTag;
   }
 
   if (options.adTagXML) {
@@ -933,9 +933,9 @@ dom.onReady(function () {
         };
 
         if (mode === 'TAG') {
-          adPluginOpts.plugins['ads-setup'].adTagUrl = tagEl.value;
+          adPluginOpts.plugins['ads-setup'].adTag = tagEl.value;
         } else if (mode === 'XML') {
-          adPluginOpts.plugins['ads-setup'].adTagUrl = xmlEl.value;
+          adPluginOpts.plugins['ads-setup'].adTag = xmlEl.value;
         } else {
           adPluginOpts.plugins['ads-setup'].adTagXML = function (done) {
             setTimeout(function () {
