@@ -26,7 +26,7 @@ async.iterator = function (tasks) {
 
 
 async.waterfall = function (tasks, callback) {
-  callback = callback || function () { };
+  callback = utilities.once(callback || utilities.noop);
   if (!utilities.isArray(tasks)) {
     var err = new Error('First argument to waterfall must be an array of functions');
     return callback(err);
@@ -38,14 +38,13 @@ async.waterfall = function (tasks, callback) {
     return function (err) {
       if (err) {
         callback.apply(null, arguments);
-        callback = function () {
-        };
+        callback = utilities.noop;
       }
       else {
         var args = Array.prototype.slice.call(arguments, 1);
         var next = iterator.next();
         if (next) {
-          args.push(wrapIterator(next));
+          args.push(utilities.once(wrapIterator(next)));
         }
         else {
           args.push(callback);

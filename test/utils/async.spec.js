@@ -88,10 +88,12 @@ describe("async", function () {
 
         function startCounter(next) {
           next(null, 0);
+          next(null, 0); // Test multiple callbacks
         }
 
         function increaseCounter(counter, next) {
           next(null, counter + 1);
+          next(null, counter + 1); // Test multiple callbacks
         }
 
         async.waterfall([
