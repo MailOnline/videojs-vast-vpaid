@@ -287,6 +287,15 @@ function isAndroid() {
   return /Android/.test(utilities._UA);
 }
 
+function once(fn) {
+  return function () {
+    if (fn === null) return;
+    var callFn = fn;
+    fn = null;
+    callFn.apply(this, arguments);
+  };
+}
+
 var utilities = {
   _UA: navigator.userAgent,
   noop: noop,
@@ -321,7 +330,8 @@ var utilities = {
   isIDevice: isIDevice,
   isMobile: isMobile,
   isIPhone: isIPhone,
-  isAndroid: isAndroid
+  isAndroid: isAndroid,
+  once: once
 };
 
 module.exports = utilities;
