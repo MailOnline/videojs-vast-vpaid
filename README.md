@@ -117,12 +117,26 @@ if you want to update to videojs 5 just follow the instruction in the **Integrat
 ## Options
 
 #### adTagUrl
-Use it to pass the ad media tag, it can be a string containing the Media tag url or a function that will return the Media tag whenever called;
+Use it to pass the ad media tag, it can be a string containing the Media tag url or a function that will return the Media tag whenever called
+or an array of Media tags. If the first Media tag returns no ads or any other error then it will continue to the next Media tag;
 On initialization, the plugin will call the function and store the returned Media tag to request the VAST/VPAID ads
 ```javascript
 // Hardcoded Media Tag
 var vastAd = player.vastClient({
     adTagUrl: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+    ...
+});
+
+// Multiple providers / media tags
+var vastAd = player.vastClient({
+    adTagUrl: [
+      // This will be the first one to be called
+      "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+
+      // If the previous one failed, this one will be called
+      "https://search.spotxchange.com/vast/2.00/[channel_id]?VPAID=js....",
+    ],
+
     ...
 });
 ```
