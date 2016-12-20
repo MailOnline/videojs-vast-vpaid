@@ -67,20 +67,27 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
   var that = this;
 
   getAdWaterfall(adTagUrl, function (error, vastTree) {
-    var waterfallAds = vastTree && utilities.isArray(vastTree.ads) ? vastTree.ads : null;
+    that.waterfallAds=[];
+    var adsTree = vastTree && utilities.isArray(vastTree.ads) ? vastTree.ads : null;
+
     if (error) {
-      that._trackError(error, waterfallAds);
-      return callback(error, waterfallAds);
+      that._trackError(error, adsTree);
+      return callback(error, adsTree);
+    }
+    var adTree = adsTree.shift() ;
+    for(var i=0; i<adsTree.length; i++ ){ 
+      that.waterfallAds.push([adsTree[i], []]);
     }
 
-    getAd(waterfallAds.shift(), [], waterfallHandler);
+    getAd(adTree, [], waterfallHandler);
 
     /*** Local functions ***/
     function waterfallHandler(error, adChain) {
       if (error) {
         that._trackError(error, adChain);
-        if (waterfallAds.length > 0) {
-          getAd(waterfallAds.shift(),[], waterfallHandler);
+        if (that.waterfallAds.length > 0) {
+          var ad = that.waterfallAds.shift() ;
+          getAd(ad[0], ad[1], waterfallHandler);
         } else {
           callback(error, adChain);
         }
@@ -137,7 +144,8 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
     if (adChain.length >= that.WRAPPER_LIMIT) {
       return callback(new VASTError("on VASTClient.getVASTAd.getAd, players wrapper limit reached (the limit is " + that.WRAPPER_LIMIT + ")", 302), adChain);
     }
-
+    that.adChain = adChain ;
+    
     async.waterfall([
       function (next) {
         if (utilities.isString(adTagUrl)) {
@@ -166,8 +174,23 @@ VASTClient.prototype._getVASTAd = function (adTagUrl, callback) {
 
   function buildAd(adJxonTree, callback) {
     try {
-      var ad = new Ad(adJxonTree);
-      callback(validateAd(ad), ad);
+
+      if(utilities.isArray(adJxonTree)){
+
+        var adJxonTreeShild = adJxonTree.shift();
+
+        var length = adJxonTree.length ;
+        for(var i=0; i<length; i++ ){ 
+          that.waterfallAds.push([adJxonTree[i], that.adChain]);
+        }
+       var ad = new Ad(adJxonTreeShild);
+          callback(validateAd(ad), ad);
+
+      }else{
+        var newAd = new Ad(adJxonTree);
+        callback(validateAd(newAd), newAd);
+      }
+
     } catch (e) {
       callback(new VASTError('on VASTClient.getVASTAd.buildAd, error parsing xml', 100), null);
     }
