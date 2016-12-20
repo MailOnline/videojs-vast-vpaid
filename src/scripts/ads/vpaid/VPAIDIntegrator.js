@@ -225,6 +225,9 @@ VPAIDIntegrator.prototype._handshake = function handshake(adUnit, vastResponse, 
   }
 
   function major(version) {
+    if (utilities.isNumber(version)) {
+      return Math.floor(version);
+    }
     var parts = version.split('.');
     return parseInt(parts[0], 10);
   }
