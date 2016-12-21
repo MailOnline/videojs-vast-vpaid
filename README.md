@@ -191,6 +191,10 @@ Flag to indicate if we must play an ad whenever possible. If set to true the plu
 Number of milliseconds for the ad to start before canceling it.
 ```Defaults to 3000ms```
 
+#### responseTimeout
+Number of milliseconds to wait for a VPAID response before canceling the ad.
+```Defaults to 5000ms```
+
 #### adsEnabled
 Flag to enable/disable the ads.
 ```Defaults to true```
