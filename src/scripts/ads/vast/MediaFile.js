@@ -1,6 +1,7 @@
 
 
 const xml = require('../../utils/xml');
+const urlUtils = require('../../utils/urlUtils');
 const vastUtil = require('./vastUtil');
 
 const attributesList = [
@@ -20,6 +21,8 @@ const attributesList = [
   'maintainAspectRatio',
   'apiFramework'
 ];
+
+const pageProtocol = window.location && urlUtils.urlParts(window.location.href).protocol;
 
 function MediaFile (mediaFileJTree) {
   if (!(this instanceof MediaFile)) {
@@ -45,7 +48,9 @@ MediaFile.prototype.isSupported = function () {
     return vastUtil.isFlashSupported();
   }
 
-  return true;
+
+
+  return urlUtils.urlParts(this.src).protocol === pageProtocol;
 };
 
 module.exports = MediaFile;

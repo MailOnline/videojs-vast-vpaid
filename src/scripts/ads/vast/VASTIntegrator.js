@@ -69,15 +69,16 @@ VASTIntegrator.prototype._selectAdSource = function selectAdSource (response, ca
   let source;
 
   const playerWidth = dom.getDimension(this.player.el()).width;
+  const mediaFiles = response.mediaFiles.filter((mediaFile) => mediaFile.isSupported());
 
-  response.mediaFiles.sort((a, b) => {
+  mediaFiles.sort((a, b) => {
     const deltaA = Math.abs(playerWidth - a.width);
     const deltaB = Math.abs(playerWidth - b.width);
 
     return deltaA - deltaB;
   });
 
-  source = this.player.selectSource(response.mediaFiles).source;
+  source = this.player.selectSource(mediaFiles).source;
 
   if (source) {
     logger.info('selected source: ', source);

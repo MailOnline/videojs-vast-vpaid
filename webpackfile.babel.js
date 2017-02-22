@@ -18,11 +18,11 @@ export default {
     loaders: [
       {
         test: /\.swf$/,
-        loader: 'file?name=[name].[ext]'
+        loader: 'file-loader?name=[name].[ext]'
       },
       {
         test: /\.js$/,
-        loader: 'babel',
+        loader: 'babel-loader',
         include: [
           path.join(__dirname, 'node_modules/vpaid-flash-client/js'),
           path.join(__dirname, 'src'),
@@ -36,9 +36,9 @@ export default {
       {
         test: /\.scss$/,
         loaders: [
-          'style',
+          'style-loader',
           {
-            loader: 'css',
+            loader: 'css-loader',
             query: {
               modules: false,
               importLoaders: 1,
@@ -57,8 +57,8 @@ export default {
               cascade: false
             }
           },
-          'resolve-url',
-          'sass'
+          'resolve-url-loader',
+          'sass-loader'
         ]
       }
     ]

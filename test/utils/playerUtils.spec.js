@@ -561,6 +561,7 @@ describe('playerUtils.prepareForAds', () => {
 
           playerUtils.prepareForAds(player);
           player.play();
+          player.trigger('play');
 
           // We fake that an ad is playing
           player.vast = {adUnit: fakeAdUnit};
