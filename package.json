@@ -1,6 +1,6 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "3.0.0-beta.4",
+  "version": "3.0.0-beta.7",
   "description": "VAST plugin to use with video.js",
   "main": "./src/scripts/videojs_5.vast.vpaid.js",
   "repository": {
