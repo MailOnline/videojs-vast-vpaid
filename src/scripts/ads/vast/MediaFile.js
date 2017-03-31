@@ -48,9 +48,11 @@ MediaFile.prototype.isSupported = function () {
     return vastUtil.isFlashSupported();
   }
 
+  if (pageProtocol === 'https') {
+    return urlUtils.urlParts(this.src).protocol === pageProtocol;
+  }
 
-
-  return urlUtils.urlParts(this.src).protocol === pageProtocol;
+  return true;
 };
 
 module.exports = MediaFile;
