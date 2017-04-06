@@ -247,6 +247,10 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   var tracker = this._createVASTTracker(adUnitSrc, vastResponse);
   var player = this.player;
   var that = this;
+  var previouslyMuted;
+  player.on('timeupdate', trackProgress);
+  player.on('volumechange', trackVolumeChange);
+  player.on('vast.adStart', trackImpressions);
 
   adUnit.on('AdSkipped', function () {
     player.trigger('vpaid.AdSkipped');
@@ -413,6 +417,27 @@ VPAIDIntegrator.prototype._setupEvents = function (adUnit, vastResponse, next) {
   function resumeAdUnit() {
     adUnit.resumeAd(utilities.noop);
   }
+
+  function trackProgress() {
+    var currentTimeInMs = player.currentTime() * 1000;
+    tracker.trackProgress(currentTimeInMs);
+  }
+
+  function trackImpressions() {
+    tracker.trackImpressions();
+    tracker.trackCreativeView();
+  }
+
+  function trackVolumeChange() {
+    var muted = player.muted();
+    if (muted) {
+      tracker.trackMute();
+    } else if (previouslyMuted) {
+      tracker.trackUnmute();
+    }
+    previouslyMuted = muted;
+  }
+
 };
 
 VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next) {
