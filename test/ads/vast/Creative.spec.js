@@ -5,6 +5,7 @@ describe("Creative", function(){
 
   var Creative = require('ads/vast/Creative');
   var Linear = require('ads/vast/Linear');
+  var NonLinear = require('ads/vast/NonLinear');
 
   var xml = require('utils/xml');
 
@@ -45,6 +46,19 @@ describe("Creative", function(){
       '</Creative>';
     var creative = new Creative(xml.toJXONTree(creativeXML));
     assert.instanceOf(creative.linear, Linear);
+  });
+
+  it("must set nonLinearAds if passed as part of the jxonTreeData", function(){
+    var creativeXML = '<Creative apiFramework="fooFramework">' +
+        '<NonLinearAds>' +
+        '<NonLinear>' +
+        '</NonLinear>'+
+        '</NonLinearAds>' +
+        '</Creative>';
+    var creative = new Creative(xml.toJXONTree(creativeXML));
+    creative.nonLinearAds.forEach(function(nonLinear) {
+      assert.instanceOf(nonLinear, NonLinear);
+    });
   });
 
   describe("companionAds", function() {

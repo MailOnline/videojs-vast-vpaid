@@ -96,7 +96,7 @@ module.exports = function VASTPlugin(options) {
   player.on('vast.reset', function () {
     //If we are reseting the plugin, we don't want to restore the content
     snapshot = null;
-    cancelAds();
+    cancelPrerollAds();
   });
 
   player.vast = {
@@ -236,7 +236,7 @@ module.exports = function VASTPlugin(options) {
 
   }
 
-  function cancelAds() {
+  function cancelPrerollAds() {
     player.trigger('vast.adsCancel');
     adsCanceled = true;
   }
@@ -275,6 +275,10 @@ module.exports = function VASTPlugin(options) {
     }
 
     player.vast.vastResponse = vastResponse;
+    if (!vastResponse.hasLinear() && vastResponse.hasNonLinear()) {
+      cancelPrerollAds();
+      return;
+    }
     logger.debug ("calling adIntegrator.playAd() with vastResponse:", vastResponse);
     player.vast.adUnit = adIntegrator.playAd(vastResponse, callback);
 
@@ -337,7 +341,7 @@ module.exports = function VASTPlugin(options) {
 
   function trackAdError(error, vastResponse) {
     player.trigger({type: 'vast.adError', error: error});
-    cancelAds();
+    cancelPrerollAds();
     logger.error ('AD ERROR:', error.message, error, vastResponse);
   }
 

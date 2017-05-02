@@ -2,6 +2,7 @@
 
 var Linear = require('./Linear');
 var Companion = require('./Companion');
+var NonLinear = require('./NonLinear');
 var utilities = require('../../utils/utilityFunctions');
 
 function Creative(creativeJTree) {
@@ -28,6 +29,19 @@ function Creative(creativeJTree) {
       });
     }
     this.companionAds = companions;
+  }
+
+  if (creativeJTree.nonLinearAds && creativeJTree.nonLinearAds.nonLinear) {
+    var nonLinears = [];
+    var nonLinearAds = creativeJTree.nonLinearAds && creativeJTree.nonLinearAds.nonLinear;
+    if (utilities.isDefined(nonLinearAds)) {
+      nonLinearAds = utilities.isArray(nonLinearAds) ? nonLinearAds : [nonLinearAds];
+      nonLinearAds.forEach(function (nonLinearAdsChild) {
+        nonLinears.push(new NonLinear(nonLinearAdsChild));
+      });
+    }
+
+    this.nonLinearAds = nonLinears;
   }
 }
 

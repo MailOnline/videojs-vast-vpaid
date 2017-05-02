@@ -3,6 +3,7 @@
 var Ad = require('./Ad');
 var VideoClicks = require('./VideoClicks');
 var Linear = require('./Linear');
+var NonLinear = require('./NonLinear');
 var InLine = require('./InLine');
 var Wrapper = require('./Wrapper');
 
@@ -16,6 +17,7 @@ function VASTResponse() {
   }
 
   this._linearAdded = false;
+  this._nonLinearAdded = false;
   this.ads = [];
   this.errorURLMacros = [];
   this.impressions = [];
@@ -134,6 +136,12 @@ VASTResponse.prototype._addLinear = function (linear) {
   }
 };
 
+VASTResponse.prototype._addNonLinearAd = function (nonLinear) {
+  if (nonLinear instanceof NonLinear) {
+    this._nonLinearAdded = true;
+  }
+};
+
 VASTResponse.prototype._addInLine = function (inLine) {
   var that = this;
 
@@ -145,6 +153,11 @@ VASTResponse.prototype._addInLine = function (inLine) {
     inLine.creatives.forEach(function (creative) {
       if (creative.linear) {
         that._addLinear(creative.linear);
+      }
+      if (creative.nonLinearAds) {
+        creative.nonLinearAds.forEach(function (nonLinear) {
+          that._addNonLinearAd(nonLinear);
+        });
       }
     });
   }
@@ -170,6 +183,10 @@ VASTResponse.prototype._addWrapper = function (wrapper) {
 
 VASTResponse.prototype.hasLinear = function(){
   return this._linearAdded;
+};
+
+VASTResponse.prototype.hasNonLinear = function(){
+  return this._nonLinearAdded;
 };
 
 function appendToArray(array, items) {
