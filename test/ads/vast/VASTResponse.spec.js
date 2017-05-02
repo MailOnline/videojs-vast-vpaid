@@ -5,6 +5,7 @@ describe("VASTResponse", function () {
   var Ad = require('ads/vast/Ad');
   var InLine = require('ads/vast/InLine');
   var Linear = require('ads/vast/Linear');
+  var NonLinear = require('ads/vast/NonLinear');
   var TrackingEvent = require('ads/vast/TrackingEvent');
   var VASTResponse = require('ads/vast/VASTResponse');
   var VideoClicks = require('ads/vast/VideoClicks');
@@ -144,6 +145,18 @@ describe("VASTResponse", function () {
         var linear = new Linear(xml.toJXONTree(linearXML));
         response._addLinear(linear);
         assert.isTrue(response.hasLinear());
+      });
+    });
+
+    describe("hasNonLinear", function(){
+      it("must return false by default", function(){
+        assert.isFalse(response.hasNonLinear());
+      });
+
+      it("must return true if you add nonlinear ad to the response", function(){
+        var nonLinear = new NonLinear(xml.toJXONTree('<NonLinear></NonLinear>'));
+        response._addNonLinearAd(nonLinear);
+        assert.isTrue(response.hasNonLinear());
       });
     });
 

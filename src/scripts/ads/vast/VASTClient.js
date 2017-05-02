@@ -256,11 +256,11 @@ VASTClient.prototype._buildVASTResponse = function buildVASTResponse(adsChain) {
   function validateResponse(response) {
     var progressEvents = response.trackingEvents.progress;
 
-    if (!response.hasLinear()) {
+    if (!response.hasLinear() && !response.hasNonLinear()) {
       throw new VASTError("on VASTClient._buildVASTResponse, Received an Ad type that is not supported", 200);
     }
 
-    if (response.duration === undefined) {
+    if (response.duration === undefined && !response.hasNonLinear()) {
       throw new VASTError("on VASTClient._buildVASTResponse, Missing duration field in VAST response", 101);
     }
 
