@@ -441,32 +441,22 @@ describe('playerUtils.prepareForAds', () => {
           utilities.isMobile.restore();
         });
 
-        it('must mute the player when you first play the video (player\'s play method)', () => {
+        it('make sure volume and mute state are set on first play', () => {
           playerUtils.prepareForAds(player);
           player.volume(1);
           player.muted(false);
           player.play();
-          assert.isTrue(player.muted());
-        });
 
-        it('must restore the muted volume on  \'vast.firstPlay\' evt', () => {
-          playerUtils.prepareForAds(player);
-          player.volume(1);
-          player.muted(false);
-          player.play();
-          assert.isTrue(player.muted());
-
-          player.trigger('vast.firstPlay');
           assert.isFalse(player.muted());
           assert.equal(player.volume(), 1);
         });
 
         it('must restore the muted volume on  \'vast.reset\' evt', () => {
           playerUtils.prepareForAds(player);
+
           player.volume(1);
           player.muted(false);
           player.play();
-          assert.isTrue(player.muted());
 
           player.trigger('vast.reset');
           assert.isFalse(player.muted());
@@ -481,7 +471,6 @@ describe('playerUtils.prepareForAds', () => {
 
           playerUtils.prepareForAds(player);
           player.play();
-          player.trigger('vast.firstPlay');
           sinon.assert.calledWithExactly(player.currentTime, 0);
         });
 
@@ -504,7 +493,6 @@ describe('playerUtils.prepareForAds', () => {
             sinon.assert.notCalled(player.currentTime);
 
             playerUtils.prepareForAds(player);
-            player.trigger('vast.firstPlay');
             sinon.assert.neverCalledWith(player.currentTime, 0);
           });
 
@@ -514,9 +502,7 @@ describe('playerUtils.prepareForAds', () => {
             player.volume(1);
             player.muted(false);
             player.play();
-            assert.isFalse(player.muted());
 
-            player.trigger('vast.firstPlay');
             assert.isFalse(player.muted());
             assert.equal(player.volume(), 1);
           });

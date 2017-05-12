@@ -195,7 +195,6 @@ playerUtils.isReadyToResume = function (player) {
 playerUtils.prepareForAds = function (player) {
   const blackPoster = player.addChild('blackPoster');
   let _firstPlay = true;
-  let _firstPlayInProgress = false;
   let volumeSnapshot;
 
 
@@ -245,17 +244,13 @@ playerUtils.prepareForAds = function (player) {
 
       /** * local functions ***/
       function firstPlay () {
-        if (_firstPlayInProgress) {
-          return;
-        }
-
-        _firstPlayInProgress = true;
         if (!utilities.isIPhone()) {
           volumeSnapshot = saveVolumeSnapshot();
           player.muted(true);
         }
 
         origPlay.apply(that, arguments);
+        tryToTriggerFirstPlay();
       }
 
       function resume (callOrigPlay) {
@@ -311,7 +306,6 @@ playerUtils.prepareForAds = function (player) {
   function tryToTriggerFirstPlay () {
     if (isFirstPlay()) {
       _firstPlay = false;
-      _firstPlayInProgress = false;
       player.trigger('vast.firstPlay');
     }
   }

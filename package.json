@@ -28,6 +28,7 @@
     "lint-styles": "stylelint './src/**/*.{scss,sass,css}'",
     "lint-scripts": "./node_modules/.bin/eslint '{src/**,test/**,demo/**}/*.js'",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post",
+    "postinstall": "bower install",
     "precommit": "npm run lint",
     "prepush": "npm test",
     "start": "npm run build-demo && webpack-dev-server --config ./webpackfile.babel.js --content-base ./dist"
