@@ -54,7 +54,7 @@ if you need to support ie8 add this after the es5-shim.js script
 <script src="/path/to/ie8fix.js"></script>
 ```
 
-**4- Create you own ads plugin to pass an add media tag to the plugin**
+**4- Create you own ads plugin to pass an ad media tag to the plugin**
 
 Below you have a simple ads-setup-plugin
 
