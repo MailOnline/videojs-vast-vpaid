@@ -18,12 +18,6 @@ To integrate the plugin with videoJs you need to:
 
 **2- If you don't have videoJs, add it's scripts and stylesheet to your page**
 ```html
-<!-- Video.js 4 -->
-<link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
-<script src="http://vjs.zencdn.net/4.12/video.js"></script>
-```
-or
-```html
 <!-- Video.js 5 -->
 <link href="http://vjs.zencdn.net/5.4.6/video-js.css" rel="stylesheet">
 <script src="http://vjs.zencdn.net/5.4.6/video.js"></script>
@@ -36,22 +30,8 @@ or
 ```
 and the videojs version specific plugin
 ```html
-<!-- Video.js 4 -->
-<script src="/path/to/videojs_4.vast.vpaid.min.js"></script>
-```
-or
-```html
 <!-- Video.js 5 -->
-<script src="/path/to/videojs_5.vast.vpaid.min.js"></script>
-```
-
-if you need to support older browsers that don't support ES5 add this to your page before the plugin script
-```html
-<script src="/path/to/es5-shim.js"></script>
-```
-if you need to support ie8 add this after the es5-shim.js script
-```html
-<script src="/path/to/ie8fix.js"></script>
+<script src="/path/to/videojs_6.vast.vpaid.min.js"></script>
 ```
 
 **4- Create you own ads plugin to pass an add media tag to the plugin**
@@ -59,7 +39,7 @@ if you need to support ie8 add this after the es5-shim.js script
 Below you have a simple ads-setup-plugin
 
 ```javascript
-videojs.plugin('ads-setup', function (opts) {
+videojs.registerPlugin('ads-setup', function (opts) {
     var player = this;
     var adsCancelTimeout = 3000;
 
@@ -105,8 +85,6 @@ You can also configure the vast plugin using the data-setup attribute
 
 if you will still use videojs version 4 you need to
 * download the new bin folder
-* replace, in your pages, ```videojs-vast-vpaid.js```with  ```videojs_4.vast.vpaid.js```
- *( or ```videojs-vast-vpaid.min.js``` with ```videojs_4.vast.vpaid.min.js```  if you were using the minified version)*
 * replace, in your pages,  ```videojs-vast-vpaid.css``` with  ```videojs.vast.vpaid.css```
  *( or ```videojs-vast-vpaid.min.css``` with ```videojs.vast.vpaid.min.css```  if you were using the minified version)*
 

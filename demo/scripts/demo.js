@@ -2,7 +2,7 @@ var dom = require('./miniDom');
 var adsSetupPlugin = require('./ads-setup-plugin');
 var messages = require('./messages');
 
-videojs.plugin('ads-setup', adsSetupPlugin);
+videojs.registerPlugin('ads-setup', adsSetupPlugin);
 
 dom.onReady(function() {
   var vastForm = document.querySelector('form#vast-vpaid-form');

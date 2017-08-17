@@ -7,3 +7,4 @@ coverage/
 *.swp
 *.swo
 .publish/
+.vscode/

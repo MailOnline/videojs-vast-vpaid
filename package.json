@@ -13,7 +13,6 @@
   "keywords": [
     "vpaid",
     "html5",
-    "flash",
     "vast",
     "videojs",
     "js",
@@ -21,15 +20,9 @@
     "iab"
   ],
   "scripts": {
-    "test": "gulp ci-test",
-    "prepare-hooks": "chmod u+x scripts/*",
-    "setup-hooks": "./scripts/setup-hooks",
-    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s",
-    "postinstall": "bower install"
+    "test": "gulp ci-test"
   },
-  "author": [
-    "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
-  ],
+  "author": "Carlos Serrano <carlos.pastor@mailonline.co.uk>",
   "license": "MIT",
   "devDependencies": {
     "asciify": "^1.3.5",
@@ -76,7 +69,7 @@
     "minimist": "^1.1.1",
     "mocha": "^2.2.5",
     "request": "^2.57.0",
-    "require-dir": "^0.3.0",
+    "require-dir": "0.3.2",
     "run-sequence": "^1.1.0",
     "sinon": "1.14.1",
     "sinon-chai": "^2.8.0",

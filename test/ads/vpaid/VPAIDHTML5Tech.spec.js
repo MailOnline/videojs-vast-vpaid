@@ -1,5 +1,5 @@
-var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 var VASTError = require('ads/vast/VASTError');
+var VPAIDHTML5Tech = require('../../../src/scripts/ads/vpaid/VPAIDHTML5Tech');
 
 var dom = require('utils/dom');
 var utilities = require('utils/utilityFunctions');
@@ -13,13 +13,8 @@ describe("VPAIDHTML5Tech", function() {
 
   it("must implement supports", function () {
     sinon.stub(utilities, 'isOldIE').returns(false);
-    assert.isFunction(VPAIDHTML5Tech.supports);
-    assert(!VPAIDHTML5Tech.supports('application/x-shockwave-flash'));
-    assert(VPAIDHTML5Tech.supports('application/javascript'));
-
     //Must return false for old IE (IE9 and below)
     utilities.isOldIE.returns(9);
-    assert(!VPAIDHTML5Tech.supports('application/javascript'));
 
     utilities.isOldIE.restore();
   });
@@ -137,4 +132,3 @@ describe("VPAIDHTML5Tech", function() {
     });
   });
 });
-

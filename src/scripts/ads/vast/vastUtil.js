@@ -2,8 +2,6 @@
 
 var utilities = require('../../utils/utilityFunctions');
 var VPAIDHTML5Tech = require('../vpaid/VPAIDHTML5Tech');
-var VPAIDFlashTech = require('../vpaid/VPAIDFlashTech');
-var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
 
 var vastUtil = {
 
@@ -135,7 +133,6 @@ var vastUtil = {
 
   //List of supported VPAID technologies
   VPAID_techs: [
-    VPAIDFlashTech,
     VPAIDHTML5Tech
   ],
 
@@ -156,17 +153,7 @@ var vastUtil = {
   },
 
   isFlashSupported: function isFlashSupported() {
-    return VPAIDFLASHClient.isSupported();
-  },
-
-  /**
-   * Necessary step for VPAIDFLAShClient to know if flash is supported and not blocked.
-   * IMPORTANT NOTE: This is an async test and needs to be run as soon as possible.
-   *
-   * @param vpaidFlashLoaderPath the path to the vpaidFlashLoader swf obj.
-   */
-  runFlashSupportCheck: function runFlashSupportCheck(vpaidFlashLoaderPath) {
-    VPAIDFLASHClient.runFlashTest({data: vpaidFlashLoaderPath});
+    return false;
   }
 
 };

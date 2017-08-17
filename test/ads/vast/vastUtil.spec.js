@@ -1,7 +1,4 @@
 var vastUtil = require('ads/vast/vastUtil');
-var VPAIDFLASHClient = require('VPAIDFLASHClient/js/VPAIDFLASHClient');
-var VPAIDFlashTech = require('ads/vpaid/VPAIDFlashTech');
-var VPAIDHTML5Tech = require('ads/vpaid/VPAIDHTML5Tech');
 
 var xml = require('utils/xml');
 
@@ -215,50 +212,4 @@ describe("vastUtil", function () {
     });
   });
 
-  describe("findSupportedVPAIDTech", function () {
-    var FLASH_APP_MIME = 'application/x-shockwave-flash';
-    var HTML5_APP_MIME = 'application/javascript';
-
-    beforeEach(function () {
-      sinon.stub(VPAIDFlashTech, 'supports');
-      sinon.stub(VPAIDHTML5Tech, 'supports');
-    });
-
-    afterEach(function () {
-      VPAIDFlashTech.supports.restore();
-      VPAIDHTML5Tech.supports.restore();
-    });
-
-    it("must return Flash tech if it supports the passed mime type", function () {
-      VPAIDFlashTech.supports.returns(true);
-      VPAIDHTML5Tech.supports.returns(false);
-      assert.equal(vastUtil.findSupportedVPAIDTech(FLASH_APP_MIME), VPAIDFlashTech);
-    });
-
-    it("must return HTML tech if it supports the passed mime type", function () {
-      VPAIDFlashTech.supports.returns(false);
-      VPAIDHTML5Tech.supports.returns(true);
-      assert.equal(vastUtil.findSupportedVPAIDTech(HTML5_APP_MIME), VPAIDHTML5Tech);
-    });
-
-    it("must return null if no supported tech is found", function () {
-      VPAIDFlashTech.supports.returns(false);
-      VPAIDHTML5Tech.supports.returns(false);
-      assert.isNull(vastUtil.findSupportedVPAIDTech(HTML5_APP_MIME));
-    });
-  });
-
-  describe("isFlashSupported", function() {
-      beforeEach(function () {
-        sinon.stub(VPAIDFLASHClient, 'isSupported');
-      });
-
-      it("must delegate in VPAIDFLASHClient.isSupported", function() {
-        VPAIDFLASHClient.isSupported.returns(false);
-        assert.isFalse(vastUtil.isFlashSupported());
-
-        VPAIDFLASHClient.isSupported.returns(true);
-        assert.isTrue(vastUtil.isFlashSupported());
-      });
-  });
 });
