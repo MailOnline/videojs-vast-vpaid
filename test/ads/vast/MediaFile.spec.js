@@ -5,7 +5,6 @@ describe("MediaFile", function () {
   var MediaFile = require('ads/vast/MediaFile');
 
   var xml = require('utils/xml');
-  var vastUtil = require('ads/vast/vastUtil');
 
   var mediaFileXML;
 
@@ -113,35 +112,6 @@ describe("MediaFile", function () {
         it("must return false if there is a supported VPAIDtech", function () {
           mediaFile.type = 'application/nonSupported';
           assert.isFalse(mediaFile.isSupported());
-        });
-      });
-
-      describe("VAST mediafile", function() {
-
-        beforeEach(function() {
-          sinon.stub(vastUtil, 'isFlashSupported');
-        });
-
-        afterEach(function () {
-          vastUtil.isFlashSupported.restore();
-        });
-
-        it("must return true if mime type is video/x-flv and flash is supported", function () {
-          mediaFile.type = 'video/x-flv';
-          vastUtil.isFlashSupported.returns(true);
-          assert.isTrue(mediaFile.isSupported());
-        });
-
-        it("must return false if mime type is video/x-flv and flash is not supported", function () {
-          mediaFile.type = 'video/x-flv';
-          vastUtil.isFlashSupported.returns(false);
-          assert.isFalse(mediaFile.isSupported());
-        });
-
-        it("must return true if mime type is not video/x-flv", function () {
-          mediaFile.type = 'video/volkswagen';
-          vastUtil.isFlashSupported.returns(false);
-          assert.isTrue(mediaFile.isSupported());
         });
       });
     });

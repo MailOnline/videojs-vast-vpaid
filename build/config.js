@@ -10,8 +10,7 @@ var knownOptions = {
 var options = parseArgs(process.argv.slice(2), knownOptions);
 
 var videoJsVersionsMap = {
-  '4': 'bower_components/videojs_4/dist/video-js/',
-  '5': 'bower_components/videojs_5/dist/'
+  '6': 'bower_components/videojs_6/dist/'
 };
 
 var demoAds = [
@@ -64,9 +63,7 @@ module.exports = {
   DEV: path.normalize('__dirname/../dev'),
 
   vendor: [
-    'src/lib/ie8fix.js', //Required for make the ad's work in ie8
-    'node_modules/es5-shim/es5-shim.js', //Required for the player to work on old browsers
-    'bower_components/VPAIDFLASHClient/bin/VPAIDFlash.swf'
+
   ],
 
   testFiles: function testFiles (videojsVersion){

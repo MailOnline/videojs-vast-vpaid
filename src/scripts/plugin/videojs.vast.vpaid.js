@@ -46,9 +46,6 @@ module.exports = function VASTPlugin(options) {
     // Boolean flag to enable or disable the resize with window.resize or orientationchange
     autoResize: true,
 
-    // Path to the VPAID flash ad's loader
-    vpaidFlashLoaderPath: '/VPAIDFlash.swf',
-
     // verbosity of console logging:
     // 0 - error
     // 1 - error, warn
@@ -77,8 +74,6 @@ module.exports = function VASTPlugin(options) {
   }
 
   logger.setVerbosity (settings.verbosity);
-
-  vastUtil.runFlashSupportCheck(settings.vpaidFlashLoaderPath);// Necessary step for VPAIDFLASHClient to work.
 
   playerUtils.prepareForAds(player);
 
