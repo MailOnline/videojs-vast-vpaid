@@ -194,6 +194,8 @@ VPAIDIntegrator.prototype._loadAdUnit = function (tech, vastResponse, next) {
 };
 
 VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback) {
+  const nextStep = (aUnit, vastResponse, next) => next(null, adUnit, vastResponse);
+
   async.waterfall([
     function (next) {
       next(null, adUnit, vastResponse);
@@ -201,7 +203,7 @@ VPAIDIntegrator.prototype._playAdUnit = function (adUnit, vastResponse, callback
     this._handshake.bind(this),
     this._initAd.bind(this),
     this._setupEvents.bind(this),
-    this._addSkipButton.bind(this),
+    this.settings.disableSkipOnVpaid ? nextStep : this._addSkipButton.bind(this),
     this._linkPlayerControls.bind(this),
     this._startAd.bind(this)
   ], callback);
