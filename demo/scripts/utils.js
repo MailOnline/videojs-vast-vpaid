@@ -1,7 +1,8 @@
-var NODE_TYPE_ELEMENT = 1;
+let NODE_TYPE_ELEMENT = 1;
 
-function extend(obj) {
-  var arg, i, k;
+function extend (obj) {
+  let arg, i, k;
+
   for (i = 1; i < arguments.length; i++) {
     arg = arguments[i];
     for (k in arg) {
@@ -14,31 +15,33 @@ function extend(obj) {
       }
     }
   }
+
   return obj;
 }
 
-function isString(str) {
+function isString (str) {
   return typeof str === 'string';
 }
 
-function isNotEmptyString(str) {
+function isNotEmptyString (str) {
   return isString(str) && str.length !== 0;
 }
 
-function isNull(o) {
+function isNull (o) {
   return o === null;
 }
 
-function isObject(obj) {
+function isObject (obj) {
   return typeof obj === 'object';
 }
 
-function isFunction(str){
+function isFunction (str) {
   return typeof str === 'function';
 }
 
-function forEach(obj, iterator, context) {
-  var key, length;
+function forEach (obj, iterator, context) {
+  let key, length;
+
   if (obj) {
     if (isFunction(obj)) {
       for (key in obj) {
@@ -49,7 +52,8 @@ function forEach(obj, iterator, context) {
         }
       }
     } else if (isArray(obj)) {
-      var isPrimitive = typeof obj !== 'object';
+      let isPrimitive = typeof obj !== 'object';
+
       for (key = 0, length = obj.length; key < length; key++) {
         if (isPrimitive || key in obj) {
           iterator.call(context, obj[key], key, obj);
@@ -65,37 +69,38 @@ function forEach(obj, iterator, context) {
       }
     }
   }
+
   return obj;
 }
 
-function isArray(array){
-  return Object.prototype.toString.call( array ) === '[object Array]';
+function isArray (array) {
+  return Object.prototype.toString.call(array) === '[object Array]';
 }
 
-function isWindow(obj) {
+function isWindow (obj) {
   return isObject(obj) && obj.window === obj;
 }
 
-function isUndefined(o){
+function isUndefined (o) {
   return o === undefined;
 }
 
-function isArrayLike(obj) {
+function isArrayLike (obj) {
   if (obj === null || isWindow(obj) || isFunction(obj) || isUndefined(obj)) {
     return false;
   }
 
-  var length = obj.length;
+  let length = obj.length;
 
   if (obj.nodeType === NODE_TYPE_ELEMENT && length) {
     return true;
   }
 
   return isString(obj) || isArray(obj) || length === 0 ||
-    typeof length === 'number' && length > 0 && (length - 1) in obj;
+    typeof length === 'number' && length > 0 && length - 1 in obj;
 }
 
-function arrayLikeObjToArray(args) {
+function arrayLikeObjToArray (args) {
   return Array.prototype.slice.call(args);
 }
 

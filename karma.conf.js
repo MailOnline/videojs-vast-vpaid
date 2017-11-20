@@ -1,36 +1,37 @@
-var istanbul = require('browserify-istanbul');
-var config = require('./build/config');
+require('babel-core/register');
 
-module.exports = function (karma) {
-  karma.set({
+const webpack = require('./webpackfile.babel').default;
+
+function karmaconf (karma) {
+  const config = {
     /**
      * From where to look for files, starting with the location of this file.
      */
     basePath: './',
 
-    files: config.testFiles(),
+    files: [
+      'bower_components/videojs_4/dist/video-js/video.js',
+      'test/test-utils.css',
+      'test/**/*.spec.js'
+    ],
 
     /**
      * This is the list of file patterns to load into the browser during testing.
      */
-    frameworks: [ 'browserify', 'mocha', 'chai-sinon'],
+    frameworks: [ 'mocha', 'chai-sinon'],
 
     preprocessors: {
-      'test/**/*.js': [ 'browserify' ]
+      'test/**/*.spec.js': [ 'webpack' ]
     },
-    browserify: {
-      paths: ['src/scripts', 'bower_components'],
-      debug: true,
-      transform: [ ['babelify', {
-        presets: ["es2015"],
-        only: /VPAIDFLASHClient/
-        }],
-        istanbul({
-            //NOTE: Once we got full ES6 there is a problem in Karma/Istanbul please look https://github.com/karma-runner/karma-coverage/issues/157#issuecomment-160555004
-            ignore: ['**/node_modules/**', '**/test/**', '**/bower_components/**'],
-        }) ]
+
+    webpack,
+
+    webpackMiddleware: {
+      stats: 'errors-only'
     },
+
     logLevel: 'ERROR',
+
     /**
      * How to report, by default.
      */
@@ -49,6 +50,14 @@ module.exports = function (karma) {
      */
     autoWatch: true,
     singleRun: false,
+
+    customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    },
+
     /**
      * The list of browsers to launch to test on. This includes only "Firefox" by
      * default, but other browser names include:
@@ -63,9 +72,16 @@ module.exports = function (karma) {
      * the aesthetic advantage of not launching a browser every time you save.
      */
     browsers: [
-      //'Safari',
-      'Firefox',
       'Chrome'
     ]
-  });
-};
+  };
+
+  // eslint-disable-next-line no-process-env
+  if (process.env.TRAVIS) {
+    config.browsers = ['Chrome_travis_ci'];
+  }
+
+  karma.set(config);
+}
+
+module.exports = karmaconf;

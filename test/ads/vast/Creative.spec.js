@@ -1,135 +1,139 @@
-'use strict';
-var testUtils = require('../../test-utils');
+const testUtils = require('../../test-utils');
 
-describe("Creative", function(){
+describe.skip('Creative', () => {
+  const Creative = require('../../../src/scripts/ads/vast/Creative');
+  const Linear = require('../../../src/scripts/ads/vast/Linear');
 
-  var Creative = require('ads/vast/Creative');
-  var Linear = require('ads/vast/Linear');
+  const xml = require('../../../src/scripts/utils/xml');
 
-  var xml = require('utils/xml');
-
-  it("must return an instance of Creative", function(){
+  it('must return an instance of Creative', () => {
     assert.instanceOf(new Creative(xml.toJXONTree('<Creative id="8455"></Creative>')), Creative);
   });
 
-  it("must set the id if passed", function(){
-    var creativeXML = '<Creative id="8455"></Creative>';
-    var creative = new Creative(xml.toJXONTree(creativeXML));
+  it('must set the id if passed', () => {
+    const creativeXML = '<Creative id="8455"></Creative>';
+    const creative = new Creative(xml.toJXONTree(creativeXML));
+
     assert.equal(creative.id, '8455');
   });
 
-  it("must set the sequence if set", function(){
-    var creativeXML = '<Creative id="8455" sequence="1"></Creative>';
-    var creative = new Creative(xml.toJXONTree(creativeXML));
+  it('must set the sequence if set', () => {
+    const creativeXML = '<Creative id="8455" sequence="1"></Creative>';
+    const creative = new Creative(xml.toJXONTree(creativeXML));
+
     assert.equal(creative.sequence, 1);
   });
 
-  it("must set the the ad id if set", function(){
-    var creativeXML = '<Creative adId="8455"></Creative>';
-    var creative = new Creative(xml.toJXONTree(creativeXML));
+  it('must set the the ad id if set', () => {
+    const creativeXML = '<Creative adId="8455"></Creative>';
+    const creative = new Creative(xml.toJXONTree(creativeXML));
+
     assert.equal(creative.adId, 8455);
   });
 
-  it("must set the the apiFramework if set", function(){
-    var creativeXML = '<Creative apiFramework="fooFramework"></Creative>';
-    var creative = new Creative(xml.toJXONTree(creativeXML));
-    assert.equal(creative.apiFramework, "fooFramework");
+  it('must set the the apiFramework if set', () => {
+    const creativeXML = '<Creative apiFramework="fooFramework"></Creative>';
+    const creative = new Creative(xml.toJXONTree(creativeXML));
+
+    assert.equal(creative.apiFramework, 'fooFramework');
   });
 
-  it("must set the linear if passed as part of the jxonTreeData", function(){
-    var creativeXML = '<Creative apiFramework="fooFramework">' +
+  it('must set the linear if passed as part of the jxonTreeData', () => {
+    const creativeXML = '<Creative apiFramework="fooFramework">' +
       '<Linear>' +
       '<Duration>00:00:58</Duration>' +
       '<MediaFiles></MediaFiles>' +
-      '</Linear>'+
+      '</Linear>' +
       '</Creative>';
-    var creative = new Creative(xml.toJXONTree(creativeXML));
+    const creative = new Creative(xml.toJXONTree(creativeXML));
+
     assert.instanceOf(creative.linear, Linear);
   });
 
-  describe("companionAds", function() {
-    var creativeXML = '<Creative sequence="1">' +
+  describe('companionAds', () => {
+    const creativeXML = '<Creative sequence="1">' +
       '<CompanionAds>' +
       '</CompanionAds>' +
       '</Creative>';
 
-    it('must handle when no companionAds', function() {
-      function newCreative() {
+    it('must handle when no companionAds', () => {
+      function newCreative () {
         return new Creative(xml.toJXONTree(creativeXML));
       }
       assert.doesNotThrow(newCreative);
     });
   });
 
-  describe("isSupported", function(){
-    var creative;
+  describe('isSupported', () => {
+    let creative;
 
-    beforeEach(function(){
-      var creativeXML = '<Creative apiFramework="fooFramework">' +
+    beforeEach(() => {
+      const creativeXML = '<Creative apiFramework="fooFramework">' +
         '<Linear>' +
         '<Duration>00:00:58</Duration>' +
         '<MediaFiles></MediaFiles>' +
-        '</Linear>'+
+        '</Linear>' +
         '</Creative>';
+
       creative = new Creative(xml.toJXONTree(creativeXML));
     });
 
-    it("must return true if the creative does not contain a linear", function(){
+    it('must return true if the creative does not contain a linear', () => {
       delete creative.linear;
       assert.isTrue(creative.isSupported());
     });
 
-    it("must returns false if it contains a non supported linear", function(){
+    it('must returns false if it contains a non supported linear', () => {
       creative.linear = {
-        isSupported: function(){
+        isSupported: function () {
           return false;
         }
       };
       assert.isFalse(creative.isSupported());
     });
 
-    it("must returns true if it contains a supported linear", function(){
+    it('must returns true if it contains a supported linear', () => {
       creative.linear = {
-        isSupported: function(){
+        isSupported: function () {
           return true;
         }
       };
       assert.isTrue(creative.isSupported());
     });
-
-
   });
 
-  describe("parseCreatives", function () {
-    var parseCreatives;
+  describe('parseCreatives', () => {
+    let parseCreatives;
 
-    beforeEach(function () {
+    beforeEach(() => {
       parseCreatives = Creative.parseCreatives;
     });
 
-    it("must return an empty array if you pass no creativesJTree", function () {
+    it('must return an empty array if you pass no creativesJTree', () => {
       testUtils.assertEmptyArray(parseCreatives());
     });
 
-    it("must return an empty array if there is no real creatives", function () {
-      var inlineXML = '<InLine><Creatives></Creatives></InLine>';
+    it('must return an empty array if there is no real creatives', () => {
+      const inlineXML = '<InLine><Creatives></Creatives></InLine>';
+
       testUtils.assertEmptyArray(parseCreatives(xml.toJXONTree(inlineXML).creatives));
     });
 
-    it("must be an array or creatives", function () {
-      var inlineXML = '<InLine>' +
+    it('must be an array or creatives', () => {
+      const inlineXML = '<InLine>' +
         '<Creatives>' +
           '<Creative id="8454" sequence="1"></Creative>' +
             '<Creative id="8455" sequence="2"></Creative>' +
               '</Creatives>' +
                 '</InLine>';
-                var creativesJTree = xml.toJXONTree(inlineXML).creatives;
-                var creatives = parseCreatives(creativesJTree);
-                assert.isArray(creatives);
-                assert.instanceOf(creatives[0], Creative);
-                assert.equal(creatives[0].id, 8454);
-                assert.instanceOf(creatives[1], Creative);
-                assert.equal(creatives[1].id, 8455);
+      const creativesJTree = xml.toJXONTree(inlineXML).creatives;
+      const creatives = parseCreatives(creativesJTree);
+
+      assert.isArray(creatives);
+      assert.instanceOf(creatives[0], Creative);
+      assert.equal(creatives[0].id, 8454);
+      assert.instanceOf(creatives[1], Creative);
+      assert.equal(creatives[1].id, 8455);
     });
   });
 });

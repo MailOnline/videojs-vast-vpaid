@@ -1,9 +1,7 @@
-'use strict';
+const utilities = require('../../utils/utilityFunctions');
+const xml = require('../../utils/xml');
 
-var utilities = require('../../utils/utilityFunctions');
-var xml = require('../../utils/xml');
-
-function VideoClicks(videoClickJTree) {
+function VideoClicks (videoClickJTree) {
   if (!(this instanceof VideoClicks)) {
     return new VideoClicks(videoClickJTree);
   }
@@ -12,15 +10,17 @@ function VideoClicks(videoClickJTree) {
   this.clickTrackings = parseClickTrackings(videoClickJTree.clickTracking);
   this.customClicks = parseClickTrackings(videoClickJTree.customClick);
 
-  /*** Local functions ***/
-  function parseClickTrackings(trackingData) {
-    var clickTrackings = [];
+  /** * Local functions ***/
+  function parseClickTrackings (trackingData) {
+    const clickTrackings = [];
+
     if (trackingData) {
       trackingData = utilities.isArray(trackingData) ? trackingData : [trackingData];
-      trackingData.forEach(function (clickTrackingData) {
+      trackingData.forEach((clickTrackingData) => {
         clickTrackings.push(xml.keyValue(clickTrackingData));
       });
     }
+
     return clickTrackings;
   }
 }

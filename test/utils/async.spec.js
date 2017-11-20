@@ -1,105 +1,105 @@
-var async = require('utils/async');
-var utilities = require('utils/utilityFunctions');
+const async = require('../../src/scripts/utils/async');
+const utilities = require('../../src/scripts/utils/utilityFunctions');
 
-describe("async", function () {
-  it("must be an object", function () {
+describe('async', () => {
+  it('must be an object', () => {
     assert.isObject(async);
   });
 
-  describe("setImmediate", function () {
-    beforeEach(function () {
+  describe('setImmediate', () => {
+    it('must call the passed function asynchronously', function () {
       this.clock = sinon.useFakeTimers();
-    });
 
-    afterEach(function () {
-      this.clock.restore();
-    });
+      const spy = sinon.spy();
 
-    it("must call the passed function asynchronously", function () {
-      var spy = sinon.spy();
       async.setImmediate(spy);
       sinon.assert.notCalled(spy);
       this.clock.tick();
       sinon.assert.calledOnce(spy);
+
+      this.clock.restore();
     });
   });
 
-  describe("iterator", function () {
-    var task1, task2, task3;
+  describe('iterator', () => {
+    let task1, task2, task3;
 
-    beforeEach(function () {
+    beforeEach(() => {
       task1 = sinon.spy();
       task2 = sinon.spy();
       task3 = sinon.spy();
     });
 
-    it("must return an iterator that iterates over the array of tasks", function () {
-      var next = async.iterator([task1, task2, task3]);
-      while (next !== null) {
-        next = next();
+    it('must return an iterator that iterates over the array of tasks', () => {
+      let nextTask;
+
+      nextTask = async.iterator([task1, task2, task3]);
+
+      while (nextTask !== null) {
+        nextTask = nextTask();
       }
       sinon.assert.callOrder(task1, task2, task3);
     });
 
-    it("must be possible to pass args to the tasks", function () {
-      var tasks = [task1, task2, task3];
-      var next = async.iterator(tasks);
-      while (next !== null) {
-        next = next('foo', 'bar');
+    it('must be possible to pass args to the tasks', () => {
+      let nextTask;
+      const tasks = [task1, task2, task3];
+
+      nextTask = async.iterator(tasks);
+
+      while (nextTask !== null) {
+        nextTask = nextTask('foo', 'bar');
       }
-      tasks.forEach(function (task) {
+      tasks.forEach((task) => {
         sinon.assert.calledWithExactly(task, 'foo', 'bar');
       });
     });
   });
 
-  describe("waterfall", function () {
-    it("must pass an error to the callback if you don't pass an array for tasks", function () {
-      var callback = sinon.spy();
+  describe('waterfall', () => {
+    it('must pass an error to the callback if you don\'t pass an array for tasks', () => {
+      const callback = sinon.spy();
+
       async.waterfall(null, callback);
-      var error = callback.lastCall.args[0];
+      const error = callback.lastCall.args[0];
+
       assert.instanceOf(error, Error);
       assert.equal('First argument to waterfall must be an array of functions', error.message);
     });
 
-    it("must call the callback with no args if the task array is empty", function () {
-      var callback = sinon.spy();
+    it('must call the callback with no args if the task array is empty', () => {
+      const callback = sinon.spy();
+
       async.waterfall([], callback);
       assert.equal(callback.lastCall.args.length, 0);
     });
 
-    describe("given an array of tasks", function () {
-      var task1, task2, task3, callback;
-
+    describe('given an array of tasks', () => {
       beforeEach(function () {
         this.clock = sinon.useFakeTimers();
-        task1 = sinon.spy();
-        task2 = sinon.spy();
-        task3 = sinon.spy();
-        callback = sinon.spy();
       });
 
-      afterEach(function(){
+      afterEach(function () {
         this.clock.restore();
       });
 
-      it("must call the all the tasks passing the arguments of the previous one to the next task", function () {
-        var spy = sinon.spy();
+      it('must call the all the tasks passing the arguments of the previous one to the next task', function () {
+        const spy = sinon.spy();
 
-        function startCounter(next) {
+        const startCounter = function (next) {
           next(null, 0);
-        }
+        };
 
-        function increaseCounter(counter, next) {
+        const increaseCounter = function (counter, next) {
           next(null, counter + 1);
-        }
+        };
 
         async.waterfall([
           startCounter,
           increaseCounter,
           increaseCounter,
           increaseCounter
-        ], function (error, counter) {
+        ], (error, counter) => {
           assert.isNull(error);
           assert.equal(3, counter);
           spy();
@@ -109,20 +109,18 @@ describe("async", function () {
         sinon.assert.calledOnce(spy);
       });
 
-      it("must call the callback if an error occur on one of the task", function () {
-        var spy = sinon.spy();
-
-        function startCounter(next) {
+      it('must call the callback if an error occur on one of the task', function () {
+        const spy = sinon.spy();
+        const startCounter = function (next) {
           next(null, 0);
-        }
-
-        function increaseCounter(counter, next) {
+        };
+        const increaseCounter = function (counter, next) {
           next(null, counter + 1);
-        }
+        };
 
-        function throwError(counter, next) {
+        const throwError = function (counter, next) {
           next(new Error(), counter);
-        }
+        };
 
         async.waterfall([
           startCounter,
@@ -130,7 +128,7 @@ describe("async", function () {
           increaseCounter,
           throwError,
           increaseCounter
-        ], function (error, counter) {
+        ], (error, counter) => {
           assert.instanceOf(error, Error);
           assert.equal(2, counter);
           spy();
@@ -142,64 +140,63 @@ describe("async", function () {
     });
   });
 
-  describe("when", function () {
-    it("must return a function", function () {
+  describe('when', () => {
+    it('must return a function', () => {
       assert.isFunction(async.when(false, utilities.noop));
     });
 
-    it("must throw an exception if the second argument is not a callback", function () {
-      assert.throws(function () {
+    it('must throw an exception if the second argument is not a callback', () => {
+      assert.throws(() => {
         async.when();
       }, Error, 'async.when error: missing callback argument');
     });
 
-    describe("with truthy condition", function () {
-      it("must call the callback with the same arguments that where passed to the return if function", function () {
-        var spy = sinon.spy();
-        var ifFn = async.when(true, spy);
+    describe('with truthy condition', () => {
+      it('must call the callback with the same arguments that where passed to the return if function', () => {
+        const spy = sinon.spy();
+        const ifFn = async.when(true, spy);
 
-        ifFn("1", 2, null, utilities.noop);
-        sinon.assert.calledWithExactly(spy, "1", 2, null, utilities.noop);
+        ifFn('1', 2, null, utilities.noop);
+        sinon.assert.calledWithExactly(spy, '1', 2, null, utilities.noop);
       });
     });
 
-    describe("with falsy condition,", function () {
-      it("must not call the callback and call the next callback passed passing null (for no error) and the rest of the args", function () {
-        var callback = sinon.spy();
-        var next = sinon.spy();
-        var ifFn = async.when(false, callback);
+    describe('with falsy condition,', () => {
+      it('must not call the callback and call the next callback passed passing null (for no error) and the rest of the args', () => {
+        const callback = sinon.spy();
+        const next = sinon.spy();
+        const ifFn = async.when(false, callback);
 
-        ifFn("1", 2, null, next);
+        ifFn('1', 2, null, next);
         sinon.assert.notCalled(callback);
-        sinon.assert.calledWithExactly(next, null, "1", 2, null);
+        sinon.assert.calledWithExactly(next, null, '1', 2, null);
       });
     });
 
-    describe("with conditional function,", function () {
-      it("must use whatever the condition return to decide weather to execute the condition or not.", function () {
-        var callback = sinon.spy();
-        var next = sinon.spy();
-        var ifFn = async.when(function () {
-          return false;
-        }, callback);
+    describe('with conditional function,', () => {
+      it('must use whatever the condition return to decide weather to execute the condition or not.', () => {
+        const callback = sinon.spy();
+        const next = sinon.spy();
+        const ifFn = async.when(() => false, callback);
 
-        ifFn("1", 2, null, next);
+        ifFn('1', 2, null, next);
         sinon.assert.notCalled(callback);
-        sinon.assert.calledWithExactly(next, null, "1", 2, null);
+        sinon.assert.calledWithExactly(next, null, '1', 2, null);
       });
 
-      it("must pass the arguments to the conditional function", function(){
-          var callback = sinon.spy();
-          var next = sinon.spy();
-          var condition = sinon.stub();
-          var ifFn = async.when(condition, callback);
-          condition.returns(true);
+      it('must pass the arguments to the conditional function', () => {
+        const callback = sinon.spy();
+        const next = sinon.spy();
+        const condition = sinon.stub();
+        const ifFn = async.when(condition, callback);
 
-          ifFn("1", 2, null, next);
+        condition.returns(true);
 
-          sinon.assert.notCalled(next);
-          sinon.assert.calledWithExactly(condition, "1", 2, null);
-          sinon.assert.calledWithExactly(callback, "1", 2, null, next);
+        ifFn('1', 2, null, next);
+
+        sinon.assert.notCalled(next);
+        sinon.assert.calledWithExactly(condition, '1', 2, null);
+        sinon.assert.calledWithExactly(callback, '1', 2, null, next);
       });
     });
   });

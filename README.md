@@ -65,7 +65,7 @@ videojs.plugin('ads-setup', function (opts) {
 
     var vastAd = player.vastClient({
       //Media tag URL
-      adTagUrl: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+      adTag: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
       playAdAlways: true,
       //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
       adCancelTimeout: adsCancelTimeout,
@@ -83,7 +83,7 @@ You can also configure the vast plugin using the data-setup attribute
     data-setup='{
       "plugins": {
       "vastClient": {
-        "adTagUrl": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+        "adTag": "http://pubads.g.doubleclick.net/gampad/ads?env=....",
         "adCancelTimeout": 5000,
         "adsEnabled": true
         }
@@ -104,7 +104,7 @@ You can also configure the vast plugin using the data-setup attribute
 ## Migration from videojs-vast-vpaid 0.1 to 1.0
 
 if you will still use videojs version 4 you need to
-* download the new bin folder
+* download the new dist folder
 * replace, in your pages, ```videojs-vast-vpaid.js```with  ```videojs_4.vast.vpaid.js```
  *( or ```videojs-vast-vpaid.min.js``` with ```videojs_4.vast.vpaid.min.js```  if you were using the minified version)*
 * replace, in your pages,  ```videojs-vast-vpaid.css``` with  ```videojs.vast.vpaid.css```
@@ -116,47 +116,28 @@ if you want to update to videojs 5 just follow the instruction in the **Integrat
 
 ## Options
 
-#### adTagUrl
-Use it to pass the ad media tag, it can be a string containing the Media tag url or a function that will return the Media tag whenever called;
-On initialization, the plugin will call the function and store the returned Media tag to request the VAST/VPAID ads
+#### adTag
+Use it to pass the ad media tag.
+
 ```javascript
 // Hardcoded Media Tag
 var vastAd = player.vastClient({
-    adTagUrl: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
+    adTag: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
     ...
 });
 ```
+
+#### getAdTag
+Error-first callback function that will be called per ad request.
 ```javascript
 //Dynamic Media Tag
 var vastAd = player.vastClient({
-    adTagUrl: getAdsUrl,
+    getAdTag: getAdsTag,
     ...
 });
 
-function getAdsUrl() {
-    return "http://pubads.g.doubleclick.net/gampad/ads?env=....";
-}
-```
-
-#### url (deprecated)
-**This option is deprecated and you should use adTagUrl instead**
-Use it to pass the ad media tag, it can be a string containing the Media tag url
-```javascript
-// Hardcoded Media Tag
-var vastAd = player.vastClient({
-    url: "http://pubads.g.doubleclick.net/gampad/ads?env=....",
-    ...
-});
-```
-```javascript
-//Dynamic Media Tag
-var vastAd = player.vastClient({
-    url: getAdsUrl,
-    ...
-});
-
-function getAdsUrl() {
-    return "http://pubads.g.doubleclick.net/gampad/ads?env=....";
+function getAdsTag(cb) {
+    cb(null, "http://pubads.g.doubleclick.net/gampad/ads?env=....");
 }
 ```
 
@@ -232,7 +213,7 @@ verbosity of console logging;
  An invocation to ```player.vastClient({...})``` returns and object that with some helper functions that allow you to dynamically enable or disable the vast plugin, or check if it is enabled.
 ```javascript
 var vastPlugin = player.vastClient({
-    adTagUrl: getAdsUrl,
+    getAdTag: getAdTag,
     playAdAlways: true,
     //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
     adCancelTimeout: adsCancelTimeout,
@@ -273,7 +254,7 @@ Otherwise it will be null or undefined
 The returned object described above it is also published as a player property so that you can use it anywhere as long as you have access to the player instance.
 ```javascript
 player.vastClient({
-    adTagUrl: getAdsUrl,
+    getAdTag: getAdTag,
     playAdAlways: true,
     //Note: As requested we set the preroll timeout at the same place than the adsCancelTimeout
     adCancelTimeout: adsCancelTimeout,

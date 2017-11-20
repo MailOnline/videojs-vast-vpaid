@@ -1,91 +1,21 @@
-var requireDir = require('require-dir');
-var asciify    = require('asciify');
-var gulp       = require('gulp');
-var async      = require('async');
-var Table      = require('cli-table');
-var BuildTaskDoc = require('./build/BuildTaskDoc');
+const path = require('path');
+const gulp = require('gulp');
+const ghPages = require('gulp-gh-pages');
 
-//Init colors
-require('./build/COLORS');
+// eslint-disable-next-line no-process-env
+const remoteUrl = process.env.GH_TOKEN ? 'https://' + process.env.GH_TOKEN + '@github.com/MailOnline/videojs-vast-vpaid' : 'origin';
 
-//We retrieve the build-tasks
-var buildTasksMap = requireDir('./build');
+gulp.task('update-gh-pages', () => {
+  return gulp.src(path.join('dist', '**/*'))
+   .pipe(ghPages({remoteUrl}));
+});
 
-
-gulp.task('default', function (finishTask) {
-    async.series([
-        printWelcomeMessage,
-        printBanner,
-        printTasksHelpTable
-        ],
-        finishTask
-    );
-
-    /*** Local functions ***/
-
-    function printWelcomeMessage(done) {
-        console.log("Welcome to MailOnline's new".info);
-        done();
-    }
-
-    function printBanner(done) {
-        asciify('Videojs Vast Vpaid', function (err, res) {
-            console.log(res.help);
-            done();
-        });
-    }
-
-    function printTasksHelpTable(done) {
-        var table = new Table({
-            head: ['Name', 'Description'],
-            colWidths: [25, 80],
-            chars: {
-                'top': '═',
-                'top-mid': '╤',
-                'top-left': '╔',
-                'top-right': '╗' ,
-                'bottom': '═',
-                'bottom-mid': '╧',
-                'bottom-left': '╚',
-                'bottom-right': '╝' ,
-                'left': '║',
-                'left-mid': '╟',
-                'mid': '─',
-                'mid-mid': '┼' ,
-                'right': '║',
-                'right-mid': '╢',
-                'middle': '│'
-            }
-        });
-
-        var buildTasks = getBuildTasks(buildTasksMap);
-
-        buildTasks.forEach(function (task) {
-            table.push([task.name, task.description]);
-        });
-
-        console.log('###### Below, you have the list of all the available build tasks ########');
-        console.log(table.toString());
-        console.log('   ');
-        console.log("NOTE: if a task is run with '--env production' it will execute the build task for production. Minifying scripts and so on".green);
-        console.log('   ');
-        done();
-    }
-
-    function getBuildTasks(tasksDir) {
-
-        var tasks = Object.keys(tasksDir)
-            .map(function mapTasks(taskName) {
-                return tasksDir[taskName];
-            })
-            .filter(function filterTasks(task) {
-                return task instanceof BuildTaskDoc;
-            })
-            .sort(function compareTasks(a, b) {
-                return a.order > b.order ? 1 : -1;
-            });
-
-        return tasks;
-    }
-
+gulp.task('prepare-demo-statics', () => {
+  return gulp.src([
+    'bower_components/videojs_4/dist/video-js/video-js.css',
+    'bower_components/videojs_4/dist/video-js/video.js',
+    'demo/*.html',
+    'demo/_config.yml'
+  ])
+  .pipe(gulp.dest('dist'));
 });

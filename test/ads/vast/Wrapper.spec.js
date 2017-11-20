@@ -1,46 +1,48 @@
-var Wrapper = require('ads/vast/Wrapper');
-var Creative = require('ads/vast/Creative');
+const Wrapper = require('../../../src/scripts/ads/vast/Wrapper');
+const Creative = require('../../../src/scripts/ads/vast/Creative');
+const xml = require('../../../src/scripts/utils/xml');
 
-var xml = require('utils/xml');
-
-describe("Wrapper", function () {
-  it("must return an instance of Wrapper", function () {
+describe('Wrapper', () => {
+  it('must return an instance of Wrapper', () => {
     assert.instanceOf(new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>')), Wrapper);
   });
 
-  it("must set the adSystem", function () {
-    var wrapperXML = '<Wrapper><AdSystem>GDFP</AdSystem></Wrapper>';
-    var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+  it('must set the adSystem', () => {
+    const wrapperXML = '<Wrapper><AdSystem>GDFP</AdSystem></Wrapper>';
+    const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
     assert.equal('GDFP', wrapper.adSystem);
   });
 
-  describe("impressions", function () {
-    it("must be an array", function () {
-      var wrapper = new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>'));
+  describe('impressions', () => {
+    it('must be an array', () => {
+      const wrapper = new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>'));
+
       assert.isArray(wrapper.impressions);
     });
 
-    it("must be empty if there is no real impression", function () {
-      var wrapperXML = '<Wrapper><Impression id="DART"></Impression></Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+    it('must be empty if there is no real impression', () => {
+      const wrapperXML = '<Wrapper><Impression id="DART"></Impression></Wrapper>';
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
       assert.equal(wrapper.impressions.length, 0);
     });
 
-    it("must contain the defined impression", function () {
-      var wrapperXML = '<Wrapper>' +
+    it('must contain the defined impression', () => {
+      const wrapperXML = '<Wrapper>' +
         '<Impression id="DART">' +
         '<![CDATA[http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif]]>' +
         '</Impression>' +
         '</Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
 
       assert.deepEqual(wrapper.impressions, [
         'http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif'
-        ]);
+      ]);
     });
 
-    it("must be possible to contain more than one impression", function () {
-      var wrapperXML = '<Wrapper>' +
+    it('must be possible to contain more than one impression', () => {
+      const wrapperXML = '<Wrapper>' +
         '<Impression id="DART">' +
         '<![CDATA[http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif]]>' +
         '</Impression>' +
@@ -51,55 +53,58 @@ describe("Wrapper", function () {
         '<![CDATA[]]>' +
         '</Impression>' +
         '</Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
 
       assert.deepEqual(wrapper.impressions, [
         'http://ad.doubleclick.net/imp;v7;x;223626102;0-0;0;47414672;0/0;30477563/30495440/1;;~aopt=0/0/ff/0;~cs=j%3fhttp://s0.2mdn.net/dot.gif',
-       'http://ad.doubleclick.net/ad/N270.Process_Other/B3473145;sz=1x1;ord=6212269?'
-        ]);
+        'http://ad.doubleclick.net/ad/N270.Process_Other/B3473145;sz=1x1;ord=6212269?'
+      ]);
     });
   });
 
-  it("must set the VASTAdTagURI", function () {
-    var wrapperXML = '<Wrapper>' +
+  it('must set the VASTAdTagURI', () => {
+    const wrapperXML = '<Wrapper>' +
       '<VASTAdTagURI><![CDATA[http://demo.tremormedia.com/proddev/vast/vast_inline_linear.xml]]></VASTAdTagURI>' +
       '</Wrapper>';
-    var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+    const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
     assert.equal('http://demo.tremormedia.com/proddev/vast/vast_inline_linear.xml', wrapper.VASTAdTagURI);
   });
 
-  it("must set the tracking error uri", function () {
-    var wrapperXML = '<Wrapper>' +
+  it('must set the tracking error uri', () => {
+    const wrapperXML = '<Wrapper>' +
       '<Error><![CDATA[http://pubads.g.doubleclick.net/pagead/conversion/[ERRORCODE]]]></Error>' +
       '</Wrapper>';
-    var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+    const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
     assert.equal(wrapper.error, 'http://pubads.g.doubleclick.net/pagead/conversion/[ERRORCODE]');
   });
 
-  describe("extensions", function () {
-    it("must be undefined if not set", function () {
-      var wrapper = new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>'));
+  describe('extensions', () => {
+    it('must be undefined if not set', () => {
+      const wrapper = new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>'));
+
       assert.isUndefined(wrapper.extensions);
     });
 
-    it("must be contain the JXONTree of the extension element if set", function () {
-      var wrapperXML = '<Wrapper><Extensions>price</Extensions></Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+    it('must be contain the JXONTree of the extension element if set', () => {
+      const wrapperXML = '<Wrapper><Extensions>price</Extensions></Wrapper>';
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
 
       assert.isDefined(wrapper.extensions);
       assert.deepEqual(wrapper.extensions, xml.toJXONTree(wrapperXML).extensions);
     });
   });
 
-  describe("creatives", function () {
-    it("must be an array or creatives", function () {
-      var wrapperXML = '<Wrapper>' +
+  describe('creatives', () => {
+    it('must be an array or creatives', () => {
+      const wrapperXML = '<Wrapper>' +
       '<Creatives>' +
       '<Creative id="8454" sequence="1"></Creative>' +
       '<Creative id="8455" sequence="2"></Creative>' +
       '</Creatives>' +
       '</Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
 
       assert.isArray(wrapper.creatives);
       assert.instanceOf(wrapper.creatives[0], Creative);
@@ -109,31 +114,35 @@ describe("Wrapper", function () {
     });
   });
 
-  describe("followAdditionalWrappers", function () {
-    it("must be true by default", function () {
-      var wrapper = new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>'));
+  describe('followAdditionalWrappers', () => {
+    it('must be true by default', () => {
+      const wrapper = new Wrapper(xml.toJXONTree('<Wrapper></Wrapper>'));
+
       assert.isTrue(wrapper.followAdditionalWrappers);
     });
 
-    it("must contain whatever the followAdditionalWrappers attr from the wrapper tag contain on the xml", function () {
-      var wrapperXML = '<Wrapper followAdditionalWrappers="false"></Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+    it('must contain whatever the followAdditionalWrappers attr from the wrapper tag contain on the xml', () => {
+      const wrapperXML = '<Wrapper followAdditionalWrappers="false"></Wrapper>';
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
       assert.isFalse(wrapper.followAdditionalWrappers);
     });
   });
 
-  describe("allowMultipleAds", function () {
-    it("must be set if the attr is present on the wrapper tag", function () {
-      var wrapperXML = '<Wrapper allowMultipleAds="false"></Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+  describe('allowMultipleAds', () => {
+    it('must be set if the attr is present on the wrapper tag', () => {
+      const wrapperXML = '<Wrapper allowMultipleAds="false"></Wrapper>';
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
       assert.isFalse(wrapper.allowMultipleAds);
     });
   });
 
-  describe("fallbackOnNoAd", function () {
-    it("must be set if the attr is present on the wrapper tag", function () {
-      var wrapperXML = '<Wrapper fallbackOnNoAd="false"></Wrapper>';
-      var wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+  describe('fallbackOnNoAd', () => {
+    it('must be set if the attr is present on the wrapper tag', () => {
+      const wrapperXML = '<Wrapper fallbackOnNoAd="false"></Wrapper>';
+      const wrapper = new Wrapper(xml.toJXONTree(wrapperXML));
+
       assert.isFalse(wrapper.fallbackOnNoAd);
     });
   });

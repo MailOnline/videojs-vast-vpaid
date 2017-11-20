@@ -1,58 +1,60 @@
-'use strict';
 
-var utilities = require('../../utils/utilityFunctions');
 
-var durationRegex = /(\d\d):(\d\d):(\d\d)(\.(\d\d\d))?/;
+const utilities = require('../../utils/utilityFunctions');
 
-var parsers = {
+const durationRegex = /(\d\d):(\d\d):(\d\d)(\.(\d\d\d))?/;
 
-  duration: function parseDuration(durationStr) {
+const parsers = {
 
-    var match, durationInMs;
+  duration: function parseDuration (durationStr) {
+    let match, durationInMs;
 
     if (utilities.isString(durationStr)) {
       match = durationStr.match(durationRegex);
       if (match) {
-        durationInMs = parseHoursToMs(match[1]) + parseMinToMs(match[2]) + parseSecToMs(match[3]) + parseInt(match[5] || 0);
+        durationInMs = parseHoursToMs(match[1]) + parseMinToMs(match[2]) + parseSecToMs(match[3]) + parseInt(match[5] || 0, 10);
       }
     }
 
     return isNaN(durationInMs) ? null : durationInMs;
 
-    /*** local functions ***/
-    function parseHoursToMs(hourStr) {
+    /** * local functions ***/
+    function parseHoursToMs (hourStr) {
       return parseInt(hourStr, 10) * 60 * 60 * 1000;
     }
 
-    function parseMinToMs(minStr) {
+    function parseMinToMs (minStr) {
       return parseInt(minStr, 10) * 60 * 1000;
     }
 
-    function parseSecToMs(secStr) {
+    function parseSecToMs (secStr) {
       return parseInt(secStr, 10) * 1000;
     }
   },
 
-  offset: function parseOffset(offset, duration) {
-    if(isPercentage(offset)){
+  offset: function parseOffset (offset, duration) {
+    if (isPercentage(offset)) {
       return calculatePercentage(offset, duration);
     }
+
     return parsers.duration(offset);
 
-    /*** Local function ***/
-    function isPercentage(offset) {
-      var percentageRegex = /^\d+(\.\d+)?%$/g;
+    /** * Local function ***/
+    function isPercentage (offset) {
+      const percentageRegex = /^\d+(\.\d+)?%$/g;
+
       return percentageRegex.test(offset);
     }
 
-    function calculatePercentage(percentStr, duration) {
-      if(duration) {
+    function calculatePercentage (percentStr, duration) {
+      if (duration) {
         return calcPercent(duration, parseFloat(percentStr.replace('%', '')));
       }
+
       return null;
     }
 
-    function calcPercent(quantity, percent){
+    function calcPercent (quantity, percent) {
       return quantity * percent / 100;
     }
   }

@@ -1,28 +1,29 @@
-var _ = require('./utils');
-var messages = require('./messages');
+const _ = require('./utils');
+const messages = require('./messages');
 
-module.exports = function molVastSetup(opts) {
-  var player = this;
-  var options = _.extend({}, this.options_, opts);
+module.exports = function molVastSetup (opts) {
+  let pluginSettings;
+  const player = this;
+  const options = _.extend({}, this.options_, opts);
 
-  var pluginSettings = {
+  pluginSettings = {
     playAdAlways: true,
     adCancelTimeout: options.adCancelTimeout || 3000,
-    adsEnabled: !!options.adsEnabled,
-    vpaidFlashLoaderPath: './scripts/VPAIDFlash.swf'
+    adsEnabled: Boolean(options.adsEnabled),
+    vpaidFlashLoaderPath: '/VPAIDFlash.swf'
   };
 
-  if(options.adTagUrl){
-    pluginSettings.adTagUrl = options.adTagUrl;
+  if (options.adTag) {
+    pluginSettings.adTag = options.adTag;
   }
 
-  if(options.adTagXML) {
+  if (options.adTagXML) {
     pluginSettings.adTagXML = options.adTagXML;
   }
 
-  var vastAd = player.vastClient(pluginSettings);
+  const vastAd = player.vastClient(pluginSettings);
 
-  player.on('reset', function () {
+  player.on('reset', () => {
     if (player.options().plugins['ads-setup'].adsEnabled) {
       vastAd.enable();
     } else {
@@ -30,10 +31,10 @@ module.exports = function molVastSetup(opts) {
     }
   });
 
-  player.on('vast.aderror', function(evt) {
-    var error = evt.error;
+  player.on('vast.aderror', (evt) => {
+    const error = evt.error;
 
-    if(error && error.message) {
+    if (error && error.message) {
       messages.error(error.message);
     }
   });

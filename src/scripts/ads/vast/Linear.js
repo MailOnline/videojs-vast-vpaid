@@ -1,25 +1,20 @@
-'use strict';
+const utilities = require('../../utils/utilityFunctions');
+const xml = require('../../utils/xml');
+const parsers = require('./parsers');
+const TrackingEvent = require('./TrackingEvent');
+const VideoClicks = require('./VideoClicks');
+const MediaFile = require('./MediaFile');
 
-var TrackingEvent = require('./TrackingEvent');
-var MediaFile = require('./MediaFile');
-var VideoClicks = require('./VideoClicks');
-
-var utilities = require('../../utils/utilityFunctions');
-var parsers = require('./parsers');
-
-var xml = require('../../utils/xml');
-
-
-function Linear(linearJTree) {
+function Linear (linearJTree) {
   if (!(this instanceof Linear)) {
     return new Linear(linearJTree);
   }
 
-  //Required Elements
+  // Required Elements
   this.duration = parsers.duration(xml.keyValue(linearJTree.duration));
   this.mediaFiles = parseMediaFiles(linearJTree.mediaFiles && linearJTree.mediaFiles.mediaFile);
 
-  //Optional fields
+  // Optional fields
   this.trackingEvents = parseTrackingEvents(linearJTree.trackingEvents && linearJTree.trackingEvents.tracking, this.duration);
   this.skipoffset = parsers.offset(xml.attr(linearJTree, 'skipoffset'), this.duration);
 
@@ -27,35 +22,39 @@ function Linear(linearJTree) {
     this.videoClicks = new VideoClicks(linearJTree.videoClicks);
   }
 
-  if(linearJTree.adParameters) {
+  if (linearJTree.adParameters) {
     this.adParameters = xml.keyValue(linearJTree.adParameters);
 
-    if(xml.attr(linearJTree.adParameters, 'xmlEncoded')) {
+    if (xml.attr(linearJTree.adParameters, 'xmlEncoded')) {
       this.adParameters = xml.decode(this.adParameters);
     }
   }
 
-  /*** Local functions ***/
-  function parseTrackingEvents(trackingEvents, duration) {
-    var trackings = [];
+  /** * Local functions ***/
+  function parseTrackingEvents (trackingEvents, duration) {
+    const trackings = [];
+
     if (utilities.isDefined(trackingEvents)) {
       trackingEvents = utilities.isArray(trackingEvents) ? trackingEvents : [trackingEvents];
-      trackingEvents.forEach(function (trackingData) {
+      trackingEvents.forEach((trackingData) => {
         trackings.push(new TrackingEvent(trackingData, duration));
       });
     }
+
     return trackings;
   }
 
-  function parseMediaFiles(mediaFilesJxonTree) {
-    var mediaFiles = [];
+  function parseMediaFiles (mediaFilesJxonTree) {
+    const mediaFiles = [];
+
     if (utilities.isDefined(mediaFilesJxonTree)) {
       mediaFilesJxonTree = utilities.isArray(mediaFilesJxonTree) ? mediaFilesJxonTree : [mediaFilesJxonTree];
 
-      mediaFilesJxonTree.forEach(function (mfData) {
+      mediaFilesJxonTree.forEach((mfData) => {
         mediaFiles.push(new MediaFile(mfData));
       });
     }
+
     return mediaFiles;
   }
 }
@@ -64,9 +63,10 @@ function Linear(linearJTree) {
  * Must return true if at least one of the MediaFiles' type is supported
  */
 Linear.prototype.isSupported = function () {
-  var i, len;
-  for(i=0, len=this.mediaFiles.length; i<len; i+=1) {
-    if(this.mediaFiles[i].isSupported()) {
+  let i, len;
+
+  for (i = 0, len = this.mediaFiles.length; i < len; i += 1) {
+    if (this.mediaFiles[i].isSupported()) {
       return true;
     }
   }

@@ -1,6 +1,6 @@
-'use strict';
 
-var utilities = require('./utilityFunctions');
+
+const utilities = require('./utilityFunctions');
 
 /**
  *
@@ -58,20 +58,21 @@ var utilities = require('./utilityFunctions');
  *
  */
 
-var urlParsingNode = document.createElement("a");
+const urlParsingNode = document.createElement('a');
+
 /**
  * documentMode is an IE-only property
  * http://msdn.microsoft.com/en-us/library/ie/cc196988(v=vs.85).aspx
  */
-var msie = document.documentMode;
+const msie = document.documentMode;
 
-function urlParts(url) {
-  var href = url;
+function urlParts (url) {
+  let href = url;
 
   if (msie) {
     // Normalize before parse.  Refer Implementation Notes on why this is
     // done in two steps on IE.
-    urlParsingNode.setAttribute("href", href);
+    urlParsingNode.setAttribute('href', href);
     href = urlParsingNode.href;
   }
 
@@ -85,8 +86,8 @@ function urlParts(url) {
     search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
     hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
     hostname: urlParsingNode.hostname,
-    port: utilities.isNotEmptyString(urlParsingNode.port)? urlParsingNode.port: 80,
-    pathname: (urlParsingNode.pathname.charAt(0) === '/')
+    port: utilities.isNotEmptyString(urlParsingNode.port) ? urlParsingNode.port : 80,
+    pathname: urlParsingNode.pathname.charAt(0) === '/'
       ? urlParsingNode.pathname
       : '/' + urlParsingNode.pathname
   };
@@ -98,10 +99,10 @@ function urlParts(url) {
  * the different key value pairs
  * @param {string} qs queryString
  */
-function queryStringToObj(qs, cond) {
-  var pairs, qsObj;
+function queryStringToObj (qs, cond) {
+  let pairs, qsObj;
 
-  cond = utilities.isFunction(cond)? cond : function() {
+  cond = utilities.isFunction(cond) ? cond : function () {
     return true;
   };
 
@@ -109,13 +110,14 @@ function queryStringToObj(qs, cond) {
   pairs = qs.split('&');
   qsObj = {};
 
-  utilities.forEach(pairs, function (pair) {
-    var keyValue, key, value;
+  utilities.forEach(pairs, (pair) => {
+    let keyValue, key, value;
+
     if (pair !== '') {
       keyValue = pair.split('=');
       key = keyValue[0];
       value = keyValue[1];
-      if(cond(key, value)){
+      if (cond(key, value)) {
         qsObj[key] = value;
       }
     }
@@ -129,11 +131,13 @@ function queryStringToObj(qs, cond) {
  * @param obj
  * @returns {string}
  */
-function objToQueryString(obj) {
-  var pairs = [];
-  utilities.forEach(obj, function (value, key) {
+function objToQueryString (obj) {
+  const pairs = [];
+
+  utilities.forEach(obj, (value, key) => {
     pairs.push(key + '=' + value);
   });
+
   return pairs.join('&');
 }
 

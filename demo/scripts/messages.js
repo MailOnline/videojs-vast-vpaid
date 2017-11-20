@@ -1,22 +1,24 @@
-var dom = require('./miniDom');
-var _ = require('./utils');
-var MESSAGE_DURATION = 3500;
-var MSG_TYPE = {
+let timeoutId;
+const dom = require('./miniDom');
+const _ = require('./utils');
+
+const MESSAGE_DURATION = 3500;
+const MSG_TYPE = {
   SUCCESS: 'msg-success',
   ERROR: 'msg-error'
 };
-var timeoutId = null;
+const messageContainer = document.createElement('div');
 
-var messageContainer = document.createElement('div');
+timeoutId = null;
 
-dom.onReady(function() {
+dom.onReady(() => {
   document.body.appendChild(messageContainer);
 });
 
 dom.addClass(messageContainer, 'messages');
 
-function showMessage(type, msg) {
-  if(timeoutId){
+function showMessage (type, msg) {
+  if (timeoutId) {
     clearTimeout(timeoutId);
   }
   dom.addClass(messageContainer, MSG_TYPE[type]);
@@ -25,19 +27,19 @@ function showMessage(type, msg) {
   timeoutId = setTimeout(resetMessageContainer, MESSAGE_DURATION);
 }
 
-function resetMessageContainer() {
-  _.forEach(MSG_TYPE, function(className) {
+function resetMessageContainer () {
+  _.forEach(MSG_TYPE, (className) => {
     dom.removeClass(messageContainer, className);
   });
   messageContainer.innerHTML = '';
   timeoutId = null;
 }
 
-function showSuccessMessage(msg) {
+function showSuccessMessage (msg) {
   showMessage('SUCCESS', msg);
 }
 
-function showErrorMessage(msg) {
+function showErrorMessage (msg) {
   showMessage('ERROR', msg);
 }
 
@@ -45,6 +47,3 @@ module.exports = {
   success: showSuccessMessage,
   error: showErrorMessage
 };
-
-
-

@@ -1,116 +1,120 @@
-'use strict';
 
-describe("VASTTracker", function () {
 
-  var TrackingEvent = require('ads/vast/TrackingEvent');
-  var VASTError = require('ads/vast/VASTError');
-  var VASTTracker = require('ads/vast/VASTTracker');
-  var VASTResponse = require('ads/vast/VASTResponse');
-  var vastUtil = require('ads/vast/vastUtil');
+describe('VASTTracker', () => {
+  const TrackingEvent = require('../../../src/scripts/ads/vast/TrackingEvent');
+  const VASTError = require('../../../src/scripts/ads/vast/VASTError');
+  const VASTTracker = require('../../../src/scripts/ads/vast/VASTTracker');
+  const VASTResponse = require('../../../src/scripts/ads/vast/VASTResponse');
+  const vastUtil = require('../../../src/scripts/ads/vast/vastUtil');
 
-  var utilities = require('utils/utilityFunctions');
-  var xml = require('utils/xml');
+  const utilities = require('../../../src/scripts/utils/utilityFunctions');
+  const xml = require('../../../src/scripts/utils/xml');
 
-  var response, ASSET_URI;
+  let response, ASSET_URI;
 
-  function createTrackEvent(eventName, uri) {
-    var trackingXML = '<Tracking event="' + eventName + '">' +
+  function createTrackEvent (eventName, uri) {
+    const trackingXML = '<Tracking event="' + eventName + '">' +
       '<![CDATA[' + uri + ']]>' +
       '</Tracking>';
+
     return new TrackingEvent(xml.toJXONTree(trackingXML));
   }
 
-  beforeEach(function () {
+  beforeEach(() => {
     response = new VASTResponse();
     response._addDuration(100000);// <== 100 seconds
     ASSET_URI = 'http://ASSET_URI';
   });
 
-  it("must return an instance of itself", function () {
+  it('must return an instance of itself', () => {
     assert.instanceOf(new VASTTracker(ASSET_URI, response), VASTTracker);
   });
 
-  it("must throw an error if you don't pass an asset URI to the constructor", function () {
-    assert.throws(function () {
-      /*jshint unused:false*/
-      var tracker = new VASTTracker();
+  it('must throw an error if you don\'t pass an asset URI to the constructor', () => {
+    assert.throws(() => {
+      // eslint-disable-next-line
+      new VASTTracker();
     }, VASTError, 'VAST Error: on VASTTracker constructor, missing required the URI of the ad asset being played');
   });
 
-  it("must throw an error if you don't pass a VASTResponse obj to the constructor", function () {
-    assert.throws(function () {
-      /*jshint unused:false*/
-      var tracker = new VASTTracker(ASSET_URI);
+  it('must throw an error if you don\'t pass a VASTResponse obj to the constructor', () => {
+    assert.throws(() => {
+      // eslint-disable-next-line
+      new VASTTracker(ASSET_URI);
     }, VASTError, 'VAST Error: on VASTTracker constructor, missing required VAST response');
   });
 
-  describe("instance", function () {
-    var origTrack;
+  describe('instance', () => {
+    let origTrack;
 
-    function assertVASTTrackRequest(URLs, variables) {
+    function assertVASTTrackRequest (URLs, variables) {
       URLs = utilities.isArray(URLs) ? URLs : [URLs];
       sinon.assert.calledWithExactly(vastUtil.track, URLs, variables);
     }
 
-    beforeEach(function () {
+    beforeEach(() => {
       origTrack = vastUtil.track;
       vastUtil.track = sinon.spy();
     });
 
-    afterEach(function () {
+    afterEach(() => {
       vastUtil.track = origTrack;
     });
 
-    it("must publish the response", function () {
-      var tracker = new VASTTracker(ASSET_URI, response);
+    it('must publish the response', () => {
+      const tracker = new VASTTracker(ASSET_URI, response);
+
       assert.equal(tracker.response, response);
     });
 
-    it("must publish the assetUri passed to the constructor", function () {
-      var tracker = new VASTTracker(ASSET_URI, response);
+    it('must publish the assetUri passed to the constructor', () => {
+      const tracker = new VASTTracker(ASSET_URI, response);
+
       assert.equal(tracker.assetURI, ASSET_URI);
     });
 
-    it("must set the progress to 0 at start", function () {
-      var tracker = new VASTTracker(ASSET_URI, response);
+    it('must set the progress to 0 at start', () => {
+      const tracker = new VASTTracker(ASSET_URI, response);
+
       assert.equal(tracker.progress, 0);
     });
 
-    it("must publish the quartiles using the duration set on the vastResponse", function () {
+    it('must publish the quartiles using the duration set on the vastResponse', () => {
       response._addDuration(10000);
-      var tracker = new VASTTracker(ASSET_URI, response);
+      const tracker = new VASTTracker(ASSET_URI, response);
+
       assert.deepEqual(tracker.quartiles, {
-        firstQuartile: { tracked: false, time: 2500},
-        midpoint:{ tracked: false, time: 5000 },
-        thirdQuartile: { tracked: false, time: 7500 }
+        firstQuartile: {tracked: false, time: 2500},
+        midpoint: {tracked: false, time: 5000},
+        thirdQuartile: {tracked: false, time: 7500}
       });
     });
 
-    describe("trackURLs", function(){
-      var tracker;
+    describe('trackURLs', () => {
+      let tracker;
 
-      beforeEach(function(){
+      beforeEach(() => {
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must add ASSETURI and CONTENTPLAYHEAD to the tracking variables", function(){
+      it('must add ASSETURI and CONTENTPLAYHEAD to the tracking variables', () => {
         tracker.trackURLs(['http://sample.track.url']);
         assertVASTTrackRequest(['http://sample.track.url'], {
           ASSETURI: ASSET_URI,
-          CONTENTPLAYHEAD: "00:00:00.000"
+          CONTENTPLAYHEAD: '00:00:00.000'
         });
       });
 
-      it("must track the passed urls with he passed variables", function(){
+      it('must track the passed urls with he passed variables', () => {
         tracker.trackURLs(['http://sample.track.url'], {FOOVAR: 'FOOVAR'});
         assertVASTTrackRequest(['http://sample.track.url'], {
           ASSETURI: ASSET_URI,
-          CONTENTPLAYHEAD: "00:00:00.000",
+          CONTENTPLAYHEAD: '00:00:00.000',
           FOOVAR: 'FOOVAR'
         });
       });
 
-      it("must not track anything if the passed urls is not an array with urls", function(){
+      it('must not track anything if the passed urls is not an array with urls', () => {
         tracker.trackURLs([], {FOOVAR: 'FOOVAR'});
         tracker.trackURLs({}, {FOOVAR: 'FOOVAR'});
         tracker.trackURLs(null, {FOOVAR: 'FOOVAR'});
@@ -119,10 +123,10 @@ describe("VASTTracker", function () {
       });
     });
 
-    describe("trackEvent", function () {
-      var tracker;
+    describe('trackEvent', () => {
+      let tracker;
 
-      beforeEach(function () {
+      beforeEach(() => {
         response._addTrackingEvents([
           createTrackEvent('start', 'http://start.trackEvent.url'),
           createTrackEvent('pause', ''),
@@ -132,28 +136,28 @@ describe("VASTTracker", function () {
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must track the passed event", function () {
+      it('must track the passed event', () => {
         tracker.trackEvent('start');
-        assertVASTTrackRequest(['http://start.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
+        assertVASTTrackRequest(['http://start.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: '00:00:00.000'});
 
         tracker.progress = 120;
         tracker.trackEvent('close');
-        assertVASTTrackRequest(['http://close.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.120"});
+        assertVASTTrackRequest(['http://close.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: '00:00:00.120'});
       });
 
-      it("must not track anything if the tracker is not tracking the passed event", function () {
+      it('must not track anything if the tracker is not tracking the passed event', () => {
         tracker.trackEvent('fooEvent');
         sinon.assert.notCalled(vastUtil.track);
       });
 
-      it("must not track anything if the tracking event has undefined url", function () {
+      it('must not track anything if the tracking event has undefined url', () => {
         tracker.trackEvent('pause');
         sinon.assert.notCalled(vastUtil.track);
       });
 
-      it("must be possible to mark an track event as track one.", function () {
+      it('must be possible to mark an track event as track one.', () => {
         tracker.trackEvent('start', true);
-        assertVASTTrackRequest(['http://start.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
+        assertVASTTrackRequest(['http://start.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: '00:00:00.000'});
 
         assert.isUndefined(tracker.response.trackingEvents.start);
 
@@ -163,10 +167,10 @@ describe("VASTTracker", function () {
       });
     });
 
-    describe("trackProgress", function () {
-      var tracker, progressEvent, progressEvent2;
+    describe('trackProgress', () => {
+      let tracker, progressEvent, progressEvent2;
 
-      beforeEach(function () {
+      beforeEach(() => {
         progressEvent = createTrackEvent('progress', 'http://progress.track.url');
         progressEvent.offset = 100;
         progressEvent2 = createTrackEvent('progress', 'http://progress2.track.url');
@@ -185,12 +189,12 @@ describe("VASTTracker", function () {
         sinon.spy(tracker, 'trackURLs');
       });
 
-      it("must set the progress in the tracker", function () {
+      it('must set the progress in the tracker', () => {
         tracker.trackProgress(124324);
         assert.equal(tracker.progress, 124324);
       });
 
-      it("must not set the progress if you don't pass an number for the progress", function () {
+      it('must not set the progress if you don\'t pass an number for the progress', () => {
         tracker.trackProgress();
         tracker.trackProgress(null);
         tracker.trackProgress('foo');
@@ -199,12 +203,12 @@ describe("VASTTracker", function () {
         assert.equal(tracker.progress, 0);
       });
 
-      it("must track start event whenever the progress becomes bigger that 0 for the first time.", function () {
+      it('must track start event whenever the progress becomes bigger that 0 for the first time.', () => {
         tracker.trackProgress(1);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'start', true);
       });
 
-      it("must NOT track the rewind event if the new progress is smaller than the current one by less thant 3 seconds", function () {
+      it('must NOT track the rewind event if the new progress is smaller than the current one by less thant 3 seconds', () => {
         tracker.trackProgress(1000);
         tracker.trackEvent.reset();
 
@@ -212,7 +216,7 @@ describe("VASTTracker", function () {
         sinon.assert.notCalled(tracker.trackEvent);
       });
 
-      it("must track the rewind event if the new progress is smaller than the current one by more than 3 seconds", function () {
+      it('must track the rewind event if the new progress is smaller than the current one by more than 3 seconds', () => {
         tracker.trackProgress(10000);
         tracker.trackEvent.reset();
 
@@ -220,54 +224,54 @@ describe("VASTTracker", function () {
         sinon.assert.calledWithExactly(tracker.trackEvent, 'rewind', false);
       });
 
-      it("must track the quartile on the proper order", function () {
+      it('must track the quartile on the proper order', () => {
         tracker.trackEvent.reset();
 
-        //FirstQuartile
+        // FirstQuartile
         tracker.trackProgress(10000);// <== 10 seconds
         sinon.assert.neverCalledWith(tracker.trackEvent, 'firstQuartile', true);
-        tracker.trackProgress(25000);//<== 25 seconds
+        tracker.trackProgress(25000);// <== 25 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
 
-        //midPoint
+        // midPoint
         tracker.trackProgress(35000);// <== 35 seconds
         sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
-        tracker.trackProgress(50000);//<== 50 seconds
+        tracker.trackProgress(50000);// <== 50 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'midpoint', true);
 
-        //thirdQuartile
+        // thirdQuartile
         tracker.trackProgress(65000);// <== 65 seconds
         sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
-        tracker.trackProgress(75500);//<== 75.5 seconds
+        tracker.trackProgress(75500);// <== 75.5 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'thirdQuartile', true);
       });
 
-      it("must not be possible to track a bigger quartile if the previous quartile has not been tracked", function(){
+      it('must not be possible to track a bigger quartile if the previous quartile has not been tracked', () => {
         tracker.trackEvent.reset();
 
-        tracker.trackProgress(75500);//<== 75.5 seconds
-        tracker.trackProgress(50000);//<== 50 seconds
+        tracker.trackProgress(75500);// <== 75.5 seconds
+        tracker.trackProgress(50000);// <== 50 seconds
         sinon.assert.neverCalledWith(tracker.trackEvent, 'firstQuartile', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
 
-        tracker.trackProgress(29000);//<== 25 seconds
+        tracker.trackProgress(29000);// <== 25 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'midpoint', true);
 
-        tracker.trackProgress(50000);//<== 25 seconds
+        tracker.trackProgress(50000);// <== 25 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'midpoint', true);
         sinon.assert.neverCalledWith(tracker.trackEvent, 'thirdQuartile', true);
 
-        tracker.trackProgress(78500);//<== 25 seconds
+        tracker.trackProgress(78500);// <== 25 seconds
         sinon.assert.calledWithExactly(tracker.trackEvent, 'firstQuartile', true);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'midpoint', true);
         sinon.assert.calledWithExactly(tracker.trackEvent, 'thirdQuartile', true);
       });
 
-      it("must trigger the progress event after the specified offset has passed", function(){
+      it('must trigger the progress event after the specified offset has passed', () => {
         tracker.trackProgress(95);
         sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent.uri]);
         sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent2.uri]);
@@ -275,7 +279,7 @@ describe("VASTTracker", function () {
         sinon.assert.calledWithExactly(tracker.trackURLs, [progressEvent.uri]);
         sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent2.uri]);
 
-        //Second tracking event
+        // Second tracking event
         tracker.trackURLs.reset();
         sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent.uri]);
         sinon.assert.neverCalledWith(tracker.trackURLs, [progressEvent2.uri]);
@@ -298,17 +302,18 @@ describe("VASTTracker", function () {
       'acceptInvitationLinear',
       'collapse',
       'expand'
-    ].forEach(function (eventName) {
-      var fnName = 'track' + utilities.capitalize(eventName);
-      describe(fnName, function(){
-        var tracker;
+    ].forEach((eventName) => {
+      const fnName = 'track' + utilities.capitalize(eventName);
 
-        beforeEach(function () {
+      describe(fnName, () => {
+        let tracker;
+
+        beforeEach(() => {
           tracker = new VASTTracker(ASSET_URI, response);
           sinon.spy(tracker, 'trackEvent');
         });
 
-        it("must track the '" + eventName + "' event", function(){
+        it('must track the \'' + eventName + '\' event', () => {
           tracker[fnName]();
           sinon.assert.calledWithExactly(tracker.trackEvent, eventName);
         });
@@ -320,17 +325,18 @@ describe("VASTTracker", function () {
       'skip',
       'close',
       'closeLinear'
-    ].forEach(function (eventName) {
-      var fnName = 'track' + utilities.capitalize(eventName);
-      describe(fnName, function(){
-        var tracker;
+    ].forEach((eventName) => {
+      const fnName = 'track' + utilities.capitalize(eventName);
 
-        beforeEach(function () {
+      describe(fnName, () => {
+        let tracker;
+
+        beforeEach(() => {
           tracker = new VASTTracker(ASSET_URI, response);
           sinon.spy(tracker, 'trackEvent');
         });
 
-        it("must track the '" + eventName + "' event", function(){
+        it('must track the \'' + eventName + '\' event', () => {
           tracker[fnName]();
           sinon.assert.calledWithExactly(tracker.trackEvent, eventName, true);
         });
@@ -341,17 +347,18 @@ describe("VASTTracker", function () {
       'firstQuartile',
       'midpoint',
       'thirdQuartile'
-    ].forEach(function (quartile) {
-      var fnName = 'track' + utilities.capitalize(quartile);
-      describe(fnName, function(){
-        var tracker;
+    ].forEach((quartile) => {
+      const fnName = 'track' + utilities.capitalize(quartile);
 
-        beforeEach(function () {
+      describe(fnName, () => {
+        let tracker;
+
+        beforeEach(() => {
           tracker = new VASTTracker(ASSET_URI, response);
           sinon.spy(tracker, 'trackEvent');
         });
 
-        it("must track the '" + quartile + "' event", function(){
+        it('must track the \'' + quartile + '\' event', () => {
           tracker[fnName]();
           sinon.assert.calledWithExactly(tracker.trackEvent, quartile, true);
           assert.isTrue(tracker.quartiles[quartile].tracked);
@@ -359,20 +366,20 @@ describe("VASTTracker", function () {
       });
     });
 
-    describe("trackComplete", function(){
-      var tracker;
+    describe('trackComplete', () => {
+      let tracker;
 
-      beforeEach(function () {
+      beforeEach(() => {
         tracker = new VASTTracker(ASSET_URI, response);
         sinon.spy(tracker, 'trackEvent');
       });
 
-      it("must not track the complete event if the thirdQuartile was not tracked", function(){
+      it('must not track the complete event if the thirdQuartile was not tracked', () => {
         tracker.trackComplete();
         sinon.assert.neverCalledWith(tracker.trackEvent, 'complete', true);
       });
 
-      it("must track the complete event if the thirdQuartile was tracked", function(){
+      it('must track the complete event if the thirdQuartile was tracked', () => {
         tracker.quartiles.thirdQuartile.tracked = true;
         tracker.trackComplete();
         sinon.assert.calledWithExactly(tracker.trackEvent, 'complete', true);
@@ -380,25 +387,24 @@ describe("VASTTracker", function () {
     });
 
 
+    describe('trackErrorWithCode', () => {
+      let tracker;
 
-    describe("trackErrorWithCode", function(){
-      var tracker;
-
-      beforeEach(function () {
+      beforeEach(() => {
         response._addErrorTrackUrl('http://error.track.url');
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must track the passed error code", function(){
+      it('must track the passed error code', () => {
         tracker.trackErrorWithCode(101);
         assertVASTTrackRequest(['http://error.track.url'], {
           ASSETURI: ASSET_URI,
-          CONTENTPLAYHEAD: "00:00:00.000",
+          CONTENTPLAYHEAD: '00:00:00.000',
           ERRORCODE: 101
         });
       });
 
-      it("must not track anything if you don't pass a valid error code", function(){
+      it('must not track anything if you don\'t pass a valid error code', () => {
         tracker.trackErrorWithCode('1224');
         tracker.trackErrorWithCode(null);
         tracker.trackErrorWithCode({});
@@ -407,57 +413,57 @@ describe("VASTTracker", function () {
       });
     });
 
-    describe("trackImpressions", function(){
-      var tracker;
+    describe('trackImpressions', () => {
+      let tracker;
 
-      beforeEach(function () {
+      beforeEach(() => {
         response._addImpressions(['http://impressions.track.url']);
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must track the impressionURLs", function(){
+      it('must track the impressionURLs', () => {
         tracker.trackImpressions();
         assertVASTTrackRequest(['http://impressions.track.url'], {
           ASSETURI: ASSET_URI,
-          CONTENTPLAYHEAD: "00:00:00.000"
+          CONTENTPLAYHEAD: '00:00:00.000'
         });
       });
     });
 
-    describe("trackCreativeView", function(){
-      var tracker;
+    describe('trackCreativeView', () => {
+      let tracker;
 
-      beforeEach(function () {
+      beforeEach(() => {
         response._addTrackingEvents([
-          createTrackEvent('creativeView', 'http://creativeView.trackEvent.url'),
+          createTrackEvent('creativeView', 'http://creativeView.trackEvent.url')
         ]);
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must track the creativeViewURLs when called with trackCreativeView", function(){
+      it('must track the creativeViewURLs when called with trackCreativeView', () => {
         tracker.trackCreativeView();
-        assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
+        assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: '00:00:00.000'});
       });
 
-      it("must track the creativeViewURLs when called with trackEvent", function(){
+      it('must track the creativeViewURLs when called with trackEvent', () => {
         tracker.trackEvent('creativeView');
-        assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: "00:00:00.000"});
+        assertVASTTrackRequest(['http://creativeView.trackEvent.url'], {ASSETURI: ASSET_URI, CONTENTPLAYHEAD: '00:00:00.000'});
       });
     });
 
-    describe("trackClick", function(){
-      var tracker;
+    describe('trackClick', () => {
+      let tracker;
 
-      beforeEach(function () {
+      beforeEach(() => {
         response._addClickTrackings(['http://click.track.url']);
         tracker = new VASTTracker(ASSET_URI, response);
       });
 
-      it("must track the clickTracking URLS", function(){
+      it('must track the clickTracking URLS', () => {
         tracker.trackClick();
         assertVASTTrackRequest(['http://click.track.url'], {
           ASSETURI: ASSET_URI,
-          CONTENTPLAYHEAD: "00:00:00.000"
+          CONTENTPLAYHEAD: '00:00:00.000'
         });
       });
     });

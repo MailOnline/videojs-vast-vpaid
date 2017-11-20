@@ -1,19 +1,12 @@
-'use strict';
+const VPAIDHTML5Client = require('vpaid-html5-client/js/VPAIDHTML5Client');
+const MimeTypes = require('../../utils/mimetypes');
+const VASTError = require('../vast/VASTError');
+const utilities = require('../../utils/utilityFunctions');
+const dom = require('../../utils/dom');
+const logger = require('../../utils/consoleLogger');
 
-var MimeTypes = require('../../utils/mimetypes');
-
-var VASTError = require('../vast/VASTError');
-
-var VPAIDHTML5Client = require('VPAIDHTML5Client/js/VPAIDHTML5Client');
-
-var utilities = require('../../utils/utilityFunctions');
-var dom = require('../../utils/dom');
-
-var logger = require ('../../utils/consoleLogger');
-
-function VPAIDHTML5Tech(mediaFile) {
-
-  if(!(this instanceof VPAIDHTML5Tech)) {
+function VPAIDHTML5Tech (mediaFile) {
+  if (!(this instanceof VPAIDHTML5Tech)) {
     return new VPAIDHTML5Tech(mediaFile);
   }
 
@@ -26,10 +19,10 @@ function VPAIDHTML5Tech(mediaFile) {
 
   this.mediaFile = mediaFile;
 
-  function sanityCheck(mediaFile) {
-      if (!mediaFile || !utilities.isString(mediaFile.src)) {
-        throw new VASTError(VPAIDHTML5Tech.INVALID_MEDIA_FILE);
-      }
+  function sanityCheck (mediaFile) {
+    if (!mediaFile || !utilities.isString(mediaFile.src)) {
+      throw new VASTError(VPAIDHTML5Tech.INVALID_MEDIA_FILE);
+    }
   }
 }
 
@@ -39,7 +32,7 @@ VPAIDHTML5Tech.supports = function (type) {
   return !utilities.isOldIE() && MimeTypes.html5.indexOf(type) > -1;
 };
 
-VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, callback) {
+VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit (containerEl, videoEl, callback) {
   sanityCheck(containerEl, videoEl, callback);
 
   this.containerEl = containerEl;
@@ -47,7 +40,7 @@ VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, 
   this.vpaidHTMLClient = new VPAIDHTML5Tech.VPAIDHTML5Client(containerEl, videoEl, {});
   this.vpaidHTMLClient.loadAdUnit(this.mediaFile.src, callback);
 
-  function sanityCheck(container, video, cb) {
+  function sanityCheck (container, video, cb) {
     if (!dom.isDomElement(container)) {
       throw new VASTError(VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL);
     }
@@ -62,12 +55,12 @@ VPAIDHTML5Tech.prototype.loadAdUnit = function loadAdUnit(containerEl, videoEl, 
   }
 };
 
-VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
+VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit () {
   if (this.vpaidHTMLClient) {
     try {
       this.vpaidHTMLClient.destroy();
-    } catch(e) {
-      logger.error ('VAST ERROR: trying to unload the VPAID adunit');
+    } catch (e) {
+      logger.error('VAST ERROR: trying to unload the VPAID adunit');
     }
 
     this.vpaidHTMLClient = null;
@@ -79,7 +72,8 @@ VPAIDHTML5Tech.prototype.unloadAdUnit = function unloadAdUnit() {
   }
 };
 
-var PREFIX = 'on VPAIDHTML5Tech';
+const PREFIX = 'on VPAIDHTML5Tech';
+
 VPAIDHTML5Tech.INVALID_MEDIA_FILE = PREFIX + ', invalid MediaFile';
 VPAIDHTML5Tech.INVALID_DOM_CONTAINER_EL = PREFIX + ', invalid container HtmlElement';
 VPAIDHTML5Tech.INVALID_DOM_VIDEO_EL = PREFIX + ', invalid HTMLVideoElement';

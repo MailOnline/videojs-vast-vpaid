@@ -1,27 +1,14 @@
-'use strict';
+const async = require('../../utils/async');
+const dom = require('../../utils/dom');
+const playerUtils = require('../../utils/playerUtils');
+const utilities = require('../../utils/utilityFunctions');
+const logger = require('../../utils/consoleLogger');
+const VASTResponse = require('./VASTResponse');
+const VASTError = require('./VASTError');
+const VASTTracker = require('./VASTTracker');
+const vastUtil = require('./vastUtil');
 
-/**
- * Inner helper class that deals with the logic of the individual steps needed to setup an ad in the player.
- *
- * @param player {object} instance of the player that will play the ad. It assumes that the videojs-contrib-ads plugin
- *                        has been initialized when you use its utility functions.
- *
- * @constructor
- */
-
-var VASTResponse = require('./VASTResponse');
-var VASTError = require('./VASTError');
-var VASTTracker = require('./VASTTracker');
-var vastUtil = require('./vastUtil');
-
-var async = require('../../utils/async');
-var dom = require('../../utils/dom');
-var playerUtils = require('../../utils/playerUtils');
-var utilities = require('../../utils/utilityFunctions');
-
-var logger = require ('../../utils/consoleLogger');
-
-function VASTIntegrator(player) {
+function VASTIntegrator (player) {
   if (!(this instanceof VASTIntegrator)) {
     return new VASTIntegrator(player);
   }
@@ -29,8 +16,9 @@ function VASTIntegrator(player) {
   this.player = player;
 }
 
-VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
-  var that = this;
+VASTIntegrator.prototype.playAd = function playAd (vastResponse, callback) {
+  const that = this;
+
   callback = callback || utilities.noop;
 
   if (!(vastResponse instanceof VASTResponse)) {
@@ -47,7 +35,7 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
     this._addSkipButton.bind(this),
     this._setupEvents.bind(this),
     this._playSelectedAd.bind(this)
-  ], function (error, response) {
+  ], (error, response) => {
     if (error && response) {
       that._trackError(error, response);
     }
@@ -77,31 +65,35 @@ VASTIntegrator.prototype.playAd = function playAd(vastResponse, callback) {
   return this._adUnit;
 };
 
-VASTIntegrator.prototype._selectAdSource = function selectAdSource(response, callback) {
-  var source;
+VASTIntegrator.prototype._selectAdSource = function selectAdSource (response, callback) {
+  let source;
 
-  var playerWidth = dom.getDimension(this.player.el()).width;
-  response.mediaFiles.sort(function compareTo(a, b) {
-    var deltaA = Math.abs(playerWidth - a.width);
-    var deltaB = Math.abs(playerWidth - b.width);
+  const playerWidth = dom.getDimension(this.player.el()).width;
+  const mediaFiles = response.mediaFiles.filter((mediaFile) => mediaFile.isSupported());
+
+  mediaFiles.sort((a, b) => {
+    const deltaA = Math.abs(playerWidth - a.width);
+    const deltaB = Math.abs(playerWidth - b.width);
+
     return deltaA - deltaB;
   });
 
-  source = this.player.selectSource(response.mediaFiles).source;
+  source = this.player.selectSource(mediaFiles).source;
 
   if (source) {
-    logger.info ("selected source: ", source);
+    logger.info('selected source: ', source);
     if (this._adUnit) {
       this._adUnit._src = source;
     }
+
     return callback(null, source, response);
   }
 
   // code 403 <== Couldn't find MediaFile that is supported by this video player
-  callback(new VASTError("Could not find Ad mediafile supported by this player", 403), response);
+  callback(new VASTError('Could not find Ad mediafile supported by this player', 403), response);
 };
 
-VASTIntegrator.prototype._createVASTTracker = function createVASTTracker(adMediaFile, response, callback) {
+VASTIntegrator.prototype._createVASTTracker = function createVASTTracker (adMediaFile, response, callback) {
   try {
     callback(null, adMediaFile, new VASTTracker(adMediaFile.src, response), response);
   } catch (e) {
@@ -109,9 +101,10 @@ VASTIntegrator.prototype._createVASTTracker = function createVASTTracker(adMedia
   }
 };
 
-VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracker, response, callback) {
-  var previouslyMuted;
-  var player = this.player;
+VASTIntegrator.prototype._setupEvents = function setupEvents (adMediaFile, tracker, response, callback) {
+  let previouslyMuted;
+  const player = this.player;
+
   player.on('fullscreenchange', trackFullscreenChange);
   player.on('vast.adStart', trackImpressions);
   player.on('pause', trackPause);
@@ -119,16 +112,16 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   player.on('volumechange', trackVolumeChange);
 
   playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], unbindEvents);
-  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adSkip'], function(evt){
-    if(evt.type === 'vast.adEnd'){
+  playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel', 'vast.adSkip'], (evt) => {
+    if (evt.type === 'vast.adEnd') {
       tracker.trackComplete();
     }
   });
 
   return callback(null, adMediaFile, response);
 
-  /*** Local Functions ***/
-  function unbindEvents() {
+  /** * Local Functions ***/
+  function unbindEvents () {
     player.off('fullscreenchange', trackFullscreenChange);
     player.off('vast.adStart', trackImpressions);
     player.off('pause', trackPause);
@@ -136,7 +129,7 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
     player.off('volumechange', trackVolumeChange);
   }
 
-  function trackFullscreenChange() {
+  function trackFullscreenChange () {
     if (player.isFullscreen()) {
       tracker.trackFullscreen();
     } else {
@@ -144,8 +137,8 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
     }
   }
 
-  function trackPause() {
-    //NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
+  function trackPause () {
+    // NOTE: whenever a video ends the video Element triggers a 'pause' event before the 'ended' event.
     //      We should not track this pause event because it makes the VAST tracking confusing again we use a
     //      Threshold of 2 seconds to prevent false positives on IOS.
     if (Math.abs(player.duration() - player.currentTime()) < 2) {
@@ -153,25 +146,27 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
     }
 
     tracker.trackPause();
-    playerUtils.once(player, ['play', 'vast.adEnd', 'vast.adsCancel'], function (evt) {
-      if(evt.type === 'play'){
+    playerUtils.once(player, ['play', 'vast.adEnd', 'vast.adsCancel'], (evt) => {
+      if (evt.type === 'play') {
         tracker.trackResume();
       }
     });
   }
 
-  function trackProgress() {
-    var currentTimeInMs = player.currentTime() * 1000;
+  function trackProgress () {
+    const currentTimeInMs = player.currentTime() * 1000;
+
     tracker.trackProgress(currentTimeInMs);
   }
 
-  function trackImpressions() {
+  function trackImpressions () {
     tracker.trackImpressions();
     tracker.trackCreativeView();
   }
 
-  function trackVolumeChange() {
-    var muted = player.muted();
+  function trackVolumeChange () {
+    const muted = player.muted();
+
     if (muted) {
       tracker.trackMute();
     } else if (previouslyMuted) {
@@ -181,9 +176,9 @@ VASTIntegrator.prototype._setupEvents = function setupEvents(adMediaFile, tracke
   }
 };
 
-VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker, response, callback) {
-  var skipOffsetInSec;
-  var that = this;
+VASTIntegrator.prototype._addSkipButton = function addSkipButton (source, tracker, response, callback) {
+  let skipOffsetInSec;
+  const that = this;
 
   if (utilities.isNumber(response.skipoffset)) {
     skipOffsetInSec = response.skipoffset / 1000;
@@ -191,25 +186,26 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
   }
   callback(null, source, tracker, response);
 
-  /*** Local function ***/
-  function addSkipButtonToPlayer(player, skipOffset) {
-    var skipButton = createSkipButton(player);
-    var updateSkipButton = updateSkipButtonState.bind(that, skipButton, skipOffset, player);
+  /** * Local function ***/
+  function addSkipButtonToPlayer (player, skipOffset) {
+    const skipButton = createSkipButton(player);
+    const updateSkipButton = updateSkipButtonState.bind(that, skipButton, skipOffset, player);
 
     player.el().appendChild(skipButton);
     player.on('timeupdate', updateSkipButton);
 
     playerUtils.once(player, ['vast.adEnd', 'vast.adsCancel'], removeSkipButton);
 
-    function removeSkipButton() {
+    function removeSkipButton () {
       player.off('timeupdate', updateSkipButton);
       dom.remove(skipButton);
     }
   }
 
-  function createSkipButton(player) {
-    var skipButton = window.document.createElement("div");
-    dom.addClass(skipButton, "vast-skip-button");
+  function createSkipButton (player) {
+    const skipButton = window.document.createElement('div');
+
+    dom.addClass(skipButton, 'vast-skip-button');
 
     skipButton.onclick = function (e) {
       if (dom.hasClass(skipButton, 'enabled')) {
@@ -217,34 +213,34 @@ VASTIntegrator.prototype._addSkipButton = function addSkipButton(source, tracker
         player.trigger('vast.adSkip');
       }
 
-      //We prevent event propagation to avoid problems with the clickThrough and so on
-      if (window.Event.prototype.stopPropagation !== undefined) {
-        e.stopPropagation();
-      } else {
+      // We prevent event propagation to avoid problems with the clickThrough and so on
+      if (window.Event.prototype.stopPropagation === undefined) {
         return false;
+      } else {
+        e.stopPropagation();
       }
     };
 
     return skipButton;
   }
 
-  function updateSkipButtonState(skipButton, skipOffset, player) {
-    var timeLeft = Math.ceil(skipOffset - player.currentTime());
+  function updateSkipButtonState (skipButton, skipOffset, player) {
+    const timeLeft = Math.ceil(skipOffset - player.currentTime());
+
     if (timeLeft > 0) {
-      skipButton.innerHTML = "Skip in " + utilities.toFixedDigits(timeLeft, 2) + "...";
-    } else {
-      if (!dom.hasClass(skipButton, 'enabled')) {
-        dom.addClass(skipButton, 'enabled');
-        skipButton.innerHTML = "Skip ad";
-      }
+      skipButton.innerHTML = 'Skip in ' + utilities.toFixedDigits(timeLeft, 2) + '...';
+    // eslint-disable-next-line
+    } else if (!dom.hasClass(skipButton, 'enabled')) {
+      dom.addClass(skipButton, 'enabled');
+      skipButton.innerHTML = 'Skip ad';
     }
   }
 };
 
-VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, tracker, response, callback) {
-  var player = this.player;
-  var blocker = createClickThroughBlocker(player, tracker, response);
-  var updateBlocker = updateBlockerURL.bind(this, blocker, response, player);
+VASTIntegrator.prototype._addClickThrough = function addClickThrough (mediaFile, tracker, response, callback) {
+  const player = this.player;
+  const blocker = createClickThroughBlocker(player, tracker, response);
+  const updateBlocker = updateBlockerURL.bind(this, blocker, response, player);
 
   player.el().insertBefore(blocker, player.controlBar.el());
   player.on('timeupdate', updateBlocker);
@@ -252,27 +248,28 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
 
   return callback(null, mediaFile, tracker, response);
 
-  /*** Local Functions ***/
+  /** * Local Functions ***/
 
-  function createClickThroughBlocker(player, tracker, response) {
-    var blocker = window.document.createElement("a");
-    var clickThroughMacro = response.clickThrough;
+  function createClickThroughBlocker (player, tracker, response) {
+    const blocker = window.document.createElement('a');
+    const clickThroughMacro = response.clickThrough;
 
     dom.addClass(blocker, 'vast-blocker');
     blocker.href = generateClickThroughURL(clickThroughMacro, player);
 
     if (utilities.isString(clickThroughMacro)) {
-      blocker.target = "_blank";
+      blocker.target = '_blank';
     }
 
     blocker.onclick = function (e) {
       if (player.paused()) {
         player.play();
 
-        //We prevent event propagation to avoid problems with the player's normal pause mechanism
+        // We prevent event propagation to avoid problems with the player's normal pause mechanism
         if (window.Event.prototype.stopPropagation !== undefined) {
           e.stopPropagation();
         }
+
         return false;
       }
 
@@ -283,12 +280,12 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
     return blocker;
   }
 
-  function updateBlockerURL(blocker, response, player) {
+  function updateBlockerURL (blocker, response, player) {
     blocker.href = generateClickThroughURL(response.clickThrough, player);
   }
 
-  function generateClickThroughURL(clickThroughMacro, player) {
-    var variables = {
+  function generateClickThroughURL (clickThroughMacro, player) {
+    const variables = {
       ASSETURI: mediaFile.src,
       CONTENTPLAYHEAD: vastUtil.formatProgress(player.currentTime() * 1000)
     };
@@ -296,39 +293,39 @@ VASTIntegrator.prototype._addClickThrough = function addClickThrough(mediaFile, 
     return clickThroughMacro ? vastUtil.parseURLMacro(clickThroughMacro, variables) : '#';
   }
 
-  function removeBlocker() {
+  function removeBlocker () {
     player.off('timeupdate', updateBlocker);
     dom.remove(blocker);
   }
 };
 
-VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, response, callback) {
-  var player = this.player;
+VASTIntegrator.prototype._playSelectedAd = function playSelectedAd (source, response, callback) {
+  const player = this.player;
 
-  player.preload("auto"); //without preload=auto the durationchange event is never fired
+  player.preload('auto'); // without preload=auto the durationchange event is never fired
   player.src(source);
 
-  logger.debug ("<VASTIntegrator._playSelectedAd> waiting for durationchange to play the ad...");
+  logger.debug('<VASTIntegrator._playSelectedAd> waiting for durationchange to play the ad...');
 
-  playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], function (evt) {
+  playerUtils.once(player, ['durationchange', 'error', 'vast.adsCancel'], (evt) => {
     if (evt.type === 'durationchange') {
-      logger.debug ("<VASTIntegrator._playSelectedAd> got durationchange; calling playAd()");
+      logger.debug('<VASTIntegrator._playSelectedAd> got durationchange; calling playAd()');
       playAd();
-    } else if(evt.type === 'error') {
-      callback(new VASTError("on VASTIntegrator, Player is unable to play the Ad", 400), response);
+    } else if (evt.type === 'error') {
+      callback(new VASTError('on VASTIntegrator, Player is unable to play the Ad', 400), response);
     }
-    //NOTE: If the ads get canceled we do nothing/
+
+    // NOTE: If the ads get canceled we do nothing/
   });
 
-  /**** local functions ******/
-  function playAd() {
-
-    playerUtils.once(player, ['playing', 'vast.adsCancel'], function (evt) {
-      if(evt.type === 'vast.adsCancel'){
+  /** ** local functions ******/
+  function playAd () {
+    playerUtils.once(player, ['playing', 'vast.adsCancel'], (evt) => {
+      if (evt.type === 'vast.adsCancel') {
         return;
       }
 
-      logger.debug ("<VASTIntegrator._playSelectedAd/playAd> got playing event; triggering vast.adStart...");
+      logger.debug('<VASTIntegrator._playSelectedAd/playAd> got playing event; triggering vast.adStart...');
 
       player.trigger('vast.adStart');
 
@@ -336,9 +333,8 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
       player.on('vast.adsCancel', proceed);
       player.on('vast.adSkip', proceed);
 
-      function proceed(evt) {
-
-        if(evt.type === 'ended' && (player.duration() - player.currentTime()) > 3 ) {
+      function proceed (evt) {
+        if (evt.type === 'ended' && player.duration() - player.currentTime() > 3) {
           // Ignore ended event if the Ad time was not 'near' the end
           // avoids issues where IOS controls could skip the Ad
           return;
@@ -348,20 +344,20 @@ VASTIntegrator.prototype._playSelectedAd = function playSelectedAd(source, respo
         player.off('vast.adsCancel', proceed);
         player.off('vast.adSkip', proceed);
 
-        //NOTE: if the ads get cancel we do nothing apart removing the listners
-        if(evt.type === 'ended' || evt.type === 'vast.adSkip'){
+        // NOTE: if the ads get cancel we do nothing apart removing the listners
+        if (evt.type === 'ended' || evt.type === 'vast.adSkip') {
           callback(null, response);
         }
       }
     });
 
-    logger.debug ("<VASTIntegrator._playSelectedAd/playAd> calling player.play()...");
+    logger.debug('<VASTIntegrator._playSelectedAd/playAd> calling player.play()...');
 
     player.play();
   }
 };
 
-VASTIntegrator.prototype._trackError = function trackError(error, response) {
+VASTIntegrator.prototype._trackError = function trackError (error, response) {
   vastUtil.track(response.errorURLMacros, {ERRORCODE: error.code || 900});
 };
 

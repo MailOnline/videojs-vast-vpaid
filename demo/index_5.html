@@ -1,0 +1,110 @@
+---
+
+---
+<!DOCTYPE html>
+<!--[if lte IE 9]><html class="lte-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 9]><!--> <html lang="en"> <!--<![endif]-->
+<head>
+    <title>videojs-vast-vpaid plugin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+    <!-- Web Fonts -->
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <!-- VideoJs -->
+    <link href="//vjs.zencdn.net/5.4.6/video-js.min.css" rel="stylesheet">
+    <script type="text/javascript" src="//vjs.zencdn.net/5.4.6/video.min.js"></script>
+
+    <!-- VideoJs.vast.vpaid required scripts-->
+    <script type="text/javascript" src="/videojs_5.vast.vpaid.js"></script>
+
+    <!-- DEMO required scripts -->
+    <script type="text/javascript" src="/demo.js"></script>
+
+</head>
+<body>
+<h3 class="title main">videojs-vast-vpaid plugin </h3>
+<div class="container">
+    <div class="row">
+        <h4>VideoJs 5 Demo</h4>
+        <div class="twelve columns">
+            <div class="vast-container">
+                <form id="vast-vpaid-form">
+                    <div class="row">
+                        <div class="one-third column">
+                            <input type="radio" name="vast-type" class="tag-type-radio" id="vast-tag-radio">
+                            <label for="vast-tag-radio">VAST/VPAID tag</label>
+                        </div>
+                        <div class="one-third column">
+                            <input type="radio" name="vast-type" class="xml-type-radio" checked="checked" id="vast-sample-radio">
+                            <label for="vast-sample-radio">VAST/VPAID sample tags</label>
+                        </div>
+                        <div class="one-third column">
+                            <input type="radio" name="vast-type" class="custom-type-radio" id="vast-custom-radio">
+                            <label for="vast-custom-radio">VAST/VPAID custom XML</label>
+                        </div>
+                    </div>
+                    <div class="row tag-type">
+                        <div class="twelve columns">
+                            <label for="vast-tag">VAST Tag</label>
+                            <input id="vast-tag" type="text" name="vast-type" class="u-full-width tag-el">
+                        </div>
+                    </div>
+                    <div class="row xml-type">
+                        <div class="twelve columns">
+                            <label for="vast-samples">VAST/VPAID sample tags</label>
+                            <select id="vast-samples" class="u-full-width xml-el">
+
+                                <option selected="selected" value="http://servedby.flashtalking.com/imp/1/31714;812030;208;xml;DailyMail;640x360VASTHTML5/?cachebuster=%%CACHEBUSTER%%">VAST flashtalking Preroll Linear</option>
+
+                                <option  value="http://search.spotxchange.com/vast/2.00/79391?VPAID=1&content_page_url=test.com&cb=3202405928168446&player_width=300&player_height=250">VPAID Flash spotX Preroll Test Tag</option>
+
+                                <option  value="http://vast.bp3863356.btrll.com/vast/3863356?n=1426410433&br_w=300&br_h=250&br_pageurl=blah">VPAID Flash Brightroll Preroll test tag</option>
+
+                                <option  value="https://ad3.liverail.com/?LR_PUBLISHER_ID=1331&LR_CAMPAIGN_ID=229&LR_SCHEMA=vast2-vpaid">VPAID Flash LiveRail Preroll test tag</option>
+
+                                <option  value="http://cdn-tags.brainient.com/1228/cba8794a-38a5-448b-ad31-e3f6169645c1/vast.xml?platform=vpaid&v=v6&proto=http">VPAID Flash Brainient Preroll Linear Expand</option>
+
+                                <option  value="http://cdn-tags.brainient.com/1228/34f8e4e6-e83c-46da-8bf6-a37ae9ed5134/vast.xml?platform=vpaid&v=v6&proto=http">VPAID Flash Brainient Preroll Linear Button</option>
+
+                                <option  value="http://asv.tubemogul.com/vast/CK6HN2uZ3ULMo7rOR4rE?ad_id=eVQayxudgvnI1TJGXf5X">VPAID Flash Tubemogul Preroll Linear</option>
+
+                                <option  value="http://rtr.innovid.com/r1.5554946ab01d97.36996823;cb=%25%CACHEBUSTER%25%25">VPAID Html5 Innovid test tag</option>
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row custom-type">
+                        <div class="twelve columns">
+                            <textarea class="u-full-width custom-el" placeholder="Sample VAST XMl"></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <a class="button button-primary" href="#">Update</a>
+                            <a class="button button-info pause" style="display:none;" href="#">Pause Ad</a>
+                            <a class="button button-info resume" style="display:none;" href="#">Resume Ad</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="twelve columns">
+                            <div class="vjs-video-container">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        Some ad's will throw "VAST Error: on VASTClient.requestVastXML, HTTP request error with status '-1'", because that adServer is not setting the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS">http access control header</a>, the reason why some video player's are able to play the ad's in firefox because they do the request by flash bypassing the browser
+    </div>
+    <br/>
+    <div class="row">
+        <h4> Other Versions </h4>
+
+        <p><a href='index_4.html'>Video.Js 4 DEMO</a></p>
+
+    </div>
+</div>
+</body>
+
+</html>

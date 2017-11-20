@@ -1,9 +1,9 @@
-'use strict';
 
-var dom = require('./dom');
-var utilities = require('./utilityFunctions');
 
-var playerUtils = {};
+const dom = require('./dom');
+const utilities = require('./utilityFunctions');
+
+const playerUtils = {};
 
 /**
  * Returns an object that captures the portions of player state relevant to
@@ -12,10 +12,10 @@ var playerUtils = {};
  * was in when this function was invoked.
  * @param {object} player The videojs player object
  */
-playerUtils.getPlayerSnapshot = function getPlayerSnapshot(player) {
-  var tech = player.el().querySelector('.vjs-tech');
+playerUtils.getPlayerSnapshot = function getPlayerSnapshot (player) {
+  const tech = player.el().querySelector('.vjs-tech');
 
-  var snapshot = {
+  const snapshot = {
     ended: player.ended(),
     src: player.currentSrc(),
     currentTime: player.currentTime(),
@@ -28,22 +28,24 @@ playerUtils.getPlayerSnapshot = function getPlayerSnapshot(player) {
     snapshot.nativePoster = tech.poster;
     snapshot.style = tech.getAttribute('style');
   }
+
   return snapshot;
 
-  /**** Local Functions ****/
-  function getSuppressedTracks(player) {
-    var tracks = player.remoteTextTracks ? player.remoteTextTracks() : [];
+  /** ** Local Functions ****/
+  function getSuppressedTracks (player) {
+    let tracks = player.remoteTextTracks ? player.remoteTextTracks() : [];
 
-    if (tracks && utilities.isArray(tracks.tracks_)) {
-      tracks = tracks.tracks_;
+    if (tracks && utilities.isArray(tracks.tracks)) {
+      tracks = tracks.tracks;
     }
 
     if (!utilities.isArray(tracks)) {
       tracks = [];
     }
 
-    var suppressedTracks = [];
-    tracks.forEach(function (track) {
+    const suppressedTracks = [];
+
+    tracks.forEach((track) => {
       suppressedTracks.push({
         track: track,
         mode: track.mode
@@ -60,9 +62,9 @@ playerUtils.getPlayerSnapshot = function getPlayerSnapshot(player) {
  * the state of the snapshot.
  * @param {object} snapshot - the player state to apply
  */
-playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snapshot) {
-  var tech = player.el().querySelector('.vjs-tech');
-  var attempts = 20; // the number of remaining attempts to restore the snapshot
+playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot (player, snapshot) {
+  const tech = player.el().querySelector('.vjs-tech');
+  let attempts = 20; // the number of remaining attempts to restore the snapshot
 
   if (snapshot.nativePoster) {
     tech.poster = snapshot.nativePoster;
@@ -74,7 +76,6 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
   }
 
   if (hasSrcChanged(player, snapshot)) {
-
     // on ios7, fiddling with textTracks too early will cause safari to crash
     player.one('contentloadedmetadata', restoreTracks);
 
@@ -86,7 +87,6 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
 
     // safari requires a call to `load` to pick up a changed source
     player.load();
-
   } else {
     restoreTracks();
 
@@ -95,18 +95,18 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
     }
   }
 
-  /*** Local Functions ***/
+  /** * Local Functions ***/
 
   /**
    * Sometimes firefox does not trigger the 'canplay' evt.
    * This code ensure that it always gets triggered triggered.
    */
-  function ensureCanplayEvtGetsFired() {
-    var timeoutId = setTimeout(function() {
+  function ensureCanplayEvtGetsFired () {
+    const timeoutId = setTimeout(() => {
       player.trigger('canplay');
     }, 1000);
 
-    player.one('canplay', function(){
+    player.one('canplay', () => {
       clearTimeout(timeoutId);
     });
   }
@@ -117,17 +117,19 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
    * ads, the content player state hasn't been modified and so no
    * restoration is required
    */
-  function hasSrcChanged(player, snapshot) {
+  function hasSrcChanged (player, snapshot) {
     if (player.src()) {
       return player.src() !== snapshot.src;
     }
+
     // the player was configured through source element children
     return player.currentSrc() !== snapshot.src;
   }
 
-  function restoreTracks() {
-    var suppressedTracks = snapshot.suppressedTracks;
-    suppressedTracks.forEach(function (trackSnapshot) {
+  function restoreTracks () {
+    const suppressedTracks = snapshot.suppressedTracks;
+
+    suppressedTracks.forEach((trackSnapshot) => {
       trackSnapshot.track.mode = trackSnapshot.mode;
     });
   }
@@ -136,8 +138,7 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
    * Determine if the video element has loaded enough of the snapshot source
    * to be ready to apply the rest of the state
    */
-  function tryToResume() {
-
+  function tryToResume () {
     // if some period of the video is seekable, resume playback
     // otherwise delay a bit and then check again unless we're out of attempts
 
@@ -145,19 +146,17 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
       setTimeout(tryToResume, 50);
     } else {
       try {
-        if(player.currentTime() !== snapshot.currentTime) {
+        if (player.currentTime() !== snapshot.currentTime) {
           if (snapshot.playing) { // if needed restore playing status after seek completes
-            player.one('seeked', function() {
+            player.one('seeked', () => {
               player.play();
             });
           }
           player.currentTime(snapshot.currentTime);
-
         } else if (snapshot.playing) {
           // if needed and no seek has been performed, restore playing status immediately
           player.play();
         }
-
       } catch (e) {
         videojs.log.warn('Failed to resume the content after an advertisement', e);
       }
@@ -166,7 +165,6 @@ playerUtils.restorePlayerSnapshot = function restorePlayerSnapshot(player, snaps
 };
 
 playerUtils.isReadyToResume = function (player) {
-
   if (player.readyState() > 1) {
     // some browsers and media aren't "seekable".
     // readyState greater than 1 allows for seeking without exceptions
@@ -195,17 +193,17 @@ playerUtils.isReadyToResume = function (player) {
  * @param player
  */
 playerUtils.prepareForAds = function (player) {
-  var blackPoster = player.addChild('blackPoster');
-  var _firstPlay = true;
-  var volumeSnapshot;
+  const blackPoster = player.addChild('blackPoster');
+  let _firstPlay = true;
+  let volumeSnapshot;
 
 
   monkeyPatchPlayerApi();
 
   player.on('play', tryToTriggerFirstPlay);
-  player.on('vast.reset', resetFirstPlay);//Every time we change the sources we reset the first play.
+  player.on('vast.reset', resetFirstPlay);// Every time we change the sources we reset the first play.
   player.on('vast.firstPlay', restoreContentVolume);
-  player.on('error', hideBlackPoster);//If there is an error in the player we remove the blackposter to show the err msg
+  player.on('error', hideBlackPoster);// If there is an error in the player we remove the blackposter to show the err msg
   player.on('vast.adStart', hideBlackPoster);
   player.on('vast.adsCancel', hideBlackPoster);
   player.on('vast.adError', hideBlackPoster);
@@ -213,7 +211,7 @@ playerUtils.prepareForAds = function (player) {
   player.on('vast.adEnd', removeStyles);
   player.on('vast.adsCancel', removeStyles);
 
-  /*** Local Functions ***/
+  /** * Local Functions ***/
 
   /**
    What this function does is ugly and horrible and I should think twice before calling myself a good developer. With that said,
@@ -224,17 +222,17 @@ playerUtils.prepareForAds = function (player) {
 
    If you have a better solution please do tell me.
    */
-  function monkeyPatchPlayerApi() {
-
+  function monkeyPatchPlayerApi () {
     /**
      * Monkey patch needed to handle firstPlay and resume of playing ad.
      *
      * @param callOrigPlay necessary flag to prevent infinite loop when you are restoring a VAST ad.
      * @returns {player}
      */
-    var origPlay = player.play;
+    const origPlay = player.play;
+
     player.play = function (callOrigPlay) {
-      var that = this;
+      const that = this;
 
       if (isFirstPlay()) {
         firstPlay();
@@ -244,17 +242,18 @@ playerUtils.prepareForAds = function (player) {
 
       return this;
 
-      /*** local functions ***/
-      function firstPlay() {
+      /** * local functions ***/
+      function firstPlay () {
         if (!utilities.isIPhone()) {
           volumeSnapshot = saveVolumeSnapshot();
           player.muted(true);
         }
 
         origPlay.apply(that, arguments);
+        tryToTriggerFirstPlay();
       }
 
-      function resume(callOrigPlay) {
+      function resume (callOrigPlay) {
         if (isAdPlaying() && !callOrigPlay) {
           player.vast.adUnit.resumeAd();
         } else {
@@ -270,13 +269,15 @@ playerUtils.prepareForAds = function (player) {
      * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
      * @returns {player}
      */
-    var origPause = player.pause;
+    const origPause = player.pause;
+
     player.pause = function (callOrigPause) {
       if (isAdPlaying() && !callOrigPause) {
         player.vast.adUnit.pauseAd();
       } else {
         origPause.apply(this, arguments);
       }
+
       return this;
     };
 
@@ -287,44 +288,46 @@ playerUtils.prepareForAds = function (player) {
      * @param callOrigPlay necessary flag to prevent infinite loop when you are pausing a VAST ad.
      * @returns {player}
      */
-    var origPaused = player.paused;
+    const origPaused = player.paused;
+
     player.paused = function (callOrigPaused) {
       if (isAdPlaying() && !callOrigPaused) {
         return player.vast.adUnit.isPaused();
       }
+
       return origPaused.apply(this, arguments);
     };
   }
 
-  function isAdPlaying() {
+  function isAdPlaying () {
     return player.vast && player.vast.adUnit;
   }
 
-  function tryToTriggerFirstPlay() {
+  function tryToTriggerFirstPlay () {
     if (isFirstPlay()) {
       _firstPlay = false;
       player.trigger('vast.firstPlay');
     }
   }
 
-  function resetFirstPlay() {
+  function resetFirstPlay () {
     _firstPlay = true;
     blackPoster.show();
     restoreContentVolume();
   }
 
-  function isFirstPlay() {
+  function isFirstPlay () {
     return _firstPlay;
   }
 
-  function saveVolumeSnapshot() {
+  function saveVolumeSnapshot () {
     return {
       muted: player.muted(),
       volume: player.volume()
     };
   }
 
-  function restoreContentVolume() {
+  function restoreContentVolume () {
     if (volumeSnapshot) {
       player.currentTime(0);
       restoreVolumeSnapshot(volumeSnapshot);
@@ -332,24 +335,24 @@ playerUtils.prepareForAds = function (player) {
     }
   }
 
-  function restoreVolumeSnapshot(snapshot) {
+  function restoreVolumeSnapshot (snapshot) {
     if (utilities.isObject(snapshot)) {
       player.volume(snapshot.volume);
       player.muted(snapshot.muted);
     }
   }
 
-  function hideBlackPoster() {
+  function hideBlackPoster () {
     if (!dom.hasClass(blackPoster.el(), 'vjs-hidden')) {
       blackPoster.hide();
     }
   }
 
-  function addStyles() {
+  function addStyles () {
     dom.addClass(player.el(), 'vjs-ad-playing');
   }
 
-  function removeStyles() {
+  function removeStyles () {
     dom.removeClass(player.el(), 'vjs-ad-playing');
   }
 };
@@ -362,7 +365,8 @@ playerUtils.prepareForAds = function (player) {
  * @param {object} player The videojs player object
  */
 playerUtils.removeNativePoster = function (player) {
-  var tech = player.el().querySelector('.vjs-tech');
+  const tech = player.el().querySelector('.vjs-tech');
+
   if (tech) {
     tech.removeAttribute('poster');
   }
@@ -376,16 +380,16 @@ playerUtils.removeNativePoster = function (player) {
  * @param events array of events
  * @param handler function to execute once one of the events fires
  */
-playerUtils.once = function once(player, events, handler) {
-  function listener() {
-    handler.apply(null, arguments);
+playerUtils.once = function once (player, events, handler) {
+  function listener () {
+    handler(...arguments);
 
-    events.forEach(function (event) {
+    events.forEach((event) => {
       player.off(event, listener);
     });
   }
 
-  events.forEach(function (event) {
+  events.forEach((event) => {
     player.on(event, listener);
   });
 };

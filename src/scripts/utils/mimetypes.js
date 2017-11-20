@@ -1,4 +1,4 @@
-'use strict';
+
 
 module.exports = {
   html5: [
@@ -15,10 +15,10 @@ module.exports = {
     'text/ecmascript1.4',
     'text/livescript',
     'application/ecmascript',
-    'application/x-ecmascript',
+    'application/x-ecmascript'
   ],
 
   flash: [
     'application/x-shockwave-flash'
-  ],
+  ]
 };

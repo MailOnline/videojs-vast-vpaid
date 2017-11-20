@@ -1,104 +1,103 @@
-var dom = require('./miniDom');
-var adsSetupPlugin = require('./ads-setup-plugin');
-var messages = require('./messages');
+require('../styles/demo.scss');
+const dom = require('./miniDom');
+const adsSetupPlugin = require('./ads-setup-plugin');
+const messages = require('./messages');
 
 videojs.plugin('ads-setup', adsSetupPlugin);
 
-dom.onReady(function() {
-  var vastForm = document.querySelector('form#vast-vpaid-form');
+dom.onReady(() => {
+  const vastForm = document.querySelector('form#vast-vpaid-form');
 
   initForm(vastForm);
 
-  /*** Local functions ***/
-  function initForm(formEl) {
-    var tagTypeEl = formEl.querySelector('input.tag-type-radio');
-    var xmlTypeEl = formEl.querySelector('input.xml-type-radio');
-    var customTypeEl = formEl.querySelector('input.custom-type-radio');
-    var updateBtn = formEl.querySelector('.button.button-primary');
-    var pauseBtn = formEl.querySelector('.pause');
-    var resumeBtn = formEl.querySelector('.resume');
-    var tagEl = formEl.querySelector('input.tag-el');
-    var xmlEl = formEl.querySelector('select.xml-el');
-    var customEl = formEl.querySelector('textarea.custom-el');
-    var videoContainer = formEl.querySelector('div.vjs-video-container');
-    var player;
+  /* Local functions ***/
+  function initForm (formEl) {
+    const tagTypeEl = formEl.querySelector('input.tag-type-radio');
+    const xmlTypeEl = formEl.querySelector('input.xml-type-radio');
+    const customTypeEl = formEl.querySelector('input.custom-type-radio');
+    const updateBtn = formEl.querySelector('.button.button-primary');
+    const pauseBtn = formEl.querySelector('.pause');
+    const resumeBtn = formEl.querySelector('.resume');
+    const tagEl = formEl.querySelector('input.tag-el');
+    const xmlEl = formEl.querySelector('select.xml-el');
+    const customEl = formEl.querySelector('textarea.custom-el');
+    const videoContainer = formEl.querySelector('div.vjs-video-container');
+    let player;
 
     updateVisibility();
     dom.addEventListener(tagTypeEl, 'change', updateVisibility);
     dom.addEventListener(xmlTypeEl, 'change', updateVisibility);
     dom.addEventListener(customTypeEl, 'change', updateVisibility);
-    dom.addEventListener(updateBtn, 'click', function() {
+    dom.addEventListener(updateBtn, 'click', () => {
       updateDemo();
-      messages.success("Demo updated!!!");
+      messages.success('Demo updated!!!');
     });
 
     if (pauseBtn && resumeBtn) {
-      dom.addEventListener(pauseBtn, 'click', function() {
+      dom.addEventListener(pauseBtn, 'click', () => {
         pauseAd();
-        messages.success("ad paused");
+        messages.success('ad paused');
       });
 
-      dom.addEventListener(resumeBtn, 'click', function() {
+      dom.addEventListener(resumeBtn, 'click', () => {
         resumeAd();
-        messages.success("ad resumed");
+        messages.success('ad resumed');
       });
-
     }
 
     updateDemo();
 
-    /*** Local functions ***/
-    function updateVisibility() {
+    /* Local functions ***/
+    function updateVisibility () {
       dom.removeClass(formEl, 'TAG');
       dom.removeClass(formEl, 'XML');
       dom.removeClass(formEl, 'CUSTOM');
       dom.addClass(formEl, activeMode());
     }
 
-    function pauseAd() {
+    function pauseAd () {
       if (player) {
         player.vast.adUnit.pauseAd();
         showResumeBtn();
       }
     }
 
-    function resumeAd() {
+    function resumeAd () {
       if (player) {
         player.vast.adUnit.resumeAd();
         showPauseBtn();
       }
     }
 
-    function showResumeBtn(){
+    function showResumeBtn () {
       pauseBtn.style.display = 'none';
       resumeBtn.style.display = 'inline-block';
     }
 
-    function showPauseBtn(){
+    function showPauseBtn () {
       pauseBtn.style.display = 'inline-block';
       resumeBtn.style.display = 'none';
     }
 
-    function updateDemo() {
-      createVideoEl(videoContainer, function(videoEl) {
-        var mode = activeMode();
-        var adPluginOpts = {
-          "plugins": {
-            "ads-setup":{
-              "adCancelTimeout":20000,// Wait for ten seconds before canceling the ad.
-              "adsEnabled": true
+    function updateDemo () {
+      createVideoEl(videoContainer, (videoEl) => {
+        const mode = activeMode();
+        const adPluginOpts = {
+          plugins: {
+            'ads-setup': {
+              adCancelTimeout: 20000,
+              adsEnabled: true
             }
           }
         };
 
         if (mode === 'TAG') {
-          adPluginOpts.plugins["ads-setup"].adTagUrl = tagEl.value;
+          adPluginOpts.plugins['ads-setup'].adTag = tagEl.value;
         } else if (mode === 'XML') {
-          adPluginOpts.plugins["ads-setup"].adTagUrl = xmlEl.value;
+          adPluginOpts.plugins['ads-setup'].adTag = xmlEl.value;
         } else {
-          adPluginOpts.plugins["ads-setup"].adTagXML = function(done){
-            //The setTimeout is to simulate asynchrony
-            setTimeout(function () {
+          adPluginOpts.plugins['ads-setup'].adTagXML = (done) => {
+            setTimeout(() => {
               done(null, customEl.value);
             }, 0);
           };
@@ -106,19 +105,17 @@ dom.onReady(function() {
 
         player = videojs(videoEl, adPluginOpts);
 
-        //We hide the pause and resume btns every time we update
         if (pauseBtn) {
           pauseBtn.style.display = 'none';
           resumeBtn.style.display = 'none';
         }
 
-
-        if(player) {
-          player.on('vast.adStart', function() {
+        if (player) {
+          player.on('vast.adStart', () => {
             showPauseBtn();
             player.on('play', showPauseBtn);
             player.on('pause', showResumeBtn);
-            player.one('vast.adEnd', function() {
+            player.one('vast.adEnd', () => {
               pauseBtn.style.display = 'none';
               resumeBtn.style.display = 'none';
 
@@ -130,7 +127,7 @@ dom.onReady(function() {
       });
     }
 
-    function activeMode() {
+    function activeMode () {
       if (tagTypeEl.checked) {
         return 'TAG';
       }
@@ -142,20 +139,22 @@ dom.onReady(function() {
       return 'CUSTOM';
     }
 
-    function createVideoEl(container, cb) {
-      var videoTag = '<video class="video-js vjs-default-skin" controls preload="auto" poster="http://vjs.zencdn.net/v/oceans.png" >' +
+    function createVideoEl (container, cb) {
+      const videoTag = '<video class="video-js vjs-default-skin" controls preload=auto poster=http://vjs.zencdn.net/v/oceans.png >' +
         '<source src="http://vjs.zencdn.net/v/oceans.mp4" type="video/mp4"/>' +
-        '<source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm"/>' +
-        '<source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg"/>' +
-        '<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
-        '<a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>' +
+        '<source src=http://vjs.zencdn.net/v/oceans.webm type=video/webm/>' +
+        '<source src=http://vjs.zencdn.net/v/oceans.ogv type=video/ogg/>' +
+        '<p class=vjs-no-js>To view this video please enable JavaScript, and consider upgrading to a web browser that ' +
+        '<a href=http://videojs.com/html5-video-support/ target=_blank>supports HTML5 video</a>' +
         '</p>' +
         '</video>';
+
       container.innerHTML = videoTag;
 
-      //We do this asynchronously to give time for the dom to be updated
-      setTimeout(function() {
-        var videoEl = container.querySelector('.video-js');
+      // We do this asynchronously to give time for the dom to be updated
+      setTimeout(() => {
+        const videoEl = container.querySelector('.video-js');
+
         cb(videoEl);
       }, 0);
     }

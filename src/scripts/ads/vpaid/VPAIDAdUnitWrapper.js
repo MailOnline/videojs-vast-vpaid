@@ -1,10 +1,7 @@
-'use strict';
+const VASTError = require('../vast/VASTError');
+const utilities = require('../../utils/utilityFunctions');
 
-var VASTError = require('../vast/VASTError');
-
-var utilities = require('../../utils/utilityFunctions');
-
-function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
+function VPAIDAdUnitWrapper (vpaidAdUnit, opts) {
   if (!(this instanceof VPAIDAdUnitWrapper)) {
     return new VPAIDAdUnitWrapper(vpaidAdUnit, opts);
   }
@@ -14,29 +11,29 @@ function VPAIDAdUnitWrapper(vpaidAdUnit, opts) {
 
   this._adUnit = vpaidAdUnit;
 
-  /*** Local Functions ***/
-  function sanityCheck(adUnit, opts) {
+  /** * Local Functions ***/
+  function sanityCheck (adUnit, opts) {
     if (!adUnit || !VPAIDAdUnitWrapper.checkVPAIDInterface(adUnit)) {
       throw new VASTError('on VPAIDAdUnitWrapper, the passed VPAID adUnit does not fully implement the VPAID interface');
     }
 
     if (!utilities.isObject(opts)) {
-      throw new VASTError("on VPAIDAdUnitWrapper, expected options hash  but got '" + opts + "'");
+      throw new VASTError('on VPAIDAdUnitWrapper, expected options hash  but got \'' + opts + '\'');
     }
 
-    if (!("responseTimeout" in opts) || !utilities.isNumber(opts.responseTimeout) ){
-      throw new VASTError("on VPAIDAdUnitWrapper, expected responseTimeout in options");
+    if (!('responseTimeout' in opts) || !utilities.isNumber(opts.responseTimeout)) {
+      throw new VASTError('on VPAIDAdUnitWrapper, expected responseTimeout in options');
     }
   }
 }
 
-VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUnit) {
-  //NOTE: skipAd is not part of the method list because it only appears in VPAID 2.0 and we support VPAID 1.0
-  var VPAIDInterfaceMethods = [
+VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface (VPAIDAdUnit) {
+  // NOTE: skipAd is not part of the method list because it only appears in VPAID 2.0 and we support VPAID 1.0
+  const VPAIDInterfaceMethods = [
     'handshakeVersion', 'initAd', 'startAd', 'stopAd', 'resizeAd', 'pauseAd', 'expandAd', 'collapseAd'
   ];
 
-  for (var i = 0, len = VPAIDInterfaceMethods.length; i < len; i++) {
+  for (let i = 0, len = VPAIDInterfaceMethods.length; i < len; i++) {
     if (!VPAIDAdUnit || !utilities.isFunction(VPAIDAdUnit[VPAIDInterfaceMethods[i]])) {
       return false;
     }
@@ -45,46 +42,44 @@ VPAIDAdUnitWrapper.checkVPAIDInterface = function checkVPAIDInterface(VPAIDAdUni
 
   return canSubscribeToEvents(VPAIDAdUnit) && canUnsubscribeFromEvents(VPAIDAdUnit);
 
-  /*** Local Functions ***/
+  /** * Local Functions ***/
 
-  function canSubscribeToEvents(adUnit) {
+  function canSubscribeToEvents (adUnit) {
     return utilities.isFunction(adUnit.subscribe) || utilities.isFunction(adUnit.addEventListener) || utilities.isFunction(adUnit.on);
   }
 
-  function canUnsubscribeFromEvents(adUnit) {
+  function canUnsubscribeFromEvents (adUnit) {
     return utilities.isFunction(adUnit.unsubscribe) || utilities.isFunction(adUnit.removeEventListener) || utilities.isFunction(adUnit.off);
-
   }
 };
 
-VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
-  var args = utilities.arrayLikeObjToArray(arguments);
-  var method = args.shift();
-  var cb = args.pop();
-  var timeoutId;
+VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function (...args) {
+  const method = args.shift();
+  let cb = args.pop();
+  let timeoutId;
 
   sanityCheck(method, cb, this._adUnit);
   args.push(wrapCallback());
 
-  this._adUnit[method].apply(this._adUnit, args);
-  timeoutId = setTimeout(function () {
+  this._adUnit[method](...args);
+  timeoutId = setTimeout(() => {
     timeoutId = null;
-    cb(new VASTError("on VPAIDAdUnitWrapper, timeout while waiting for a response on call '" + method + "'"));
+    cb(new VASTError('on VPAIDAdUnitWrapper, timeout while waiting for a response on call \'' + method + '\''));
     cb = utilities.noop;
   }, this.options.responseTimeout);
 
-  /*** Local functions ***/
-  function sanityCheck(method, cb, adUnit) {
+  /** * Local functions ***/
+  function sanityCheck (method, cb, adUnit) {
     if (!utilities.isString(method) || !utilities.isFunction(adUnit[method])) {
-      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name");
+      throw new VASTError('on VPAIDAdUnitWrapper.adUnitAsyncCall, invalid method name');
     }
 
     if (!utilities.isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback");
+      throw new VASTError('on VPAIDAdUnitWrapper.adUnitAsyncCall, missing callback');
     }
   }
 
-  function wrapCallback() {
+  function wrapCallback () {
     return function () {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -95,41 +90,44 @@ VPAIDAdUnitWrapper.prototype.adUnitAsyncCall = function () {
 };
 
 VPAIDAdUnitWrapper.prototype.on = function (evtName, handler) {
-  var addEventListener = this._adUnit.addEventListener || this._adUnit.subscribe || this._adUnit.on;
+  const addEventListener = this._adUnit.addEventListener || this._adUnit.subscribe || this._adUnit.on;
+
   addEventListener.call(this._adUnit, evtName, handler);
 };
 
 VPAIDAdUnitWrapper.prototype.off = function (evtName, handler) {
-  var removeEventListener = this._adUnit.removeEventListener || this._adUnit.unsubscribe || this._adUnit.off;
+  const removeEventListener = this._adUnit.removeEventListener || this._adUnit.unsubscribe || this._adUnit.off;
+
   removeEventListener.call(this._adUnit, evtName, handler);
 };
 
 VPAIDAdUnitWrapper.prototype.waitForEvent = function (evtName, cb, context) {
-  var timeoutId;
+  let timeoutId;
+
   sanityCheck(evtName, cb);
   context = context || null;
 
   this.on(evtName, responseListener);
 
-  timeoutId = setTimeout(function () {
-    cb(new VASTError("on VPAIDAdUnitWrapper.waitForEvent, timeout while waiting for event '" + evtName + "'"));
+  timeoutId = setTimeout(() => {
+    cb(new VASTError('on VPAIDAdUnitWrapper.waitForEvent, timeout while waiting for event \'' + evtName + '\''));
     timeoutId = null;
     cb = utilities.noop;
   }, this.options.responseTimeout);
 
-  /*** Local functions ***/
-  function sanityCheck(evtName, cb) {
+  /** * Local functions ***/
+  function sanityCheck (evtName, cb) {
     if (!utilities.isString(evtName)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing evt name");
+      throw new VASTError('on VPAIDAdUnitWrapper.waitForEvent, missing evt name');
     }
 
     if (!utilities.isFunction(cb)) {
-      throw new VASTError("on VPAIDAdUnitWrapper.waitForEvent, missing callback");
+      throw new VASTError('on VPAIDAdUnitWrapper.waitForEvent, missing callback');
     }
   }
 
-  function responseListener() {
-    var args = utilities.arrayLikeObjToArray(arguments);
+  function responseListener () {
+    const args = utilities.arrayLikeObjToArray(arguments);
 
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -193,7 +191,7 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   this._adUnit.skipAd();
 };
 
-//VPAID property getters
+// VPAID property getters
 [
   'adLinear',
   'adWidth',
@@ -205,17 +203,17 @@ VPAIDAdUnitWrapper.prototype.skipAd = function (cb) {
   'adVolume',
   'adCompanions',
   'adIcons'
-].forEach(function (property) {
-  var getterName = 'get' + utilities.capitalize(property);
+].forEach((property) => {
+  const getterName = 'get' + utilities.capitalize(property);
 
   VPAIDAdUnitWrapper.prototype[getterName] = function (cb) {
     this.adUnitAsyncCall(getterName, cb);
   };
 });
 
-//VPAID property setters
-VPAIDAdUnitWrapper.prototype.setAdVolume = function(volume, cb){
-  this.adUnitAsyncCall('setAdVolume',volume, cb);
+// VPAID property setters
+VPAIDAdUnitWrapper.prototype.setAdVolume = function (volume, cb) {
+  this.adUnitAsyncCall('setAdVolume', volume, cb);
 };
 
 module.exports = VPAIDAdUnitWrapper;

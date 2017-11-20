@@ -1,9 +1,10 @@
+*.log
+*.swo
+*.swp
 .DS_Store
+.idea/
+bin/
+dist/
+coverage/
 node_modules/
 bower_components/
-dev/
-.idea/
-coverage/
-*.swp
-*.swo
-.publish/

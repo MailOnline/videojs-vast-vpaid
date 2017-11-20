@@ -1,15 +1,17 @@
-'use strict';
 
-var xml = require('../../utils/xml');
-var vastUtil = require('./vastUtil');
 
-var attributesList = [
-  //Required attributes
+const xml = require('../../utils/xml');
+const urlUtils = require('../../utils/urlUtils');
+const vastUtil = require('./vastUtil');
+
+const attributesList = [
+  // Required attributes
   'delivery',
   'type',
   'width',
   'height',
-  //Optional attributes
+
+  // Optional attributes
   'codec',
   'id',
   'bitrate',
@@ -20,27 +22,34 @@ var attributesList = [
   'apiFramework'
 ];
 
-function MediaFile(mediaFileJTree) {
+const pageProtocol = window.location && urlUtils.urlParts(window.location.href).protocol;
+
+function MediaFile (mediaFileJTree) {
   if (!(this instanceof MediaFile)) {
     return new MediaFile(mediaFileJTree);
   }
 
-  //Required attributes
+  // Required attributes
   this.src = xml.keyValue(mediaFileJTree);
 
-  for(var x=0; x<attributesList.length; x++) {
-    var attribute = attributesList[x];
+  for (let x = 0; x < attributesList.length; x++) {
+    const attribute = attributesList[x];
+
     this[attribute] = mediaFileJTree.attr(attribute);
   }
 }
 
-MediaFile.prototype.isSupported = function(){
-  if(vastUtil.isVPAID(this)) {
-    return !!vastUtil.findSupportedVPAIDTech(this.type);
+MediaFile.prototype.isSupported = function () {
+  if (vastUtil.isVPAID(this)) {
+    return Boolean(vastUtil.findSupportedVPAIDTech(this.type));
   }
 
   if (this.type === 'video/x-flv') {
     return vastUtil.isFlashSupported();
+  }
+
+  if (pageProtocol === 'https') {
+    return urlUtils.urlParts(this.src).protocol === pageProtocol;
   }
 
   return true;

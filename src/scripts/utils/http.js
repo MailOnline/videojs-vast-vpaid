@@ -1,15 +1,15 @@
-'use strict';
 
-var urlUtils = require('./urlUtils');
-var utilities = require('./utilityFunctions');
 
-function HttpRequestError(message) {
+const urlUtils = require('./urlUtils');
+const utilities = require('./utilityFunctions');
+
+function HttpRequestError (message) {
   this.message = 'HttpRequest Error: ' + (message || '');
 }
 HttpRequestError.prototype = new Error();
-HttpRequestError.prototype.name = "HttpRequest Error";
+HttpRequestError.prototype.name = 'HttpRequest Error';
 
-function HttpRequest(createXhr) {
+function HttpRequest (createXhr) {
   if (!utilities.isFunction(createXhr)) {
     throw new HttpRequestError('Missing XMLHttpRequest factory method');
   }
@@ -19,8 +19,9 @@ function HttpRequest(createXhr) {
 
 HttpRequest.prototype.run = function (method, url, callback, options) {
   sanityCheck(url, callback, options);
-  var timeout, timeoutId;
-  var xhr = this.createXhr();
+  let timeout, timeoutId;
+  const xhr = this.createXhr();
+
   options = options || {};
   timeout = utilities.isNumber(options.timeout) ? options.timeout : 0;
 
@@ -35,7 +36,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
   }
 
   xhr.onload = function () {
-    var statusText, response, status;
+    let statusText, response, status;
 
     /**
      * The only way to do a secure request on IE8 and IE9 is with the XDomainRequest object. Unfortunately, microsoft is
@@ -64,7 +65,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
 
     // responseText is the old-school way of retrieving response (supported by IE8 & 9)
     // response/responseType properties were introduced in XHR Level2 spec (supported by IE10)
-    response = ('response' in xhr) ? xhr.response : xhr.responseText;
+    response = 'response' in xhr ? xhr.response : xhr.responseText;
 
     // normalize IE9 bug (http://bugs.jquery.com/ticket/1450)
     status = xhr.status === 1223 ? 204 : xhr.status;
@@ -82,34 +83,36 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
   xhr.send();
 
   if (timeout > 0) {
-    timeoutId = setTimeout(function () {
-      xhr && xhr.abort();
+    timeoutId = setTimeout(() => {
+      if (xhr) {
+        xhr.abort();
+      }
     }, timeout);
   }
 
-  function sanityCheck(url, callback, options) {
+  function sanityCheck (url, callback, options) {
     if (!utilities.isString(url) || utilities.isEmptyString(url)) {
-      throw new HttpRequestError("Invalid url '" + url + "'");
+      throw new HttpRequestError('Invalid url \'' + url + '\'');
     }
 
     if (!utilities.isFunction(callback)) {
-      throw new HttpRequestError("Invalid handler '" + callback + "' for the http request");
+      throw new HttpRequestError('Invalid handler \'' + callback + '\' for the http request');
     }
 
     if (utilities.isDefined(options) && !utilities.isObject(options)) {
-      throw new HttpRequestError("Invalid options map '" + options + "'");
+      throw new HttpRequestError('Invalid options map \'' + options + '\'');
     }
   }
 
-  function setHeaders(xhr, headers) {
-    utilities.forEach(headers, function (value, key) {
+  function setHeaders (xhr, headers) {
+    utilities.forEach(headers, (value, key) => {
       if (utilities.isDefined(value)) {
         xhr.setRequestHeader(key, value);
       }
     });
   }
 
-  function requestError() {
+  function requestError () {
     callback(-1, null, null, '');
   }
 };
@@ -117,7 +120,7 @@ HttpRequest.prototype.run = function (method, url, callback, options) {
 HttpRequest.prototype.get = function (url, callback, options) {
   this.run('GET', url, processResponse, options);
 
-  function processResponse(status, response, headersString, statusText) {
+  function processResponse (status, response, headersString, statusText) {
     if (isSuccess(status)) {
       callback(null, response, status, headersString, statusText);
     } else {
@@ -125,21 +128,23 @@ HttpRequest.prototype.get = function (url, callback, options) {
     }
   }
 
-  function isSuccess(status) {
+  function isSuccess (status) {
     return 200 <= status && status < 300;
   }
 };
 
-function createXhr() {
-  var xhr = new XMLHttpRequest();
-  if (!("withCredentials" in xhr)) {
+function createXhr () {
+  let xhr = new XMLHttpRequest();
+
+  if (!('withCredentials' in xhr)) {
     // XDomainRequest for IE.
     xhr = new XDomainRequest();
   }
+
   return xhr;
 }
 
-var http = new HttpRequest(createXhr);
+const http = new HttpRequest(createXhr);
 
 module.exports = {
   http: http,
