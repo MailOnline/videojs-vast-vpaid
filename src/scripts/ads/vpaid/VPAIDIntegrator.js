@@ -480,9 +480,12 @@ VPAIDIntegrator.prototype._addSkipButton = function (adUnit, vastResponse, next)
 
 VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, next) {
   const that = this;
+  const player = this.player;
 
-  linkVolumeControl(this.player, adUnit);
-  linkFullScreenControl(this.player, adUnit, this.VIEW_MODE);
+  linkVolumeControl(player, adUnit);
+  linkFullScreenControl(player, adUnit, this.VIEW_MODE);
+
+  updateAdUnitVolume();
 
   next(null, adUnit, vastResponse);
 
@@ -494,27 +497,25 @@ VPAIDIntegrator.prototype._linkPlayerControls = function (adUnit, vastResponse, 
     player.one('vpaid.adEnd', () => {
       player.off('volumechange', updateAdUnitVolume);
     });
+  }
 
+  function updateAdUnitVolume () {
+    const vol = player.muted() ? 0 : player.volume();
 
-    /** * local functions ***/
-    function updateAdUnitVolume () {
-      const vol = player.muted() ? 0 : player.volume();
+    adUnit.setAdVolume(vol, logError);
+  }
 
-      adUnit.setAdVolume(vol, logError);
-    }
+  function updatePlayerVolume () {
+    player.trigger('vpaid.AdVolumeChange');
+    const lastVolume = player.volume();
 
-    function updatePlayerVolume () {
-      player.trigger('vpaid.AdVolumeChange');
-      const lastVolume = player.volume();
-
-      adUnit.getAdVolume((error, vol) => {
-        if (error) {
-          logError(error);
-        } else if (lastVolume !== vol) {
-          player.volume(vol);
-        }
-      });
-    }
+    adUnit.getAdVolume((error, vol) => {
+      if (error) {
+        logError(error);
+      } else if (lastVolume !== vol) {
+        player.volume(vol);
+      }
+    });
   }
 
   function linkFullScreenControl (player, adUnit, VIEW_MODE) {
