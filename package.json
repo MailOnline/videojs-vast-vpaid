@@ -1,11 +1,11 @@
 {
   "name": "videojs-vast-vpaid",
-  "version": "0.0.0",
+  "version": "1.2.3",
   "authors": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
   "description": "VAST plugin to use with video.js",
-  "main": "bin",
+  "main": "src/scripts/videojs.vast.vpaid.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/MailOnline/videojs-vast-vpaid"
@@ -24,13 +24,16 @@
     "test": "gulp ci-test",
     "prepare-hooks": "chmod u+x scripts/*",
     "setup-hooks": "./scripts/setup-hooks",
-    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s",
-    "postinstall": "bower install"
+    "preinstall": "npm run prepare-hooks -s && npm run setup-hooks -s"
   },
   "author": [
     "Carlos Serrano <carlos.pastor@mailonline.co.uk>"
   ],
   "license": "MIT",
+  "dependencies": {
+    "vpaid-flash-client": "lunchtime-labs/VPAIDFLASHClient",
+    "vpaid-html5-client": "lunchtime-labs/VPAIDHTML5Client"
+  },
   "devDependencies": {
     "asciify": "^1.3.5",
     "async": "^1.2.1",

@@ -2,17 +2,8 @@ var dom = require('utils/dom');
 var utilities = require('utils/utilityFunctions');
 var playerUtils = require('utils/playerUtils');
 
-var videoJsVersion = parseInt(videojs.VERSION.split('.')[0], 10);
-
-if(videoJsVersion === 4) {
-  require('plugin/components/ads-label_4');
-  require('plugin/components/black-poster_4');
-}
-if(videoJsVersion === 5) {
-  require('plugin/components/ads-label_5');
-  require('plugin/components/black-poster_5');
-}
-
+require('plugin/components/ads-label-loader');
+require('plugin/components/black-poster-loader');
 
 describe("playerUtils", function () {
   var testDiv, player, tech;
