@@ -118,7 +118,7 @@ if you want to update to videojs 5 just follow the instruction in the **Integrat
 
 #### adTagUrl
 Use it to pass the ad media tag, it can be a string containing the Media tag url or a function that will return the Media tag whenever called;
-On initialization, the plugin will call the function and store the returned Media tag to request the VAST/VPAID ads
+On initialization, the plugin will call the function and store the returned Media tag to request the VAST/VPAID ads.
 ```javascript
 // Hardcoded Media Tag
 var vastAd = player.vastClient({
