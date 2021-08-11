@@ -78,7 +78,7 @@
     "request": "^2.57.0",
     "require-dir": "^0.3.0",
     "run-sequence": "^1.1.0",
-    "sinon": "1.14.1",
+    "sinon": "1.17.7",
     "sinon-chai": "^2.8.0",
     "uglifyify": "^3.0.1",
     "vinyl-buffer": "^1.0.0",
