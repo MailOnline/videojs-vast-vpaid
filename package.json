@@ -53,7 +53,7 @@
     "gulp-if": "^2.0.0",
     "gulp-jshint": "^2.0.0",
     "gulp-rename": "^1.2.2",
-    "gulp-sass": "^2.1.1",
+    "gulp-sass": "^5.0.0",
     "gulp-size": "^2.0.0",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-supervisor": "^0.1.2",
