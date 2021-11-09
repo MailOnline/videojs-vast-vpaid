@@ -58,7 +58,7 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-supervisor": "^0.1.2",
     "gulp-template": "^3.0.0",
-    "gulp-uglify": "^1.2.0",
+    "gulp-uglify": "^3.0.0",
     "gulp-util": "^3.0.5",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.1.0",
@@ -80,7 +80,7 @@
     "run-sequence": "^1.1.0",
     "sinon": "1.14.1",
     "sinon-chai": "^2.8.0",
-    "uglifyify": "^3.0.1",
+    "uglifyify": "^4.0.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
   }
